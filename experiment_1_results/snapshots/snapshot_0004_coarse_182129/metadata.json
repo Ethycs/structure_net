@@ -1,0 +1,94 @@
+{
+  "snapshot_id": "snapshot_0004_coarse_182129",
+  "epoch": 4,
+  "performance": 0.6875,
+  "phase": "coarse",
+  "growth_info": {
+    "growth_occurred": true,
+    "connections_added": 10,
+    "phase": "coarse",
+    "epoch": 4
+  },
+  "timestamp": "2025-07-05T18:21:29.827254",
+  "metadata": {
+    "training_step": 152,
+    "best_performance": 0.84375,
+    "growth_stats": {
+      "scheduler_stats": {
+        "current_epoch": 4,
+        "current_credits": 0,
+        "total_spikes": 0,
+        "total_growth_events": 1,
+        "last_growth_epoch": 4,
+        "current_phase": "coarse",
+        "epochs_since_growth": 0,
+        "in_stabilization": true
+      },
+      "structural_limits": {
+        "limits": {
+          "coarse": 10,
+          "medium": 50,
+          "fine": 200
+        },
+        "current_counts": {
+          "coarse": 10,
+          "medium": 0,
+          "fine": 0
+        },
+        "growth_log": [
+          {
+            "epoch": 4,
+            "phase": "coarse",
+            "structures_added": 10,
+            "total_in_phase": 10,
+            "limit": 10
+          }
+        ]
+      },
+      "routing_stats": {
+        "total_routing_events": 1,
+        "total_high_extrema_processed": 136,
+        "total_low_extrema_available": 136,
+        "total_connections_created": 1070,
+        "average_connections_per_event": 1070.0,
+        "routing_history": [
+          {
+            "total_high_extrema": 136,
+            "total_low_extrema": 136,
+            "connections_created": 1070,
+            "skipped_due_to_limits": 0
+          }
+        ]
+      },
+      "snapshot_stats": {
+        "total_snapshots": 0,
+        "performance_saves": 0,
+        "structural_saves": 0,
+        "total_size_mb": 0.0,
+        "snapshots_by_phase": {
+          "coarse": 0,
+          "medium": 0,
+          "fine": 0
+        },
+        "average_size_mb": 0.0,
+        "base_snapshot": null
+      },
+      "network_stats": {
+        "total_possible_connections": 566528,
+        "total_active_connections": 11335,
+        "connectivity_ratio": 0.020007837211929506,
+        "sparsity": 0.9799921627880704
+      },
+      "total_growth_events": 1,
+      "current_phase": "coarse"
+    },
+    "connectivity_stats": {
+      "total_possible_connections": 566528,
+      "total_active_connections": 11335,
+      "connectivity_ratio": 0.020007837211929506,
+      "sparsity": 0.9799921627880704
+    }
+  },
+  "save_type": "full",
+  "base_snapshot": "snapshot_0004_coarse_182129"
+}

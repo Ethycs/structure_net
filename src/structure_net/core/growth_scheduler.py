@@ -31,8 +31,10 @@ class GrowthScheduler:
         variance_threshold: float = 0.5,
         gradient_credits: int = 10,
         cit_credits: int = 80,
-        growth_threshold: int = 100,
-        stabilization_epochs: int = 10
+        growth_threshold: int = 25,  # Further reduced to trigger growth more often
+        stabilization_epochs: int = 5,  # Reduced cooldown period
+        bootstrap_epochs: int = 10,    # Shorter bootstrap period
+        bootstrap_credits_per_epoch: int = 8  # More bootstrap credits
     ):
         """
         Initialize growth scheduler.
@@ -51,6 +53,8 @@ class GrowthScheduler:
         self.cit_credits = cit_credits
         self.growth_threshold = growth_threshold
         self.stabilization_epochs = stabilization_epochs
+        self.bootstrap_epochs = bootstrap_epochs
+        self.bootstrap_credits_per_epoch = bootstrap_credits_per_epoch
         
         # State tracking
         self.gradient_history = deque(maxlen=gradient_window * 2)  # Keep extra history
@@ -58,6 +62,7 @@ class GrowthScheduler:
         self.growth_events = []
         self.last_growth_epoch = -1
         self.current_epoch = 0
+        self.last_bootstrap_epoch = -1  # Track when bootstrap was last applied
         
         # Statistics
         self.variance_history = []
@@ -83,12 +88,30 @@ class GrowthScheduler:
         """
         self.gradient_history.append(gradient_norm)
         
+        # Bootstrap mechanism: Add credits once per epoch early on if no growth has occurred
+        bootstrap_credits_added = False
+        if (self.current_epoch < self.bootstrap_epochs and 
+            len(self.growth_events) == 0 and 
+            self.current_epoch > 0 and
+            self.last_bootstrap_epoch != self.current_epoch):  # Only once per epoch
+            self.credits += self.bootstrap_credits_per_epoch
+            self.last_bootstrap_epoch = self.current_epoch
+            bootstrap_credits_added = True
+            self.logger.info(f"Bootstrap credits added at epoch {self.current_epoch}. Credits: {self.credits}")
+        
         # Need sufficient history for variance calculation
         if len(self.gradient_history) < self.gradient_window * 2:
+            # Record credit history even if we can't detect spikes yet
+            self.credit_history.append(self.credits)
+            # Check for bootstrap growth trigger
+            if self.credits >= self.growth_threshold:
+                self._trigger_growth()
+                return True
             return False
         
         # Check if we're in stabilization period
         if self.current_epoch - self.last_growth_epoch < self.stabilization_epochs:
+            self.credit_history.append(self.credits)
             return False
         
         # Calculate gradient variance spike

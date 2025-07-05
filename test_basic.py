@@ -19,10 +19,12 @@ def test_basic_functionality():
         from src.structure_net import create_multi_scale_network
         print("✓ Import successful!")
         
-        # Test network creation
-        network = create_multi_scale_network(784, [256, 128], 10)
+        # Test network creation with CUDA if available
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        network = create_multi_scale_network(784, [256, 128], 10, device=device)
         print("✓ Network created successfully!")
         print(f"  Architecture: {network.network.layer_sizes}")
+        print(f"  Device: {device}")
         
         # Test connectivity stats
         stats = network.network.get_connectivity_stats()
@@ -30,7 +32,7 @@ def test_basic_functionality():
         print(f"  Total connections: {stats['total_active_connections']}")
         
         # Test forward pass
-        x = torch.randn(32, 784)
+        x = torch.randn(32, 784).to(device)
         output = network(x)
         print(f"✓ Forward pass successful! Output shape: {output.shape}")
         

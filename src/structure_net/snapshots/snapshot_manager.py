@@ -31,7 +31,7 @@ class SnapshotManager:
     def __init__(
         self,
         save_dir: str = "snapshots",
-        performance_threshold: float = 0.02,  # 2% improvement
+        performance_threshold: float = 0.50,  # 50% improvement (very conservative)
         save_deltas: bool = True,
         compression: bool = True
     ):
@@ -107,11 +107,15 @@ class SnapshotManager:
             self.logger.info(f"Saving snapshot at epoch {epoch}: major structural change ({structural_change_size} connections)")
             return True
         
-        # Save at specific milestone epochs
-        milestone_epochs = [20, 50, 100, 150, 200]
+        # Save at specific milestone epochs (much less frequent)
+        # Only save milestone if no recent snapshot was saved
+        milestone_epochs = [50, 100, 200]
         if epoch in milestone_epochs:
-            self.logger.info(f"Saving snapshot at epoch {epoch}: milestone epoch")
-            return True
+            # Check if we already saved a snapshot recently
+            recent_snapshots = [s for s in self.snapshots if abs(s['epoch'] - epoch) < 5]
+            if not recent_snapshots:
+                self.logger.info(f"Saving snapshot at epoch {epoch}: milestone epoch")
+                return True
         
         return False
     
@@ -215,19 +219,9 @@ class SnapshotManager:
         if self.base_snapshot is None:
             return self._create_full_snapshot(network, snapshot_data)
         
-        # Load base snapshot for comparison
-        base_data = self._load_snapshot_data(self.base_snapshot)
-        base_state = base_data['state_dict']
-        current_state = network.state_dict_sparse()
-        
-        # Compute deltas
-        weight_deltas = {}
-        for key in current_state:
-            if key in base_state and isinstance(current_state[key], torch.Tensor):
-                delta = current_state[key] - base_state[key]
-                # Only store non-zero deltas
-                if delta.abs().sum() > 1e-8:
-                    weight_deltas[key] = delta
+        # For now, just create full snapshots to avoid compatibility issues
+        # TODO: Implement proper delta snapshots with size checking
+        return self._create_full_snapshot(network, snapshot_data)
         
         # Compute connectivity deltas
         connectivity_deltas = self._compute_connectivity_deltas(

@@ -180,8 +180,8 @@ class MultiScaleNetwork(nn.Module):
         Returns:
             (growth_occurred, connections_added)
         """
-        # Detect extrema in current network state
-        extrema = self.network.detect_extrema()
+        # Detect extrema in current network state with epoch-aware detection
+        extrema = self.network.detect_extrema(epoch=self.current_epoch)
         
         if not extrema:
             self.logger.info("No extrema detected, skipping growth")
@@ -448,7 +448,7 @@ def create_multi_scale_network(
     input_size: int,
     hidden_sizes: List[int],
     output_size: int,
-    sparsity: float = 0.0001,
+    sparsity: float = 0.05,  # Updated to 5% for better learning
     activation: str = 'tanh',
     device: Optional[torch.device] = None,
     snapshot_dir: str = "snapshots"

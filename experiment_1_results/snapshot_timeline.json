@@ -1,0 +1,26 @@
+[
+  {
+    "epoch": 4,
+    "snapshot_id": "snapshot_0004_coarse_182129",
+    "phase": "coarse",
+    "performance": 0.6875,
+    "growth_occurred": false,
+    "timestamp": "2025-07-05T18:21:30.580184"
+  },
+  {
+    "epoch": 50,
+    "snapshot_id": "snapshot_0050_medium_182141",
+    "phase": "medium",
+    "performance": 1.0,
+    "growth_occurred": false,
+    "timestamp": "2025-07-05T18:21:42.287306"
+  },
+  {
+    "epoch": 54,
+    "snapshot_id": "snapshot_0054_medium_182143",
+    "phase": "medium",
+    "performance": 1.0,
+    "growth_occurred": false,
+    "timestamp": "2025-07-05T18:21:43.821039"
+  }
+]

@@ -1,2 +1,7 @@
 # pixi environments
 .pixi
+*.pyc
+/mnist_snapshots
+/test_snapshots
+/improved_multiscale_results
+/extended_experiment_results

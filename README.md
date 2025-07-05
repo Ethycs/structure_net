@@ -99,6 +99,22 @@ for epoch in range(50):
               f"{epoch_stats['connections_added']} connections added")
 ```
 
+### Main Experiment
+
+Run the main Experiment 1 implementation:
+
+```bash
+# Run Experiment 1 with default settings
+pixi run python experiment_1.py
+
+# Custom settings
+pixi run python experiment_1.py \
+    --epochs 100 \
+    --batch-size 64 \
+    --learning-rate 0.002 \
+    --device auto
+```
+
 ### MNIST Experiment
 
 Run the complete MNIST experiment:
@@ -192,21 +208,27 @@ The implementation automatically falls back to CPU if CUDA is unavailable, thoug
 
 ```
 structure_net/
-├── src/structure_net/           # Main package
-│   ├── core/                    # Core components
-│   │   ├── minimal_network.py   # Sparse network implementation
-│   │   ├── growth_scheduler.py  # Growth detection and scheduling
+├── experiment_1.py             # 🎯 Main Experiment 1 implementation
+├── src/structure_net/          # Core package
+│   ├── core/                   # Core components
+│   │   ├── minimal_network.py  # Sparse network implementation
+│   │   ├── growth_scheduler.py # Growth detection and scheduling
 │   │   └── connection_router.py # Extrema-based routing
-│   ├── models/                  # High-level models
+│   ├── models/                 # High-level models
 │   │   └── multi_scale_network.py # Main network class
-│   ├── snapshots/               # Snapshot management
-│   │   └── snapshot_manager.py  # Multi-scale snapshot saving
-│   └── __init__.py             # Package exports
-├── examples/                    # Example scripts
-│   └── mnist_experiment.py     # Complete MNIST experiment
-├── test_basic.py               # Basic functionality test
-├── pyproject.toml              # Project configuration
-└── README.md                   # This file
+│   ├── snapshots/              # Snapshot management
+│   │   └── snapshot_manager.py # Multi-scale snapshot saving
+│   └── __init__.py            # Package exports
+├── examples/                   # Example implementations
+│   ├── mnist_experiment.py    # MNIST-specific experiment
+│   ├── true_multiscale_experiment.py # Multi-scale concept demo
+│   └── improved_multiscale_experiment.py # Transfer learning demo
+├── comprehensive_test_suite.py # Complete test suite
+├── test_basic.py              # Basic functionality tests
+├── check_cuda.py              # CUDA availability check
+├── experiment 1.md            # Experiment specification
+├── pyproject.toml             # Project configuration
+└── README.md                  # This documentation
 ```
 
 ## Testing

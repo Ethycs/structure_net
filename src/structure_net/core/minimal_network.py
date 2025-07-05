@@ -27,7 +27,7 @@ class MinimalNetwork(nn.Module):
     def __init__(
         self,
         layer_sizes: List[int],
-        sparsity: float = 0.0001,  # 0.01% connectivity
+        sparsity: float = 0.001,  # 0.1% connectivity (10x more than before)
         activation: str = 'tanh',
         device: Optional[torch.device] = None
     ):
@@ -58,6 +58,8 @@ class MinimalNetwork(nn.Module):
         
         # Move to device
         self.to(self.device)
+        # Ensure connection masks are also on the correct device
+        self.connection_masks = [mask.to(self.device) for mask in self.connection_masks]
         
         # Growth tracking
         self.growth_history = []
@@ -72,13 +74,7 @@ class MinimalNetwork(nn.Module):
             # Create full linear layer
             layer = nn.Linear(in_features, out_features, bias=True)
             
-            # Initialize weights with Xavier/He initialization
-            if self.activation_name in ['tanh', 'sigmoid']:
-                nn.init.xavier_uniform_(layer.weight)
-            else:  # ReLU
-                nn.init.kaiming_uniform_(layer.weight, nonlinearity='relu')
-            
-            # Create sparse mask
+            # Create sparse mask first
             total_connections = in_features * out_features
             num_active = max(1, int(total_connections * self.sparsity))
             
@@ -89,12 +85,25 @@ class MinimalNetwork(nn.Module):
             flat_mask[active_indices] = True
             mask = flat_mask.view(out_features, in_features)
             
-            # Apply mask to weights
+            # Initialize weights with sparse-aware initialization
             with torch.no_grad():
+                if self.activation_name in ['tanh', 'sigmoid']:
+                    # Xavier initialization with sparsity compensation
+                    gain = math.sqrt(2.0 / (1 + 0**2))  # Xavier gain
+                    sparsity_gain = math.sqrt(1.0 / self.sparsity)  # Compensate for sparsity
+                    std = gain * sparsity_gain * math.sqrt(2.0 / (in_features + out_features))
+                    layer.weight.data.normal_(0, std)
+                else:  # ReLU
+                    # He initialization with sparsity compensation
+                    sparsity_gain = math.sqrt(1.0 / self.sparsity)
+                    std = sparsity_gain * math.sqrt(2.0 / in_features)
+                    layer.weight.data.normal_(0, std)
+                
+                # Apply mask to weights (zero out inactive connections)
                 layer.weight.data *= mask.float()
             
             self.layers.append(layer)
-            self.connection_masks.append(mask)
+            self.connection_masks.append(mask.to(self.device))
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass with sparse connectivity and activation tracking."""
@@ -120,13 +129,15 @@ class MinimalNetwork(nn.Module):
         
         return x
     
-    def detect_extrema(self, threshold_high: float = 0.95, threshold_low: float = 0.05) -> Dict[int, Dict[str, List[int]]]:
+    def detect_extrema(self, threshold_high: float = 0.85, threshold_low: float = 0.15, 
+                      use_adaptive: bool = True, epoch: int = 0) -> Dict[int, Dict[str, List[int]]]:
         """
-        Detect high and low extrema in network activations.
+        Detect high and low extrema in network activations with adaptive thresholds.
         
         Args:
-            threshold_high: Threshold for high extrema
-            threshold_low: Threshold for low extrema
+            threshold_high: Fixed threshold for high extrema (used if not adaptive)
+            threshold_low: Fixed threshold for low extrema (used if not adaptive)
+            use_adaptive: Whether to use adaptive percentile-based detection
             
         Returns:
             Dictionary mapping layer index to extrema indices
@@ -142,22 +153,47 @@ class MinimalNetwork(nn.Module):
             # Get mean activation across batch
             mean_activations = activations.mean(dim=0)
             
+            if len(mean_activations) == 0:
+                extrema[layer_idx] = layer_extrema
+                continue
+            
             if self.activation_name == 'relu':
                 # For ReLU, detect dead neurons (always zero)
                 dead_neurons = (mean_activations == 0).nonzero(as_tuple=True)[0].tolist()
                 layer_extrema['low'] = dead_neurons
                 
-                # High extrema for ReLU could be very high activations
-                high_neurons = (mean_activations > mean_activations.quantile(0.95)).nonzero(as_tuple=True)[0].tolist()
+                # High extrema for ReLU - use percentile-based detection
+                if use_adaptive and len(mean_activations) > 0:
+                    high_threshold = torch.quantile(mean_activations, 0.9)
+                    high_neurons = (mean_activations > high_threshold).nonzero(as_tuple=True)[0].tolist()
+                else:
+                    high_neurons = (mean_activations > mean_activations.quantile(0.95)).nonzero(as_tuple=True)[0].tolist()
                 layer_extrema['high'] = high_neurons
                 
             else:  # tanh, sigmoid
-                # High extrema
-                high_neurons = (mean_activations > threshold_high).nonzero(as_tuple=True)[0].tolist()
-                layer_extrema['high'] = high_neurons
+                if use_adaptive and len(mean_activations) > 0:
+                    # Adaptive percentile-based detection - more aggressive
+                    high_threshold = torch.quantile(mean_activations, 0.85)  # Top 15%
+                    low_threshold = torch.quantile(mean_activations, 0.15)   # Bottom 15%
+                    
+                    # For sparse networks, be more lenient with thresholds
+                    if self.activation_name == 'tanh':
+                        # Use the actual percentiles, but ensure we get some extrema
+                        high_threshold = max(high_threshold, 0.2)  # Much more lenient
+                        low_threshold = min(low_threshold, -0.2)   # Much more lenient
+                    elif self.activation_name == 'sigmoid':
+                        high_threshold = max(high_threshold, 0.6)  # More lenient for sigmoid
+                        low_threshold = min(low_threshold, 0.4)    # More lenient for sigmoid
+                else:
+                    # Fixed thresholds (more lenient than before)
+                    high_threshold = threshold_high
+                    low_threshold = threshold_low
                 
-                # Low extrema
-                low_neurons = (mean_activations < threshold_low).nonzero(as_tuple=True)[0].tolist()
+                # Find extrema
+                high_neurons = (mean_activations > high_threshold).nonzero(as_tuple=True)[0].tolist()
+                low_neurons = (mean_activations < low_threshold).nonzero(as_tuple=True)[0].tolist()
+                
+                layer_extrema['high'] = high_neurons
                 layer_extrema['low'] = low_neurons
             
             extrema[layer_idx] = layer_extrema
