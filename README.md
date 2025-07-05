@@ -115,6 +115,68 @@ pixi run python experiment_1.py \
     --device auto
 ```
 
+### Multi-GPU Experiment
+
+Run Experiment 1 with both RTX 2060 SUPER GPUs:
+
+```bash
+# Run Multi-GPU Experiment 1 with both GPUs (synchronized training)
+pixi run python experiment_1_multi_gpu.py
+
+# Custom settings for multi-GPU
+pixi run python experiment_1_multi_gpu.py \
+    --epochs 100 \
+    --batch-size 64 \
+    --learning-rate 0.002 \
+    --world-size 2
+```
+
+### Parallel GPU Experiment
+
+Run independent experiments on both RTX 2060 GPUs simultaneously for 2x speedup:
+
+```bash
+# Run parallel experiments on both RTX 2060 GPUs
+pixi run python experiment_1_parallel.py --gpus 1,2
+
+# Custom settings for parallel execution
+pixi run python experiment_1_parallel.py \
+    --epochs 50 \
+    --batch-size 64 \
+    --learning-rate 0.002 \
+    --experiments-per-gpu 1 \
+    --gpus 1,2
+```
+
+**Note:** Use `--gpus 1,2` to target the RTX 2060 SUPER and RTX 2060 (avoiding the RTX 6000).
+
+### Maximum GPU Utilization System
+
+Run continuous parameter sweeps to maximize GPU utilization:
+
+```bash
+# Run maximum utilization with parameter sweep
+pixi run python experiment_1_max_utilization.py --experiment-type parameter_sweep --num-experiments 20
+
+# Focus on specific aspects
+pixi run python experiment_1_max_utilization.py --experiment-type growth_focused --num-experiments 15
+pixi run python experiment_1_max_utilization.py --experiment-type architecture_focused --num-experiments 25
+pixi run python experiment_1_max_utilization.py --experiment-type performance_focused --num-experiments 30
+
+# Custom configuration
+pixi run python experiment_1_max_utilization.py \
+    --experiment-type parameter_sweep \
+    --num-experiments 50 \
+    --max-workers 2
+```
+
+**Features:**
+- 🔄 **Queue Management**: Keeps GPUs constantly busy with experiments
+- 📊 **Parameter Sweeps**: Automatic generation of experiment configurations
+- 🎯 **Memory-Aware**: Optimizes batch sizes based on GPU memory
+- 📈 **Real-time Monitoring**: Progress tracking and resource utilization
+- 🏆 **Best Configuration Discovery**: Automatically finds optimal hyperparameters
+
 ### MNIST Experiment
 
 Run the complete MNIST experiment:

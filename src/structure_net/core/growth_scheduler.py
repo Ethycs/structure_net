@@ -31,10 +31,10 @@ class GrowthScheduler:
         variance_threshold: float = 0.5,
         gradient_credits: int = 10,
         cit_credits: int = 80,
-        growth_threshold: int = 25,  # Further reduced to trigger growth more often
-        stabilization_epochs: int = 5,  # Reduced cooldown period
-        bootstrap_epochs: int = 10,    # Shorter bootstrap period
-        bootstrap_credits_per_epoch: int = 8  # More bootstrap credits
+        growth_threshold: int = 100,  # Back to specification: 100 credits
+        stabilization_epochs: int = 10,  # Back to specification: 10 epochs
+        bootstrap_epochs: int = 15,    # Back to specification
+        bootstrap_credits_per_epoch: int = 5  # Back to specification
     ):
         """
         Initialize growth scheduler.

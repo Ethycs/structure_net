@@ -448,7 +448,7 @@ def create_multi_scale_network(
     input_size: int,
     hidden_sizes: List[int],
     output_size: int,
-    sparsity: float = 0.05,  # Updated to 5% for better learning
+    sparsity: float = 0.0001,  # Back to specification: 0.01% initial connectivity
     activation: str = 'tanh',
     device: Optional[torch.device] = None,
     snapshot_dir: str = "snapshots"

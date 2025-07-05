@@ -26,10 +26,10 @@ class ConnectionRouter:
     
     def __init__(
         self,
-        max_fan_out: int = 8,  # Increased from 4 to 8
+        max_fan_out: int = 4,  # Back to specification: 3-4 connections per high extrema
         max_search_radius: int = 3,
         connection_weight_scale: float = 0.1,
-        max_incoming_per_neuron: int = 10  # Increased from 5 to 10
+        max_incoming_per_neuron: int = 5  # Back to specification: max 5 incoming
     ):
         """
         Initialize connection router.
