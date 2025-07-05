@@ -1,0 +1,27 @@
+[project]
+authors = [{name = "Ethycs", email = "Ethycs@users.noreply.github.com"}]
+dependencies = []
+name = "structure_net"
+requires-python = ">= 3.11"
+version = "0.1.0"
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge", "pytorch", "nvidia"]
+platforms = ["linux-64"]
+
+[tool.pixi.dependencies]
+python = "3.11.*"
+pytorch = ">=2.5"
+pytorch-cuda = "12.4.*"  # Use 12.4 which is available and forward compatible with CUDA 12.9
+torchvision = "*"
+torchaudio = "*"
+
+[tool.pixi.pypi-dependencies]
+structure_net = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+test-cuda = "python -c \"import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')\""
