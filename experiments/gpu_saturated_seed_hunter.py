@@ -23,15 +23,21 @@ from torch.utils.data import DataLoader
 os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 
 class ModelCheckpointer:
-    """Save promising models for future experiments"""
+    """Save promising models for future experiments with top-K management"""
     
-    def __init__(self, save_dir="data/promising_models", dataset="mnist"):
+    def __init__(self, save_dir="data/promising_models", dataset="mnist", keep_top_k=3):
         self.save_dir = save_dir
         self.dataset = dataset.lower()
+        self.keep_top_k = keep_top_k  # Keep only top K models per category
         os.makedirs(save_dir, exist_ok=True)
+        
+        print(f"📁 ModelCheckpointer initialized:")
+        print(f"   Save directory: {save_dir}")
+        print(f"   Dataset: {dataset}")
+        print(f"   Keep top-{keep_top_k} models per category")
     
     def save_promising_model(self, model, architecture, seed, metrics, optimizer=None):
-        """Save the complete model state for future experiments"""
+        """Save the complete model state for future experiments with top-K management"""
         
         checkpoint = {
             # Model state
@@ -46,7 +52,7 @@ class ModelCheckpointer:
             # Performance metrics
             'accuracy': metrics['accuracy'],
             'patchability_score': metrics.get('patchability', 0),
-            'extrema_counts': metrics.get('extrema_score', 0),
+            'extrema_counts': metrics.get('extrema_score', 0), 
             
             # Neuron analysis
             'dead_neurons': metrics.get('dead_neurons', 0),
@@ -72,7 +78,142 @@ class ModelCheckpointer:
         filepath = os.path.join(self.save_dir, filename)
         torch.save(checkpoint, filepath)
         
+        # Apply top-K management after saving
+        self._manage_top_k_models()
+        
         return filepath
+    
+    def _manage_top_k_models(self):
+        """Keep only top-K models per category and clean up the rest"""
+        try:
+            # Get all model files in the directory
+            model_files = [f for f in os.listdir(self.save_dir) if f.endswith('.pt')]
+            
+            if len(model_files) <= self.keep_top_k:
+                return  # Not enough models to need cleanup
+            
+            # Parse model files and group by category
+            categories = {
+                'accuracy': [],
+                'patchability': [], 
+                'efficiency': [],
+                'general': []  # Models without specific category
+            }
+            
+            for filename in model_files:
+                filepath = os.path.join(self.save_dir, filename)
+                
+                try:
+                    # Load checkpoint to get metrics
+                    checkpoint = torch.load(filepath, map_location='cpu')
+                    
+                    model_info = {
+                        'filename': filename,
+                        'filepath': filepath,
+                        'accuracy': checkpoint.get('accuracy', 0),
+                        'patchability': checkpoint.get('patchability_score', 0),
+                        'parameters': sum(p.numel() for p in checkpoint['model_state_dict'].values()),
+                        'efficiency': checkpoint.get('accuracy', 0) / max(sum(p.numel() for p in checkpoint['model_state_dict'].values()), 1)
+                    }
+                    
+                    # Determine category from filename
+                    if 'BEST_ACCURACY' in filename:
+                        categories['accuracy'].append(model_info)
+                    elif 'BEST_PATCHABILITY' in filename:
+                        categories['patchability'].append(model_info)
+                    elif 'BEST_EFFICIENCY' in filename:
+                        categories['efficiency'].append(model_info)
+                    else:
+                        categories['general'].append(model_info)
+                        
+                except Exception as e:
+                    print(f"⚠️  Warning: Could not parse model file {filename}: {e}")
+                    continue
+            
+            # Keep top-K in each category and mark others for deletion
+            files_to_delete = []
+            
+            for category, models in categories.items():
+                if len(models) <= self.keep_top_k:
+                    continue
+                
+                # Sort by appropriate metric
+                if category == 'accuracy':
+                    models.sort(key=lambda x: x['accuracy'], reverse=True)
+                elif category == 'patchability':
+                    models.sort(key=lambda x: x['patchability'], reverse=True)
+                elif category == 'efficiency':
+                    models.sort(key=lambda x: x['efficiency'], reverse=True)
+                else:  # general - sort by combined score
+                    models.sort(key=lambda x: x['accuracy'] + x['patchability'], reverse=True)
+                
+                # Mark excess models for deletion
+                models_to_delete = models[self.keep_top_k:]
+                files_to_delete.extend([m['filepath'] for m in models_to_delete])
+                
+                if models_to_delete:
+                    print(f"🧹 Cleaning up {category} category: keeping top-{self.keep_top_k}, removing {len(models_to_delete)} models")
+            
+            # Delete excess files
+            deleted_count = 0
+            for filepath in files_to_delete:
+                try:
+                    os.remove(filepath)
+                    deleted_count += 1
+                except Exception as e:
+                    print(f"⚠️  Warning: Could not delete {filepath}: {e}")
+            
+            if deleted_count > 0:
+                print(f"✅ Cleaned up {deleted_count} models, keeping top-{self.keep_top_k} per category")
+                
+        except Exception as e:
+            print(f"⚠️  Warning: Top-K management failed: {e}")
+    
+    def get_model_summary(self):
+        """Get summary of currently saved models"""
+        try:
+            model_files = [f for f in os.listdir(self.save_dir) if f.endswith('.pt')]
+            
+            categories = {
+                'accuracy': [],
+                'patchability': [], 
+                'efficiency': [],
+                'general': []
+            }
+            
+            for filename in model_files:
+                filepath = os.path.join(self.save_dir, filename)
+                
+                try:
+                    checkpoint = torch.load(filepath, map_location='cpu')
+                    
+                    model_info = {
+                        'filename': filename,
+                        'accuracy': checkpoint.get('accuracy', 0),
+                        'patchability': checkpoint.get('patchability_score', 0),
+                        'architecture': checkpoint.get('architecture', []),
+                        'seed': checkpoint.get('seed', 0)
+                    }
+                    
+                    # Determine category from filename
+                    if 'BEST_ACCURACY' in filename:
+                        categories['accuracy'].append(model_info)
+                    elif 'BEST_PATCHABILITY' in filename:
+                        categories['patchability'].append(model_info)
+                    elif 'BEST_EFFICIENCY' in filename:
+                        categories['efficiency'].append(model_info)
+                    else:
+                        categories['general'].append(model_info)
+                        
+                except Exception as e:
+                    print(f"⚠️  Warning: Could not parse model file {filename}: {e}")
+                    continue
+            
+            return categories
+            
+        except Exception as e:
+            print(f"⚠️  Warning: Could not get model summary: {e}")
+            return {}
     
     def load_model(self, filepath, model_class=None):
         """Load a saved model checkpoint"""
@@ -127,12 +268,13 @@ class GPUSaturatedSeedHunter:
     Maximally utilize GPU for parallel seed exploration with sparsity sweeping
     """
     
-    def __init__(self, num_gpus=1, device='cuda', save_promising=True, dataset='mnist', save_threshold=0.25):
+    def __init__(self, num_gpus=1, device='cuda', save_promising=True, dataset='mnist', save_threshold=0.25, keep_top_k=3):
         self.num_gpus = num_gpus
         self.device = device
         self.save_promising = save_promising
         self.dataset = dataset.lower()
         self.save_threshold = save_threshold  # Minimum accuracy threshold for saving
+        self.keep_top_k = keep_top_k  # Keep only top K models per category
         
         # Dataset-specific parameters
         if self.dataset == 'cifar10':
@@ -157,7 +299,7 @@ class GPUSaturatedSeedHunter:
         
         # Model checkpointer for saving promising models
         if self.save_promising:
-            self.checkpointer = ModelCheckpointer(dataset=self.dataset)
+            self.checkpointer = ModelCheckpointer(dataset=self.dataset, keep_top_k=self.keep_top_k)
         
         # Sparsity sweep configuration
         self.sparsity_config = SparsitySweepConfig()
@@ -457,7 +599,8 @@ class GPUSaturatedSeedHunter:
             'extrema_score': extrema_score,
             'parameters': sum(p.numel() for p in model.parameters()),
             'patchability': extrema_score * (1 - best_acc),  # High extrema + low acc = patchable
-            'sparsity': sparsity
+            'sparsity': sparsity,
+            'epochs': epochs
         }
     
     def gpu_saturated_search(self, num_architectures=50, seeds_per_arch=20, sparsity=0.02):
@@ -505,34 +648,12 @@ class GPUSaturatedSeedHunter:
                     result = future.result()
                     all_results.append(result)
                     
-                    # Print and save promising seeds immediately
+                    # Print promising seeds but don't save yet
                     if result['accuracy'] > self.save_threshold:
                         print(f"🌟 Promising: {result['architecture']} "
                               f"seed={result['seed']} "
                               f"acc={result['accuracy']:.2%} "
                               f"patch_score={result['patchability']:.3f}")
-                        
-                        # Save promising model if enabled
-                        if self.save_promising:
-                            # Recreate the model to save it
-                            torch.manual_seed(result['seed'])
-                            model = self.create_sparse_network(
-                                result['architecture'], 
-                                sparsity=result['sparsity'], 
-                                seed=result['seed']
-                            )
-                            
-                            # Add epoch info to metrics
-                            metrics_with_epoch = result.copy()
-                            metrics_with_epoch['epoch'] = 5  # We trained for 5 epochs
-                            
-                            filepath = self.checkpointer.save_promising_model(
-                                model, 
-                                result['architecture'], 
-                                result['seed'], 
-                                metrics_with_epoch
-                            )
-                            print(f"💾 Saved to: {filepath}")
         
         # Synchronize all streams if using CUDA
         if torch.cuda.is_available():
@@ -660,22 +781,6 @@ class GPUSaturatedSeedHunter:
                 for future in futures:
                     result = future.result()
                     results.append(result)
-                    
-                    # Save very promising models
-                    if result['accuracy'] > self.save_threshold and self.save_promising:
-                        torch.manual_seed(result['seed'])
-                        model = self.create_sparse_network(
-                            result['architecture'], 
-                            sparsity=result['sparsity'], 
-                            seed=result['seed']
-                        )
-                        
-                        metrics_with_epoch = result.copy()
-                        metrics_with_epoch['epoch'] = epochs
-                        
-                        filepath = self.checkpointer.save_promising_model(
-                            model, result['architecture'], result['seed'], metrics_with_epoch
-                        )
         
         return results
     
@@ -787,6 +892,53 @@ class GPUSaturatedSeedHunter:
             'best_efficiency': by_efficiency[0],
             'best_per_sparsity': sparsity_best
         }
+        
+        # Save top models if checkpointer is available
+        if hasattr(self, 'checkpointer') and self.save_promising:
+            print("\n💾 Saving top models from sweep with category markers...")
+            
+            top_models_data = all_results['best_combinations']
+            
+            models_to_save = {
+                'accuracy': top_models_data['best_accuracy'],
+                'patchability': top_models_data['best_patchability'],
+                'efficiency': top_models_data['best_efficiency']
+            }
+            
+            for category, result in models_to_save.items():
+                print(f"\n   🔧 Saving best {category}:")
+                print(f"      Architecture: {result['architecture']}")
+                print(f"      Seed: {result['seed']}")
+                print(f"      Sparsity: {result['sparsity']:.3f}")
+                print(f"      Accuracy: {result['accuracy']:.3f}")
+                print(f"      Patchability: {result['patchability']:.3f}")
+                
+                try:
+                    # Recreate the model
+                    torch.manual_seed(result['seed'])
+                    model = self.create_sparse_network(
+                        result['architecture'], 
+                        sparsity=result['sparsity'], 
+                        seed=result['seed']
+                    )
+                    
+                    # Add category and epoch info to metrics
+                    metrics_with_info = result.copy()
+                    metrics_with_info['epoch'] = result.get('epochs', self.sparsity_config.FINE_EPOCHS)
+                    metrics_with_info['category'] = f'best_{category}'
+                    
+                    filepath = self.checkpointer.save_promising_model(
+                        model, 
+                        result['architecture'], 
+                        result['seed'], 
+                        metrics_with_info
+                    )
+                    print(f"      ✅ Saved: {filepath}")
+                    
+                except Exception as e:
+                    print(f"      ❌ Failed to save best {category}: {e}")
+        else:
+            print("   ⚠️  Best model saving skipped (checkpointer not available or saving disabled)")
         
         return all_results
     
