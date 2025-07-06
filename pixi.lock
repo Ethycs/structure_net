@@ -1630,7 +1630,7 @@ packages:
 - pypi: ./
   name: structure-net
   version: 0.1.0
-  sha256: 2011c07d47ddb2e8cac79a1feaad717f9660939687a17835b669f7667fea127e
+  sha256: 4eef0d6e7e51d68fc29d81f55f51f0ea986aeb8d00719400248b28f16f73a934
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/tk-8.6.13-noxft_hd72426e_102.conda

@@ -25,5 +25,5 @@ pip = "*"
 structure_net = { path = ".", editable = true }
 
 [tool.pixi.tasks]
-install-torch = "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121"
+install-torch = "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128"
 test-cuda = "python -c \"import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')\""
