@@ -100,6 +100,24 @@ class SimpleForwardPass:
         
         return network, 0
 
+class FlattenWrapper(nn.Module):
+    """Wraps a network to flatten the input before the forward pass."""
+    def __init__(self, network):
+        super().__init__()
+        self.network = network
+
+    def forward(self, x):
+        # Flatten the input for linear layers
+        x = x.view(x.size(0), -1)
+        return self.network(x)
+
+    def __getattr__(self, name):
+        """Forward attribute calls to the wrapped network."""
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.network, name)
+
 class CIFAR10ImprovedExperiment:
     """Improved CIFAR-10 experiment using full structure_net capabilities."""
     
@@ -695,21 +713,108 @@ Growth Effectiveness:
             print(f"   ⚠️  Growth mechanism needs significant improvement")
             print(f"   🔧 Debug extrema detection and growth triggers")
 
+    def run_from_checkpoint(self, checkpoint_path):
+        """Run experiment starting from a saved model checkpoint."""
+        print(f"🔬 Running experiment from checkpoint: {checkpoint_path}")
+        print("=" * 60)
+
+        # Load checkpoint
+        if not os.path.exists(checkpoint_path):
+            print(f"❌ Checkpoint file not found: {checkpoint_path}")
+            return
+
+        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        architecture = checkpoint['architecture']
+        sparsity = checkpoint.get('sparsity', 0.02) # Default if not in checkpoint
+        seed = checkpoint.get('seed', 42)
+        
+        print(f"   Loaded architecture: {architecture}")
+        print(f"   Sparsity: {sparsity:.4f}")
+        print(f"   Seed: {seed}")
+
+        # Load data
+        train_loader, test_loader = self.load_cifar10_data(batch_size=128)
+
+        # Create and load the growth network
+        print("\n🌱 Creating and loading growth-enabled network...")
+        growth_network = self.create_growth_network(architecture, sparsity)
+        
+        # Manually remap state_dict keys to match the new network structure
+        original_state_dict = checkpoint['model_state_dict']
+        new_state_dict = growth_network.network.state_dict()
+
+        # Create a mapping from the sequential keys ('0.weight', '2.weight', etc.)
+        # to the ModuleList keys ('layers.0.weight', 'layers.1.weight', etc.)
+        # We find the linear layer keys from the original state dict to build the map
+        linear_layer_keys = sorted([int(k.split('.')[0]) for k in original_state_dict if k.endswith('.weight')])
+        
+        key_map = {}
+        for i, seq_key_idx in enumerate(linear_layer_keys):
+            key_map[f'{seq_key_idx}.weight'] = f'layers.{i}.weight'
+            key_map[f'{seq_key_idx}.bias'] = f'layers.{i}.bias'
+
+        for old_key, new_key in key_map.items():
+            if old_key in original_state_dict and new_key in new_state_dict:
+                new_state_dict[new_key] = original_state_dict[old_key]
+        
+        growth_network.network.load_state_dict(new_state_dict)
+        print("   ✅ Model state loaded successfully via key remapping.")
+
+        # Wrap the internal network to handle input flattening
+        growth_network.network = FlattenWrapper(growth_network.network)
+        print("   ✅ Wrapped internal network with FlattenWrapper.")
+
+        # Train the loaded network
+        results = self.train_growth_network(
+            growth_network, train_loader, test_loader, epochs=50
+        )
+
+        # Save results for this specific run
+        checkpoint_name = os.path.splitext(os.path.basename(checkpoint_path))[0]
+        results_path = os.path.join(self.save_dir, f"results_{checkpoint_name}.json")
+        with open(results_path, 'w') as f:
+            json.dump(results, f, indent=2, default=str)
+        print(f"\n💾 Results for this run saved to {results_path}")
+
+        # Plot and save the accuracy curve for this run
+        plt.figure(figsize=(10, 6))
+        plt.plot(results['test_accs'], label='Test Accuracy')
+        plt.title(f'Test Accuracy from {checkpoint_name}')
+        plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.legend()
+        plt.grid(True)
+        plot_path = os.path.join(self.save_dir, f"plot_{checkpoint_name}.png")
+        plt.savefig(plot_path)
+        plt.close()
+        print(f"📊 Plot for this run saved to {plot_path}")
+
+        return results
 
 def main():
     """Main function to run the improved CIFAR-10 experiment."""
-    print("🔬 CIFAR-10 IMPROVED EXPERIMENT")
-    print("=" * 60)
-    print("This experiment demonstrates the full structure_net capabilities:")
-    print("1. Proper multi-layer architectures for extrema detection")
-    print("2. Advanced growth mechanisms integration")
-    print("3. Comprehensive monitoring and analysis")
-    print("4. Comparison between baseline and growth-enabled networks")
-    print("=" * 60)
-    
-    # Run the comprehensive experiment
+    import argparse
+    parser = argparse.ArgumentParser(description='CIFAR-10 Improved Experiment')
+    parser.add_argument('--load-model', type=str, default=None,
+                       help='Path to a saved model checkpoint to continue training.')
+    args = parser.parse_args()
+
     experiment = CIFAR10ImprovedExperiment()
-    results = experiment.run_comprehensive_experiment()
+
+    if args.load_model:
+        results = experiment.run_from_checkpoint(args.load_model)
+    else:
+        print("🔬 CIFAR-10 IMPROVED EXPERIMENT")
+        print("=" * 60)
+        print("This experiment demonstrates the full structure_net capabilities:")
+        print("1. Proper multi-layer architectures for extrema detection")
+        print("2. Advanced growth mechanisms integration")
+        print("3. Comprehensive monitoring and analysis")
+        print("4. Comparison between baseline and growth-enabled networks")
+        print("=" * 60)
+        
+        # Run the comprehensive experiment
+        results = experiment.run_comprehensive_experiment()
     
     print(f"\n🎉 CIFAR-10 improved experiment completed!")
     print(f"📁 Results saved to {experiment.save_dir}/")
