@@ -1,20 +1,192 @@
-# patched_density_experiment.py
+#!/usr/bin/env python3
+"""
+CIFAR-10 Combined Experiment
 
+This script combines the Optimal Seed Finder and Patched Density experiments,
+and adapts them for the CIFAR-10 dataset.
+"""
+
+import sys
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader
 import numpy as np
-from tqdm import tqdm
 import os
-
+import json
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+import torch.multiprocessing as mp
+import torch.nn.functional as F
 os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+# Add project root to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from src.structure_net.core.minimal_network import MinimalNetwork
+
+def count_parameters(network):
+    """Count the number of active parameters in a sparse network."""
+    total_params = 0
+    if hasattr(network, 'connection_masks'):
+        for mask in network.connection_masks:
+            total_params += mask.sum().item()
+    else:
+        for param in network.parameters():
+            total_params += param.numel()
+    return total_params
+
+def load_cifar10_data(batch_size=64, is_worker=False):
+    """Load the CIFAR-10 dataset."""
+    if not is_worker:
+        print("📦 Loading CIFAR-10 dataset...")
+    
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+    
+    train_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    test_dataset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    
+    num_workers = 0 if is_worker else 4
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True)
+    
+    if not is_worker:
+        print(f"✅ Dataset loaded: {len(train_dataset)} train, {len(test_dataset)} test samples.")
+    return train_loader, test_loader
+
+def train_and_evaluate_arch_cifar(args):
+    """Worker function for parallel training on CIFAR-10."""
+    arch, device_id, batch_size = args
+    device = torch.device(f"cuda:{device_id}")
+    
+    print(f"  [GPU {device_id}] Testing architecture: {arch}")
+
+    train_loader, test_loader = load_cifar10_data(batch_size=batch_size, is_worker=True)
+
+    network = MinimalNetwork(
+        layer_sizes=arch,
+        sparsity=0.02,
+        activation='relu',
+        device=device
+    )
+    
+    optimizer = optim.Adam(network.parameters(), lr=0.001)
+    criterion = nn.CrossEntropyLoss()
+    best_test_acc = 0
+
+    for epoch in range(20): # epochs=20
+        network.train()
+        for data, target in train_loader:
+            data, target = data.to(device), target.to(device)
+            data = data.view(data.size(0), -1)
+            optimizer.zero_grad()
+            output = network(data)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
+
+        network.eval()
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for data, target in test_loader:
+                data, target = data.to(device), target.to(device)
+                data = data.view(data.size(0), -1)
+                output = network(data)
+                _, predicted = torch.max(output.data, 1)
+                total += target.size(0)
+                correct += (predicted == target).sum().item()
+        
+        test_acc = correct / total
+        if test_acc > best_test_acc:
+            best_test_acc = test_acc
+    
+    learns = best_test_acc > 0.15 # CIFAR-10 has 10 classes, so >10% is learning
+    result = {
+        'arch': arch,
+        'accuracy': best_test_acc,
+        'parameters': count_parameters(network),
+        'learns': learns
+    }
+    print(f"  [GPU {device_id}] Accuracy: {best_test_acc:.2%}, Learns: {learns}")
+    return result
+
+class OptimalSeedFinder:
+    """Find the smallest viable network to bootstrap from for CIFAR-10."""
+
+    def find_optimal_seed(self):
+        """Find minimal architecture that still learns in parallel."""
+        print("🔍 Finding optimal small seed network for CIFAR-10 in parallel...")
+        
+        input_size = 32 * 32 * 3
+        architectures = [
+            [input_size, 256, 10],
+            [input_size, 128, 10],
+            [input_size, 64, 10],
+            [input_size, 32, 10],
+            [input_size, 10],
+        ]
+        
+        num_gpus = torch.cuda.device_count()
+        print(f"Found {num_gpus} GPUs.")
+
+        args_list = [(arch, i % num_gpus, 64) for i, arch in enumerate(architectures)]
+
+        ctx = mp.get_context('spawn')
+        with ctx.Pool(processes=num_gpus) as pool:
+            worker_results = pool.map(train_and_evaluate_arch_cifar, args_list)
+
+        results = {str(res['arch']): res for res in worker_results}
+
+        learning_archs = [a for a in results if results[a]['learns']]
+        if not learning_archs:
+            print("⚠️ No architecture learned successfully.")
+            return None, results
+
+        optimal_arch_str = min(learning_archs, key=lambda a: results[a]['parameters'])
+        optimal_arch = json.loads(optimal_arch_str)
+        
+        print(f"✅ Found optimal seed for CIFAR-10: {optimal_arch}")
+        return optimal_arch, results
+
+def train_epoch(model, train_loader, optimizer, criterion, device):
+    """Train for one epoch"""
+    model.train()
+    total_loss = 0
+    
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
+        
+        optimizer.zero_grad()
+        output = model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+        
+        total_loss += loss.item()
+    
+    return total_loss / len(train_loader)
+
+
+def evaluate(model, test_loader, device):
+    """Evaluate model accuracy"""
+    model.eval()
+    correct = 0
+    
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            pred = output.argmax(dim=1, keepdim=True)
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    
+    accuracy = 100. * correct / len(test_loader.dataset)
+    return accuracy
 
 class PatchedDensityNetwork(nn.Module):
-    """Network with sparse scaffold + dense patches at extrema"""
+    """Patched density network for CIFAR-10."""
     
-    def __init__(self, architecture=[784, 256, 128, 10], scaffold_sparsity=0.02, device='cuda'):
+    def __init__(self, architecture=[3072, 256, 128, 10], scaffold_sparsity=0.02, device='cuda'):
         super().__init__()
         self.device = device
         self.architecture = architecture
@@ -52,7 +224,7 @@ class PatchedDensityNetwork(nn.Module):
             with torch.no_grad():
                 layer.weight.mul_(mask)
             
-            layers.append(layer)
+            layers.append(layer.to(self.device))
             
         return layers
     
@@ -236,137 +408,65 @@ class PatchedDensityNetwork(nn.Module):
             
         return stats
 
-
-def train_epoch(model, train_loader, optimizer, criterion, device):
-    """Train for one epoch"""
-    model.train()
-    total_loss = 0
-    
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        
-        optimizer.zero_grad()
-        output = model(data)
-        loss = criterion(output, target)
-        loss.backward()
-        optimizer.step()
-        
-        total_loss += loss.item()
-    
-    return total_loss / len(train_loader)
-
-
-def evaluate(model, test_loader, device):
-    """Evaluate model accuracy"""
-    model.eval()
-    correct = 0
-    
-    with torch.no_grad():
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
-    
-    accuracy = 100. * correct / len(test_loader.dataset)
-    return accuracy
-
-
 def main():
-    # Setup
+    """Main entry point for the script."""
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"🖥️  Using device: {device}")
-    
-    # Load MNIST
-    from torchvision import datasets, transforms
-    
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
-    
-    train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
-    test_dataset = datasets.MNIST('./data', train=False, transform=transform)
-    
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=1000, shuffle=False)
-    
-    # Create patched density network
-    model = PatchedDensityNetwork(device=device).to(device)
-    
-    # Phase 1: Train sparse scaffold
-    print("\n🏗️  Phase 1: Training sparse scaffold (2% sparsity)")
-    
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    criterion = nn.CrossEntropyLoss()
-    
-    for epoch in range(20):
-        train_loss = train_epoch(model, train_loader, optimizer, criterion, device)
-        test_acc = evaluate(model, test_loader, device)
-        print(f"  Epoch {epoch+1}/20, Test Acc: {test_acc:.2f}%")
-    
-    # Detect extrema
-    print("\nDetecting extrema on test set...")
-    with torch.no_grad():
-        data, _ = next(iter(test_loader))
-        _ = model(data.to(device))
-    extrema = model.detect_extrema()
-    
-    total_extrema = sum(len(v) for v in extrema.get('high', {}).values()) + \
-                   sum(len(v) for v in extrema.get('low', {}).values())
-    print(f"\nFound {sum(len(v) for v in extrema.get('high', {}).values())} high extrema, "
-          f"{sum(len(v) for v in extrema.get('low', {}).values())} low extrema")
-    
-    # Phase 2: Create dense patches
-    print(f"\n🔧 Phase 2: Creating dense patches (density=0.5)")
-    patches_created = model.create_dense_patches(extrema, patch_density=0.5)
-    print(f"✅ Created {patches_created} dense patches")
-    
-    # Phase 3: Train with dual learning rates
-    print(f"\n🎯 Phase 3: Training with dual learning rates")
-    print(f"   Scaffold LR: 0.0001 (slow)")
-    print(f"   Patch LR: 0.0005 (faster)")
-    
-    # Create parameter groups
-    param_groups = [
-        {'params': model.scaffold.parameters(), 'lr': 0.0001, 'name': 'scaffold'}
-    ]
-    
-    for patch_name, patch in model.patches.items():
-        param_groups.append({
-            'params': patch.parameters(),
-            'lr': 0.0005,
-            'name': f'patch_{patch_name}'
-        })
-    
-    optimizer = optim.Adam(param_groups)
-    
-    best_accuracy = 0
-    for epoch in range(30):
-        train_loss = train_epoch(model, train_loader, optimizer, criterion, device)
-        test_acc = evaluate(model, test_loader, device)
-        
-        if epoch % 5 == 0:
-            patch_stats = model.analyze_patch_effectiveness()
-            print(f"  Epoch {epoch}: Test Acc: {test_acc:.2f}%")
-            print(f"    Active patches: {patch_stats['active_count']}/{len(model.patches)}")
-            print(f"    Avg patch weight norm: {patch_stats['avg_contribution']:.4f}")
-        
-        best_accuracy = max(best_accuracy, test_acc)
-    
-    print(f"\n🎉 Experiment completed. Best accuracy: {best_accuracy:.2f}%")
-    
-    # Final analysis
-    print("\n📊 Final Analysis:")
-    print(f"  Sparse scaffold parameters: {sum(p.numel() for p in model.scaffold.parameters())}")
-    print(f"  Patch parameters: {sum(p.numel() for p in model.patches.parameters())}")
-    print(f"  Total parameters: {sum(p.numel() for p in model.parameters())}")
-    
-    # Compare to dense network
-    dense_params = sum((model.architecture[i] * model.architecture[i+1]) for i in range(len(model.architecture)-1))
-    sparsity = 1 - (sum(p.numel() for p in model.parameters()) / dense_params)
-    print(f"  Effective sparsity: {sparsity:.2%}")
 
+    if not torch.cuda.is_available():
+        print("⚠️  CUDA not available. Running on CPU will be very slow.")
+
+    save_dir = "data/cifar10_combined_results"
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Step 1: Use the pre-determined optimal seed
+    optimal_seed_arch = [3072, 10]
+    print(f"✅ Using optimal seed for CIFAR-10: {optimal_seed_arch}")
+
+    if optimal_seed_arch:
+        # Step 2: Run the patched density experiment
+        print("\n" + "="*60)
+        print("🔬 Running Patched Density Experiment for CIFAR-10")
+        print("="*60)
+
+        patched_network = PatchedDensityNetwork(architecture=optimal_seed_arch, device=device)
+        
+        # Phase 1: Train sparse scaffold
+        train_loader, test_loader = load_cifar10_data()
+        print("\n🏗️  Phase 1: Training sparse scaffold")
+        optimizer = optim.Adam(patched_network.parameters(), lr=0.001)
+        criterion = nn.CrossEntropyLoss()
+        for epoch in range(20):
+            train_epoch(patched_network, train_loader, optimizer, criterion, device)
+            test_acc = evaluate(patched_network, test_loader, device)
+            print(f"  Epoch {epoch+1}/20, Scaffold Test Acc: {test_acc:.2f}%")
+
+        # Detect extrema
+        print("\nDetecting extrema on test set...")
+        with torch.no_grad():
+            data, _ = next(iter(test_loader))
+            _ = patched_network(data.to(device))
+        extrema = patched_network.detect_extrema()
+        
+        # Phase 2: Create dense patches
+        print(f"\n🔧 Phase 2: Creating dense patches")
+        patches_created = patched_network.create_dense_patches(extrema)
+        print(f"✅ Created {patches_created} dense patches")
+
+        # Phase 3: Train with dual learning rates
+        print(f"\n🎯 Phase 3: Training with dual learning rates")
+        param_groups = [
+            {'params': patched_network.scaffold.parameters(), 'lr': 0.0001},
+            {'params': patched_network.patches.parameters(), 'lr': 0.0005}
+        ]
+        optimizer = optim.Adam(param_groups)
+        
+        for epoch in range(30):
+            train_epoch(patched_network, train_loader, optimizer, criterion, device)
+            test_acc = evaluate(patched_network, test_loader, device)
+            print(f"  Epoch {epoch+1}/30, Patched Test Acc: {test_acc:.2f}%")
+
+    print("\n🎉 All CIFAR-10 experiments completed.")
 
 if __name__ == "__main__":
     main()
