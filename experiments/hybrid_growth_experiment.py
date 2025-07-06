@@ -179,24 +179,53 @@ def create_lsuv_sparse_scaffold(architecture, sparsity, device, sample_batch, sk
 def create_sparse_scaffold_from_pretrained(architecture, sparsity, device, pretrained_state_dict):
     """Creates a sparse scaffold from pretrained weights WITHOUT LSUV."""
     layers = nn.ModuleList()
+    
+    # Debug: Print all available keys in the pretrained state dict
+    print(f"   🔍 Available keys in pretrained checkpoint:")
+    for key in sorted(pretrained_state_dict.keys()):
+        print(f"      {key}: {pretrained_state_dict[key].shape if hasattr(pretrained_state_dict[key], 'shape') else type(pretrained_state_dict[key])}")
+    
     for i in range(len(architecture) - 1):
         in_features, out_features = architecture[i], architecture[i+1]
         layer = nn.Linear(in_features, out_features).to(device)
         
-        # Load pretrained weights if available
-        layer_key = f'scaffold.{i}.weight'
-        if layer_key in pretrained_state_dict:
-            layer.weight.data = pretrained_state_dict[layer_key]
-            layer.bias.data = pretrained_state_dict[f'scaffold.{i}.bias']
-            
-            # CRITICAL FIX: Extract the original mask from pretrained weights
-            # The pretrained model already has its optimal sparsity pattern!
-            original_mask = (layer.weight.data != 0).float()
-            layer.register_buffer('mask', original_mask)
-            print(f"   ✅ Loaded pretrained weights for layer {i} (preserved {original_mask.sum().item()}/{original_mask.numel()} connections)")
-            
-            # DON'T apply new random mask - weights are already optimally sparse!
-        else:
+        # Try different possible key patterns for pretrained weights
+        # The checkpoint uses nn.Sequential indexing: 0, 2, 4 (with ReLU in between)
+        sequential_layer_idx = i * 2  # Map our layer index to sequential index
+        possible_keys = [
+            f'{sequential_layer_idx}.weight',  # CRITICAL: Sequential pattern (0, 2, 4)
+            f'{i}.weight',           # Simple numeric pattern
+            f'scaffold.{i}.weight',  # Original attempt
+            f'layers.{i}.weight',    # Alternative pattern
+            f'sparse_layers.{i}.weight',  # Another pattern
+            f'network.{i}.weight',   # Yet another pattern
+        ]
+        
+        loaded = False
+        for layer_key in possible_keys:
+            if layer_key in pretrained_state_dict:
+                layer.weight.data = pretrained_state_dict[layer_key]
+                bias_key = layer_key.replace('.weight', '.bias')
+                if bias_key in pretrained_state_dict:
+                    layer.bias.data = pretrained_state_dict[bias_key]
+                
+                # CRITICAL FIX: Load the original mask from checkpoint
+                # The pretrained model stores the actual mask used during training
+                mask_key = layer_key.replace('.weight', '.mask')
+                if mask_key in pretrained_state_dict:
+                    original_mask = pretrained_state_dict[mask_key]
+                    layer.register_buffer('mask', original_mask)
+                    print(f"   ✅ Loaded pretrained weights & mask for layer {i} using key '{layer_key}' (preserved {original_mask.sum().item()}/{original_mask.numel()} connections)")
+                else:
+                    # Fallback: extract mask from non-zero weights
+                    original_mask = (layer.weight.data != 0).float()
+                    layer.register_buffer('mask', original_mask)
+                    print(f"   ✅ Loaded pretrained weights for layer {i} using key '{layer_key}' (extracted mask: {original_mask.sum().item()}/{original_mask.numel()} connections)")
+                
+                loaded = True
+                break
+        
+        if not loaded:
             # Only create new mask for layers without pretrained weights
             mask = _create_sparse_mask((out_features, in_features), sparsity).to(device)
             layer.register_buffer('mask', mask)
@@ -482,7 +511,16 @@ class HybridGrowthNetwork(nn.Module):
             # Store the input to this layer (for patch creation)
             self.layer_inputs.append(h.detach())
             
-            sparse_out = F.linear(h, layer.weight * layer.mask, layer.bias)
+            # CRITICAL FIX: Apply mask during forward pass like the original network
+            # The original network applies mask during forward, not just during initialization
+            if hasattr(layer, 'mask'):
+                # Apply the mask to weights during forward pass
+                masked_weight = layer.weight * layer.mask
+                sparse_out = F.linear(h, masked_weight, layer.bias)
+            else:
+                # Fallback for layers without masks
+                sparse_out = layer(h)
+            
             patch_out = self._compute_patch_contributions(h, i, sparse_out)
             h = sparse_out + patch_out
             
@@ -743,7 +781,21 @@ def main():
         print(f"🔬 Loading model from checkpoint: {args.load_model}")
         checkpoint = torch.load(args.load_model, map_location=device)
         initial_arch = checkpoint['architecture']
+        
+        # Debug: Print the loaded architecture
+        print(f"   🏗️  Loaded architecture: {initial_arch}")
+        
+        # CRITICAL FIX: Extract sparsity from filename if not in checkpoint
         base_sparsity = checkpoint.get('sparsity', 0.02)
+        if 'patch' in args.load_model:
+            # Extract sparsity from filename like "patch0.065"
+            import re
+            sparsity_match = re.search(r'patch([\d.]+)', args.load_model)
+            if sparsity_match:
+                base_sparsity = float(sparsity_match.group(1))
+                print(f"   🎯 Extracted sparsity from filename: {base_sparsity}")
+        
+        print(f"   📊 Using sparsity: {base_sparsity} (from {'checkpoint' if 'sparsity' in checkpoint else 'filename'})")
         
         # Create network with pretrained flag and state dict
         network = HybridGrowthNetwork(
