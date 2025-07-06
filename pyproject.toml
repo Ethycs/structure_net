@@ -10,21 +10,20 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [tool.pixi.workspace]
-channels = ["conda-forge", "pytorch", "nvidia"]
+channels = ["conda-forge"]
 platforms = ["linux-64"]
 
 [tool.pixi.dependencies]
 python = "3.11.*"
-pytorch = { version = ">=2.4", channel = "pytorch", build = "*cuda*" }
-torchvision = { version = "*", channel = "pytorch" }
-pytorch-cuda = { version = "12.4.*", channel = "pytorch" }
 matplotlib = "*"
 numpy = "*"
 pytest = "*"
 tqdm = "*"
+pip = "*"
 
 [tool.pixi.pypi-dependencies]
 structure_net = { path = ".", editable = true }
 
 [tool.pixi.tasks]
+install-torch = "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121"
 test-cuda = "python -c \"import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')\""
