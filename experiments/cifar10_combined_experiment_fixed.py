@@ -193,7 +193,7 @@ def evaluate(model, test_loader, device):
 class PatchedDensityNetwork(nn.Module):
     """Patched density network for CIFAR-10."""
     
-    def __init__(self, architecture=[3072, 256, 128, 10], scaffold_sparsity=0.02, device='cuda'):
+    def __init__(self, architecture=[3072, 256, 128, 10], scaffold_sparsity=0.05, device='cuda'):
         super().__init__()
         self.device = device
         self.architecture = architecture
@@ -445,10 +445,11 @@ def main():
     save_dir = "data/cifar10_combined_results"
     os.makedirs(save_dir, exist_ok=True)
 
-    # Step 1: Use a multi-layer architecture that can have extrema
+    # Step 1: Use a wider architecture with more capacity for CIFAR-10
     # The original [3072, 10] has no hidden layers, so no extrema can be detected
-    optimal_seed_arch = [3072, 64, 10]  # Add a hidden layer for extrema detection
-    print(f"✅ Using multi-layer seed for CIFAR-10: {optimal_seed_arch}")
+    # [3072, 64, 10] was too small (56/64 neurons dead), need more capacity
+    optimal_seed_arch = [3072, 256, 128, 10]  # Wider architecture for complex task
+    print(f"✅ Using wider seed for CIFAR-10: {optimal_seed_arch}")
 
     if optimal_seed_arch:
         # Step 2: Run the patched density experiment
