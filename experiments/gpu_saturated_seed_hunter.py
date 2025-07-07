@@ -20,68 +20,165 @@ import json
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+# Note: CUDA_VISIBLE_DEVICES will be set by command line arguments in main()
 
 class ModelCheckpointer:
-    """Save promising models for future experiments with top-K management"""
+    """Save promising models for future experiments with datetime organization"""
     
-    def __init__(self, save_dir="data/promising_models", dataset="mnist", keep_top_k=3):
-        self.save_dir = save_dir
+    def __init__(self, save_dir="data/promising_models", dataset="mnist", run_args=None):
         self.dataset = dataset.lower()
-        self.keep_top_k = keep_top_k  # Keep only top K models per category
-        os.makedirs(save_dir, exist_ok=True)
         
-        print(f"📁 ModelCheckpointer initialized:")
-        print(f"   Save directory: {save_dir}")
-        print(f"   Dataset: {dataset}")
-        print(f"   Keep top-{keep_top_k} models per category")
-    
-    def save_promising_model(self, model, architecture, seed, metrics, optimizer=None):
-        """Save the complete model state for future experiments with top-K management"""
+        # Create datetime-based subdirectory
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        checkpoint = {
-            # Model state
-            'model_state_dict': model.state_dict(),
-            'architecture': architecture,
-            'seed': seed,
-            
-            # Training state
-            'epoch': metrics.get('epoch', 0),
-            'optimizer_state_dict': optimizer.state_dict() if optimizer else None,
-            
-            # Performance metrics
-            'accuracy': metrics['accuracy'],
-            'patchability_score': metrics.get('patchability', 0),
-            'extrema_counts': metrics.get('extrema_score', 0), 
-            
-            # Neuron analysis
-            'dead_neurons': metrics.get('dead_neurons', 0),
-            'saturated_neurons': metrics.get('saturated_neurons', 0),
-            'activation_patterns': metrics.get('activation_patterns'),
-            
-            # Reproducibility
-            'torch_version': torch.__version__,
-            'random_state': torch.get_rng_state(),
-            'cuda_random_state': torch.cuda.get_rng_state() if torch.cuda.is_available() else None,
+        # Create args string for folder name
+        if run_args:
+            args_str = f"_{run_args.mode}"
+            if hasattr(run_args, 'sparsity_list') and run_args.sparsity_list:
+                args_str += f"_custom"
+            elif run_args.mode == 'range':
+                args_str += f"_{run_args.sparsity_min:.3f}-{run_args.sparsity_max:.3f}"
+            elif run_args.mode == 'single':
+                args_str += f"_{run_args.sparsity:.3f}"
+            if hasattr(run_args, 'disable_sorting') and run_args.disable_sorting:
+                args_str += "_nosort"
+            if hasattr(run_args, 'gpu_ids') and run_args.gpu_ids:
+                args_str += f"_gpu{run_args.gpu_ids.replace(',', '')}"
+        else:
+            args_str = ""
+        
+        self.run_dir = os.path.join(save_dir, f"{timestamp}{args_str}")
+        os.makedirs(self.run_dir, exist_ok=True)
+        
+        # Track global best across all sparsity levels
+        self.global_best = {
+            'accuracy': {'value': 0.0, 'model': None},
+            'patchability': {'value': 0.0, 'model': None},
+            'efficiency': {'value': 0.0, 'model': None}
         }
         
-        # Build filename with category if present
-        base_filename = f"model_{self.dataset}_{len(architecture)}layers_seed{seed}_acc{metrics['accuracy']:.2f}_patch{metrics.get('patchability', 0):.3f}"
+        # Track best for each sparsity level
+        self.sparsity_best = {}  # sparsity -> {category -> {value, model}}
         
-        # Add category suffix if present
-        if 'category' in metrics:
-            category_suffix = f"_{metrics['category'].upper()}"
+        print(f"📁 ModelCheckpointer initialized:")
+        print(f"   Run directory: {self.run_dir}")
+        print(f"   Dataset: {dataset}")
+        print(f"   Global best tracking enabled")
+    
+    def save_promising_model(self, model, architecture, seed, metrics, optimizer=None):
+        """Save model if it's best globally OR best for its sparsity level in any category"""
+        
+        # Calculate metrics for comparison
+        accuracy = metrics['accuracy']
+        patchability = metrics.get('patchability', 0)
+        parameters = sum(p.numel() for p in model.parameters())
+        efficiency = accuracy / parameters
+        sparsity = metrics.get('sparsity', 0.02)
+        
+        # Initialize sparsity tracking if needed
+        if sparsity not in self.sparsity_best:
+            self.sparsity_best[sparsity] = {
+                'accuracy': {'value': 0.0, 'model': None},
+                'patchability': {'value': 0.0, 'model': None},
+                'efficiency': {'value': 0.0, 'model': None}
+            }
+        
+        # Check if this model is best globally OR best for this sparsity level
+        categories_to_save = []
+        save_reasons = []
+        
+        # Global best checks
+        if accuracy > self.global_best['accuracy']['value']:
+            categories_to_save.append(('accuracy', 'GLOBAL'))
+            self.global_best['accuracy']['value'] = accuracy
+            save_reasons.append(f"New global best accuracy: {accuracy:.2%}")
+            
+        if patchability > self.global_best['patchability']['value']:
+            categories_to_save.append(('patchability', 'GLOBAL'))
+            self.global_best['patchability']['value'] = patchability
+            save_reasons.append(f"New global best patchability: {patchability:.3f}")
+            
+        if efficiency > self.global_best['efficiency']['value']:
+            categories_to_save.append(('efficiency', 'GLOBAL'))
+            self.global_best['efficiency']['value'] = efficiency
+            save_reasons.append(f"New global best efficiency: {efficiency:.6f}")
+        
+        # Sparsity-specific best checks
+        if accuracy > self.sparsity_best[sparsity]['accuracy']['value']:
+            categories_to_save.append(('accuracy', f'SPARSITY_{sparsity:.3f}'))
+            self.sparsity_best[sparsity]['accuracy']['value'] = accuracy
+            save_reasons.append(f"New sparsity {sparsity:.1%} best accuracy: {accuracy:.2%}")
+            
+        if patchability > self.sparsity_best[sparsity]['patchability']['value']:
+            categories_to_save.append(('patchability', f'SPARSITY_{sparsity:.3f}'))
+            self.sparsity_best[sparsity]['patchability']['value'] = patchability
+            save_reasons.append(f"New sparsity {sparsity:.1%} best patchability: {patchability:.3f}")
+            
+        if efficiency > self.sparsity_best[sparsity]['efficiency']['value']:
+            categories_to_save.append(('efficiency', f'SPARSITY_{sparsity:.3f}'))
+            self.sparsity_best[sparsity]['efficiency']['value'] = efficiency
+            save_reasons.append(f"New sparsity {sparsity:.1%} best efficiency: {efficiency:.6f}")
+        
+        # Only save if model is best in at least one category
+        if not categories_to_save:
+            return None
+        
+        saved_files = []
+        
+        for category, scope in categories_to_save:
+            checkpoint = {
+                # Model state
+                'model_state_dict': model.state_dict(),
+                'architecture': architecture,
+                'seed': seed,
+                'sparsity': sparsity,
+                
+                # Training state
+                'epoch': metrics.get('epoch', 0),
+                'optimizer_state_dict': optimizer.state_dict() if optimizer else None,
+                
+                # Performance metrics
+                'accuracy': accuracy,
+                'patchability_score': patchability,
+                'extrema_counts': metrics.get('extrema_score', 0), 
+                'efficiency': efficiency,
+                
+                # Training settings (IMPORTANT!)
+                'neuron_sorting_enabled': metrics.get('sorted', True),
+                'sort_frequency': metrics.get('sort_frequency', 5),
+                'training_epochs': metrics.get('epochs', 15),
+                
+                # Neuron analysis
+                'dead_neurons': metrics.get('dead_neurons', 0),
+                'saturated_neurons': metrics.get('saturated_neurons', 0),
+                'activation_patterns': metrics.get('activation_patterns'),
+                
+                # Reproducibility
+                'torch_version': torch.__version__,
+                'random_state': torch.get_rng_state(),
+                'cuda_random_state': torch.cuda.get_rng_state() if torch.cuda.is_available() else None,
+            }
+            
+            # Build filename with sparsity and category scope
+            base_filename = f"model_{self.dataset}_{len(architecture)}layers_seed{seed}_acc{accuracy:.2f}_patch{patchability:.3f}_sparse{sparsity:.3f}"
+            category_suffix = f"_BEST_{category.upper()}_{scope}"
             filename = f"{base_filename}{category_suffix}.pt"
-        else:
-            filename = f"{base_filename}.pt"
+            
+            filepath = os.path.join(self.run_dir, filename)
+            torch.save(checkpoint, filepath)
+            saved_files.append(filepath)
+            
+            if scope == 'GLOBAL':
+                print(f"      💾 New global best {category}: {filepath}")
+            else:
+                print(f"      💾 New sparsity {sparsity:.1%} best {category}: {filepath}")
         
-        filepath = os.path.join(self.save_dir, filename)
-        torch.save(checkpoint, filepath)
+        # Print summary of why this model was saved
+        if save_reasons:
+            print(f"      🎯 Save reasons: {'; '.join(save_reasons)}")
         
-        # Apply top-K management after saving
-        self._manage_top_k_models()
-        
-        return filepath
+        return saved_files
     
     def _manage_top_k_models(self):
         """Keep only top-K models per category and clean up the rest"""
@@ -244,7 +341,7 @@ class GPUSaturatedSeedHunter:
         
         # Model checkpointer for saving promising models
         if self.save_promising:
-            self.checkpointer = ModelCheckpointer(dataset=self.dataset, keep_top_k=self.keep_top_k)
+            self.checkpointer = ModelCheckpointer(dataset=self.dataset, run_args=getattr(self, '_run_args', None))
         
         # Sparsity sweep configuration
         self.sparsity_config = SparsitySweepConfig()
@@ -547,9 +644,13 @@ class GPUSaturatedSeedHunter:
         else:
             return self._test_seed_impl(architecture, seed, sparsity, epochs)
     
-    def _test_seed_impl(self, architecture, seed, sparsity, epochs=15, sort_every_epochs=5):
-        """Implementation of seed testing with periodic neuron sorting."""
+    def _test_seed_impl(self, architecture, seed, sparsity, epochs=15):
+        """Implementation of seed testing with configurable neuron sorting."""
         torch.manual_seed(seed)
+        
+        # Get sorting configuration from hunter instance
+        disable_sorting = getattr(self, '_disable_sorting', False)
+        sort_frequency = getattr(self, '_sort_frequency', 5)
         
         # Create sparse network
         model = self.create_sparse_network(architecture, sparsity=sparsity, seed=seed)
@@ -563,7 +664,10 @@ class GPUSaturatedSeedHunter:
         # Only print for first few models to avoid spam
         should_print = seed < 3 and len(architecture) <= 3
         if should_print:
-            print(f"  🌱 Training arch {architecture} seed {seed} with sorting every {sort_every_epochs} epochs...")
+            if disable_sorting:
+                print(f"  🌱 Training arch {architecture} seed {seed} (no sorting)...")
+            else:
+                print(f"  🌱 Training arch {architecture} seed {seed} with sorting every {sort_frequency} epochs...")
         
         best_acc = 0
         for epoch in range(epochs):
@@ -592,8 +696,8 @@ class GPUSaturatedSeedHunter:
                     optimizer.step()
 
             # --- NEURON SORTING MAINTENANCE ---
-            # Perform maintenance (sorting) every few epochs
-            if (epoch + 1) % sort_every_epochs == 0 and epoch < epochs - 1:
+            # Perform maintenance (sorting) every few epochs if enabled
+            if not disable_sorting and (epoch + 1) % sort_frequency == 0 and epoch < epochs - 1:
                 if should_print:
                     print(f"    🔄 Epoch {epoch+1}: Performing maintenance sort...")
                 self.sort_network_layers(model)
@@ -627,7 +731,8 @@ class GPUSaturatedSeedHunter:
             'patchability': extrema_score * (1 - best_acc),  # High extrema + low acc = patchable
             'sparsity': sparsity,
             'epochs': epochs,
-            'sorted': True  # Flag to indicate this model used neuron sorting
+            'sorted': not disable_sorting,  # Flag to indicate if this model used neuron sorting
+            'sort_frequency': sort_frequency if not disable_sorting else None
         }
     
     def gpu_saturated_search(self, num_architectures=50, seeds_per_arch=20, sparsity=0.02):
@@ -779,8 +884,8 @@ def main():
     
     parser = argparse.ArgumentParser(description='GPU Saturated Seed Hunter with Hybrid Sparsity Sweep')
     parser.add_argument('--mode', type=str, default='single', 
-                       choices=['single', 'coarse', 'hybrid'],
-                       help='Search mode: single sparsity, coarse sweep, or hybrid sweep (default: single)')
+                       choices=['single', 'sweep', 'range'],
+                       help='Search mode: single sparsity, predefined sweep, or custom range (default: single)')
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
                        help='Dataset to use (default: mnist)')
     parser.add_argument('--num-architectures', type=int, default=30,
@@ -789,30 +894,175 @@ def main():
                        help='Number of seeds per architecture (default: 10)')
     parser.add_argument('--sparsity', type=float, default=0.02,
                        help='Sparsity level for single mode (default: 0.02)')
+    parser.add_argument('--sparsity-min', type=float, default=0.001,
+                       help='Minimum sparsity for range mode (default: 0.001)')
+    parser.add_argument('--sparsity-max', type=float, default=0.1,
+                       help='Maximum sparsity for range mode (default: 0.1)')
+    parser.add_argument('--sparsity-step', type=float, default=0.01,
+                       help='Sparsity increment for range mode (default: 0.01)')
+    parser.add_argument('--sparsity-list', type=str, default=None,
+                       help='Comma-separated list of sparsities (e.g., "0.01,0.02,0.05,0.1")')
     parser.add_argument('--thresh', type=float, default=0.25,
                        help='Patchability threshold for saving models (default: 0.25 = 25%%)')
+    parser.add_argument('--disable-sorting', action='store_true',
+                       help='Disable neuron sorting during training')
+    parser.add_argument('--sort-frequency', type=int, default=5,
+                       help='Sort neurons every N epochs (default: 5)')
+    parser.add_argument('--num-gpus', type=int, default=1,
+                       help='Number of GPUs to use for parallel processing (default: 1)')
+    parser.add_argument('--gpu-ids', type=str, default=None,
+                       help='Comma-separated GPU IDs to use (e.g., "0,1,2"). If not specified, uses first N GPUs.')
     
     args = parser.parse_args()
     
-    print("🔍 GPU Saturated Seed Hunter with Systematic Architecture Generation")
-    print("="*70)
+    # Configure GPU usage
+    if args.gpu_ids:
+        gpu_list = [int(gpu.strip()) for gpu in args.gpu_ids.split(',')]
+        os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, gpu_list))
+        effective_num_gpus = len(gpu_list)
+        print(f"🎮 Using specified GPUs: {gpu_list}")
+    else:
+        effective_num_gpus = min(args.num_gpus, torch.cuda.device_count()) if torch.cuda.is_available() else 1
+        if torch.cuda.is_available():
+            gpu_list = list(range(effective_num_gpus))
+            os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, gpu_list))
+            print(f"🎮 Using first {effective_num_gpus} GPUs: {gpu_list}")
+        else:
+            print("🎮 CUDA not available, using CPU")
+    
+    # Determine sparsity values to test
+    if args.mode == 'single':
+        sparsity_values = [args.sparsity]
+    elif args.mode == 'sweep':
+        # Predefined comprehensive sweep
+        sparsity_values = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2]
+    elif args.mode == 'range':
+        if args.sparsity_list:
+            # Parse comma-separated list
+            sparsity_values = [float(s.strip()) for s in args.sparsity_list.split(',')]
+        else:
+            # Generate range
+            sparsity_values = []
+            current = args.sparsity_min
+            while current <= args.sparsity_max:
+                sparsity_values.append(current)
+                current += args.sparsity_step
+    
+    print("🔍 GPU Saturated Seed Hunter with Systematic Architecture Generation & Neuron Sorting")
+    print("="*80)
     print(f"Mode: {args.mode.upper()}")
     print(f"Dataset: {args.dataset.upper()}")
     print(f"Architectures: {args.num_architectures}")
     print(f"Seeds per arch: {args.seeds_per_arch}")
+    print(f"Neuron sorting: {'Disabled' if args.disable_sorting else f'Every {args.sort_frequency} epochs'}")
+    
     if args.mode == 'single':
         print(f"Sparsity: {args.sparsity:.1%}")
-    print("="*70)
+    else:
+        print(f"Sparsity values: {[f'{s:.1%}' for s in sparsity_values]}")
+        print(f"Total sparsity levels: {len(sparsity_values)}")
+        print(f"Total experiments: {args.num_architectures * args.seeds_per_arch * len(sparsity_values)}")
+    print("="*80)
     
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    hunter = GPUSaturatedSeedHunter(num_gpus=1, device=device, dataset=args.dataset, save_threshold=args.thresh)
+    hunter = GPUSaturatedSeedHunter(num_gpus=effective_num_gpus, device=device, dataset=args.dataset, save_threshold=args.thresh)
     
-    # Single sparsity search
-    results = hunter.gpu_saturated_search(
-        num_architectures=args.num_architectures,
-        seeds_per_arch=args.seeds_per_arch,
-        sparsity=args.sparsity
-    )
+    # Store all results across sparsity levels
+    all_sparsity_results = {}
+    
+    for sparsity in sparsity_values:
+        print(f"\n🎯 Testing Sparsity Level: {sparsity:.1%}")
+        print("-" * 50)
+        
+        # Update hunter's test implementation to use sorting settings
+        hunter._disable_sorting = args.disable_sorting
+        hunter._sort_frequency = args.sort_frequency
+        
+        results = hunter.gpu_saturated_search(
+            num_architectures=args.num_architectures,
+            seeds_per_arch=args.seeds_per_arch,
+            sparsity=sparsity
+        )
+        
+        all_sparsity_results[sparsity] = results
+        
+        # Print summary for this sparsity level
+        best_acc = results['best_accuracy']
+        print(f"\n📊 Sparsity {sparsity:.1%} Summary:")
+        print(f"   Best accuracy: {best_acc['accuracy']:.2%} (arch: {best_acc['architecture']}, seed: {best_acc['seed']})")
+    
+    # Cross-sparsity analysis
+    if len(sparsity_values) > 1:
+        print(f"\n🔬 CROSS-SPARSITY ANALYSIS")
+        print("="*50)
+        
+        # Find overall best across all sparsity levels
+        all_results = []
+        for sparsity, results in all_sparsity_results.items():
+            for result in results['all_results']:
+                result['tested_sparsity'] = sparsity
+                all_results.append(result)
+        
+        # Overall best performers
+        overall_best_acc = max(all_results, key=lambda x: x['accuracy'])
+        overall_best_patch = max(all_results, key=lambda x: x['patchability'])
+        overall_best_eff = max(all_results, key=lambda x: x['accuracy']/x['parameters'])
+        
+        print(f"\n🏆 Overall Best Accuracy: {overall_best_acc['accuracy']:.2%}")
+        print(f"   Architecture: {overall_best_acc['architecture']}")
+        print(f"   Seed: {overall_best_acc['seed']}")
+        print(f"   Sparsity: {overall_best_acc['tested_sparsity']:.1%}")
+        
+        print(f"\n🎯 Overall Best Patchability: {overall_best_patch['patchability']:.3f}")
+        print(f"   Architecture: {overall_best_patch['architecture']}")
+        print(f"   Accuracy: {overall_best_patch['accuracy']:.2%}")
+        print(f"   Sparsity: {overall_best_patch['tested_sparsity']:.1%}")
+        
+        print(f"\n⚡ Overall Best Efficiency: {overall_best_eff['accuracy']/overall_best_eff['parameters']*1000:.3f} acc/kparam")
+        print(f"   Architecture: {overall_best_eff['architecture']}")
+        print(f"   Accuracy: {overall_best_eff['accuracy']:.2%}")
+        print(f"   Sparsity: {overall_best_eff['tested_sparsity']:.1%}")
+        
+        # Sparsity trend analysis
+        print(f"\n📈 Sparsity Trend Analysis:")
+        sparsity_summary = {}
+        for sparsity in sorted(sparsity_values):
+            results = all_sparsity_results[sparsity]
+            avg_acc = np.mean([r['accuracy'] for r in results['all_results']])
+            avg_patch = np.mean([r['patchability'] for r in results['all_results']])
+            best_acc = results['best_accuracy']['accuracy']
+            sparsity_summary[sparsity] = {
+                'avg_accuracy': avg_acc,
+                'best_accuracy': best_acc,
+                'avg_patchability': avg_patch
+            }
+            print(f"   {sparsity:.1%}: avg_acc={avg_acc:.2%}, best_acc={best_acc:.2%}, avg_patch={avg_patch:.3f}")
+        
+        # Save comprehensive results
+        results_dir = f'data/seed_hunt_results_{args.dataset}'
+        os.makedirs(results_dir, exist_ok=True)
+        
+        comprehensive_results = {
+            'mode': args.mode,
+            'dataset': args.dataset,
+            'sparsity_values': sparsity_values,
+            'neuron_sorting': not args.disable_sorting,
+            'sort_frequency': args.sort_frequency,
+            'overall_best_accuracy': overall_best_acc,
+            'overall_best_patchability': overall_best_patch,
+            'overall_best_efficiency': overall_best_eff,
+            'sparsity_summary': sparsity_summary,
+            'detailed_results': all_sparsity_results
+        }
+        
+        with open(f'{results_dir}/comprehensive_sparsity_sweep.json', 'w') as f:
+            json.dump(comprehensive_results, f, indent=2, default=str)
+        
+        print(f"\n💾 Comprehensive results saved to {results_dir}/comprehensive_sparsity_sweep.json")
+    
+    else:
+        # Single sparsity mode - use original result handling
+        results = all_sparsity_results[sparsity_values[0]]
     
     print("\n🎊 BEST SEEDS SUMMARY")
     print("="*50)
