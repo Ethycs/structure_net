@@ -23,6 +23,7 @@ pip = "*"
 ipykernel = ">=6.29.5,<7"
 scipy = ">=1.16.0,<2"
 scikit-learn = ">=1.7.0,<2"
+pandas = ">=2.3.0,<3"
 
 [tool.pixi.pypi-dependencies]
 structure_net = { path = ".", editable = true }
