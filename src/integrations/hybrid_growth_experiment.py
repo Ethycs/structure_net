@@ -22,6 +22,32 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # --- Advanced Architecture Components ---
+def load_cifar10_data_compatible(batch_size=64):
+    """Load CIFAR-10 with EXACT GPU seed hunter preprocessing"""
+    # Load raw datasets without any transforms first
+    train_dataset = datasets.CIFAR10('./data', train=True, download=True, transform=None)
+    test_dataset = datasets.CIFAR10('./data', train=False, download=True, transform=None)
+    
+    # Convert to tensors and preprocess EXACTLY like GPU seed hunter
+    train_x = torch.from_numpy(train_dataset.data).float().reshape(-1, 3072) / 255.0
+    train_y = torch.tensor(train_dataset.targets)
+    test_x = torch.from_numpy(test_dataset.data).float().reshape(-1, 3072) / 255.0
+    test_y = torch.tensor(test_dataset.targets)
+    
+    # Normalize EXACTLY like GPU seed hunter
+    train_mean = train_x.mean(dim=0)
+    train_std = train_x.std(dim=0)
+    train_x = (train_x - train_mean) / (train_std + 1e-8)
+    test_x = (test_x - train_mean) / (train_std + 1e-8)  # Use TRAIN stats for test
+    
+    # Create tensor datasets
+    train_tensor_dataset = TensorDataset(train_x, train_y)
+    test_tensor_dataset = TensorDataset(test_x, test_y)
+    
+    return DataLoader(train_tensor_dataset, batch_size=batch_size, shuffle=True), \
+           DataLoader(test_tensor_dataset, batch_size=batch_size, shuffle=False)
+
+
 
 class ExtremaAwareSparseLayer(nn.Module):
     """A sparse linear layer where connectivity density is guided by extrema.
@@ -122,6 +148,62 @@ def analyze_layer_extrema(
     saturated_neurons = torch.where(mean_activations > saturated_threshold)[0].tolist()
     
     return {'low': dead_neurons, 'high': saturated_neurons}
+
+@torch.no_grad()
+def apply_permutation_to_sparse_layer(layer, perm_indices: torch.Tensor):
+    """
+    Applies a permutation to a sparse layer, preserving network function.
+    Works with both ExtremaAwareSparseLayer and regular nn.Linear layers.
+    """
+    # Permute the output neurons (rows of weight and bias)
+    layer.weight.data = layer.weight.data[perm_indices, :]
+    layer.bias.data = layer.bias.data[perm_indices]
+    
+    # Also permute the mask if it exists
+    if hasattr(layer, 'mask'):
+        layer.mask = layer.mask[perm_indices, :]
+
+@torch.no_grad()
+def apply_permutation_to_network(network, layer_idx_to_sort: int, perm_indices: torch.Tensor):
+    """
+    Applies a permutation to a layer within a PatchedSparseNetwork,
+    perfectly preserving the network's function.
+    """
+    # --- Part A: Permute the output neurons of the target layer ---
+    target_layer = network.sparse_layers[layer_idx_to_sort]
+    apply_permutation_to_sparse_layer(target_layer, perm_indices)
+    
+    # --- Part B: Permute the input connections of the NEXT layer ---
+    next_layer_idx = layer_idx_to_sort + 1
+    if next_layer_idx < len(network.sparse_layers):
+        next_layer = network.sparse_layers[next_layer_idx]
+        
+        # Permute columns of weight matrix
+        next_layer.weight.data = next_layer.weight.data[:, perm_indices]
+        
+        # Also permute the mask if it exists
+        if hasattr(next_layer, 'mask'):
+            next_layer.mask = next_layer.mask[:, perm_indices]
+
+def sort_network_layers(network):
+    """
+    Performs neuron sorting maintenance on the network by sorting neurons
+    in each hidden layer by importance (L2 norm of weights).
+    """
+    num_layers = len(network.sparse_layers)
+    
+    # Sort every hidden layer, but not the final output layer
+    for i in range(num_layers - 1):
+        current_layer = network.sparse_layers[i]
+        
+        # Calculate importance of each output neuron based on its weight norm
+        importance = torch.linalg.norm(current_layer.weight, ord=2, dim=1)
+        
+        # Get the indices that would sort the neurons by importance (descending)
+        perm_indices = torch.argsort(importance, descending=True)
+        
+        # Apply this permutation to the network
+        apply_permutation_to_network(network, i, perm_indices)
 
 def estimate_mi_sparse(x: torch.Tensor, y: torch.Tensor) -> float:
     """Placeholder for a mutual information estimator."""
@@ -329,13 +411,21 @@ class OptimalGrowthEvolver:
                  seed_arch: List[int],
                  seed_sparsity: float,
                  data_loader: DataLoader, 
-                 device: torch.device):
+                 device: torch.device,
+                 enable_sorting: bool = True,
+                 sort_frequency: int = 3):
         
         self.network = PatchedSparseNetwork(seed_arch, seed_sparsity).to(device)
         self.data_loader = data_loader
         self.device = device
         self.history = []
+        self.enable_sorting = enable_sorting
+        self.sort_frequency = sort_frequency
+        self.evolution_step_count = 0
         print(f"🚀 Initialized OptimalGrowthEvolver (V2.0) with seed: {seed_arch}, sparsity: {seed_sparsity}")
+        print(f"   🔄 Neuron sorting: {'Enabled' if enable_sorting else 'Disabled'}")
+        if enable_sorting:
+            print(f"   📊 Sort frequency: Every {sort_frequency} evolution steps")
 
     def load_pretrained_scaffold(self, state_dict: Dict[str, Any]):
         """Correctly loads weights from a saved nn.Sequential model."""
@@ -452,13 +542,61 @@ class OptimalGrowthEvolver:
         self.network = new_network
         self.history.append(f"Inserted layer of width {new_width} at position {position} to fix info loss.")
 
+    def perform_neuron_sorting(self):
+        """Performs neuron sorting maintenance on the network."""
+        print("   🔄 Performing neuron sorting maintenance...")
+        sort_network_layers(self.network)
+        self.history.append(f"Performed neuron sorting at evolution step {self.evolution_step_count}")
+
+    def emergency_training_phase(self, epochs=3):
+        """Emergency training when analysis fails to find actionable issues."""
+        print("   🚨 Running emergency training phase...")
+        
+        self.network.train()
+        optimizer = optim.Adam(self.network.parameters(), lr=0.001)
+        criterion = nn.CrossEntropyLoss()
+        
+        for epoch in range(epochs):
+            total_loss = 0
+            batch_count = 0
+            
+            for batch_idx, (data, target) in enumerate(self.data_loader):
+                if batch_idx >= 10:  # Limit to 10 batches for speed
+                    break
+                    
+                data, target = data.to(self.device), target.to(self.device)
+                data = data.view(data.size(0), -1)
+                
+                optimizer.zero_grad()
+                output = self.network(data)
+                loss = criterion(output, target)
+                loss.backward()
+                optimizer.step()
+                
+                total_loss += loss.item()
+                batch_count += 1
+            
+            avg_loss = total_loss / batch_count if batch_count > 0 else 0
+            print(f"      Emergency training epoch {epoch+1}/{epochs}: avg_loss={avg_loss:.4f}")
+        
+        self.network.eval()
+        self.history.append(f"Emergency training phase completed at evolution step {self.evolution_step_count}")
+
     def evolve_step(self):
-        """Performs one full cycle of analysis and optimal growth."""
+        """Performs one full cycle of analysis and optimal growth with fallback."""
+        self.evolution_step_count += 1
+        
+        # Perform neuron sorting if enabled and it's time
+        if self.enable_sorting and (self.evolution_step_count % self.sort_frequency == 0):
+            self.perform_neuron_sorting()
+        
         # 1. Use MI to find the worst information bottleneck
         bottlenecks = self.analyze_information_flow()
         
         if not bottlenecks:
-            print("No significant bottlenecks found. Evolution paused.")
+            print("No significant bottlenecks found. Trying emergency training...")
+            # Fallback: emergency training to potentially create detectable patterns
+            self.emergency_training_phase()
             return
 
         worst_bottleneck = bottlenecks[0]
@@ -504,39 +642,74 @@ def load_pretrained_into_patched_network(checkpoint_path: str, device: torch.dev
     architecture = checkpoint['architecture']
     state_dict = checkpoint['model_state_dict']
     
-    # Extract sparsity from checkpoint or filename
+    # Extract sparsity from checkpoint (more reliable than filename)
     base_sparsity = checkpoint.get('sparsity', 0.02)
-    if 'patch' in checkpoint_path:
-        import re
-        sparsity_match = re.search(r'patch([\d.]+)', checkpoint_path)
-        if sparsity_match:
-            base_sparsity = float(sparsity_match.group(1))
-            print(f"   🎯 Extracted sparsity from filename: {base_sparsity}")
+    print(f"   🎯 Using sparsity from checkpoint: {base_sparsity}")
     
     print(f"   🏗️  Architecture: {architecture}")
     print(f"   📊 Sparsity: {base_sparsity}")
+    
+    # Debug: Print available keys to understand structure
+    print(f"   🔍 Available state dict keys:")
+    for key in sorted(state_dict.keys())[:10]:  # Show first 10 keys
+        print(f"      {key}: {state_dict[key].shape if hasattr(state_dict[key], 'shape') else type(state_dict[key])}")
+    if len(state_dict.keys()) > 10:
+        print(f"      ... and {len(state_dict.keys()) - 10} more keys")
     
     # Create the PatchedSparseNetwork
     network = PatchedSparseNetwork(architecture, base_sparsity).to(device)
     
     # Load pretrained weights from GPU seed hunter format
+    # GPU seed hunter uses PersistentSparseLayer with nested structure
     for i, layer in enumerate(network.sparse_layers):
-        layer_key = str(i * 2)  # nn.Sequential keys: 0, 2, 4...
+        layer_key = str(i * 2)  # nn.Sequential keys: 0, 2, 4... (ReLU at 1, 3, 5...)
         
-        if f'{layer_key}.weight' in state_dict:
-            print(f"   ✅ Loading pretrained weights for layer {i} (key '{layer_key}.weight')")
-            
-            # Load weights and bias
-            layer.weight.data = state_dict[f'{layer_key}.weight']
-            layer.bias.data = state_dict[f'{layer_key}.bias']
-            
-            # Extract mask from loaded weights to preserve learned sparsity
-            mask = (layer.weight.data != 0).float()
-            layer.register_buffer('mask', mask)  # Overwrite random mask
-            
-            print(f"      Preserved {mask.sum().item()}/{mask.numel()} connections")
-        else:
-            print(f"   ⚠️  No pretrained weights found for layer {i}")
+        # Try different key patterns for GPU seed hunter format
+        possible_weight_keys = [
+            f'{layer_key}.linear.weight',  # PersistentSparseLayer format
+            f'{layer_key}.weight',         # Direct format
+        ]
+        
+        possible_bias_keys = [
+            f'{layer_key}.linear.bias',    # PersistentSparseLayer format
+            f'{layer_key}.bias',           # Direct format
+        ]
+        
+        possible_mask_keys = [
+            f'{layer_key}.mask',           # Standard mask location
+        ]
+        
+        loaded = False
+        for weight_key, bias_key in zip(possible_weight_keys, possible_bias_keys):
+            if weight_key in state_dict and bias_key in state_dict:
+                print(f"   ✅ Loading pretrained weights for layer {i} (keys '{weight_key}', '{bias_key}')")
+                
+                # Load weights and bias
+                layer.weight.data = state_dict[weight_key]
+                layer.bias.data = state_dict[bias_key]
+                
+                # Try to load the actual mask used during training
+                mask_loaded = False
+                for mask_key in possible_mask_keys:
+                    if mask_key in state_dict:
+                        mask_tensor = state_dict[mask_key].to(device)
+                        layer.register_buffer('mask', mask_tensor)
+                        print(f"      ✅ Loaded original mask: {mask_tensor.sum().item()}/{mask_tensor.numel()} connections")
+                        mask_loaded = True
+                        break
+                
+                if not mask_loaded:
+                    # Fallback: extract mask from non-zero weights
+                    mask = (layer.weight.data != 0).float()
+                    layer.register_buffer('mask', mask)
+                    print(f"      ⚠️  Extracted mask from weights: {mask.sum().item()}/{mask.numel()} connections")
+                
+                loaded = True
+                break
+        
+        if not loaded:
+            print(f"   ❌ No pretrained weights found for layer {i} - using random initialization")
+            print(f"      Tried keys: {possible_weight_keys}")
     
     return network
 
@@ -549,7 +722,9 @@ def test_network_accuracy(network: PatchedSparseNetwork, test_loader: DataLoader
     with torch.no_grad():
         for i, (data, target) in enumerate(test_loader):
             data, target = data.to(device), target.to(device)
-            data = data.view(data.size(0), -1)  # Flatten
+            # Data is already flattened from our custom preprocessing
+            if data.dim() > 2:
+                data = data.view(data.size(0), -1)  # Flatten only if needed
             
             # Debug first batch
             if i == 0:
@@ -588,13 +763,29 @@ def test_network_accuracy(network: PatchedSparseNetwork, test_loader: DataLoader
 def main():
     """Main function using the DeltaGuidedEvolver system."""
     import argparse
-    parser = argparse.ArgumentParser(description='Delta-Guided Architecture Evolution')
+    parser = argparse.ArgumentParser(description='Delta-Guided Architecture Evolution with Neuron Sorting')
     parser.add_argument('--load-model', type=str, help='Path to a saved model checkpoint to start from.')
     parser.add_argument('--evolution-steps', type=int, default=5, help='Number of evolution steps to run.')
+    parser.add_argument('--disable-sorting', action='store_true', help='Disable neuron sorting during evolution.')
+    parser.add_argument('--sort-frequency', type=int, default=3, help='Sort neurons every N evolution steps (default: 3).')
     args = parser.parse_args()
 
+    # Use CUDA if available, fallback to CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    train_loader, test_loader = load_cifar10_data()
+    if torch.cuda.is_available():
+        print(f"🖥️  Using device: {device} ({torch.cuda.get_device_name(0)})")
+    else:
+        print(f"🖥️  Using device: {device}")
+    
+    # Use compatible data loader to match GPU seed hunter preprocessing
+    print("📦 Loading CIFAR-10 with GPU seed hunter compatible preprocessing...")
+    train_loader, test_loader = load_cifar10_data_compatible()
+    
+    # Configure sorting settings
+    enable_sorting = not args.disable_sorting
+    sort_frequency = args.sort_frequency
+    
+    print(f"🔄 Neuron sorting: {'Disabled' if args.disable_sorting else f'Enabled (every {sort_frequency} steps)'}")
     
     if args.load_model:
         # Load pretrained model into PatchedSparseNetwork
@@ -610,7 +801,9 @@ def main():
             seed_arch=network.architecture,
             seed_sparsity=network.base_sparsity,
             data_loader=train_loader,
-            device=device
+            device=device,
+            enable_sorting=enable_sorting,
+            sort_frequency=sort_frequency
         )
         
         # Replace the evolver's network with our loaded one
@@ -625,7 +818,9 @@ def main():
             seed_arch=initial_arch,
             seed_sparsity=base_sparsity,
             data_loader=train_loader,
-            device=device
+            device=device,
+            enable_sorting=enable_sorting,
+            sort_frequency=sort_frequency
         )
         
         # Test initial accuracy

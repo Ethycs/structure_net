@@ -4,6 +4,8 @@ Indefinite Growth Experiment
 
 Implements the indefinite growth hypothesis: keep adding sparse→dense layers 
 until we hit target accuracy by following extrema signals.
+This essentially grows a network indefinitely,
+And we show that it can be grown to arbitrary precision
 """
 
 import sys
