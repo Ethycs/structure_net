@@ -6,9 +6,6 @@ based on extrema detection and multi-scale snapshot preservation.
 """
 
 from .models.multi_scale_network import MultiScaleNetwork, create_multi_scale_network
-from .core.minimal_network import MinimalNetwork, create_minimal_network
-from .core.growth_scheduler import GrowthScheduler, StructuralLimits
-from .core.connection_router import ConnectionRouter, ParsimonousRouter
 from .snapshots.snapshot_manager import SnapshotManager
 
 # Import canonical standard (THE foundation)
@@ -36,15 +33,9 @@ __version__ = "0.2.0"
 __author__ = "Ethycs"
 
 __all__ = [
-    # Legacy components
+    # Legacy components (still available)
     "MultiScaleNetwork",
     "create_multi_scale_network",
-    "MinimalNetwork", 
-    "create_minimal_network",
-    "GrowthScheduler",
-    "StructuralLimits",
-    "ConnectionRouter",
-    "ParsimonousRouter",
     "SnapshotManager",
     
     # Canonical Standard (THE foundation)
