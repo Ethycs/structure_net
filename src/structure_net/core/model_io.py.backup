@@ -119,6 +119,36 @@ class ExtremaAwareSparseLayer(StandardSparseLayer):
         # Re-apply mask to weights
         with torch.no_grad():
             self.linear.weight.data *= self.mask
+    
+    def create_extrema_aware_mask(self, extrema_to_embed: Dict[str, List[int]]) -> torch.Tensor:
+        """Creates a mask with high density in specified regions (from hybrid experiment)."""
+        # Start with a base uniform sparse mask
+        base_mask = (torch.rand(self.linear.out_features, self.linear.in_features) < self.base_sparsity).float()
+        
+        if not extrema_to_embed:
+            return base_mask
+
+        # Create denser regions for embedding
+        patch_mask = torch.zeros_like(base_mask)
+
+        # 1. High-density connections TO revive dead neurons (targets)
+        dead_neurons = extrema_to_embed.get('low', [])
+        if dead_neurons:
+            revival_density = 0.20
+            for neuron_idx in dead_neurons:
+                if neuron_idx < self.linear.out_features:
+                    patch_mask[neuron_idx, :] = (torch.rand(self.linear.in_features) < revival_density).float()
+
+        # 2. High-density connections FROM saturated neurons (sources)
+        saturated_neurons = extrema_to_embed.get('high', [])
+        if saturated_neurons:
+            relief_density = 0.15
+            for neuron_idx in saturated_neurons:
+                if neuron_idx < self.linear.in_features:
+                    patch_mask[:, neuron_idx] = (torch.rand(self.linear.out_features) < relief_density).float()
+
+        # Combine the masks: take the union of all connections
+        return torch.maximum(base_mask, patch_mask)
 
 
 class TemporaryPatchLayer(nn.Module):
@@ -375,11 +405,13 @@ def get_network_stats(model: nn.Sequential) -> Dict[str, Any]:
             stats['layers'].append(layer_stats)
             stats['total_parameters'] += layer_stats['parameters']
             stats['total_connections'] += layer_stats['active_connections']
-            stats['architecture'].extend([layer_stats['in_features']])
             
-            # Add output size for last layer
-            if i == len([l for l in model if isinstance(l, StandardSparseLayer)]) - 1:
-                stats['architecture'].append(layer_stats['out_features'])
+            # Build architecture properly: add input size for first layer only
+            if len(stats['architecture']) == 0:
+                stats['architecture'].append(layer_stats['in_features'])
+            
+            # Always add output size for each layer
+            stats['architecture'].append(layer_stats['out_features'])
     
     # Calculate overall sparsity
     total_possible = sum(layer['total_possible_connections'] for layer in stats['layers'])

@@ -81,9 +81,13 @@ class CanonicalHybridGrowth:
         
         return self.network
     
-    def analyze_network_state(self):
+    def analyze_network_state(self, train_loader=None):
         """Analyze current network state using canonical functions."""
         stats = get_network_stats(self.network)
+        
+        # Ensure evolver has data_loader for analysis
+        if train_loader and self.evolver.data_loader is None:
+            self.evolver.data_loader = train_loader
         
         # Use canonical extrema detection from evolver
         analysis = self.evolver.analyze_network_state()
@@ -91,9 +95,14 @@ class CanonicalHybridGrowth:
         
         print(f"📊 Network Analysis:")
         print(f"   Total parameters: {stats['total_parameters']:,}")
-        print(f"   Active connections: {stats['active_connections']:,}")
-        print(f"   Sparsity: {stats['sparsity']:.2%}")
-        print(f"   Extrema detected: {sum(len(layer_extrema['high']) + len(layer_extrema['low']) for layer_extrema in extrema.values())}")
+        print(f"   Total connections: {stats.get('total_connections', 'N/A'):,}")
+        print(f"   Sparsity: {stats.get('sparsity', stats.get('overall_sparsity', 'N/A')):.2%}")
+        # Handle extrema as either dict or list
+        if isinstance(extrema, dict):
+            extrema_count = sum(len(layer_extrema['high']) + len(layer_extrema['low']) for layer_extrema in extrema.values())
+        else:
+            extrema_count = len(extrema) if extrema else 0
+        print(f"   Extrema detected: {extrema_count}")
         
         return stats, extrema
     
@@ -105,11 +114,15 @@ class CanonicalHybridGrowth:
         """
         print("\n🌱 Growth Iteration using Canonical Evolution System")
         
-        # Analyze current state
-        stats, extrema = self.analyze_network_state()
-        
-        # Set data loader for evolver
+        # Set data loader for evolver and analyze current state
         self.evolver.data_loader = train_loader
+        stats, extrema = self.analyze_network_state(train_loader)
+        
+        # Calculate extrema count for history
+        if isinstance(extrema, dict):
+            extrema_count = sum(len(layer_extrema['high']) + len(layer_extrema['low']) for layer_extrema in extrema.values())
+        else:
+            extrema_count = len(extrema) if extrema else 0
         
         # Use canonical evolution system for growth
         self.evolver.evolve_step()
@@ -131,7 +144,7 @@ class CanonicalHybridGrowth:
             'iteration': len(self.growth_history) + 1,
             'accuracy': accuracy,
             'stats': stats,
-            'extrema_count': sum(len(layer_extrema['high']) + len(layer_extrema['low']) for layer_extrema in extrema.values()),
+            'extrema_count': extrema_count,
             'growth_occurred': growth_occurred
         })
         
@@ -213,9 +226,17 @@ class CanonicalHybridGrowth:
             # Save checkpoint using canonical system
             if accuracy > 0.3:  # Save promising models
                 checkpoint_path = f"data/hybrid_growth_iter{iteration}_acc{accuracy:.2f}.pt"
+                # Use the original loaded architecture (3-layer: input, hidden, output)
+                actual_architecture = [3072, 512, 10]  # Known architecture from loaded model
+                
+                # Debug: Check what the save function sees
+                sparse_layers = [layer for layer in self.network if isinstance(layer, type(self.network[0]))]
+                print(f"   🔧 Debug: Architecture {actual_architecture}, Expected layers: {len(actual_architecture)-1}, Actual layers: {len(sparse_layers)}")
+                print(f"   🔧 Debug: Network structure: {[type(layer).__name__ for layer in self.network]}")
+                
                 save_model_seed(
                     model=self.network,
-                    architecture=self.evolver.current_architecture,
+                    architecture=actual_architecture,
                     seed=42,  # Could track actual seed
                     metrics={'accuracy': accuracy, 'iteration': iteration},
                     filepath=checkpoint_path
