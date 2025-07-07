@@ -26,6 +26,7 @@ import json
 from datetime import datetime
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+import multiprocessing as mp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -35,6 +36,11 @@ from src.structure_net import (
     load_model_seed,
     get_network_stats,
     sort_all_network_layers
+)
+from src.structure_net.evolution.integrated_growth_system import (
+    IntegratedGrowthSystem,
+    ThresholdConfig,
+    MetricsConfig
 )
 
 class ModernIndefiniteGrowth:
@@ -49,10 +55,11 @@ class ModernIndefiniteGrowth:
     - Sophisticated extrema detection
     """
     
-    def __init__(self, seed_architecture, scaffold_sparsity=0.02, device='cuda'):
+    def __init__(self, seed_architecture, scaffold_sparsity=0.02, device='cuda', allow_patches=True):
         self.device = device
         self.scaffold_sparsity = scaffold_sparsity
         self.seed_architecture = seed_architecture
+        self.allow_patches = allow_patches
         
         # Create initial network using canonical standard
         self.network = create_standard_network(
@@ -89,6 +96,7 @@ class ModernIndefiniteGrowth:
         print(f"   Seed architecture: {seed_architecture}")
         print(f"   Scaffold sparsity: {scaffold_sparsity:.1%}")
         print(f"   Device: {device}")
+        print(f"   Allow Patches: {self.allow_patches}")
     
     @property
     def current_architecture(self):
@@ -195,7 +203,7 @@ class ModernIndefiniteGrowth:
                 batch_activations = []
                 
                 # Get sparse layers using model_io pattern
-                from src.structure_net.core.model_io import StandardSparseLayer
+                from src.structure_net.core import StandardSparseLayer
                 
                 for layer in self.network:
                     if isinstance(layer, StandardSparseLayer):  # Use proper type check
@@ -556,18 +564,21 @@ class ModernIndefiniteGrowth:
                 growth_occurred = True
         
         # ALWAYS try to add patches if we have extrema (not elif!)
-        if (extrema_analysis['total_extrema'] > 0 and 
+        if self.allow_patches and (extrema_analysis['total_extrema'] > 0 and 
             self.can_afford_patch_growth()):
             
             if self.spend_credits(self.patch_growth_cost, "embedded patches"):
                 patches_added = self.add_embedded_patches(extrema_analysis)
                 if patches_added > 0:
                     growth_occurred = True
-                    print(f"   ✅ Added {patches_added} patches")
+                    # This print is now inside the add_embedded_patches method
                 else:
                     print(f"   ⚠️  No patches added despite {extrema_analysis['total_extrema']} extrema")
         else:
-            print(f"   ⚠️  Patch addition skipped: extrema={extrema_analysis['total_extrema']}, can_afford={self.can_afford_patch_growth()}")
+            if not self.allow_patches:
+                print("   ℹ️  Patch addition disabled by configuration.")
+            elif extrema_analysis['total_extrema'] > 0:
+                print(f"   ⚠️  Patch addition skipped: can_afford={self.can_afford_patch_growth()}")
         
         # Apply neuron sorting if growth occurred
         if growth_occurred:
@@ -670,6 +681,31 @@ class ModernIndefiniteGrowth:
         print(f"💾 Growth summary saved to {filepath}")
         return summary
 
+def run_experiment(device, allow_patches, seed_arch, target_accuracy, dataset, output_filename):
+    """Worker function to run a single growth experiment."""
+    print(f"🚀 Starting experiment on {device} | Patches: {'Enabled' if allow_patches else 'Disabled'}")
+    
+    # Load data
+    if dataset == 'mnist':
+        train_loader, test_loader = load_mnist_data()
+    else:
+        train_loader, test_loader = load_cifar10_data()
+    
+    # Create and run the growth engine
+    engine = ModernIndefiniteGrowth(
+        seed_architecture=seed_arch,
+        scaffold_sparsity=0.02,
+        device=device,
+        allow_patches=allow_patches
+    )
+    engine.grow_until_target_accuracy(
+        target_accuracy=target_accuracy,
+        train_loader=train_loader,
+        test_loader=test_loader
+    )
+    engine.save_growth_summary(output_filename)
+    print(f"✅ Experiment on {device} finished. Results saved to {output_filename}")
+
 def load_cifar10_data(batch_size=64):
     """Load CIFAR-10 dataset."""
     transform = transforms.Compose([
@@ -710,52 +746,99 @@ def main():
                        help='Target accuracy to grow towards')
     parser.add_argument('--seed-arch', type=str, default='784,128,10',
                        help='Seed architecture (comma-separated)')
+    parser.add_argument('--growth-mode', type=str, choices=['direct', 'tournament'], default='direct',
+                        help='Growth strategy to use')
+    parser.add_argument('-a', '--advanced-gpu', action='store_true',
+                        help='Run dual-GPU comparison in parallel: sparse-only vs sparse+patches')
     args = parser.parse_args()
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"🚀 Device: {device}")
-    
     # Parse seed architecture
     seed_arch = [int(x) for x in args.seed_arch.split(',')]
     
-    # Load data
-    if args.dataset == 'mnist':
-        train_loader, test_loader = load_mnist_data()
+    if args.advanced_gpu:
+        if not torch.cuda.is_available() or torch.cuda.device_count() < 2:
+            print("⚠️  Advanced GPU mode requires at least 2 available GPUs. Exiting.")
+            sys.exit(1)
+            
+        print("\n" + "="*60)
+        print("🚀 ADVANCED DUAL-GPU PARALLEL EXPERIMENT")
+        print("="*60)
+
+        # Define experiment configurations
+        configs = [
+            {
+                'device': 'cuda:0',
+                'allow_patches': False,
+                'output_filename': 'data/modern_growth_results_sparse_only.json'
+            },
+            {
+                'device': 'cuda:1',
+                'allow_patches': True,
+                'output_filename': 'data/modern_growth_results_layers_and_patches.json'
+            }
+        ]
+
+        # Create and start processes
+        processes = []
+        for config in configs:
+            p = mp.Process(target=run_experiment, args=(
+                config['device'],
+                config['allow_patches'],
+                seed_arch,
+                args.target_accuracy,
+                args.dataset,
+                config['output_filename']
+            ))
+            processes.append(p)
+            p.start()
+
+        # Wait for all processes to complete
+        for p in processes:
+            p.join()
+
+        print("\n✅ Dual-GPU parallel experiment complete.")
+
     else:
-        train_loader, test_loader = load_cifar10_data()
-        seed_arch = [3072, 128, 10]  # Override for CIFAR-10
-    
-    # Create modern indefinite growth engine
-    growth_engine = ModernIndefiniteGrowth(
-        seed_architecture=seed_arch,
-        scaffold_sparsity=0.02,
-        device=device
-    )
-    
-    # Run indefinite growth experiment
-    final_accuracy, history = growth_engine.grow_until_target_accuracy(
-        target_accuracy=args.target_accuracy,
-        train_loader=train_loader,
-        test_loader=test_loader
-    )
-    
-    # Save comprehensive results
-    summary = growth_engine.save_growth_summary()
-    
-    # Print final summary
-    print("\n" + "="*60)
-    print("📈 FINAL GROWTH SUMMARY")
-    print("="*60)
-    
-    for event in history:
-        print(f"Iter {event['iteration']}: "
-              f"{event['architecture']} → {event['accuracy']:.2%} "
-              f"(Credits: {event['credits']:.0f}, Growth: {'✓' if event['growth_occurred'] else '✗'})")
-    
-    print(f"\n🎯 Target: {args.target_accuracy:.1%}")
-    print(f"🏆 Achieved: {final_accuracy:.2%}")
-    print(f"🌱 Growth iterations: {len(history)}")
-    print(f"💰 Final credits: {growth_engine.credits:.1f}")
+        # Original single-experiment logic
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
+        if args.growth_mode == 'direct':
+            run_experiment(
+                device=device,
+                allow_patches=True,
+                seed_arch=seed_arch,
+                target_accuracy=args.target_accuracy,
+                dataset=args.dataset,
+                output_filename='data/modern_indefinite_growth_results.json'
+            )
+        elif args.growth_mode == 'tournament':
+            print("🚀 Running Tournament-Based Growth Experiment")
+            # Create network
+            network = create_standard_network(
+                architecture=seed_arch,
+                sparsity=0.02,
+                device=device
+            )
+            
+            # Configure and run the integrated system
+            threshold_config = ThresholdConfig()
+            metrics_config = MetricsConfig()
+            
+            system = IntegratedGrowthSystem(network, threshold_config, metrics_config)
+            
+            final_network = system.grow_network(
+                train_loader,
+                test_loader,
+                growth_iterations=5,
+                epochs_per_iteration=10,
+                tournament_epochs=3
+            )
+            print("🎉 Tournament growth complete.")
 
 if __name__ == "__main__":
+    # Set start method for multiprocessing
+    try:
+        mp.set_start_method('spawn')
+    except RuntimeError:
+        pass
     main()

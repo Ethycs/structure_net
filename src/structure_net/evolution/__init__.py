@@ -8,8 +8,9 @@ model standard for perfect compatibility across the project.
 from .network_evolver import OptimalGrowthEvolver
 from .extrema_analyzer import analyze_layer_extrema, detect_network_extrema
 from .information_theory import estimate_mi_proxy, analyze_information_flow
+from .integrated_growth_system import IntegratedGrowthSystem, ThresholdConfig, MetricsConfig
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"  # Updated version
 __author__ = "Structure Net Team"
 
 __all__ = [
@@ -17,5 +18,8 @@ __all__ = [
     'analyze_layer_extrema',
     'detect_network_extrema', 
     'estimate_mi_proxy',
-    'analyze_information_flow'
+    'analyze_information_flow',
+    'IntegratedGrowthSystem',
+    'ThresholdConfig',
+    'MetricsConfig'
 ]
