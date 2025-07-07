@@ -168,79 +168,6 @@ class ModelCheckpointer:
                 
         except Exception as e:
             print(f"⚠️  Warning: Top-K management failed: {e}")
-    
-    def get_model_summary(self):
-        """Get summary of currently saved models"""
-        try:
-            model_files = [f for f in os.listdir(self.save_dir) if f.endswith('.pt')]
-            
-            categories = {
-                'accuracy': [],
-                'patchability': [], 
-                'efficiency': [],
-                'general': []
-            }
-            
-            for filename in model_files:
-                filepath = os.path.join(self.save_dir, filename)
-                
-                try:
-                    checkpoint = torch.load(filepath, map_location='cpu')
-                    
-                    model_info = {
-                        'filename': filename,
-                        'accuracy': checkpoint.get('accuracy', 0),
-                        'patchability': checkpoint.get('patchability_score', 0),
-                        'architecture': checkpoint.get('architecture', []),
-                        'seed': checkpoint.get('seed', 0)
-                    }
-                    
-                    # Determine category from filename
-                    if 'BEST_ACCURACY' in filename:
-                        categories['accuracy'].append(model_info)
-                    elif 'BEST_PATCHABILITY' in filename:
-                        categories['patchability'].append(model_info)
-                    elif 'BEST_EFFICIENCY' in filename:
-                        categories['efficiency'].append(model_info)
-                    else:
-                        categories['general'].append(model_info)
-                        
-                except Exception as e:
-                    print(f"⚠️  Warning: Could not parse model file {filename}: {e}")
-                    continue
-            
-            return categories
-            
-        except Exception as e:
-            print(f"⚠️  Warning: Could not get model summary: {e}")
-            return {}
-    
-    def load_model(self, filepath, model_class=None):
-        """Load a saved model checkpoint"""
-        checkpoint = torch.load(filepath, map_location='cpu')
-        
-        if model_class is None:
-            # Reconstruct model from architecture
-            architecture = checkpoint['architecture']
-            model = self._reconstruct_model(architecture)
-        else:
-            model = model_class()
-        
-        model.load_state_dict(checkpoint['model_state_dict'])
-        
-        return model, checkpoint
-    
-    def _reconstruct_model(self, architecture):
-        """Reconstruct model from architecture specification"""
-        layers = []
-        
-        for i in range(len(architecture) - 1):
-            layer = nn.Linear(architecture[i], architecture[i+1])
-            layers.append(layer)
-            if i < len(architecture) - 2:  # No ReLU after last layer
-                layers.append(nn.ReLU())
-                
-        return nn.Sequential(*layers)
 
 class SparsitySweepConfig:
     """Configuration for sparsity sweep strategies"""
@@ -262,6 +189,24 @@ class SparsitySweepConfig:
     # Thresholds for determining promising ranges
     MIN_ACCURACY_THRESHOLD = 0.15  # Minimum accuracy to consider
     MIN_PATCHABILITY_THRESHOLD = 0.2  # Minimum patchability to consider
+
+class PersistentSparseLayer(nn.Module):
+    """A sparse layer that enforces sparsity during every forward pass."""
+    def __init__(self, in_features, out_features, sparsity):
+        super().__init__()
+        self.linear = nn.Linear(in_features, out_features)
+        
+        # Create and register the mask
+        mask = torch.rand_like(self.linear.weight) < sparsity
+        self.register_buffer('mask', mask.float())
+        
+        # Apply mask at initialization
+        with torch.no_grad():
+            self.linear.weight.data *= self.mask
+
+    def forward(self, x):
+        # CRITICAL: Enforce sparsity on every forward pass
+        return torch.nn.functional.linear(x, self.linear.weight * self.mask, self.linear.bias)
 
 class GPUSaturatedSeedHunter:
     """
@@ -342,67 +287,83 @@ class GPUSaturatedSeedHunter:
                     return 64
                 
         return test_batch_sizes[-1]
-    
+
     def create_seed_batch(self, num_seeds=100):
-        """Create batch of different seed architectures"""
+        """
+        Create batch of different seed architectures using systematic exploration.
+        
+        This function systematically builds a diverse "portfolio" of network shapes,
+        each designed to test a different architectural philosophy or heuristic.
+        It explores the fundamental trade-off between depth and width.
+        """
         
         architectures = []
         
-        # Type 1: Direct connections [input_size, C]
+        # Type 1: The Simplest Baseline - Direct Connections [input_size, C]
+        # Purpose: Test if any meaningful mapping can be learned without hidden representations
+        # Example: [3072, 10] - rock-bottom baseline for performance
         for c in [10, 20, 30, 40, 50]:
             architectures.append([self.input_size, c])
             
-        # Type 2: Single hidden [input_size, H, C]
+        # Type 2: The Classic MLP - Single Hidden Layer [input_size, H, C]
+        # Purpose: Explore the effect of a single bottleneck with various widths
+        # Example: [3072, 128, 10] - tests optimal "compression" size
         for h in [16, 32, 64, 128, 256, 512]:
             architectures.append([self.input_size, h, self.num_classes])
             
-        # Type 3: Double hidden [input_size, H1, H2, C]
+        # Type 3: The Funnel - Decreasing Width, Two Hidden Layers
+        # Purpose: Test progressive compression through deeper layers
+        # Example: [3072, 512, 64, 10] - gradual funnel vs sharp bottleneck
         for h1 in [128, 256, 512]:
             for h2 in [32, 64, 128]:
                 if h2 < h1:  # Decreasing size
                     architectures.append([self.input_size, h1, h2, self.num_classes])
                     
-        # Type 4: Triple hidden [input_size, H1, H2, H3, C]
+        # Type 4: The Deep Funnel - Decreasing Width, Three Hidden Layers
+        # Purpose: Push the "funnel" idea further with more gradual compression
+        # Example: [3072, 512, 256, 64, 10] - test if more depth helps
         for h1 in [256, 512]:
             for h2 in [128, 256]:
                 for h3 in [32, 64]:
                     if h3 < h2 < h1:
                         architectures.append([self.input_size, h1, h2, h3, self.num_classes])
                         
-        # Type 5: Wide shallow [input_size, W, C]
+        # Type 5: Wide and Shallow - A Single, Massive Hidden Layer
+        # Purpose: Test opposite extreme of deep funnels
+        # Example: [3072, 2048, 10] - large features in single layer vs sequence of smaller transformations
         for w in [1024, 2048]:
             architectures.append([self.input_size, w, self.num_classes])
             
-        # Type 6: Narrow deep
+        # Type 6: The Column - Constant Width, Deep
+        # Purpose: Test maintaining "representational capacity" throughout network
+        # Example: [3072, 64, 64, 64, 64, 64, 10] - transform features without compression
         narrow_arch = [self.input_size]
         for depth in range(5):
             narrow_arch.append(64)
         narrow_arch.append(self.num_classes)
         architectures.append(narrow_arch)
         
+        print(f"📐 Generated {len(architectures)} systematic architectures:")
+        print(f"   - Direct connections: 5 variants")
+        print(f"   - Classic MLPs: 6 variants") 
+        print(f"   - Funnels (2-layer): {sum(1 for h1 in [128,256,512] for h2 in [32,64,128] if h2 < h1)} variants")
+        print(f"   - Deep funnels (3-layer): {sum(1 for h1 in [256,512] for h2 in [128,256] for h3 in [32,64] if h3 < h2 < h1)} variants")
+        print(f"   - Wide & shallow: 2 variants")
+        print(f"   - Deep columns: 1 variant")
+        
         return architectures[:num_seeds]
-    
+
     def create_sparse_network(self, architecture, sparsity=0.02, seed=None):
-        """Create sparse network with given architecture and seed"""
+        """Create sparse network with persistent sparsity enforcement"""
         if seed is not None:
             torch.manual_seed(seed)
-            
-        layers = []
         
+        layers = []
         for i in range(len(architecture) - 1):
-            # Create sparse linear layer
-            layer = nn.Linear(architecture[i], architecture[i+1])
-            
-            # Apply sparsity mask
-            mask = torch.rand_like(layer.weight) < sparsity
-            with torch.no_grad():
-                layer.weight *= mask.float()
-                
-            # Register mask as buffer
-            layer.register_buffer('mask', mask)
-            
+            # Use the new persistent sparse layer
+            layer = PersistentSparseLayer(architecture[i], architecture[i+1], sparsity)
             layers.append(layer)
-            if i < len(architecture) - 2:  # No ReLU after last layer
+            if i < len(architecture) - 2:
                 layers.append(nn.ReLU())
                 
         return nn.Sequential(*layers)
@@ -488,12 +449,12 @@ class GPUSaturatedSeedHunter:
                 
                 # Hook to capture activations
                 def hook(module, input, output):
-                    if isinstance(module, nn.Linear):
+                    if isinstance(module, (nn.Linear, PersistentSparseLayer)):
                         activations.append(output)
                 
                 hooks = []
                 for layer in model:
-                    if isinstance(layer, nn.Linear):
+                    if isinstance(layer, (nn.Linear, PersistentSparseLayer)):
                         hooks.append(layer.register_forward_hook(hook))
                 
                 _ = model(x)
@@ -669,279 +630,6 @@ class GPUSaturatedSeedHunter:
         # Analyze results
         return self.analyze_seed_results(all_results)
     
-    def hybrid_sparsity_sweep(self, num_architectures=30, seeds_per_arch=10, sweep_mode='hybrid'):
-        """Run hybrid sparsity sweep: coarse then fine exploration"""
-        
-        print(f"\n🌊 HYBRID SPARSITY SWEEP")
-        print(f"   Mode: {sweep_mode}")
-        print(f"   Architectures: {num_architectures}")
-        print(f"   Seeds per arch: {seeds_per_arch}")
-        
-        # Pre-cache dataset
-        print("📦 Caching dataset...")
-        self.cache_dataset_gpu()
-        
-        all_results = {
-            'phase_1_coarse': {},
-            'phase_2_fine': {},
-            'best_combinations': {}
-        }
-        
-        # Phase 1: Coarse sweep
-        print(f"\n🔍 PHASE 1: COARSE SPARSITY SWEEP")
-        print(f"   Sparsities: {self.sparsity_config.COARSE_SPARSITIES}")
-        print(f"   Epochs per experiment: {self.sparsity_config.COARSE_EPOCHS}")
-        
-        phase1_results = []
-        architectures = self.create_seed_batch(num_architectures)
-        
-        for sparsity in self.sparsity_config.COARSE_SPARSITIES:
-            print(f"\n🎯 Testing sparsity {sparsity:.3f}")
-            sparsity_results = self._run_sparsity_batch(
-                architectures, seeds_per_arch, sparsity, 
-                epochs=self.sparsity_config.COARSE_EPOCHS
-            )
-            
-            all_results['phase_1_coarse'][f'sparsity_{sparsity}'] = sparsity_results
-            phase1_results.extend(sparsity_results)
-            
-            # Quick analysis
-            avg_acc = np.mean([r['accuracy'] for r in sparsity_results])
-            avg_patch = np.mean([r['patchability'] for r in sparsity_results])
-            print(f"   📊 Sparsity {sparsity:.3f}: avg_acc={avg_acc:.3f}, avg_patch={avg_patch:.3f}")
-        
-        if sweep_mode == 'coarse':
-            print(f"\n✅ Coarse sweep completed!")
-            return self._analyze_sparsity_results(all_results, phase='coarse')
-        
-        # Analyze Phase 1 to determine promising ranges
-        print(f"\n📊 ANALYZING PHASE 1 RESULTS...")
-        promising_ranges = self._identify_promising_sparsity_ranges(phase1_results)
-        
-        if not promising_ranges:
-            print("⚠️  No promising sparsity ranges found. Returning coarse results.")
-            return self._analyze_sparsity_results(all_results, phase='coarse')
-        
-        # Phase 2: Fine sweep on promising ranges
-        print(f"\n🔬 PHASE 2: FINE SPARSITY SWEEP")
-        print(f"   Promising ranges: {list(promising_ranges.keys())}")
-        print(f"   Epochs per experiment: {self.sparsity_config.FINE_EPOCHS}")
-        
-        # Select top architectures from Phase 1
-        top_architectures = self._select_top_architectures(phase1_results, top_k=10)
-        print(f"   Selected top {len(top_architectures)} architectures for fine sweep")
-        
-        for range_name, sparsities in promising_ranges.items():
-            print(f"\n🎯 Fine sweep: {range_name} range {sparsities}")
-            
-            range_results = []
-            for sparsity in sparsities:
-                sparsity_results = self._run_sparsity_batch(
-                    top_architectures, seeds_per_arch, sparsity,
-                    epochs=self.sparsity_config.FINE_EPOCHS
-                )
-                range_results.extend(sparsity_results)
-            
-            all_results['phase_2_fine'][range_name] = range_results
-            
-            # Quick analysis
-            avg_acc = np.mean([r['accuracy'] for r in range_results])
-            avg_patch = np.mean([r['patchability'] for r in range_results])
-            print(f"   📊 {range_name}: avg_acc={avg_acc:.3f}, avg_patch={avg_patch:.3f}")
-        
-        print(f"\n✅ Hybrid sparsity sweep completed!")
-        return self._analyze_sparsity_results(all_results, phase='hybrid')
-    
-    def _run_sparsity_batch(self, architectures, seeds_per_arch, sparsity, epochs=5):
-        """Run a batch of experiments for a specific sparsity level"""
-        results = []
-        
-        # Process architectures in batches
-        for arch_idx in range(0, len(architectures), self.parallel_models):
-            arch_batch = architectures[arch_idx:arch_idx + self.parallel_models]
-            
-            # Launch parallel seeds for each architecture
-            with ThreadPoolExecutor(max_workers=self.parallel_models) as executor:
-                futures = []
-                
-                for i, arch in enumerate(arch_batch):
-                    for seed in range(seeds_per_arch):
-                        stream_idx = (i * seeds_per_arch + seed) % self.num_streams
-                        future = executor.submit(
-                            self.parallel_seed_test, 
-                            arch, 
-                            seed, 
-                            stream_idx,
-                            sparsity,
-                            epochs
-                        )
-                        futures.append(future)
-                
-                # Collect results
-                for future in futures:
-                    result = future.result()
-                    results.append(result)
-        
-        return results
-    
-    def _identify_promising_sparsity_ranges(self, phase1_results):
-        """Identify promising sparsity ranges from Phase 1 results"""
-        promising_ranges = {}
-        
-        # Group results by sparsity
-        sparsity_groups = {}
-        for result in phase1_results:
-            sparsity = result['sparsity']
-            if sparsity not in sparsity_groups:
-                sparsity_groups[sparsity] = []
-            sparsity_groups[sparsity].append(result)
-        
-        # Analyze each sparsity level
-        for sparsity, results in sparsity_groups.items():
-            avg_accuracy = np.mean([r['accuracy'] for r in results])
-            avg_patchability = np.mean([r['patchability'] for r in results])
-            max_patchability = max([r['patchability'] for r in results])
-            
-            print(f"   Sparsity {sparsity:.3f}: avg_acc={avg_accuracy:.3f}, "
-                  f"avg_patch={avg_patchability:.3f}, max_patch={max_patchability:.3f}")
-            
-            # Determine which fine range this sparsity belongs to
-            if sparsity <= 0.005 and (avg_accuracy >= self.sparsity_config.MIN_ACCURACY_THRESHOLD or 
-                                     max_patchability >= self.sparsity_config.MIN_PATCHABILITY_THRESHOLD):
-                promising_ranges['ultra_sparse'] = self.sparsity_config.FINE_RANGES['ultra_sparse']
-            elif 0.005 < sparsity <= 0.05 and (avg_accuracy >= self.sparsity_config.MIN_ACCURACY_THRESHOLD or 
-                                              max_patchability >= self.sparsity_config.MIN_PATCHABILITY_THRESHOLD):
-                promising_ranges['moderate_sparse'] = self.sparsity_config.FINE_RANGES['moderate_sparse']
-            elif sparsity > 0.05 and (avg_accuracy >= self.sparsity_config.MIN_ACCURACY_THRESHOLD or 
-                                     max_patchability >= self.sparsity_config.MIN_PATCHABILITY_THRESHOLD):
-                promising_ranges['dense_sparse'] = self.sparsity_config.FINE_RANGES['dense_sparse']
-        
-        return promising_ranges
-    
-    def _select_top_architectures(self, results, top_k=10):
-        """Select top architectures based on Phase 1 performance"""
-        # Group by architecture and calculate average performance
-        arch_performance = {}
-        for result in results:
-            arch_key = str(result['architecture'])
-            if arch_key not in arch_performance:
-                arch_performance[arch_key] = []
-            arch_performance[arch_key].append(result['patchability'] + result['accuracy'])
-        
-        # Calculate average performance per architecture
-        arch_avg_performance = {
-            arch: np.mean(scores) for arch, scores in arch_performance.items()
-        }
-        
-        # Select top architectures
-        top_arch_keys = sorted(arch_avg_performance.keys(), 
-                              key=lambda x: arch_avg_performance[x], reverse=True)[:top_k]
-        
-        # Convert back to architecture lists
-        top_architectures = [eval(arch_key) for arch_key in top_arch_keys]
-        
-        return top_architectures
-    
-    def _analyze_sparsity_results(self, all_results, phase='hybrid'):
-        """Analyze sparsity sweep results"""
-        print(f"\n📊 SPARSITY SWEEP ANALYSIS ({phase.upper()})")
-        print("=" * 60)
-        
-        # Collect all results
-        all_experiments = []
-        
-        if 'phase_1_coarse' in all_results:
-            for sparsity_key, results in all_results['phase_1_coarse'].items():
-                all_experiments.extend(results)
-        
-        if 'phase_2_fine' in all_results:
-            for range_key, results in all_results['phase_2_fine'].items():
-                all_experiments.extend(results)
-        
-        if not all_experiments:
-            print("⚠️  No results to analyze!")
-            return all_results
-        
-        # Find best combinations
-        by_accuracy = sorted(all_experiments, key=lambda x: x['accuracy'], reverse=True)
-        by_patchability = sorted(all_experiments, key=lambda x: x['patchability'], reverse=True)
-        by_efficiency = sorted(all_experiments, key=lambda x: x['accuracy']/x['parameters'], reverse=True)
-        
-        # Best per sparsity level
-        sparsity_best = {}
-        for result in all_experiments:
-            sparsity = result['sparsity']
-            if sparsity not in sparsity_best or result['patchability'] > sparsity_best[sparsity]['patchability']:
-                sparsity_best[sparsity] = result
-        
-        print(f"🏆 BEST OVERALL RESULTS:")
-        print(f"   Best accuracy: {by_accuracy[0]['accuracy']:.3f} at sparsity {by_accuracy[0]['sparsity']:.3f}")
-        print(f"   Best patchability: {by_patchability[0]['patchability']:.3f} at sparsity {by_patchability[0]['sparsity']:.3f}")
-        print(f"   Best efficiency: {by_efficiency[0]['accuracy']/by_efficiency[0]['parameters']*1000:.3f} at sparsity {by_efficiency[0]['sparsity']:.3f}")
-        
-        print(f"\n🎯 BEST PER SPARSITY LEVEL:")
-        for sparsity in sorted(sparsity_best.keys()):
-            result = sparsity_best[sparsity]
-            print(f"   Sparsity {sparsity:.3f}: acc={result['accuracy']:.3f}, "
-                  f"patch={result['patchability']:.3f}, arch={result['architecture']}")
-        
-        # Store best combinations
-        all_results['best_combinations'] = {
-            'best_accuracy': by_accuracy[0],
-            'best_patchability': by_patchability[0],
-            'best_efficiency': by_efficiency[0],
-            'best_per_sparsity': sparsity_best
-        }
-        
-        # Save top models if checkpointer is available
-        if hasattr(self, 'checkpointer') and self.save_promising:
-            print("\n💾 Saving top models from sweep with category markers...")
-            
-            top_models_data = all_results['best_combinations']
-            
-            models_to_save = {
-                'accuracy': top_models_data['best_accuracy'],
-                'patchability': top_models_data['best_patchability'],
-                'efficiency': top_models_data['best_efficiency']
-            }
-            
-            for category, result in models_to_save.items():
-                print(f"\n   🔧 Saving best {category}:")
-                print(f"      Architecture: {result['architecture']}")
-                print(f"      Seed: {result['seed']}")
-                print(f"      Sparsity: {result['sparsity']:.3f}")
-                print(f"      Accuracy: {result['accuracy']:.3f}")
-                print(f"      Patchability: {result['patchability']:.3f}")
-                
-                try:
-                    # Recreate the model
-                    torch.manual_seed(result['seed'])
-                    model = self.create_sparse_network(
-                        result['architecture'], 
-                        sparsity=result['sparsity'], 
-                        seed=result['seed']
-                    )
-                    
-                    # Add category and epoch info to metrics
-                    metrics_with_info = result.copy()
-                    metrics_with_info['epoch'] = result.get('epochs', self.sparsity_config.FINE_EPOCHS)
-                    metrics_with_info['category'] = f'best_{category}'
-                    
-                    filepath = self.checkpointer.save_promising_model(
-                        model, 
-                        result['architecture'], 
-                        result['seed'], 
-                        metrics_with_info
-                    )
-                    print(f"      ✅ Saved: {filepath}")
-                    
-                except Exception as e:
-                    print(f"      ❌ Failed to save best {category}: {e}")
-        else:
-            print("   ⚠️  Best model saving skipped (checkpointer not available or saving disabled)")
-        
-        return all_results
-    
     def analyze_seed_results(self, results):
         """Find best seeds by different criteria"""
         
@@ -968,10 +656,6 @@ class GPUSaturatedSeedHunter:
                   f"{eff:.3f} acc/kparam")
         
         # Save top models if checkpointer is available
-        print(f"\n🔍 CHECKING BEST MODEL SAVING...")
-        print(f"   Has checkpointer: {hasattr(self, 'checkpointer')}")
-        print(f"   Save promising enabled: {self.save_promising}")
-        
         if hasattr(self, 'checkpointer') and self.save_promising:
             print("\n💾 Saving top models with category markers...")
             
@@ -981,8 +665,6 @@ class GPUSaturatedSeedHunter:
                 'patchability': by_patchability[0], 
                 'efficiency': by_efficiency[0]
             }
-            
-            print(f"   Top models to save: {len(top_models)}")
             
             for category, result in top_models.items():
                 print(f"\n   🔧 Saving best {category}:")
@@ -1025,15 +707,45 @@ class GPUSaturatedSeedHunter:
             'all_results': results
         }
 
-def run_saturated_seed_hunt(dataset='mnist'):
-    """Main function to run the seed hunt"""
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    hunter = GPUSaturatedSeedHunter(num_gpus=1, device=device, dataset=dataset)
+def main():
+    """Main entry point"""
+    import argparse
     
+    parser = argparse.ArgumentParser(description='GPU Saturated Seed Hunter with Hybrid Sparsity Sweep')
+    parser.add_argument('--mode', type=str, default='single', 
+                       choices=['single', 'coarse', 'hybrid'],
+                       help='Search mode: single sparsity, coarse sweep, or hybrid sweep (default: single)')
+    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
+                       help='Dataset to use (default: mnist)')
+    parser.add_argument('--num-architectures', type=int, default=30,
+                       help='Number of architectures to test (default: 30)')
+    parser.add_argument('--seeds-per-arch', type=int, default=10,
+                       help='Number of seeds per architecture (default: 10)')
+    parser.add_argument('--sparsity', type=float, default=0.02,
+                       help='Sparsity level for single mode (default: 0.02)')
+    parser.add_argument('--thresh', type=float, default=0.25,
+                       help='Patchability threshold for saving models (default: 0.25 = 25%%)')
+    
+    args = parser.parse_args()
+    
+    print("🔍 GPU Saturated Seed Hunter with Systematic Architecture Generation")
+    print("="*70)
+    print(f"Mode: {args.mode.upper()}")
+    print(f"Dataset: {args.dataset.upper()}")
+    print(f"Architectures: {args.num_architectures}")
+    print(f"Seeds per arch: {args.seeds_per_arch}")
+    if args.mode == 'single':
+        print(f"Sparsity: {args.sparsity:.1%}")
+    print("="*70)
+    
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    hunter = GPUSaturatedSeedHunter(num_gpus=1, device=device, dataset=args.dataset, save_threshold=args.thresh)
+    
+    # Single sparsity search
     results = hunter.gpu_saturated_search(
-        num_architectures=30,
-        seeds_per_arch=10,
-        sparsity=0.02
+        num_architectures=args.num_architectures,
+        seeds_per_arch=args.seeds_per_arch,
+        sparsity=args.sparsity
     )
     
     print("\n🎊 BEST SEEDS SUMMARY")
@@ -1060,11 +772,13 @@ def run_saturated_seed_hunt(dataset='mnist'):
     print(f"   Efficiency: {best_eff['accuracy']/best_eff['parameters']*1000:.3f} acc/kparam")
     
     # Save results
-    results_dir = f'data/seed_hunt_results_{dataset}'
+    results_dir = f'data/seed_hunt_results_{args.dataset}'
     os.makedirs(results_dir, exist_ok=True)
     with open(f'{results_dir}/gpu_saturated_results.json', 'w') as f:
         json.dump({
-            'dataset': dataset,
+            'mode': args.mode,
+            'dataset': args.dataset,
+            'sparsity': args.sparsity,
             'best_accuracy': results['best_accuracy'],
             'best_patchable': results['best_patchable'],
             'best_efficient': results['best_efficient'],
@@ -1076,152 +790,8 @@ def run_saturated_seed_hunt(dataset='mnist'):
         }, f, indent=2)
     
     print(f"\n💾 Results saved to {results_dir}/gpu_saturated_results.json")
-    
-    return results
-
-def main():
-    """Main entry point"""
-    import argparse
-    
-    parser = argparse.ArgumentParser(description='GPU Saturated Seed Hunter with Hybrid Sparsity Sweep')
-    parser.add_argument('--mode', type=str, default='single', 
-                       choices=['single', 'coarse', 'hybrid'],
-                       help='Search mode: single sparsity, coarse sweep, or hybrid sweep (default: single)')
-    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
-                       help='Dataset to use (default: mnist)')
-    parser.add_argument('--num-architectures', type=int, default=30,
-                       help='Number of architectures to test (default: 30)')
-    parser.add_argument('--seeds-per-arch', type=int, default=10,
-                       help='Number of seeds per architecture (default: 10)')
-    parser.add_argument('--sparsity', type=float, default=0.02,
-                       help='Sparsity level for single mode (default: 0.02)')
-    parser.add_argument('--thresh', type=float, default=0.25,
-                       help='Patchability threshold for saving models (default: 0.25 = 25%%)')
-    
-    args = parser.parse_args()
-    
-    print("🔍 GPU Saturated Seed Hunter with Hybrid Sparsity Sweep")
-    print("="*60)
-    print(f"Mode: {args.mode.upper()}")
-    print(f"Dataset: {args.dataset.upper()}")
-    print(f"Architectures: {args.num_architectures}")
-    print(f"Seeds per arch: {args.seeds_per_arch}")
-    if args.mode == 'single':
-        print(f"Sparsity: {args.sparsity:.1%}")
-    print("="*60)
-    
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    hunter = GPUSaturatedSeedHunter(num_gpus=1, device=device, dataset=args.dataset, save_threshold=args.thresh)
-    
-    if args.mode == 'single':
-        # Single sparsity search
-        results = hunter.gpu_saturated_search(
-            num_architectures=args.num_architectures,
-            seeds_per_arch=args.seeds_per_arch,
-            sparsity=args.sparsity
-        )
-        
-        print("\n🎊 BEST SEEDS SUMMARY")
-        print("="*50)
-        
-        best = results['best_patchable']
-        print(f"🎯 Best for patching:")
-        print(f"   Architecture: {best['architecture']}")
-        print(f"   Seed: {best['seed']}")
-        print(f"   Initial accuracy: {best['accuracy']:.2%}")
-        print(f"   Patchability score: {best['patchability']:.3f}")
-        print(f"   Parameters: {best['parameters']:,}")
-        
-        best_acc = results['best_accuracy']
-        print(f"\n🏆 Best accuracy:")
-        print(f"   Architecture: {best_acc['architecture']}")
-        print(f"   Seed: {best_acc['seed']}")
-        print(f"   Accuracy: {best_acc['accuracy']:.2%}")
-        
-        best_eff = results['best_efficient']
-        print(f"\n⚡ Most efficient:")
-        print(f"   Architecture: {best_eff['architecture']}")
-        print(f"   Seed: {best_eff['seed']}")
-        print(f"   Efficiency: {best_eff['accuracy']/best_eff['parameters']*1000:.3f} acc/kparam")
-        
-        # Save results
-        results_dir = f'data/seed_hunt_results_{args.dataset}'
-        os.makedirs(results_dir, exist_ok=True)
-        with open(f'{results_dir}/gpu_saturated_results.json', 'w') as f:
-            json.dump({
-                'mode': args.mode,
-                'dataset': args.dataset,
-                'sparsity': args.sparsity,
-                'best_accuracy': results['best_accuracy'],
-                'best_patchable': results['best_patchable'],
-                'best_efficient': results['best_efficient'],
-                'summary_stats': {
-                    'total_experiments': len(results['all_results']),
-                    'avg_accuracy': np.mean([r['accuracy'] for r in results['all_results']]),
-                    'avg_patchability': np.mean([r['patchability'] for r in results['all_results']]),
-                }
-            }, f, indent=2)
-        
-        print(f"\n💾 Results saved to {results_dir}/gpu_saturated_results.json")
-        
-    else:
-        # Sparsity sweep (coarse or hybrid)
-        results = hunter.hybrid_sparsity_sweep(
-            num_architectures=args.num_architectures,
-            seeds_per_arch=args.seeds_per_arch,
-            sweep_mode=args.mode
-        )
-        
-        print("\n🎊 SPARSITY SWEEP SUMMARY")
-        print("="*50)
-        
-        if 'best_combinations' in results:
-            best_combos = results['best_combinations']
-            
-            print(f"🏆 BEST OVERALL COMBINATIONS:")
-            
-            best_acc = best_combos['best_accuracy']
-            print(f"\n🎯 Best Accuracy: {best_acc['accuracy']:.3f}")
-            print(f"   Architecture: {best_acc['architecture']}")
-            print(f"   Sparsity: {best_acc['sparsity']:.3f}")
-            print(f"   Seed: {best_acc['seed']}")
-            
-            best_patch = best_combos['best_patchability']
-            print(f"\n🔧 Best Patchability: {best_patch['patchability']:.3f}")
-            print(f"   Architecture: {best_patch['architecture']}")
-            print(f"   Sparsity: {best_patch['sparsity']:.3f}")
-            print(f"   Seed: {best_patch['seed']}")
-            print(f"   Accuracy: {best_patch['accuracy']:.3f}")
-            
-            best_eff = best_combos['best_efficiency']
-            eff_score = best_eff['accuracy'] / best_eff['parameters'] * 1000
-            print(f"\n⚡ Best Efficiency: {eff_score:.3f} acc/kparam")
-            print(f"   Architecture: {best_eff['architecture']}")
-            print(f"   Sparsity: {best_eff['sparsity']:.3f}")
-            print(f"   Seed: {best_eff['seed']}")
-            
-            print(f"\n🎯 BEST PER SPARSITY LEVEL:")
-            for sparsity, result in sorted(best_combos['best_per_sparsity'].items()):
-                print(f"   Sparsity {sparsity:.3f}: acc={result['accuracy']:.3f}, "
-                      f"patch={result['patchability']:.3f}")
-        
-        # Save sparsity sweep results
-        results_dir = f'data/sparsity_sweep_results_{args.dataset}'
-        os.makedirs(results_dir, exist_ok=True)
-        with open(f'{results_dir}/sparsity_sweep_{args.mode}.json', 'w') as f:
-            json.dump({
-                'mode': args.mode,
-                'dataset': args.dataset,
-                'results': results
-            }, f, indent=2, default=str)
-        
-        print(f"\n💾 Sparsity sweep results saved to {results_dir}/sparsity_sweep_{args.mode}.json")
-    
     print("\n🎉 Seed hunt completed!")
-    if args.mode == 'single':
-        print("Use the best seeds for your patching experiments.")
-    else:
-        print("Use the best sparsity-architecture combinations for your experiments.")
+    print("Use the best seeds for your patching experiments.")
 
 if __name__ == "__main__":
     main()

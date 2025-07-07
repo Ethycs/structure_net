@@ -272,45 +272,58 @@ class PatchedSparseNetwork(nn.Module):
         self.patches = nn.ModuleDict()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Store patch outputs to be added to the *next* layer's pre-activations
-        patch_outputs_for_next_layer = {}
+        h = x.view(x.size(0), -1)
+        
+        # Store patch corrections for the next layer
+        patch_corrections = {}
 
-        h = x
         for i, layer in enumerate(self.sparse_layers):
-            # 1. Calculate pre-activation from the main sparse layer
+            # 1. Apply corrections from patches on the PREVIOUS layer
+            if i in patch_corrections:
+                h = h + patch_corrections[i]
+            
+            # 2. Main sparse layer forward pass
             pre_activation = layer(h)
-
-            # 2. Add corrections from patches on the PREVIOUS layer
-            if i in patch_outputs_for_next_layer:
-                pre_activation += patch_outputs_for_next_layer[i]
-
-            # 3. Apply activation function
-            h = F.relu(pre_activation)
-
-            # 4. If this layer has patches, compute their outputs for the NEXT layer
+            
+            # 3. Apply activation function (except for last layer)
+            if i < len(self.sparse_layers) - 1:
+                h = F.relu(pre_activation)
+            else:
+                h = pre_activation  # Last layer outputs logits
+            
+            # 4. Compute outputs of patches attached to THIS layer's output
             layer_key = str(i)
             if layer_key in self.patches:
-                # Sum the outputs of all patches attached to this layer
-                total_patch_correction = 0
+                total_patch_output = 0
                 for patch in self.patches[layer_key]:
-                    total_patch_correction += patch(h)
+                    total_patch_output += patch(h)
                 
-                # The output dimension of each patch is 4. We need to project it
-                # to the next layer's size. For simplicity, we tile and slice.
-                # A more advanced version would use a learned projection.
-                next_layer_dim = self.architecture[i+2] if i + 2 < len(self.architecture) else 0
-                if next_layer_dim > 0:
-                    correction_size = total_patch_correction.shape[1]
-                    repeats = (next_layer_dim + correction_size - 1) // correction_size
-                    full_correction = total_patch_correction.repeat(1, repeats)[:, :next_layer_dim]
-                    patch_outputs_for_next_layer[i + 1] = full_correction
+                # Project patch output to match next layer's input dimension
+                next_layer_idx = i + 1
+                if next_layer_idx < len(self.sparse_layers):
+                    next_layer_input_dim = self.architecture[next_layer_idx]
+                    
+                    if total_patch_output.shape[1] != next_layer_input_dim:
+                        # Simple projection: tile and slice
+                        correction_size = total_patch_output.shape[1]
+                        repeats = (next_layer_input_dim + correction_size - 1) // correction_size
+                        projected_output = total_patch_output.repeat(1, repeats)[:, :next_layer_input_dim]
+                    else:
+                        projected_output = total_patch_output
+                    
+                    # Store for next layer
+                    patch_corrections[next_layer_idx] = projected_output
         
         return h
 
-class DeltaGuidedEvolver:
+# =================================================================
+# ADVANCED EVOLVER (V2.0) - Replaces DeltaGuidedEvolver
+# =================================================================
+
+class OptimalGrowthEvolver:
     """
-    Starts with a seed architecture and continuously finds the most efficient 
-    place to add sparse capacity (layers) or targeted fixes (patches).
+    An advanced evolver that uses information theory to precisely identify
+    bottlenecks and calculate the minimal, optimal intervention needed.
     """
     def __init__(self, 
                  seed_arch: List[int],
@@ -322,7 +335,141 @@ class DeltaGuidedEvolver:
         self.data_loader = data_loader
         self.device = device
         self.history = []
-        print(f"Initialized DeltaGuidedEvolver with seed: {seed_arch}, sparsity: {seed_sparsity}")
+        print(f"🚀 Initialized OptimalGrowthEvolver (V2.0) with seed: {seed_arch}, sparsity: {seed_sparsity}")
+
+    def load_pretrained_scaffold(self, state_dict: Dict[str, Any]):
+        """Correctly loads weights from a saved nn.Sequential model."""
+        print("   ✅ Attempting to load pretrained scaffold weights...")
+        for i, layer in enumerate(self.network.sparse_layers):
+            layer_key = str(i * 2) 
+            weight_key, bias_key = f'{layer_key}.weight', f'{layer_key}.bias'
+            if weight_key in state_dict and bias_key in state_dict:
+                layer.weight.data = state_dict[weight_key]
+                layer.bias.data = state_dict[bias_key]
+                mask = (layer.weight.data != 0).float()
+                layer.register_buffer('mask', mask)
+                print(f"      Layer {i}: Loaded weights and preserved {mask.sum().item():.0f} connections.")
+            else:
+                print(f"      Layer {i}: Not found in checkpoint. Using random initialization.")
+
+    def _estimate_mi_proxy(self, x: torch.Tensor, y: torch.Tensor) -> float:
+        """A fast proxy for Mutual Information based on correlation."""
+        if x.numel() == 0 or y.numel() == 0: 
+            return 0.0
+        x_norm = F.normalize(x, dim=1)
+        y_norm = F.normalize(y, dim=1)
+        min_dim = min(x_norm.shape[1], y_norm.shape[1])
+        correlation = (x_norm[:, :min_dim] * y_norm[:, :min_dim]).sum(dim=1).mean()
+        mi_approx = -0.5 * torch.log(1 - correlation**2 + 1e-8)
+        return mi_approx.item()
+
+    def analyze_information_flow(self) -> List[Dict[str, Any]]:
+        """Finds information bottlenecks by measuring MI loss between layers."""
+        print("\n--- Analyzing Information Flow (MI) ---")
+        bottlenecks = []
+        activations = self.get_layer_activations()
+        
+        # Calculate MI between each layer transition
+        mi_flow = [self._estimate_mi_proxy(activations[i], activations[i+1]) for i in range(len(activations)-1)]
+        
+        # Calculate information loss at each step
+        for i in range(len(mi_flow) - 1):
+            info_loss = mi_flow[i] - mi_flow[i+1]
+            if info_loss > 0.05: # Only consider non-trivial loss
+                bottlenecks.append({
+                    'position': i + 1, # Bottleneck is AT layer i+1
+                    'info_loss': info_loss,
+                    'severity': info_loss / (mi_flow[0] + 1e-6) # Loss relative to input info
+                })
+        
+        print(f"   MI Flow Detected: {[f'{m:.2f}' for m in mi_flow]}")
+        if bottlenecks:
+            worst = max(bottlenecks, key=lambda x: x['severity'])
+            print(f"   🔥 Worst Bottleneck found at layer {worst['position']} with {worst['info_loss']:.2f} bits lost.")
+        
+        return sorted(bottlenecks, key=lambda x: x['severity'], reverse=True)
+
+    def calculate_optimal_intervention(self, bottleneck: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Uses information theory to calculate the minimal intervention needed.
+        """
+        info_loss = bottleneck['info_loss']
+        s = self.network.base_sparsity
+        
+        # Capacity formula: I_max = -s * log(s) * width
+        capacity_per_neuron = -s * np.log(s) if 0 < s < 1 else 0
+        
+        if capacity_per_neuron > 0:
+            neurons_needed = int(np.ceil(info_loss / capacity_per_neuron))
+        else:
+            neurons_needed = 64 # Fallback if sparsity is 0 or 1
+        
+        # Differentiated strategy based on severity
+        if bottleneck['severity'] > 0.5: # Severe loss
+            return {'type': 'insert_layer', 'width': neurons_needed, 'position': bottleneck['position']}
+        elif bottleneck['severity'] > 0.2: # Moderate loss
+            # Future implementation: add skip connection
+            return {'type': 'add_skip_connection', 'position': bottleneck['position'], 'info': 'Moderate severity, skip connection suggested.'}
+        else: # Mild loss
+            # Future implementation: increase local density
+            return {'type': 'increase_density', 'position': bottleneck['position'], 'info': 'Mild severity, local density increase suggested.'}
+
+    def apply_growth_action(self, action: Dict[str, Any]):
+        """Applies the calculated optimal growth action."""
+        print(f"\n--- Applying Optimal Action: {action['type']} at position {action['position']} ---")
+        
+        if action['type'] == 'insert_layer':
+            self._insert_layer(action['position'], action['width'])
+        elif action['type'] == 'add_skip_connection':
+            print(f"   (SKIPPED) Action '{action['type']}' is not yet implemented.")
+            # self._add_skip_connection(action['position'])
+        elif action['type'] == 'increase_density':
+            print(f"   (SKIPPED) Action '{action['type']}' is not yet implemented.")
+            # self._increase_local_density(action['position'])
+
+    def _insert_layer(self, position: int, new_width: int):
+        """Inserts a new layer with the calculated optimal width."""
+        new_width = min(max(new_width, 16), 1024) # Clamp width for stability
+        
+        old_arch = self.network.architecture
+        new_arch = old_arch[:position] + [new_width] + old_arch[position:]
+        
+        print(f"      Growing architecture from {old_arch} to {new_arch}")
+        
+        new_network = PatchedSparseNetwork(new_arch, self.network.base_sparsity).to(self.device)
+        
+        # Smartly copy weights to preserve learning
+        with torch.no_grad():
+            old_layers = self.network.sparse_layers
+            new_layers = new_network.sparse_layers
+            for i in range(len(new_layers)):
+                if i < position:
+                    new_layers[i].load_state_dict(old_layers[i].state_dict())
+                elif i > position:
+                    new_layers[i].load_state_dict(old_layers[i-1].state_dict())
+            # The new layer at 'position' is randomly initialized.
+
+        self.network = new_network
+        self.history.append(f"Inserted layer of width {new_width} at position {position} to fix info loss.")
+
+    def evolve_step(self):
+        """Performs one full cycle of analysis and optimal growth."""
+        # 1. Use MI to find the worst information bottleneck
+        bottlenecks = self.analyze_information_flow()
+        
+        if not bottlenecks:
+            print("No significant bottlenecks found. Evolution paused.")
+            return
+
+        worst_bottleneck = bottlenecks[0]
+        
+        # 2. Calculate the optimal intervention for that bottleneck
+        optimal_action = self.calculate_optimal_intervention(worst_bottleneck)
+        
+        # 3. Apply the action
+        self.apply_growth_action(optimal_action)
+        
+        print(f"\nCurrent Architecture: {self.network.architecture}")
 
     def get_layer_activations(self) -> List[torch.Tensor]:
         """Utility to get activations from each layer for analysis."""
@@ -335,422 +482,7 @@ class DeltaGuidedEvolver:
                 activations.append(h)
         return activations
 
-    def _calculate_params(self, arch: List[int], sparsity: float) -> int:
-        """Calculates the number of parameters in a sparse architecture."""
-        params = 0
-        for i in range(len(arch) - 1):
-            params += arch[i] * arch[i+1] * sparsity
-        return int(params)
-
-    def analyze_growth_options(self) -> List[Dict[str, Any]]:
-        """
-        Calculates the "efficiency" (delta) of all possible growth actions.
-        This is the core of the decision-making process.
-        """
-        print("\n--- Analyzing All Possible Growth Options ---")
-        options = []
-        activations = self.get_layer_activations()
-        current_arch = self.network.architecture
-        current_sparsity = self.network.base_sparsity
-        current_params = self._calculate_params(current_arch, current_sparsity)
-
-        # --- Option Type 1: Insert a New Sparse Layer ---
-        for i in range(1, len(current_arch) - 1): # Can insert between any two existing layers
-            # Heuristic for new layer width
-            new_width = int((current_arch[i-1] + current_arch[i]) / 4) # Be conservative
-            new_width = min(max(new_width, 16), 512) # Clamp width
-            
-            # Estimate information gain
-            # Gain comes from relieving the bottleneck at layer i-1 -> i
-            mi_before = estimate_mi_sparse(activations[i-1], activations[i])
-            # The new layer will ideally pass more info
-            mi_after_est = np.log2(new_width + 1)
-            info_gain = max(0, mi_after_est - mi_before)
-            
-            # Calculate parameter cost
-            new_arch = current_arch[:i] + [new_width] + current_arch[i:]
-            params_added = self._calculate_params(new_arch, current_sparsity) - current_params
-            
-            efficiency = info_gain / (params_added + 1e-6)
-
-            options.append({
-                'type': 'insert_layer',
-                'position': i,
-                'new_width': new_width,
-                'efficiency': efficiency,
-                'info': f"Relieves MI bottleneck ({mi_before:.2f} bits)"
-            })
-
-        # --- Option Type 2: Add Patches for Severe Extrema ---
-        for i in range(len(self.network.sparse_layers)):
-            extrema = analyze_layer_extrema(activations[i+1])
-            num_extrema = len(extrema['low']) + len(extrema['high'])
-            
-            if num_extrema > 0:
-                # Info gain from patching is about fixing broken neurons
-                info_gain = num_extrema * 0.1 # Heuristic: each patch provides a small, fixed gain
-                
-                # Parameter cost of a patch is constant (1->8->4 = 40 params)
-                params_added = num_extrema * 40
-                
-                efficiency = info_gain / (params_added + 1e-6)
-
-                options.append({
-                    'type': 'add_patches',
-                    'position': i,
-                    'num_extrema': num_extrema,
-                    'efficiency': efficiency,
-                    'info': f"Fixing {num_extrema} dead/saturated neurons"
-                })
-
-        return sorted(options, key=lambda x: x['efficiency'], reverse=True)
-
-    def apply_growth_action(self, action: Dict[str, Any]):
-        """Applies the chosen growth action to the network."""
-        print(f"\n--- Applying Best Action: {action['type']} at position {action['position']} (Efficiency: {action['efficiency']:.6f}) ---")
-        print(f"      Reason: {action['info']}")
-        
-        if action['type'] == 'insert_layer':
-            self._insert_layer(action['position'], action['new_width'])
-        elif action['type'] == 'add_patches':
-            self._add_patches(action['position'])
-
-    def _insert_layer(self, position: int, new_width: int):
-        """Inserts a new ExtremaAwareSparseLayer and rebuilds the network."""
-        old_arch = self.network.architecture
-        new_arch = old_arch[:position] + [new_width] + old_arch[position:]
-        
-        print(f"Growing architecture from {old_arch} to {new_arch}")
-        
-        new_network = PatchedSparseNetwork(new_arch, self.network.base_sparsity).to(self.device)
-        
-        # Smartly copy weights to preserve learning
-        with torch.no_grad():
-            for i in range(len(new_network.sparse_layers)):
-                if i < position: # Copy layers before the insertion point
-                    new_network.sparse_layers[i].load_state_dict(self.network.sparse_layers[i].state_dict())
-                elif i > position: # Copy layers after the insertion point
-                    new_network.sparse_layers[i].load_state_dict(self.network.sparse_layers[i-1].state_dict())
-            # The new layer at 'position' is randomly initialized.
-
-        self.network = new_network
-        self.history.append(f"Inserted layer of width {new_width} at position {position}. New arch: {new_arch}")
-
-    def _add_patches(self, layer_idx: int):
-        """Adds temporary patches to fix extrema at a given layer."""
-        activations = self.get_layer_activations()
-        extrema = analyze_layer_extrema(activations[layer_idx+1])
-        
-        layer_key = str(layer_idx)
-        if layer_key not in self.network.patches:
-            self.network.patches[layer_key] = nn.ModuleList()
-
-        # Patch the most severe extrema
-        sources_to_patch = extrema['high'][:3] + extrema['low'][:3]
-        for source_idx in sources_to_patch:
-            self.network.patches[layer_key].append(TemporaryPatch(source_idx).to(self.device))
-        
-        self.history.append(f"Added {len(sources_to_patch)} patches to layer {layer_idx}.")
-
-    def evolve_step(self):
-        """Performs one full cycle of analysis and growth."""
-        # 1. Analyze all possible growth moves and their efficiency
-        growth_options = self.analyze_growth_options()
-        
-        if not growth_options:
-            print("No growth options found. Evolution complete.")
-            return
-
-        # 2. Select the single best action
-        best_action = growth_options[0]
-        
-        # 3. Apply the action
-        self.apply_growth_action(best_action)
-        
-        print(f"\nCurrent Architecture: {self.network.architecture}")
-        print(f"Active Patches: { {k: len(v) for k,v in self.network.patches.items()} }")
-
-class HybridGrowthNetwork(nn.Module):
-    """
-    A network that combines a sparse scaffold with multi-scale dense patches,
-    and grows based on extrema patterns.
-    """
-    
-    def __init__(self, initial_arch, base_sparsity, device='cuda', sample_batch=None, is_pretrained=False, pretrained_state_dict=None):
-        super().__init__()
-        self.device = device
-        self.architecture = initial_arch
-        self.is_pretrained = is_pretrained
-        
-        if is_pretrained and pretrained_state_dict is not None:
-            # DON'T apply LSUV to pretrained scaffold - it would destroy learned features
-            print("   🔒 Creating scaffold from pretrained weights (NO LSUV)")
-            self.scaffold = create_sparse_scaffold_from_pretrained(initial_arch, base_sparsity, device, pretrained_state_dict)
-        else:
-            # Apply LSUV only for new networks
-            print("   🌱 Creating new scaffold with LSUV initialization")
-            self.scaffold = create_lsuv_sparse_scaffold(initial_arch, base_sparsity, device, sample_batch)
-            
-        self.scale_patches = nn.ModuleDict({
-            'coarse': nn.ModuleList(),
-            'medium': nn.ModuleList(),
-            'fine': nn.ModuleList()
-        })
-        self.patch_connections = {}
-        self.growth_history = []
-        self.current_accuracy = 0.0
-        self.activations = []
-
-    def forward(self, x):
-        x = x.view(x.size(0), -1)
-        self.activations = []
-        self.layer_inputs = []  # Store inputs to each layer for patch initialization
-        h = x
-
-        for i, layer in enumerate(self.scaffold):
-            # Store the input to this layer (for patch creation)
-            self.layer_inputs.append(h.detach())
-            
-            # CRITICAL FIX: Apply mask during forward pass like the original network
-            # The original network applies mask during forward, not just during initialization
-            if hasattr(layer, 'mask'):
-                # Apply the mask to weights during forward pass
-                masked_weight = layer.weight * layer.mask
-                sparse_out = F.linear(h, masked_weight, layer.bias)
-            else:
-                # Fallback for layers without masks
-                sparse_out = layer(h)
-            
-            patch_out = self._compute_patch_contributions(h, i, sparse_out)
-            h = sparse_out + patch_out
-            
-            self.activations.append(h.detach())
-            if i < len(self.scaffold) - 1:
-                h = F.relu(h)
-        
-        return h
-
-    def _compute_patch_contributions(self, input_h, layer_idx, sparse_out):
-        return torch.zeros_like(sparse_out)
-
-    def analyze_multiscale_extrema(self):
-        scale_extrema = {
-            'coarse': {'high': [], 'low': []},
-            'medium': {'high': [], 'low': []},
-            'fine': {'high': [], 'low': []}
-        }
-        
-        print(f"🔍 Analyzing extrema across {len(self.activations[:-1])} layers...")
-        
-        for i, activation in enumerate(self.activations[:-1]):
-            mean_acts = activation.mean(dim=0)
-            high_threshold = mean_acts.mean() + 2 * mean_acts.std()
-            low_threshold = 0.1
-            
-            high_indices = torch.where(mean_acts > high_threshold)[0].cpu().numpy().tolist()
-            low_indices = torch.where(mean_acts < low_threshold)[0].cpu().numpy().tolist()
-
-            if i < len(self.scaffold) / 3:
-                scale = 'coarse'
-            elif i < 2 * len(self.scaffold) / 3:
-                scale = 'medium'
-            else:
-                scale = 'fine'
-                
-            scale_extrema[scale]['high'].extend([(i, idx) for idx in high_indices])
-            scale_extrema[scale]['low'].extend([(i, idx) for idx in low_indices])
-            
-            print(f"   Layer {i} ({scale}): {len(high_indices)} high, {len(low_indices)} low extrema")
-            print(f"      Activation stats: mean={mean_acts.mean():.3f}, std={mean_acts.std():.3f}")
-            print(f"      Thresholds: high>{high_threshold:.3f}, low<{low_threshold:.3f}")
-            
-        # Summary
-        print(f"📊 Extrema Summary:")
-        for scale, extrema in scale_extrema.items():
-            print(f"   {scale.capitalize()}: {len(extrema['high'])} high, {len(extrema['low'])} low")
-            
-        return scale_extrema
-
-    def determine_growth_scale(self, scale_extrema):
-        coarse_pressure = len(scale_extrema['coarse']['high'])
-        medium_pressure = len(scale_extrema['medium']['high'])
-        fine_pressure = len(scale_extrema['fine']['high'])
-        
-        print(f"🎯 Growth Pressure Analysis:")
-        print(f"   Coarse: {coarse_pressure}, Medium: {medium_pressure}, Fine: {fine_pressure}")
-        
-        primary_scale = 'coarse'
-        if medium_pressure > coarse_pressure and medium_pressure > fine_pressure:
-            primary_scale = 'medium'
-        elif fine_pressure > coarse_pressure and fine_pressure > medium_pressure:
-            primary_scale = 'fine'
-
-        needs_new_layer = coarse_pressure > 10
-        print(f"   Primary scale: {primary_scale}")
-        print(f"   Needs new layer: {needs_new_layer} (coarse pressure: {coarse_pressure})")
-
-        growth_decision = {
-            'primary_scale': primary_scale,
-            'needs_new_layer': needs_new_layer,
-            'patch_density': {
-                'coarse': min(0.5, coarse_pressure / 20),
-                'medium': min(0.3, medium_pressure / 50),
-                'fine': min(0.2, fine_pressure / 100)
-            }
-        }
-        return growth_decision
-
-    def add_sparse_layer_at_scale(self, growth_scale, sample_batch):
-        print("   🌱 Adding a new sparse layer...")
-        new_layer_size = 128
-        old_architecture = self.architecture.copy()
-        self.architecture.insert(-1, new_layer_size)
-        
-        if self.is_pretrained:
-            # For pretrained networks, only add the new layer with LSUV
-            # Keep existing pretrained layers intact
-            print("   🔒 Preserving pretrained layers, only initializing new layer")
-            
-            # Get the output from the previous layer to initialize the new layer
-            with torch.no_grad():
-                sample_batch_flat = sample_batch.view(sample_batch.size(0), -1)
-                h = sample_batch_flat
-                for layer in self.scaffold[:-1]:  # All but the last layer
-                    h = F.relu(F.linear(h, layer.weight * layer.mask, layer.bias))
-                
-                # Create new layer and insert it before the output layer
-                new_layer = nn.Linear(old_architecture[-2], new_layer_size).to(self.device)
-                mask = _create_sparse_mask((new_layer_size, old_architecture[-2]), 0.05).to(self.device)
-                new_layer.register_buffer('mask', mask)
-                new_layer.weight.data.mul_(mask)
-                
-                # Apply LSUV only to the new layer
-                lsuv_init_new_layer(new_layer, h)
-                
-                # Insert the new layer before the output layer
-                self.scaffold.insert(-1, new_layer)
-        else:
-            # For new networks, recreate the entire scaffold with LSUV
-            self.scaffold = create_lsuv_sparse_scaffold(self.architecture, 0.05, self.device, sample_batch)
-            
-        print(f"   🌱 New architecture: {self.architecture}")
-
-    def add_multiscale_patches(self, scale_extrema, growth_scale):
-        patches_added = {'coarse': 0, 'medium': 0, 'fine': 0}
-        print(f"🔧 Creating patches for extrema...")
-        
-        for scale, extrema in scale_extrema.items():
-            for layer_idx, neuron_idx in extrema['high'][:5]:
-                if layer_idx < len(self.architecture) - 1:
-                    # Debug patch dimensions
-                    in_features = self.architecture[layer_idx]
-                    out_features = self.architecture[layer_idx+1]
-                    print(f"   Creating {scale} patch for layer {layer_idx}: {in_features} -> {out_features}")
-                    
-                    patch = nn.Linear(in_features, out_features).to(self.device)
-                    
-                    # Apply LSUV to new patches using stored layer inputs
-                    if hasattr(self, 'layer_inputs') and len(self.layer_inputs) > layer_idx:
-                        with torch.no_grad():
-                            # Use the stored input to this layer
-                            sample_input = self.layer_inputs[layer_idx][:32]  # First 32 samples
-                            
-                            print(f"      Input shape: {sample_input.shape}, Patch expects: {in_features}")
-                            
-                            # Validate dimensions before LSUV
-                            if sample_input.shape[1] == in_features:
-                                lsuv_init_new_layer(patch, sample_input)
-                                print(f"   ✅ LSUV initialized {scale} patch for layer {layer_idx}")
-                            else:
-                                print(f"   ⚠️  Dimension mismatch for layer {layer_idx}: input {sample_input.shape[1]} != expected {in_features}")
-                                print(f"      Skipping LSUV for this patch")
-                    else:
-                        print(f"   ⚠️  No layer inputs available for layer {layer_idx}, skipping LSUV")
-                    
-                    self.scale_patches[scale].append(patch)
-                    patches_added[scale] += 1
-                    
-        print(f"   🔧 Added patches - Coarse: {patches_added['coarse']}, Medium: {patches_added['medium']}, Fine: {patches_added['fine']}")
-
-    def train_to_convergence(self, train_loader, test_loader, max_epochs=5):
-        optimizer_groups = [
-            {'params': self.scaffold.parameters(), 'lr': 0.0001},
-            {'params': self.scale_patches['coarse'].parameters(), 'lr': 0.001},
-            {'params': self.scale_patches['medium'].parameters(), 'lr': 0.005},
-            {'params': self.scale_patches['fine'].parameters(), 'lr': 0.01}
-        ]
-        optimizer = optim.Adam(optimizer_groups)
-        criterion = nn.CrossEntropyLoss()
-        
-        best_acc = 0
-        for epoch in range(max_epochs):
-            self.train()
-            for data, target in train_loader:
-                data, target = data.to(self.device), target.to(self.device)
-                optimizer.zero_grad()
-                output = self(data)
-                loss = criterion(output, target)
-                loss.backward()
-                optimizer.step()
-
-            self.eval()
-            correct = 0
-            with torch.no_grad():
-                for data, target in test_loader:
-                    data, target = data.to(self.device), target.to(self.device)
-                    output = self(data)
-                    pred = output.argmax(dim=1, keepdim=True)
-                    correct += pred.eq(target.view_as(pred)).sum().item()
-            
-            accuracy = correct / len(test_loader.dataset)
-            if accuracy > best_acc:
-                best_acc = accuracy
-            print(f"    Epoch {epoch}: Accuracy {accuracy:.2%}")
-
-        self.current_accuracy = best_acc
-        return best_acc
-
-    def test_initial_accuracy(self, test_loader):
-        """Test the initial accuracy of the loaded model."""
-        print("🧪 Testing initial accuracy...")
-        self.eval()
-        correct = 0
-        with torch.no_grad():
-            for data, target in test_loader:
-                data, target = data.to(self.device), target.to(self.device)
-                output = self(data)
-                pred = output.argmax(dim=1, keepdim=True)
-                correct += pred.eq(target.view_as(pred)).sum().item()
-        
-        initial_accuracy = correct / len(test_loader.dataset)
-        print(f"   📊 Initial accuracy: {initial_accuracy:.2%}")
-        self.current_accuracy = initial_accuracy
-        return initial_accuracy
-
-    def grow_with_scale_aware_patches(self, train_loader, test_loader, target_accuracy=0.95):
-        iteration = 0
-        sample_batch, _ = next(iter(train_loader))
-        sample_batch = sample_batch.to(self.device)
-
-        # Test initial accuracy first
-        if self.is_pretrained:
-            self.test_initial_accuracy(test_loader)
-
-        while self.current_accuracy < target_accuracy and iteration < 5:
-            iteration += 1
-            print(f"\n🌱 Multi-Scale Growth Iteration {iteration}")
-            
-            self.train_to_convergence(train_loader, test_loader)
-            
-            scale_extrema = self.analyze_multiscale_extrema()
-            growth_scale = self.determine_growth_scale(scale_extrema)
-            
-            if growth_scale['needs_new_layer']:
-                self.add_sparse_layer_at_scale(growth_scale, sample_batch)
-            
-            self.add_multiscale_patches(scale_extrema, growth_scale)
-            
-            print(f"📊 Current accuracy: {self.current_accuracy:.2%}")
+# HybridGrowthNetwork removed - replaced by superior DeltaGuidedEvolver system
 
 def load_cifar10_data(batch_size=64):
     """Loads the CIFAR-10 dataset."""
@@ -764,61 +496,165 @@ def load_cifar10_data(batch_size=64):
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
 
+def load_pretrained_into_patched_network(checkpoint_path: str, device: torch.device) -> PatchedSparseNetwork:
+    """Load a pretrained model from GPU seed hunter into our PatchedSparseNetwork structure."""
+    print(f"🔬 Loading pretrained model from: {checkpoint_path}")
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    
+    architecture = checkpoint['architecture']
+    state_dict = checkpoint['model_state_dict']
+    
+    # Extract sparsity from checkpoint or filename
+    base_sparsity = checkpoint.get('sparsity', 0.02)
+    if 'patch' in checkpoint_path:
+        import re
+        sparsity_match = re.search(r'patch([\d.]+)', checkpoint_path)
+        if sparsity_match:
+            base_sparsity = float(sparsity_match.group(1))
+            print(f"   🎯 Extracted sparsity from filename: {base_sparsity}")
+    
+    print(f"   🏗️  Architecture: {architecture}")
+    print(f"   📊 Sparsity: {base_sparsity}")
+    
+    # Create the PatchedSparseNetwork
+    network = PatchedSparseNetwork(architecture, base_sparsity).to(device)
+    
+    # Load pretrained weights from GPU seed hunter format
+    for i, layer in enumerate(network.sparse_layers):
+        layer_key = str(i * 2)  # nn.Sequential keys: 0, 2, 4...
+        
+        if f'{layer_key}.weight' in state_dict:
+            print(f"   ✅ Loading pretrained weights for layer {i} (key '{layer_key}.weight')")
+            
+            # Load weights and bias
+            layer.weight.data = state_dict[f'{layer_key}.weight']
+            layer.bias.data = state_dict[f'{layer_key}.bias']
+            
+            # Extract mask from loaded weights to preserve learned sparsity
+            mask = (layer.weight.data != 0).float()
+            layer.register_buffer('mask', mask)  # Overwrite random mask
+            
+            print(f"      Preserved {mask.sum().item()}/{mask.numel()} connections")
+        else:
+            print(f"   ⚠️  No pretrained weights found for layer {i}")
+    
+    return network
+
+def test_network_accuracy(network: PatchedSparseNetwork, test_loader: DataLoader, device: torch.device) -> float:
+    """Test the accuracy of a network."""
+    network.eval()
+    correct = 0
+    total = 0
+    
+    with torch.no_grad():
+        for i, (data, target) in enumerate(test_loader):
+            data, target = data.to(device), target.to(device)
+            data = data.view(data.size(0), -1)  # Flatten
+            
+            # Debug first batch
+            if i == 0:
+                print(f"   🔍 Debug: Input shape: {data.shape}")
+                print(f"   🔍 Debug: Expected input dim: {network.architecture[0]}")
+                print(f"   🔍 Debug: Target shape: {target.shape}")
+                
+                # Test forward pass step by step
+                h = data
+                for j, layer in enumerate(network.sparse_layers):
+                    print(f"   🔍 Debug: Layer {j} input shape: {h.shape}")
+                    print(f"   🔍 Debug: Layer {j} weight shape: {layer.weight.shape}")
+                    print(f"   🔍 Debug: Layer {j} mask sum: {layer.mask.sum().item()}")
+                    h_out = layer(h)
+                    print(f"   🔍 Debug: Layer {j} output shape: {h_out.shape}")
+                    print(f"   🔍 Debug: Layer {j} output stats: mean={h_out.mean().item():.4f}, std={h_out.std().item():.4f}")
+                    if j < len(network.sparse_layers) - 1:
+                        h = F.relu(h_out)
+                    else:
+                        h = h_out
+                print(f"   🔍 Debug: Final output shape: {h.shape}")
+                print(f"   🔍 Debug: Final output sample: {h[0][:5]}")
+            
+            output = network(data)
+            pred = output.argmax(dim=1)
+            correct += (pred == target).sum().item()
+            total += target.size(0)
+            
+            # Only debug first batch
+            if i == 0:
+                break
+    
+    accuracy = correct / total
+    return accuracy
+
 def main():
-    """Main function to run the experiment."""
+    """Main function using the DeltaGuidedEvolver system."""
     import argparse
-    parser = argparse.ArgumentParser(description='Hybrid Growth Experiment')
+    parser = argparse.ArgumentParser(description='Delta-Guided Architecture Evolution')
     parser.add_argument('--load-model', type=str, help='Path to a saved model checkpoint to start from.')
+    parser.add_argument('--evolution-steps', type=int, default=5, help='Number of evolution steps to run.')
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     train_loader, test_loader = load_cifar10_data()
     
-    sample_batch, _ = next(iter(train_loader))
-    sample_batch = sample_batch.to(device)
-
     if args.load_model:
-        print(f"🔬 Loading model from checkpoint: {args.load_model}")
-        checkpoint = torch.load(args.load_model, map_location=device)
-        initial_arch = checkpoint['architecture']
+        # Load pretrained model into PatchedSparseNetwork
+        network = load_pretrained_into_patched_network(args.load_model, device)
         
-        # Debug: Print the loaded architecture
-        print(f"   🏗️  Loaded architecture: {initial_arch}")
+        # Test initial accuracy
+        print("🧪 Testing initial accuracy...")
+        initial_accuracy = test_network_accuracy(network, test_loader, device)
+        print(f"   📊 Initial accuracy: {initial_accuracy:.2%}")
         
-        # CRITICAL FIX: Extract sparsity from filename if not in checkpoint
-        base_sparsity = checkpoint.get('sparsity', 0.02)
-        if 'patch' in args.load_model:
-            # Extract sparsity from filename like "patch0.065"
-            import re
-            sparsity_match = re.search(r'patch([\d.]+)', args.load_model)
-            if sparsity_match:
-                base_sparsity = float(sparsity_match.group(1))
-                print(f"   🎯 Extracted sparsity from filename: {base_sparsity}")
-        
-        print(f"   📊 Using sparsity: {base_sparsity} (from {'checkpoint' if 'sparsity' in checkpoint else 'filename'})")
-        
-        # Create network with pretrained flag and state dict
-        network = HybridGrowthNetwork(
-            initial_arch=initial_arch,
-            base_sparsity=base_sparsity,
-            device=device,
-            sample_batch=sample_batch.view(sample_batch.size(0), -1),
-            is_pretrained=True,
-            pretrained_state_dict=checkpoint['model_state_dict']
+        # Create OptimalGrowthEvolver with the loaded network
+        evolver = OptimalGrowthEvolver(
+            seed_arch=network.architecture,
+            seed_sparsity=network.base_sparsity,
+            data_loader=train_loader,
+            device=device
         )
         
-        # Load remaining state (patches, etc.) with strict=False to allow missing keys
-        network.load_state_dict(checkpoint['model_state_dict'], strict=False)
-        print("   ✅ Pretrained model loaded successfully (LSUV skipped for scaffold)")
+        # Replace the evolver's network with our loaded one
+        evolver.network = network
+        
     else:
-        network = HybridGrowthNetwork(
-            initial_arch=[3072, 128, 32, 10],
-            base_sparsity=0.05,
-            device=device,
-            sample_batch=sample_batch.view(sample_batch.size(0), -1)
+        # Create new network from scratch
+        initial_arch = [3072, 128, 32, 10]
+        base_sparsity = 0.05
+        
+        evolver = OptimalGrowthEvolver(
+            seed_arch=initial_arch,
+            seed_sparsity=base_sparsity,
+            data_loader=train_loader,
+            device=device
         )
-
-    network.grow_with_scale_aware_patches(train_loader, test_loader, target_accuracy=0.80)
+        
+        # Test initial accuracy
+        print("🧪 Testing initial accuracy...")
+        initial_accuracy = test_network_accuracy(evolver.network, test_loader, device)
+        print(f"   📊 Initial accuracy: {initial_accuracy:.2%}")
+    
+    print(f"\n🚀 Starting Delta-Guided Evolution for {args.evolution_steps} steps...")
+    
+    # Run evolution steps
+    for step in range(args.evolution_steps):
+        print(f"\n🧬 Evolution Step {step + 1}/{args.evolution_steps}")
+        
+        # Perform one evolution step
+        evolver.evolve_step()
+        
+        # Test accuracy after evolution
+        accuracy = test_network_accuracy(evolver.network, test_loader, device)
+        print(f"📊 Accuracy after step {step + 1}: {accuracy:.2%}")
+        
+        # Optional: Early stopping if accuracy is high enough
+        if accuracy > 0.80:
+            print(f"🎯 Target accuracy reached! Stopping evolution.")
+            break
+    
+    print(f"\n✅ Evolution complete!")
+    print(f"📈 Evolution history:")
+    for i, event in enumerate(evolver.history):
+        print(f"   {i+1}. {event}")
 
 if __name__ == "__main__":
     main()
