@@ -433,6 +433,64 @@ class GPUSaturatedSeedHunter:
         """Return cached dataset"""
         return self.cached_dataset
     
+    @torch.no_grad()
+    def apply_permutation(self, model: nn.Sequential, layer_idx_to_sort: int, perm_indices: torch.Tensor):
+        """
+        Applies a permutation to a layer within an nn.Sequential model,
+        perfectly preserving the network's function.
+        """
+        # The actual nn.Linear module is at index `layer_idx_to_sort * 2`
+        # because of the ReLUs in between.
+        linear_layer_idx = layer_idx_to_sort * 2
+
+        # --- Part A: Permute the output neurons of the target layer ---
+        # This means re-ordering the rows of its weight and bias.
+        layer_i = model[linear_layer_idx]
+        if hasattr(layer_i, 'linear'):  # PersistentSparseLayer
+            layer_i.linear.weight.data = layer_i.linear.weight.data[perm_indices, :]
+            layer_i.linear.bias.data = layer_i.linear.bias.data[perm_indices]
+            # Also permute the mask
+            layer_i.mask = layer_i.mask[perm_indices, :]
+        else:  # Regular nn.Linear
+            layer_i.weight.data = layer_i.weight.data[perm_indices, :]
+            layer_i.bias.data = layer_i.bias.data[perm_indices]
+        
+        # --- Part B: Permute the input connections of the NEXT layer ---
+        # This means re-ordering the columns of the next layer's weight matrix.
+        next_linear_layer_idx = (layer_idx_to_sort + 1) * 2
+        if next_linear_layer_idx < len(model):
+            layer_i_plus_1 = model[next_linear_layer_idx]
+            if hasattr(layer_i_plus_1, 'linear'):  # PersistentSparseLayer
+                layer_i_plus_1.linear.weight.data = layer_i_plus_1.linear.weight.data[:, perm_indices]
+                # Also permute the mask
+                layer_i_plus_1.mask = layer_i_plus_1.mask[:, perm_indices]
+            else:  # Regular nn.Linear
+                layer_i_plus_1.weight.data = layer_i_plus_1.weight.data[:, perm_indices]
+
+    def sort_network_layers(self, model: nn.Sequential):
+        """
+        Performs a maintenance step on the network by sorting the neurons
+        in each hidden layer by importance.
+        """
+        num_linear_layers = (len(model) + 1) // 2
+        
+        # We sort every hidden layer, but not the final output layer.
+        for i in range(num_linear_layers - 1):
+            linear_layer_idx = i * 2
+            current_layer = model[linear_layer_idx]
+            
+            # Calculate importance of each output neuron based on its weight norm (L2 norm of rows)
+            if hasattr(current_layer, 'linear'):  # PersistentSparseLayer
+                importance = torch.linalg.norm(current_layer.linear.weight, ord=2, dim=1)
+            else:  # Regular nn.Linear
+                importance = torch.linalg.norm(current_layer.weight, ord=2, dim=1)
+            
+            # Get the indices that would sort the neurons by importance
+            perm_indices = torch.argsort(importance, descending=True)
+            
+            # Apply this permutation to the network
+            self.apply_permutation(model, i, perm_indices)
+
     def calculate_extrema_score(self, model):
         """Calculate extrema score for patchability prediction"""
         extrema_count = 0
@@ -489,8 +547,8 @@ class GPUSaturatedSeedHunter:
         else:
             return self._test_seed_impl(architecture, seed, sparsity, epochs)
     
-    def _test_seed_impl(self, architecture, seed, sparsity, epochs=5):
-        """Implementation of seed testing with configurable epochs"""
+    def _test_seed_impl(self, architecture, seed, sparsity, epochs=15, sort_every_epochs=5):
+        """Implementation of seed testing with periodic neuron sorting."""
         torch.manual_seed(seed)
         
         # Create sparse network
@@ -498,12 +556,14 @@ class GPUSaturatedSeedHunter:
         model = model.to(self.device)
         
         # Use mixed precision for speed if available
-        if torch.cuda.is_available():
-            scaler = GradScaler()
+        scaler = GradScaler() if torch.cuda.is_available() else None
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        
-        # Training with configurable epochs
         dataset = self.get_cached_dataset()
+        
+        # Only print for first few models to avoid spam
+        should_print = seed < 3 and len(architecture) <= 3
+        if should_print:
+            print(f"  🌱 Training arch {architecture} seed {seed} with sorting every {sort_every_epochs} epochs...")
         
         best_acc = 0
         for epoch in range(epochs):
@@ -518,12 +578,10 @@ class GPUSaturatedSeedHunter:
                 y = dataset['train_y'][batch_idx:end_idx]
                 
                 # Forward with mixed precision if available
-                if torch.cuda.is_available():
+                if scaler:
                     with autocast():
                         output = model(x)
                         loss = nn.functional.cross_entropy(output, y)
-                    
-                    # Backward
                     scaler.scale(loss).backward()
                     scaler.step(optimizer)
                     scaler.update()
@@ -532,6 +590,13 @@ class GPUSaturatedSeedHunter:
                     loss = nn.functional.cross_entropy(output, y)
                     loss.backward()
                     optimizer.step()
+
+            # --- NEURON SORTING MAINTENANCE ---
+            # Perform maintenance (sorting) every few epochs
+            if (epoch + 1) % sort_every_epochs == 0 and epoch < epochs - 1:
+                if should_print:
+                    print(f"    🔄 Epoch {epoch+1}: Performing maintenance sort...")
+                self.sort_network_layers(model)
             
             # Evaluation on final epoch
             if epoch == epochs - 1:
@@ -561,7 +626,8 @@ class GPUSaturatedSeedHunter:
             'parameters': sum(p.numel() for p in model.parameters()),
             'patchability': extrema_score * (1 - best_acc),  # High extrema + low acc = patchable
             'sparsity': sparsity,
-            'epochs': epochs
+            'epochs': epochs,
+            'sorted': True  # Flag to indicate this model used neuron sorting
         }
     
     def gpu_saturated_search(self, num_architectures=50, seeds_per_arch=20, sparsity=0.02):
