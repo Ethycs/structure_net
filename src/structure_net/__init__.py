@@ -5,8 +5,9 @@ A PyTorch implementation of neural networks that grow dynamically during trainin
 based on extrema detection and multi-scale snapshot preservation.
 """
 
-from .models.multi_scale_network import MultiScaleNetwork, create_multi_scale_network
-from .snapshots.snapshot_manager import SnapshotManager
+# Legacy components temporarily disabled due to dependencies on deleted modules
+# from .models.multi_scale_network import MultiScaleNetwork, create_multi_scale_network
+# from .snapshots.snapshot_manager import SnapshotManager
 
 # Import canonical standard (THE foundation)
 from .core.model_io import (
@@ -33,11 +34,6 @@ __version__ = "0.2.0"
 __author__ = "Ethycs"
 
 __all__ = [
-    # Legacy components (still available)
-    "MultiScaleNetwork",
-    "create_multi_scale_network",
-    "SnapshotManager",
-    
     # Canonical Standard (THE foundation)
     "StandardSparseLayer",
     "ExtremaAwareSparseLayer", 

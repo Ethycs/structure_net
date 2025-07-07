@@ -5,6 +5,9 @@ CIFAR-10 Seed Hunt - High Accuracy, Low Sparsity
 Hunt for CIFAR-10 seeds with high accuracy and low sparsity using the canonical system.
 """
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+
 import torch
 from src.structure_net import GPUSeedHunter, ArchitectureGenerator
 
@@ -19,9 +22,7 @@ def main():
     # Create architecture generator for CIFAR-10
     arch_gen = ArchitectureGenerator(
         input_size=3072,  # CIFAR-10 flattened
-        output_size=10,   # 10 classes
-        max_layers=4,     # Keep it reasonable
-        max_width=2048    # Allow wider layers for better accuracy
+        num_classes=10    # 10 classes
     )
     
     # Generate architectures optimized for accuracy
@@ -49,20 +50,25 @@ def main():
     
     # Create GPU seed hunter with settings optimized for high accuracy
     hunter = GPUSeedHunter(
-        architectures=architectures,
-        sparsity_levels=[0.005, 0.01, 0.02, 0.05],  # Low sparsity for high accuracy
-        max_seeds_per_config=20,  # More seeds per config
-        training_epochs=20,       # More training for better accuracy
-        device=device,
-        save_top_k=10,           # Save more good models
-        accuracy_threshold=0.40,  # High accuracy threshold
-        enable_sorting=True,      # Enable neuron sorting
-        sort_frequency=3          # Sort frequently
+        num_gpus=1,
+        device=device.type,
+        save_promising=True,
+        dataset='cifar10',
+        save_threshold=0.40,  # High accuracy threshold
+        keep_top_k=10
     )
     
-    # Hunt for seeds
+    # Set sorting configuration
+    hunter._disable_sorting = False  # Enable neuron sorting
+    hunter._sort_frequency = 3       # Sort frequently
+    
+    # Hunt for seeds using GPU saturated search
     print("\n🚀 Starting seed hunt...")
-    results = hunter.hunt_seeds()
+    results = hunter.gpu_saturated_search(
+        num_architectures=len(architectures),
+        seeds_per_arch=20,  # More seeds per config
+        sparsity=0.01       # Low sparsity for high accuracy
+    )
     
     # Print results
     print(f"\n📊 SEED HUNT RESULTS")
