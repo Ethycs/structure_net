@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Dict
 from .layers import StandardSparseLayer
 
 
@@ -302,7 +302,7 @@ def create_lsuv_initialized_network(architecture: List[int],
     Returns:
         LSUV-initialized sparse network
     """
-    from .model_io import create_standard_network
+    from .network_factory import create_standard_network
     
     if verbose:
         print(f"🏗️  Creating LSUV-initialized network")

@@ -15,14 +15,10 @@ from typing import List, Dict, Any, Optional
 from torch.utils.data import DataLoader
 
 # Import canonical standard
-from ..core.model_io import (
-    create_standard_network,
-    save_model_seed,
-    load_model_seed,
-    sort_all_network_layers,
-    get_network_stats,
-    StandardSparseLayer
-)
+from ..core.network_factory import create_standard_network
+from ..core.layers import StandardSparseLayer
+from ..core.io_operations import save_model_seed, load_model_seed
+from ..core.network_analysis import sort_all_network_layers, get_network_stats
 from .extrema_analyzer import detect_network_extrema, print_extrema_analysis
 # MI analysis removed - using direct extrema-driven approach
 # from .information_theory import (

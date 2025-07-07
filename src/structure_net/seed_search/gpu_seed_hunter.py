@@ -23,13 +23,9 @@ from torch.utils.data import DataLoader
 from typing import List, Dict, Any, Optional, Tuple
 
 # Import the canonical standard
-from ..core.model_io import (
-    create_standard_network, 
-    save_model_seed, 
-    load_model_seed,
-    sort_all_network_layers,
-    get_network_stats
-)
+from ..core.network_factory import create_standard_network
+from ..core.io_operations import save_model_seed, load_model_seed
+from ..core.network_analysis import sort_all_network_layers, get_network_stats
 from .architecture_generator import ArchitectureGenerator
 
 
@@ -362,13 +358,13 @@ class GPUSeedHunter:
                 
                 # Hook to capture activations
                 def hook(module, input, output):
-                    from ..core.model_io import StandardSparseLayer
+                    from ..core.layers import StandardSparseLayer
                     if isinstance(module, StandardSparseLayer):
                         activations.append(output)
                 
                 hooks = []
                 for layer in model:
-                    from ..core.model_io import StandardSparseLayer
+                    from ..core.layers import StandardSparseLayer
                     if isinstance(layer, StandardSparseLayer):
                         hooks.append(layer.register_forward_hook(hook))
                 

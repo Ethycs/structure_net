@@ -12,7 +12,8 @@ import torch.nn.functional as F
 from typing import List, Dict, Any, Optional
 from torch.utils.data import DataLoader
 
-from ..core.model_io import StandardSparseLayer, get_network_stats
+from ..core.layers import StandardSparseLayer
+from ..core.network_analysis import get_network_stats
 
 
 @torch.no_grad()

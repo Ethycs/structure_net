@@ -13,7 +13,7 @@ import numpy as np
 from typing import List, Dict, Any, Tuple
 from torch.utils.data import DataLoader
 
-from ..core.model_io import StandardSparseLayer
+from ..core.layers import StandardSparseLayer
 
 
 def estimate_mi_proxy(x: torch.Tensor, y: torch.Tensor) -> float:
