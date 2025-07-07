@@ -38,6 +38,13 @@ from .core import (
 # Import evolution system (built on canonical standard)
 from .evolution.network_evolver import OptimalGrowthEvolver
 from .evolution.extrema_analyzer import analyze_layer_extrema, detect_network_extrema
+from .evolution.integrated_growth_system import (
+    StructureNetGrowthSystem,
+    ThresholdConfig,
+    MetricsConfig,
+    ExactMutualInformation,
+    analyze_and_grow_network
+)
 # MI analysis removed - using direct extrema-driven approach
 # from .evolution.information_theory import analyze_information_flow, estimate_mi_proxy
 
@@ -79,6 +86,13 @@ __all__ = [
     "OptimalGrowthEvolver",
     "analyze_layer_extrema",
     "detect_network_extrema",
+    
+    # Integrated Growth System
+    "StructureNetGrowthSystem",
+    "ThresholdConfig",
+    "MetricsConfig",
+    "ExactMutualInformation",
+    "analyze_and_grow_network",
     
     # Seed Search
     "GPUSeedHunter",
