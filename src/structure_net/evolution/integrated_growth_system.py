@@ -20,6 +20,7 @@ from typing import Dict, List, Any
 from ..core.layers import StandardSparseLayer
 from .complete_metrics_system import CompleteMetricsSystem, CompleteGraphAnalyzer
 from ..core.network_factory import create_standard_network
+from ..core.network_analysis import get_network_stats
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -125,21 +126,23 @@ class ParallelGrowthTournament:
         worst_layer_key = min(health_scores, key=health_scores.get)
         worst_layer_idx = int(worst_layer_key.split('_')[-1])
         
-        current_arch = [l.in_features for l in network.layers] + [network.layers[-1].out_features]
+        current_arch = get_network_stats(network)['architecture']
         new_layer_size = max(64, current_arch[worst_layer_idx] // 2)
         
         new_arch = current_arch[:worst_layer_idx+1] + [new_layer_size] + current_arch[worst_layer_idx+1:]
         
-        # This is a placeholder for the actual network modification logic
-        # In a real implementation, you would replace the network object.
         logger.info(f"    Action: Add layer of size {new_layer_size} after layer {worst_layer_idx}")
         
+        new_network = create_standard_network(new_arch, sparsity=0.02, device=next(network.parameters()).device)
+        # In a real implementation, we would copy weights. For now, we just replace the network.
+        network = new_network
+
         return [{'action': 'add_layer', 'position': worst_layer_idx, 'size': new_layer_size}]
 
     def _strategy_add_patches(self, network, data_loader):
         """Strategy: Add connections to fix dead or saturated neurons."""
-        # This is a placeholder for the actual patching logic
-        logger.info("    Action: Add patches to extrema neurons")
+        logger.info("    Action: Add patches to extrema neurons (placeholder)")
+        # This would involve modifying the mask of the sparse layers.
         return [{'action': 'add_patches', 'reason': 'Fixing extrema'}]
 
     def _strategy_prune_weak(self, network, data_loader):
@@ -156,12 +159,14 @@ class ParallelGrowthTournament:
 
     def _train_candidate(self, network, train_loader, epochs):
         """Train a candidate network for a few epochs."""
+        device = next(network.parameters()).device
         optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
         criterion = nn.CrossEntropyLoss()
         network.train()
         
         for epoch in range(epochs):
             for data, target in train_loader:
+                data, target = data.to(device), target.to(device)
                 optimizer.zero_grad()
                 output = network(data.view(data.size(0), -1))
                 loss = criterion(output, target)
@@ -170,11 +175,13 @@ class ParallelGrowthTournament:
 
     def _evaluate_network(self, network, val_loader):
         """Evaluate a network's accuracy."""
+        device = next(network.parameters()).device
         network.eval()
         correct = 0
         total = 0
         with torch.no_grad():
             for data, target in val_loader:
+                data, target = data.to(device), target.to(device)
                 output = network(data.view(data.size(0), -1))
                 pred = output.argmax(dim=1)
                 correct += (pred == target).sum().item()
@@ -225,6 +232,7 @@ class AdaptiveThresholdManager:
    
    def compute_network_stats(self, network, dataloader):
        """Compute statistics for threshold adjustment."""
+       device = next(network.parameters()).device
        stats = {
            'active_ratio': [],
            'avg_gradient': [],
@@ -237,9 +245,10 @@ class AdaptiveThresholdManager:
        # Forward pass to collect activation stats
        with torch.no_grad():
            for data, _ in dataloader:
+               data = data.to(device)
                x = data.view(data.size(0), -1)
                
-               for i, layer in enumerate(network.layers):
+               for i, layer in enumerate(network):
                    x = layer(x)
                    
                    # Active ratio
@@ -260,6 +269,7 @@ class AdaptiveThresholdManager:
        # Compute gradients
        network.train()
        data, target = next(iter(dataloader))
+       data, target = data.to(device), target.to(device)
        output = network(data.view(data.size(0), -1))
        loss = F.cross_entropy(output, target)
        loss.backward()

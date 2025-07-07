@@ -41,7 +41,9 @@ class StandardSparseLayer(nn.Module):
         
         This ensures all systems have identical behavior.
         """
-        return F.linear(x, self.linear.weight * self.mask, self.linear.bias)
+        # Ensure mask is on the same device as the weight
+        mask = self.mask.to(self.linear.weight.device)
+        return F.linear(x, self.linear.weight * mask, self.linear.bias)
     
     def get_connection_count(self) -> int:
         """Get number of active connections in this layer."""

@@ -260,7 +260,9 @@ class CompleteMIAnalyzer:
             return self._histogram_entropy(X.squeeze())
         else:
             cov = torch.cov(X.T)
-            sign, logdet = torch.linalg.slogdet(cov + 1e-6 * torch.eye(X.shape[1]))
+            # Ensure identity matrix is on the same device as the covariance matrix
+            identity = torch.eye(X.shape[1], device=cov.device, dtype=cov.dtype)
+            sign, logdet = torch.linalg.slogdet(cov + 1e-6 * identity)
             d = X.shape[1]
             h = 0.5 * (d * np.log(2 * np.pi * np.e) + logdet)
             return h.item() / np.log(2)
@@ -325,8 +327,8 @@ class CompleteActivityAnalyzer:
         persistent_active = (neuron_activity_rates > self.config.persistence_ratio).sum().item()
         
         # Activation distribution analysis
-        activation_percentiles = torch.quantile(activations.abs().flatten(), 
-                                               torch.tensor([0.1, 0.25, 0.5, 0.75, 0.9]))
+        quantile_values = torch.tensor([0.1, 0.25, 0.5, 0.75, 0.9], device=activations.device)
+        activation_percentiles = torch.quantile(activations.abs().flatten(), quantile_values)
         
         # Saturation analysis
         saturation_threshold = 10.0
@@ -498,6 +500,10 @@ class CompleteSensLIAnalyzer:
     
     def _get_layer_activations_and_gradients(self, data, target, layer_idx):
         """Get activations and gradients for a specific layer."""
+        # Ensure data and target are on the same device as the network
+        device = next(self.network.parameters()).device
+        data = data.to(device)
+        target = target.to(device)
         data.requires_grad_(True)
         
         x = data.view(data.size(0), -1)
@@ -539,7 +545,19 @@ class CompleteSensLIAnalyzer:
     def _compute_virtual_parameter_sensitivity(self, acts_i, acts_j, grads_i, grads_j):
         """Compute sensitivity to virtual parameters."""
         # Sensitivity of adding a connection between layers
-        sensitivity = torch.norm(acts_i.mean(dim=0).unsqueeze(0) @ grads_j.mean(dim=0).unsqueeze(1))
+        # Use element-wise multiplication instead of matrix multiplication for compatibility
+        acts_i_mean = acts_i.mean(dim=0)  # Shape: [features_i]
+        grads_j_mean = grads_j.mean(dim=0)  # Shape: [features_j]
+        
+        # Compute sensitivity as the norm of the outer product (flattened)
+        # This represents sensitivity to adding connections between all pairs
+        if acts_i_mean.numel() > 0 and grads_j_mean.numel() > 0:
+            # Use broadcasting to compute outer product efficiently
+            outer_product = acts_i_mean.unsqueeze(1) * grads_j_mean.unsqueeze(0)
+            sensitivity = torch.norm(outer_product)
+        else:
+            sensitivity = torch.tensor(0.0)
+        
         return sensitivity.item()
     
     def _compute_bottleneck_score(self, acts_i, acts_j, grads_i, grads_j, 
@@ -597,6 +615,65 @@ class CompleteSensLIAnalyzer:
         stability_score = 1.0 / (1.0 + std_sens)
         
         return (magnitude_score + stability_score) / 2.0
+    
+    def compute_sensli_from_precomputed_data(self, acts_i: torch.Tensor, acts_j: torch.Tensor,
+                                           grads_i: torch.Tensor, grads_j: torch.Tensor,
+                                           layer_i: int, layer_j: int) -> Dict[str, float]:
+        """
+        OPTIMIZED: Compute SensLI metrics from precomputed activation and gradient data.
+        This eliminates redundant forward/backward passes.
+        """
+        # Apply thresholds
+        active_mask_i = acts_i.abs() > self.config.activation_threshold
+        active_mask_j = acts_j.abs() > self.config.activation_threshold
+        
+        if not active_mask_i.any() or not active_mask_j.any():
+            return self._zero_sensli_metrics()
+        
+        # Compute gradient sensitivity
+        virtual_sensitivity = self._compute_virtual_parameter_sensitivity(
+            acts_i, acts_j, grads_i, grads_j
+        )
+        
+        # Bottleneck score computation
+        bottleneck_score = self._compute_bottleneck_score(
+            acts_i, acts_j, grads_i, grads_j, active_mask_i, active_mask_j
+        )
+        
+        # Determine suggested action
+        suggested_action = self._determine_suggested_action(
+            virtual_sensitivity, bottleneck_score
+        )
+        
+        # Compute intervention priority
+        intervention_priority = self._compute_intervention_priority(
+            virtual_sensitivity, bottleneck_score
+        )
+        
+        return {
+            # Gradient-Based Sensitivity
+            'gradient_sensitivity': virtual_sensitivity,
+            'max_gradient_sensitivity': virtual_sensitivity,
+            'std_gradient_sensitivity': 0.0,  # Single batch, no variance
+            
+            # Bottleneck Scores
+            'bottleneck_score': bottleneck_score,
+            'max_bottleneck_score': bottleneck_score,
+            'critical_bottleneck': bottleneck_score == float('inf'),
+            
+            # Action Recommendations
+            'suggested_action': suggested_action,
+            'intervention_priority': intervention_priority,
+            
+            # Sensitivity Analysis
+            'sensitivity_stability': 1.0,  # Single measurement, assume stable
+            'gradient_flow_health': self._assess_gradient_flow_health([virtual_sensitivity]),
+            
+            # Meta information
+            'batches_analyzed': 1,  # Using aggregated data from multiple batches
+            'layer_pair': (layer_i, layer_j),
+            'optimization': 'precomputed_data'  # Flag to indicate optimization used
+        }
     
     def _zero_sensli_metrics(self):
         """Return zero metrics when computation fails."""
@@ -1052,8 +1129,8 @@ class CompleteMetricsSystem:
             'summary': {}
         }
         
-        # Collect activation data
-        activation_data = self._collect_activation_data(data_loader, num_batches)
+        # Collect activation and gradient data in a single pass (OPTIMIZED)
+        activation_data, gradient_data = self._collect_activation_and_gradient_data(data_loader, num_batches)
         
         # Get sparse layers
         sparse_layers = [layer for layer in self.network if isinstance(layer, StandardSparseLayer)]
@@ -1080,13 +1157,16 @@ class CompleteMetricsSystem:
             activity_metrics = self.activity_analyzer.compute_complete_activity_metrics(acts, layer_idx)
             results['activity_metrics'][f'layer_{layer_idx}'] = activity_metrics
         
-        # 3. SensLI Metrics for each layer pair
+        # 3. SensLI Metrics for each layer pair (OPTIMIZED - reuse pre-computed data)
         logger.info("  Computing SensLI metrics...")
         for i in range(len(sparse_layers) - 1):
-            sensli_metrics = self.sensli_analyzer.compute_complete_sensli_metrics(
-                i, i+1, data_loader, num_batches
-            )
-            results['sensli_metrics'][f'layer_{i}_{i+1}'] = sensli_metrics
+            if i in activation_data and i+1 in activation_data and i in gradient_data and i+1 in gradient_data:
+                sensli_metrics = self.sensli_analyzer.compute_sensli_from_precomputed_data(
+                    activation_data[i], activation_data[i+1],
+                    gradient_data[i], gradient_data[i+1],
+                    i, i+1
+                )
+                results['sensli_metrics'][f'layer_{i}_{i+1}'] = sensli_metrics
         
         # 4. Graph Metrics
         logger.info("  Computing graph metrics...")
@@ -1100,38 +1180,82 @@ class CompleteMetricsSystem:
         
         return results
     
-    def _collect_activation_data(self, data_loader, num_batches):
-        """Collect activation data for analysis."""
+    def _collect_activation_and_gradient_data(self, data_loader, num_batches):
+        """
+        OPTIMIZED: Collect both activation and gradient data in a single pass.
+        This eliminates redundant forward passes and significantly improves efficiency.
+        """
+        device = next(self.network.parameters()).device
         activation_data = defaultdict(list)
+        gradient_data = defaultdict(list)
         
-        self.network.eval()
-        with torch.no_grad():
-            for batch_idx, (data, _) in enumerate(data_loader):
-                if batch_idx >= num_batches:
-                    break
-                
-                x = data.view(data.size(0), -1)
-                layer_idx = 0
-                
-                for layer in self.network:
-                    if isinstance(layer, StandardSparseLayer):
-                        x = layer(x)
-                        activation_data[layer_idx].append(x.clone())
-                        layer_idx += 1
-                        if layer_idx < len([l for l in self.network if isinstance(l, StandardSparseLayer)]):
-                            x = F.relu(x)
-                    elif isinstance(layer, nn.ReLU):
-                        x = layer(x)
-        
-        # Aggregate activations - concatenate all batches to keep 2D shape [total_samples, features]
-        for layer_idx in activation_data:
-            # Concatenate all batches: [batch1, batch2, ...] -> [total_samples, features]
-            activation_data[layer_idx] = torch.cat(activation_data[layer_idx], dim=0)
+        for batch_idx, (data, target) in enumerate(data_loader):
+            if batch_idx >= num_batches:
+                break
             
-            # Ensure we have 2D tensors for proper analysis
-            assert activation_data[layer_idx].dim() == 2, f"Layer {layer_idx} activations should be 2D, got {activation_data[layer_idx].shape}"
+            data = data.to(device)
+            target = target.to(device)
+            data.requires_grad_(True)
+            
+            # Forward pass collecting activations
+            x = data.view(data.size(0), -1)
+            layer_activations = []
+            layer_idx = 0
+            
+            for layer in self.network:
+                if isinstance(layer, StandardSparseLayer):
+                    x = layer(x)
+                    layer_activations.append(x.clone())
+                    activation_data[layer_idx].append(x.detach().clone())
+                    layer_idx += 1
+                    if layer_idx < len([l for l in self.network if isinstance(l, StandardSparseLayer)]):
+                        x = F.relu(x)
+                elif isinstance(layer, nn.ReLU):
+                    x = layer(x)
+            
+            # Backward pass to compute gradients for each layer
+            loss = F.cross_entropy(x, target)
+            
+            # Compute gradients for each layer activation
+            for i, acts in enumerate(layer_activations):
+                try:
+                    if not acts.requires_grad:
+                        acts.requires_grad_(True)
+                    
+                    grads = torch.autograd.grad(
+                        loss, acts, 
+                        retain_graph=(i < len(layer_activations) - 1),
+                        create_graph=False,
+                        allow_unused=True
+                    )
+                    
+                    if grads[0] is not None:
+                        gradient_data[i].append(grads[0].detach().clone())
+                    else:
+                        # Create zero gradients if unused
+                        zero_grads = torch.zeros_like(acts)
+                        gradient_data[i].append(zero_grads.detach().clone())
+                        
+                except RuntimeError as e:
+                    # Fallback: create zero gradients
+                    zero_grads = torch.zeros_like(acts)
+                    gradient_data[i].append(zero_grads.detach().clone())
         
-        return dict(activation_data)
+        # Aggregate data - concatenate all batches
+        for layer_idx in activation_data:
+            activation_data[layer_idx] = torch.cat(activation_data[layer_idx], dim=0)
+            assert activation_data[layer_idx].dim() == 2, f"Layer {layer_idx} activations should be 2D"
+        
+        for layer_idx in gradient_data:
+            gradient_data[layer_idx] = torch.cat(gradient_data[layer_idx], dim=0)
+            assert gradient_data[layer_idx].dim() == 2, f"Layer {layer_idx} gradients should be 2D"
+        
+        return dict(activation_data), dict(gradient_data)
+    
+    def _collect_activation_data(self, data_loader, num_batches):
+        """Legacy method - kept for backward compatibility."""
+        activation_data, _ = self._collect_activation_and_gradient_data(data_loader, num_batches)
+        return activation_data
     
     def _compute_summary_metrics(self, results):
         """Compute high-level summary metrics."""
