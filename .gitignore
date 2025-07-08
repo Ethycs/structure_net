@@ -11,3 +11,8 @@ data/*
 Breakthroughs.md
 .env
 *.json
+*.log
+
+*.txt
+*.yaml
+*.wandb

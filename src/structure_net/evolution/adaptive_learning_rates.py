@@ -215,6 +215,332 @@ class MultiScaleLearning:
             return 'fine'
 
 
+class CascadingDecayScheduler:
+    """
+    Cascading/Exponential Decay Learning Rates
+    
+    Each layer gets exponentially smaller LR based on depth.
+    Purpose: Preserve learned features in early layers while allowing later layers to adapt.
+    """
+    
+    def __init__(self, base_lr: float = 0.001, decay_base: float = 0.1):
+        self.base_lr = base_lr
+        self.decay_base = decay_base
+    
+    def get_layer_lr(self, layer_idx: int, total_layers: int) -> float:
+        """Get exponentially decaying LR based on layer depth"""
+        decay = self.decay_base ** (layer_idx / total_layers)
+        return self.base_lr * decay
+    
+    def create_param_groups(self, layers: List) -> List[Dict]:
+        """Create parameter groups with cascading decay"""
+        param_groups = []
+        for i, layer in enumerate(layers):
+            decay = self.decay_base ** (i / len(layers))
+            param_groups.append({
+                'params': layer.parameters(),
+                'lr': self.base_lr * decay,
+                'name': f'scaffold_layer_{i}'
+            })
+        return param_groups
+
+
+class AgeBasedScheduler:
+    """
+    Age-Based Learning Rates
+    
+    Older layers learn slower, newer layers learn faster.
+    Purpose: Stabilize old knowledge while allowing new adaptation.
+    """
+    
+    def __init__(self, base_lr: float = 0.001, age_decay_base: float = 0.1):
+        self.base_lr = base_lr
+        self.age_decay_base = age_decay_base
+        self.layer_birth_epochs = {}
+        self.current_epoch = 0
+    
+    def register_layer(self, layer_id: str, birth_epoch: int):
+        """Register when a layer was created"""
+        self.layer_birth_epochs[layer_id] = birth_epoch
+    
+    def get_age_based_lr(self, layer_id: str) -> float:
+        """Get learning rate based on layer age"""
+        birth_epoch = self.layer_birth_epochs.get(layer_id, self.current_epoch)
+        age = self.current_epoch - birth_epoch
+        decay = self.age_decay_base ** age
+        return self.base_lr * decay
+    
+    def update_epoch(self, epoch: int):
+        """Update current epoch"""
+        self.current_epoch = epoch
+
+
+class ComponentSpecificScheduler:
+    """
+    Component-Specific Learning Rates
+    
+    Different components (scaffold, patches, necks, new layers) get different rates.
+    Purpose: Different components need different learning speeds.
+    """
+    
+    def __init__(self, 
+                 scaffold_lr: float = 0.0001,
+                 patch_lr: float = 0.0005,
+                 neck_lr: float = 0.001,
+                 new_layer_lr: float = 0.001):
+        self.component_rates = {
+            'scaffold': scaffold_lr,
+            'patches': patch_lr,
+            'necks': neck_lr,
+            'new_layers': new_layer_lr
+        }
+    
+    def create_component_groups(self, components: Dict[str, List]) -> List[Dict]:
+        """Create parameter groups for different components"""
+        param_groups = []
+        
+        for component_type, layers in components.items():
+            if component_type in self.component_rates:
+                lr = self.component_rates[component_type]
+                for i, layer in enumerate(layers):
+                    param_groups.append({
+                        'params': layer.parameters(),
+                        'lr': lr,
+                        'name': f'{component_type}_{i}'
+                    })
+        
+        return param_groups
+
+
+class PretrainedNewLayerScheduler:
+    """
+    Pretrained + New Layer Strategy
+    
+    Pretrained layers get very low LR, new layers get high LR.
+    Purpose: Preserve pretrained features while training new components.
+    """
+    
+    def __init__(self, 
+                 pretrained_lr: float = 1e-5,
+                 new_lr: float = 1e-3,
+                 adapter_lr: float = 5e-4):
+        self.pretrained_lr = pretrained_lr
+        self.new_lr = new_lr
+        self.adapter_lr = adapter_lr
+    
+    def create_pretrained_groups(self, 
+                               pretrained_layers: List,
+                               new_layers: List,
+                               adapter_layers: List = None) -> List[Dict]:
+        """Create parameter groups for pretrained vs new components"""
+        param_groups = []
+        
+        # Pretrained layers - nearly frozen
+        for i, layer in enumerate(pretrained_layers):
+            param_groups.append({
+                'params': layer.parameters(),
+                'lr': self.pretrained_lr,
+                'name': f'pretrained_{i}'
+            })
+        
+        # New layers - full learning rate
+        for i, layer in enumerate(new_layers):
+            param_groups.append({
+                'params': layer.parameters(),
+                'lr': self.new_lr,
+                'name': f'new_{i}'
+            })
+        
+        # Adapter layers - medium speed
+        if adapter_layers:
+            for i, layer in enumerate(adapter_layers):
+                param_groups.append({
+                    'params': layer.parameters(),
+                    'lr': self.adapter_lr,
+                    'name': f'adapter_{i}'
+                })
+        
+        return param_groups
+
+
+class GrowthAwareScheduler:
+    """
+    Growth-Aware Learning Rate Scheduling
+    
+    Adjusts learning rates after growth events.
+    Purpose: Stabilize learning after architectural changes.
+    """
+    
+    def __init__(self, scaffold_decay: float = 0.5, new_component_lr: float = 0.001):
+        self.scaffold_decay = scaffold_decay
+        self.new_component_lr = new_component_lr
+    
+    def adjust_lr_after_growth(self, optimizer: optim.Optimizer, growth_event: str):
+        """Adjust learning rates after a growth event"""
+        for param_group in optimizer.param_groups:
+            if 'scaffold' in param_group.get('name', ''):
+                param_group['lr'] *= self.scaffold_decay  # Halve scaffold LR after growth
+            elif 'new' in param_group.get('name', ''):
+                param_group['lr'] = self.new_component_lr  # Fresh LR for new components
+
+
+class WarmupScheduler:
+    """
+    Warm-Up for New Components
+    
+    Gradually increase learning rate for new components.
+    Purpose: Prevent new components from disrupting existing features.
+    """
+    
+    def __init__(self, warmup_epochs: int = 5):
+        self.warmup_epochs = warmup_epochs
+    
+    def warmup_schedule(self, epoch: int) -> float:
+        """Linear warm-up schedule"""
+        if epoch < self.warmup_epochs:
+            return epoch / self.warmup_epochs
+        return 1.0
+    
+    def get_warmup_lr(self, base_lr: float, epoch: int) -> float:
+        """Get learning rate with warm-up applied"""
+        return base_lr * self.warmup_schedule(epoch)
+
+
+class LARSScheduler:
+    """
+    Layer-wise Adaptive Rate Scaling (LARS)
+    
+    Adapt learning rate based on gradient/weight ratio per layer.
+    Purpose: Automatic scaling based on layer dynamics.
+    """
+    
+    def __init__(self, base_lr: float = 0.001, eps: float = 1e-8):
+        self.base_lr = base_lr
+        self.eps = eps
+    
+    def get_lars_lr(self, layer: nn.Module) -> float:
+        """Get LARS-adjusted learning rate for a layer"""
+        if not hasattr(layer, 'weight') or layer.weight.grad is None:
+            return self.base_lr
+        
+        weight_norm = layer.weight.norm().item()
+        grad_norm = layer.weight.grad.norm().item()
+        
+        if grad_norm > 0:
+            layer_lr = self.base_lr * (weight_norm / (grad_norm + self.eps))
+            return layer_lr
+        return self.base_lr
+
+
+class ProgressiveFreezingScheduler:
+    """
+    Progressive Freezing Schedule
+    
+    Gradually freeze layers as training progresses.
+    Purpose: Focus learning on later layers over time.
+    """
+    
+    def __init__(self, 
+                 warmup_lr: float = 0.001,
+                 refinement_early_lr: float = 0.00001,
+                 refinement_late_lr: float = 0.0001,
+                 final_lr: float = 0.0001):
+        self.warmup_lr = warmup_lr
+        self.refinement_early_lr = refinement_early_lr
+        self.refinement_late_lr = refinement_late_lr
+        self.final_lr = final_lr
+    
+    def get_lr_by_phase(self, layer_idx: int, total_layers: int, current_phase: str) -> float:
+        """Get learning rate based on training phase and layer position"""
+        if current_phase == 'warmup':
+            return self.warmup_lr  # All layers active
+        elif current_phase == 'refinement':
+            if layer_idx < 2:
+                return self.refinement_early_lr  # Nearly frozen early layers
+            else:
+                return self.refinement_late_lr   # Slow for later layers
+        elif current_phase == 'final':
+            if layer_idx < total_layers - 1:
+                return 0  # Freeze all but last
+            return self.final_lr  # Only tune final layer
+        return self.warmup_lr
+
+
+class SparsityAwareScheduler:
+    """
+    Sparsity-Aware Learning Rates
+    
+    Adjust LR based on connection density.
+    Purpose: Sparse connections may need higher learning rates.
+    """
+    
+    def __init__(self, 
+                 base_lr: float = 0.001,
+                 sparse_multiplier: float = 2.0,
+                 dense_multiplier: float = 0.5,
+                 sparse_threshold: float = 0.02,
+                 dense_threshold: float = 0.1):
+        self.base_lr = base_lr
+        self.sparse_multiplier = sparse_multiplier
+        self.dense_multiplier = dense_multiplier
+        self.sparse_threshold = sparse_threshold
+        self.dense_threshold = dense_threshold
+    
+    def get_sparsity_adjusted_lr(self, layer) -> float:
+        """Adjust learning rate based on layer sparsity"""
+        if hasattr(layer, 'mask'):
+            density = layer.mask.float().mean().item()
+        elif hasattr(layer, 'get_density'):
+            density = layer.get_density()
+        else:
+            return self.base_lr
+        
+        if density < self.sparse_threshold:  # Very sparse
+            return self.base_lr * self.sparse_multiplier  # Need higher LR
+        elif density > self.dense_threshold:  # Dense patches
+            return self.base_lr * self.dense_multiplier  # Lower LR for stability
+        else:
+            return self.base_lr
+
+
+class SedimentaryLearningScheduler:
+    """
+    The "Sedimentary" Learning Strategy
+    
+    Natural stratification of learning speeds by component age.
+    Purpose: Geological-like learning where older layers barely change.
+    """
+    
+    def __init__(self, 
+                 geological_lr: float = 0.00001,
+                 sediment_lr: float = 0.0001,
+                 active_lr: float = 0.001,
+                 patch_lr: float = 0.0005):
+        self.learning_rates = {
+            'geological_layers': geological_lr,   # Oldest, barely change
+            'sediment_layers': sediment_lr,       # Middle age, slow drift
+            'active_layers': active_lr,           # Newest, rapid change
+            'patches': patch_lr                   # Targeted fixes
+        }
+    
+    def classify_layer_age(self, layer_age: int) -> str:
+        """Classify layer into geological age category"""
+        if layer_age > 100:
+            return 'geological_layers'
+        elif layer_age > 20:
+            return 'sediment_layers'
+        else:
+            return 'active_layers'
+    
+    def get_sedimentary_lr(self, layer_age: int, is_patch: bool = False) -> float:
+        """Get learning rate based on sedimentary classification"""
+        if is_patch:
+            return self.learning_rates['patches']
+        
+        age_category = self.classify_layer_age(layer_age)
+        return self.learning_rates[age_category]
+
+
 class UnifiedAdaptiveLearning:
     """
     The Ultimate Combination: Unified Adaptive System
@@ -225,6 +551,7 @@ class UnifiedAdaptiveLearning:
     3. Scale-based rates (connection birth time)
     4. Age-based soft decay
     5. Extrema proximity bonus
+    6. All the additional sophisticated strategies
     """
     
     def __init__(self, 
@@ -760,6 +1087,164 @@ class AdaptiveLearningRateManager:
                     print(f"   {key}: {value:.4f}")
                 else:
                     print(f"   {key}: {value}")
+
+
+def create_optimal_lr_schedule(model, 
+                             base_lr: float = 0.001,
+                             current_epoch: int = 0,
+                             epochs_since_growth: int = 0) -> List[Dict]:
+    """
+    Create the optimal comprehensive learning rate schedule combining all strategies.
+    
+    This is the recommended combined strategy that uses multiple approaches:
+    1. Cascading by depth and age for scaffold
+    2. Medium stable rate for patches
+    3. Warm-up schedule for new components
+    4. Sparsity-aware adjustments
+    5. Age-based decay
+    """
+    param_groups = []
+    
+    # Initialize schedulers
+    cascading = CascadingDecayScheduler(base_lr)
+    age_scheduler = AgeBasedScheduler(base_lr)
+    warmup = WarmupScheduler()
+    sparsity_aware = SparsityAwareScheduler(base_lr)
+    sedimentary = SedimentaryLearningScheduler()
+    
+    # Get sparse layers
+    sparse_layers = [layer for layer in model if isinstance(layer, StandardSparseLayer)]
+    
+    # 1. Scaffold - cascading by depth and age
+    for i, layer in enumerate(sparse_layers):
+        # Age factor (every 20 epochs reduces by 10x)
+        age_factor = 0.1 ** (current_epoch // 20)
+        
+        # Depth factor (exponential decay by depth)
+        depth_factor = cascading.get_layer_lr(i, len(sparse_layers)) / base_lr
+        
+        # Sparsity adjustment
+        sparsity_lr = sparsity_aware.get_sparsity_adjusted_lr(layer)
+        sparsity_factor = sparsity_lr / base_lr
+        
+        # Sedimentary classification
+        layer_age = current_epoch  # Simplified - in real use, track actual layer age
+        sedimentary_lr = sedimentary.get_sedimentary_lr(layer_age, is_patch=False)
+        sedimentary_factor = sedimentary_lr / base_lr
+        
+        # Combine all factors
+        final_lr = base_lr * age_factor * depth_factor * sparsity_factor * sedimentary_factor
+        
+        param_groups.append({
+            'params': list(layer.parameters()),
+            'lr': final_lr,
+            'name': f'scaffold_layer_{i}',
+            'layer_type': 'scaffold'
+        })
+    
+    # 2. Patches - medium stable rate with warm-up
+    # (In a real implementation, you'd identify patch parameters)
+    patch_lr = base_lr * 0.5 * warmup.warmup_schedule(epochs_since_growth)
+    
+    # 3. New components - warm-up schedule
+    # (In a real implementation, you'd identify new components)
+    new_component_lr = base_lr * warmup.warmup_schedule(epochs_since_growth)
+    
+    return param_groups
+
+
+def differential_decay_after_events(optimizer: optim.Optimizer, growth_event: str):
+    """
+    Differential Decay After Events
+    
+    Apply different decay rates to different components after growth events.
+    Purpose: Maintain stability after growth events.
+    """
+    for param_group in optimizer.param_groups:
+        group_name = param_group.get('name', '')
+        
+        if 'grown_layer' in group_name:
+            param_group['lr'] *= 0.9   # Slight decay
+        elif 'adjacent_layer' in group_name:
+            param_group['lr'] *= 0.7   # More decay for adjacent
+        else:
+            param_group['lr'] *= 0.5   # Heavy decay for distant layers
+
+
+def create_comprehensive_adaptive_manager(network: nn.Module,
+                                        base_lr: float = 0.001,
+                                        strategy: str = 'comprehensive') -> AdaptiveLearningRateManager:
+    """
+    Create a comprehensive adaptive learning rate manager with all strategies enabled.
+    
+    Args:
+        network: The neural network
+        base_lr: Base learning rate
+        strategy: Strategy type ('basic', 'advanced', 'comprehensive', 'ultimate')
+    
+    Returns:
+        Configured AdaptiveLearningRateManager
+    """
+    
+    if strategy == 'basic':
+        # Basic strategies only
+        return AdaptiveLearningRateManager(
+            network=network,
+            base_lr=base_lr,
+            enable_exponential_backoff=True,
+            enable_layerwise_rates=True,
+            enable_soft_clamping=True,
+            enable_scale_dependent=True,
+            enable_phase_based=True
+        )
+    
+    elif strategy == 'advanced':
+        # Basic + some advanced
+        return AdaptiveLearningRateManager(
+            network=network,
+            base_lr=base_lr,
+            enable_exponential_backoff=True,
+            enable_layerwise_rates=True,
+            enable_soft_clamping=True,
+            enable_scale_dependent=True,
+            enable_phase_based=True,
+            enable_extrema_phase=True,
+            enable_layer_age_aware=True
+        )
+    
+    elif strategy == 'comprehensive':
+        # Most strategies enabled
+        return AdaptiveLearningRateManager(
+            network=network,
+            base_lr=base_lr,
+            enable_exponential_backoff=True,
+            enable_layerwise_rates=True,
+            enable_soft_clamping=True,
+            enable_scale_dependent=True,
+            enable_phase_based=True,
+            enable_extrema_phase=True,
+            enable_layer_age_aware=True,
+            enable_multi_scale=True
+        )
+    
+    elif strategy == 'ultimate':
+        # Everything enabled including unified system
+        return AdaptiveLearningRateManager(
+            network=network,
+            base_lr=base_lr,
+            enable_exponential_backoff=True,
+            enable_layerwise_rates=True,
+            enable_soft_clamping=True,
+            enable_scale_dependent=True,
+            enable_phase_based=True,
+            enable_extrema_phase=True,
+            enable_layer_age_aware=True,
+            enable_multi_scale=True,
+            enable_unified_system=True
+        )
+    
+    else:
+        raise ValueError(f"Unknown strategy: {strategy}")
 
 
 def create_adaptive_training_loop(network: nn.Module, 

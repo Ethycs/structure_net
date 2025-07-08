@@ -32,6 +32,12 @@ from .adaptive_learning_rates import (
     MultiScaleLearning,
     UnifiedAdaptiveLearning
 )
+from .residual_blocks import (
+    SparseResidualBlock,
+    AdaptiveResidualInsertion,
+    ResidualGrowthStrategy,
+    create_residual_network
+)
 
 __version__ = "1.2.0"  # Updated version with advanced components
 __author__ = "Structure Net Team"
@@ -62,5 +68,10 @@ __all__ = [
     'ExtremaPhaseScheduler',
     'LayerAgeAwareLR',
     'MultiScaleLearning',
-    'UnifiedAdaptiveLearning'
+    'UnifiedAdaptiveLearning',
+    # Residual Block Components
+    'SparseResidualBlock',
+    'AdaptiveResidualInsertion',
+    'ResidualGrowthStrategy',
+    'create_residual_network'
 ]

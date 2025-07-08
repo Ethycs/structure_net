@@ -22,6 +22,7 @@ from .complete_metrics_system import CompleteMetricsSystem, CompleteGraphAnalyze
 from ..core.network_factory import create_standard_network
 from ..core.network_analysis import get_network_stats
 from .advanced_layers import ThresholdConfig, MetricsConfig
+from .residual_blocks import SparseResidualBlock
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -91,7 +92,8 @@ class ParallelGrowthTournament:
         return {
             "Add Layer at Bottleneck": self._strategy_add_layer,
             "Add Patches to Extrema": self._strategy_add_patches,
-            "Add Residual Block": self._strategy_add_residual_block,
+            "Add 2-Layer Residual Block": self._strategy_add_2layer_residual,
+            "Add 3-Layer Residual Block": self._strategy_add_3layer_residual,
             "Hybrid: Add Layer & Patches": self._strategy_hybrid_growth,
         }
 
@@ -225,6 +227,9 @@ class ParallelGrowthTournament:
                     h = layer(h)
                     activations.append(h.clone())
                     h = F.relu(h)
+                elif isinstance(layer, SparseResidualBlock):
+                    h = layer(h)  # Residual block handles its own ReLU
+                    activations.append(h.clone())
                 elif isinstance(layer, nn.ReLU):
                     h = layer(h)
                     # Update the last activation with ReLU applied
@@ -379,6 +384,148 @@ class ParallelGrowthTournament:
         else:
             logger.info("      Failed to add residual block")
             return [{'action': 'residual_block_failed', 'reason': 'Implementation failed'}]
+
+    def _strategy_add_2layer_residual(self, network, data_loader):
+        """Strategy: Add a 2-layer residual block with skip connections."""
+        logger.info("    Action: Add 2-layer residual block")
+        
+        # Analyze where to add the residual block
+        bottlenecks = self._analyze_information_flow(network, data_loader)
+        
+        if not bottlenecks:
+            logger.info("      No bottlenecks found for 2-layer residual block placement")
+            return [{'action': 'no_2layer_residual', 'reason': 'No suitable placement found'}]
+        
+        # Find the best position for residual block
+        best_position = bottlenecks[0]['position']
+        
+        # Add 2-layer residual block at the identified position
+        success = self._add_actual_residual_block(network, best_position, num_layers=2)
+        
+        if success:
+            logger.info(f"      Added 2-layer residual block at position {best_position}")
+            return [{'action': 'add_2layer_residual', 'position': best_position, 'reason': 'Information flow bottleneck'}]
+        else:
+            logger.info("      Failed to add 2-layer residual block")
+            return [{'action': '2layer_residual_failed', 'reason': 'Implementation failed'}]
+    
+    def _strategy_add_3layer_residual(self, network, data_loader):
+        """Strategy: Add a 3-layer residual block with skip connections."""
+        logger.info("    Action: Add 3-layer residual block")
+        
+        # Analyze where to add the residual block
+        bottlenecks = self._analyze_information_flow(network, data_loader)
+        
+        if not bottlenecks:
+            logger.info("      No bottlenecks found for 3-layer residual block placement")
+            return [{'action': 'no_3layer_residual', 'reason': 'No suitable placement found'}]
+        
+        # Find the best position for residual block
+        best_position = bottlenecks[0]['position']
+        
+        # Add 3-layer residual block at the identified position
+        success = self._add_actual_residual_block(network, best_position, num_layers=3)
+        
+        if success:
+            logger.info(f"      Added 3-layer residual block at position {best_position}")
+            return [{'action': 'add_3layer_residual', 'position': best_position, 'reason': 'Information flow bottleneck'}]
+        else:
+            logger.info("      Failed to add 3-layer residual block")
+            return [{'action': '3layer_residual_failed', 'reason': 'Implementation failed'}]
+    
+    def _add_actual_residual_block(self, network, position, num_layers=2):
+        """
+        Actually add a working residual block using SparseResidualBlock.
+        
+        This replaces the old placeholder implementation with real residual blocks.
+        """
+        try:
+            # Get network information
+            sparse_layers = [layer for layer in network if isinstance(layer, StandardSparseLayer)]
+            device = next(network.parameters()).device
+            
+            if position >= len(sparse_layers):
+                logger.warning(f"      Invalid position {position} for {len(sparse_layers)} layers")
+                return False
+            
+            # Determine dimensions for residual block
+            if position == 0:
+                in_features = sparse_layers[0].linear.in_features
+                out_features = sparse_layers[0].linear.out_features
+            else:
+                in_features = sparse_layers[position - 1].linear.out_features
+                out_features = sparse_layers[position].linear.in_features if position < len(sparse_layers) else in_features
+            
+            # Calculate hidden size (bottleneck design)
+            hidden_features = max(in_features // 2, 32)
+            hidden_features = min(hidden_features, 256)  # Cap at 256
+            
+            # Get sparsity from existing network
+            total_connections = sum(layer.mask.sum().item() for layer in sparse_layers)
+            total_possible = sum(layer.mask.numel() for layer in sparse_layers)
+            sparsity = 1.0 - (total_connections / total_possible) if total_possible > 0 else 0.02
+            
+            logger.info(f"      Creating {num_layers}-layer residual block:")
+            logger.info(f"        Dimensions: {in_features} → {hidden_features} → {out_features}")
+            logger.info(f"        Sparsity: {sparsity:.1%}")
+            
+            # Create the actual residual block
+            residual_block = SparseResidualBlock(
+                in_features=in_features,
+                hidden_features=hidden_features,
+                out_features=out_features,
+                sparsity=sparsity,
+                num_layers=num_layers,
+                device=str(device)
+            )
+            
+            # Insert the residual block into the network
+            self._insert_residual_block_into_network(network, residual_block, position)
+            
+            return True
+            
+        except Exception as e:
+            logger.warning(f"      Residual block creation failed: {e}")
+            return False
+    
+    def _insert_residual_block_into_network(self, network, residual_block, position):
+        """
+        Insert a residual block into the network at the specified position.
+        
+        This modifies the network in-place by replacing layers with a new structure
+        that includes the residual block.
+        """
+        # Get current sparse layers
+        sparse_layers = [layer for layer in network if isinstance(layer, StandardSparseLayer)]
+        
+        # Create new layer list
+        new_layers = []
+        
+        # Add layers before insertion point
+        for i in range(position):
+            new_layers.append(sparse_layers[i])
+        
+        # Add the residual block
+        new_layers.append(residual_block)
+        
+        # Add layers after insertion point
+        for i in range(position, len(sparse_layers)):
+            new_layers.append(sparse_layers[i])
+        
+        # Replace the network's modules
+        # This is a simplified approach - in practice you'd need more sophisticated
+        # network reconstruction, but for tournament testing this works
+        
+        # Clear existing modules and add new ones
+        for name, module in list(network.named_children()):
+            delattr(network, name)
+        
+        # Add new layers
+        for i, layer in enumerate(new_layers):
+            setattr(network, f'layer_{i}', layer)
+        
+        logger.info(f"      Inserted residual block at position {position}")
+        logger.info(f"      Network now has {len(new_layers)} components")
 
     def _strategy_hybrid_growth(self, network, data_loader):
         """Strategy: A mix of adding a layer and patching."""
