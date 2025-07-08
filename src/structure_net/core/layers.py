@@ -24,6 +24,9 @@ class StandardSparseLayer(nn.Module):
     def __init__(self, in_features: int, out_features: int, sparsity: float):
         super().__init__()
         
+        # Type tag for experiment tracking
+        self.type = "layer"
+        
         # Standard structure: nested linear module (matches GPU seed hunter)
         self.linear = nn.Linear(in_features, out_features)
         
@@ -66,6 +69,9 @@ class ExtremaAwareSparseLayer(StandardSparseLayer):
                  extrema_to_embed: Optional[Dict[str, List[int]]] = None):
         # Initialize as standard sparse layer first
         super().__init__(in_features, out_features, base_sparsity)
+        
+        # Override type tag for experiment tracking
+        self.type = "layer"
         
         # Store extrema information for potential mask updates
         self.base_sparsity = base_sparsity
@@ -153,6 +159,10 @@ class TemporaryPatchLayer(nn.Module):
     
     def __init__(self, source_neuron_idx: int, patch_size: int = 8, output_size: int = 4):
         super().__init__()
+        
+        # Type tag for experiment tracking
+        self.type = "layer"
+        
         self.source_neuron_idx = source_neuron_idx
         self.patch_size = patch_size
         self.output_size = output_size

@@ -40,6 +40,7 @@ class ExtremaPhaseScheduler:
                  explosive_multiplier: float = 1.0,
                  steady_multiplier: float = 0.1,
                  refinement_multiplier: float = 0.01):
+        self.type = "scheduler"
         self.explosive_threshold = explosive_threshold
         self.steady_threshold = steady_threshold
         self.explosive_multiplier = explosive_multiplier
@@ -118,6 +119,7 @@ class LayerAgeAwareLR:
                  decay_constant: float = 50.0,
                  early_layer_rate: float = 0.1,
                  late_layer_boost: float = 0.9):
+        self.type = "scheduler"
         self.decay_constant = decay_constant
         self.early_layer_rate = early_layer_rate
         self.late_layer_boost = late_layer_boost
@@ -166,6 +168,7 @@ class MultiScaleLearning:
     """
     
     def __init__(self):
+        self.type = "scheduler"
         self.scale_snapshots = {
             'coarse': {'epoch_threshold': 20, 'lr_multiplier': 0.1},
             'medium': {'epoch_threshold': 50, 'lr_multiplier': 0.5},
@@ -224,6 +227,7 @@ class CascadingDecayScheduler:
     """
     
     def __init__(self, base_lr: float = 0.001, decay_base: float = 0.1):
+        self.type = "scheduler"
         self.base_lr = base_lr
         self.decay_base = decay_base
     
@@ -254,6 +258,7 @@ class AgeBasedScheduler:
     """
     
     def __init__(self, base_lr: float = 0.001, age_decay_base: float = 0.1):
+        self.type = "scheduler"
         self.base_lr = base_lr
         self.age_decay_base = age_decay_base
         self.layer_birth_epochs = {}
@@ -288,6 +293,7 @@ class ComponentSpecificScheduler:
                  patch_lr: float = 0.0005,
                  neck_lr: float = 0.001,
                  new_layer_lr: float = 0.001):
+        self.type = "scheduler"
         self.component_rates = {
             'scaffold': scaffold_lr,
             'patches': patch_lr,
@@ -324,6 +330,7 @@ class PretrainedNewLayerScheduler:
                  pretrained_lr: float = 1e-5,
                  new_lr: float = 1e-3,
                  adapter_lr: float = 5e-4):
+        self.type = "scheduler"
         self.pretrained_lr = pretrained_lr
         self.new_lr = new_lr
         self.adapter_lr = adapter_lr
@@ -372,6 +379,7 @@ class GrowthAwareScheduler:
     """
     
     def __init__(self, scaffold_decay: float = 0.5, new_component_lr: float = 0.001):
+        self.type = "scheduler"
         self.scaffold_decay = scaffold_decay
         self.new_component_lr = new_component_lr
     
@@ -393,6 +401,7 @@ class WarmupScheduler:
     """
     
     def __init__(self, warmup_epochs: int = 5):
+        self.type = "scheduler"
         self.warmup_epochs = warmup_epochs
     
     def warmup_schedule(self, epoch: int) -> float:
@@ -415,6 +424,7 @@ class LARSScheduler:
     """
     
     def __init__(self, base_lr: float = 0.001, eps: float = 1e-8):
+        self.type = "scheduler"
         self.base_lr = base_lr
         self.eps = eps
     
@@ -445,6 +455,7 @@ class ProgressiveFreezingScheduler:
                  refinement_early_lr: float = 0.00001,
                  refinement_late_lr: float = 0.0001,
                  final_lr: float = 0.0001):
+        self.type = "scheduler"
         self.warmup_lr = warmup_lr
         self.refinement_early_lr = refinement_early_lr
         self.refinement_late_lr = refinement_late_lr
@@ -480,6 +491,7 @@ class SparsityAwareScheduler:
                  dense_multiplier: float = 0.5,
                  sparse_threshold: float = 0.02,
                  dense_threshold: float = 0.1):
+        self.type = "scheduler"
         self.base_lr = base_lr
         self.sparse_multiplier = sparse_multiplier
         self.dense_multiplier = dense_multiplier
@@ -516,6 +528,7 @@ class SedimentaryLearningScheduler:
                  sediment_lr: float = 0.0001,
                  active_lr: float = 0.001,
                  patch_lr: float = 0.0005):
+        self.type = "scheduler"
         self.learning_rates = {
             'geological_layers': geological_lr,   # Oldest, barely change
             'sediment_layers': sediment_lr,       # Middle age, slow drift
@@ -559,6 +572,7 @@ class UnifiedAdaptiveLearning:
                  min_lr: float = 1e-6,
                  max_lr: float = 0.1,
                  extrema_boost: float = 2.0):
+        self.type = "scheduler"
         self.base_lr = base_lr
         self.min_lr = min_lr
         self.max_lr = max_lr
@@ -669,6 +683,7 @@ class ExponentialBackoffScheduler:
     """
     
     def __init__(self, initial_lr: float = 1.0, decay_rate: float = 0.95):
+        self.type = "scheduler"
         self.initial_lr = initial_lr
         self.decay_rate = decay_rate
         self.epoch = 0
@@ -704,6 +719,7 @@ class LayerwiseAdaptiveRates:
                  early_rate: float = 0.02,
                  middle_rate: float = 0.01, 
                  late_rate: float = 0.005):
+        self.type = "scheduler"
         self.early_rate = early_rate
         self.middle_rate = middle_rate
         self.late_rate = late_rate
@@ -731,6 +747,7 @@ class SoftClampingScheduler:
     """
     
     def __init__(self, max_age: int = 100, min_clamp_factor: float = 0.1):
+        self.type = "scheduler"
         self.max_age = max_age
         self.min_clamp_factor = min_clamp_factor
         self.connection_ages = defaultdict(int)
@@ -773,6 +790,7 @@ class ScaleDependentRates:
                  coarse_scale_lr: float = 0.001,
                  medium_scale_lr: float = 0.01,
                  fine_scale_lr: float = 0.1):
+        self.type = "scheduler"
         self.learning_rates = {
             'coarse_scale': coarse_scale_lr,   # Slow learning for major pathways
             'medium_scale': medium_scale_lr,   # Moderate for features
@@ -822,6 +840,7 @@ class GrowthPhaseScheduler:
                  late_lr: float = 0.001,
                  early_phase_end: int = 20,
                  middle_phase_end: int = 50):
+        self.type = "scheduler"
         self.early_lr = early_lr
         self.middle_lr = middle_lr
         self.late_lr = late_lr
@@ -877,6 +896,7 @@ class AdaptiveLearningRateManager:
                  enable_multi_scale: bool = False,
                  enable_unified_system: bool = False):
         
+        self.type = "scheduler"
         self.network = network
         self.base_lr = base_lr
         

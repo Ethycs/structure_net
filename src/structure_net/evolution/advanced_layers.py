@@ -18,6 +18,9 @@ from ..core.layers import StandardSparseLayer
 class ThresholdConfig:
     """Configuration for thresholds used in growth and analysis."""
     def __init__(self):
+        # Type tag for experiment tracking
+        self.type = "config"
+        
         self.activation_threshold = 0.01
         self.weight_threshold = 0.01
         self.gradient_threshold = 1e-4
@@ -30,6 +33,9 @@ class ThresholdConfig:
 class MetricsConfig:
     """Configuration for which metrics to compute."""
     def __init__(self):
+        # Type tag for experiment tracking
+        self.type = "config"
+        
         self.compute_mi = True
         self.compute_activity = True
         self.compute_sensli = True
@@ -50,6 +56,9 @@ class ExtremaAwareSparseLayer(StandardSparseLayer):
                  extrema_to_embed: Optional[Dict[str, List[int]]] = None):
         # Initialize as standard sparse layer first
         super().__init__(in_features, out_features, base_sparsity)
+        
+        # Override type tag for experiment tracking
+        self.type = "layer"
         
         # Store extrema information for potential mask updates
         self.base_sparsity = base_sparsity
@@ -107,6 +116,10 @@ class TemporaryPatchModule(nn.Module):
     
     def __init__(self, source_neuron_idx: int, patch_size: int = 8, output_size: int = 4):
         super().__init__()
+        
+        # Type tag for experiment tracking
+        self.type = "layer"
+        
         self.source_neuron_idx = source_neuron_idx
         self.patch_size = patch_size
         self.output_size = output_size
