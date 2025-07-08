@@ -43,6 +43,21 @@ from .evolution.integrated_growth_system import (
     ThresholdConfig,
     MetricsConfig
 )
+# Import adaptive learning rate strategies
+from .evolution.adaptive_learning_rates import (
+    ExponentialBackoffScheduler,
+    LayerwiseAdaptiveRates,
+    SoftClampingScheduler,
+    ScaleDependentRates,
+    GrowthPhaseScheduler,
+    AdaptiveLearningRateManager,
+    create_adaptive_training_loop,
+    # Advanced combination systems
+    ExtremaPhaseScheduler,
+    LayerAgeAwareLR,
+    MultiScaleLearning,
+    UnifiedAdaptiveLearning
+)
 # MI analysis removed - using direct extrema-driven approach
 # from .evolution.information_theory import analyze_information_flow, estimate_mi_proxy
 
@@ -89,6 +104,20 @@ __all__ = [
     "IntegratedGrowthSystem",
     "ThresholdConfig",
     "MetricsConfig",
+    
+    # Adaptive Learning Rate Strategies
+    "ExponentialBackoffScheduler",
+    "LayerwiseAdaptiveRates",
+    "SoftClampingScheduler",
+    "ScaleDependentRates",
+    "GrowthPhaseScheduler",
+    "AdaptiveLearningRateManager",
+    "create_adaptive_training_loop",
+    # Advanced combination systems
+    "ExtremaPhaseScheduler",
+    "LayerAgeAwareLR",
+    "MultiScaleLearning",
+    "UnifiedAdaptiveLearning",
     
     # Seed Search
     "GPUSeedHunter",

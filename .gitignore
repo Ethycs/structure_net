@@ -10,3 +10,4 @@
 data/*
 Breakthroughs.md
 .env
+*.json

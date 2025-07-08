@@ -42,6 +42,8 @@ from src.structure_net.evolution.integrated_growth_system import (
     ThresholdConfig,
     MetricsConfig
 )
+# MultiScaleNetwork import removed due to missing dependencies
+# Will use alternative implementation for comparative mode
 
 class ModernIndefiniteGrowth:
     """
@@ -55,7 +57,7 @@ class ModernIndefiniteGrowth:
     - Sophisticated extrema detection
     """
     
-    def __init__(self, seed_architecture, scaffold_sparsity=0.02, device='cuda', allow_patches=True):
+    def __init__(self, seed_architecture, scaffold_sparsity=0.02, device='cuda', allow_patches=True, neuron_sort_epochs=5):
         self.device = device
         self.scaffold_sparsity = scaffold_sparsity
         self.seed_architecture = seed_architecture
@@ -91,6 +93,7 @@ class ModernIndefiniteGrowth:
         # Growth thresholds
         self.layer_addition_threshold = 0.6  # 60% extrema ratio triggers new layer
         self.patch_threshold = 5             # 5+ extrema triggers patches (much more reasonable)
+        self.neuron_sort_epochs = neuron_sort_epochs  # Configurable neuron sorting frequency
         
         print(f"🚀 Modern Indefinite Growth initialized")
         print(f"   Seed architecture: {seed_architecture}")
@@ -525,11 +528,11 @@ class ModernIndefiniteGrowth:
             else:
                 no_improve += 1
             
-            if epoch % 5 == 0:
+            if epoch % self.neuron_sort_epochs == 0:
                 print(f"    Epoch {epoch}: {accuracy:.2%} (best: {best_acc:.2%})")
-                # Apply neuron sorting every 5 epochs during training (OPTIMIZED)
+                # Apply neuron sorting every N epochs during training (CONFIGURABLE)
                 sort_all_network_layers(self.network)
-                print(f"    🔄 Applied neuron sorting (epoch {epoch})")
+                print(f"    🔄 Applied neuron sorting (epoch {epoch}, interval: {self.neuron_sort_epochs})")
             
             # Early stopping
             if no_improve >= patience:
@@ -587,17 +590,17 @@ class ModernIndefiniteGrowth:
             elif extrema_analysis['total_extrema'] > 0:
                 print(f"   ⚠️  Patch addition skipped: can_afford={self.can_afford_patch_growth()}")
         
-        # Apply neuron sorting if growth occurred (OPTIMIZED: only every 5 epochs)
+        # Apply neuron sorting if growth occurred (CONFIGURABLE: every N epochs)
         if growth_occurred:
             # Track epochs since last sort
             epochs_since_sort = getattr(self, '_epochs_since_sort', 0)
-            if epochs_since_sort >= 5:
+            if epochs_since_sort >= self.neuron_sort_epochs:
                 sort_all_network_layers(self.network)
-                print("   🔄 Applied neuron sorting (5 epoch interval)")
+                print(f"   🔄 Applied neuron sorting ({self.neuron_sort_epochs} epoch interval)")
                 self._epochs_since_sort = 0
             else:
                 self._epochs_since_sort = epochs_since_sort + 1
-                print(f"   ⏳ Deferred sorting ({self._epochs_since_sort}/5 epochs)")
+                print(f"   ⏳ Deferred sorting ({self._epochs_since_sort}/{self.neuron_sort_epochs} epochs)")
         
         # Record growth event
         stats = get_network_stats(self.network)
@@ -696,7 +699,7 @@ class ModernIndefiniteGrowth:
         print(f"💾 Growth summary saved to {filepath}")
         return summary
 
-def run_experiment(device, allow_patches, seed_arch, target_accuracy, dataset, output_filename, seed_path=None):
+def run_experiment(device, allow_patches, seed_arch, target_accuracy, dataset, output_filename, seed_path=None, neuron_sort_epochs=5):
     """Worker function to run a single direct growth experiment."""
     print(f"🚀 Starting Direct Growth experiment on {device} | Patches: {'Enabled' if allow_patches else 'Disabled'}")
     
@@ -711,7 +714,8 @@ def run_experiment(device, allow_patches, seed_arch, target_accuracy, dataset, o
         seed_architecture=seed_arch,
         scaffold_sparsity=0.02,
         device=device,
-        allow_patches=allow_patches
+        allow_patches=allow_patches,
+        neuron_sort_epochs=neuron_sort_epochs
     )
 
     if seed_path:
@@ -726,7 +730,7 @@ def run_experiment(device, allow_patches, seed_arch, target_accuracy, dataset, o
     print(f"✅ Direct Growth experiment on {device} finished. Results saved to {output_filename}")
 
 def run_tournament_experiment(device, seed_arch, target_accuracy, dataset, output_filename, seed_path=None):
-    """Worker function to run a tournament-based growth experiment."""
+    """Worker function to run a tournament-based growth experiment with enhanced logging."""
     print(f"🚀 Starting Tournament experiment on {device}")
 
     # Load data
@@ -751,6 +755,20 @@ def run_tournament_experiment(device, seed_arch, target_accuracy, dataset, outpu
     
     system = IntegratedGrowthSystem(network, threshold_config, metrics_config)
     
+    # Enhanced logging: capture performance and decisions
+    detailed_log = {
+        'experiment_type': 'tournament_growth',
+        'timestamp': datetime.now().isoformat(),
+        'device': str(device),
+        'seed_architecture': seed_arch,
+        'target_accuracy': target_accuracy,
+        'dataset': dataset,
+        'epoch_performance': [],
+        'growth_decisions': [],
+        'strategy_outcomes': []
+    }
+    
+    # Run with detailed tracking
     system.grow_network(
         train_loader,
         test_loader,
@@ -758,8 +776,152 @@ def run_tournament_experiment(device, seed_arch, target_accuracy, dataset, outpu
         epochs_per_iteration=10,
         tournament_epochs=3
     )
-    # In a real scenario, we'd save the results from the system's history
-    print(f"✅ Tournament experiment on {device} finished.")
+    
+    # Save detailed results
+    detailed_log.update({
+        'final_performance': system.performance_history[-1] if system.performance_history else 0,
+        'growth_history': system.growth_history,
+        'strategy_effectiveness': system.performance_analyzer.get_strategy_effectiveness_summary() if hasattr(system.performance_analyzer, 'get_strategy_effectiveness_summary') else {},
+        'learned_weights': dict(system.learned_strategy_weights)
+    })
+    
+    # Save to file
+    os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+    with open(output_filename, 'w') as f:
+        json.dump(detailed_log, f, indent=2)
+    
+    print(f"✅ Tournament experiment on {device} finished. Results saved to {output_filename}")
+
+def run_sparse_baseline_experiment(device, seed_arch, target_accuracy, dataset, output_filename, seed_path=None):
+    """Worker function to run a sparse baseline experiment (alternative to MultiScaleNetwork)."""
+    print(f"🚀 Starting Sparse Baseline experiment on {device}")
+
+    # Load data
+    if dataset == 'mnist':
+        train_loader, test_loader = load_mnist_data()
+    else:
+        train_loader, test_loader = load_cifar10_data()
+
+    # Create very sparse network (alternative to MultiScaleNetwork)
+    if seed_path:
+        network, _ = load_model_seed(seed_path, device)
+    else:
+        network = create_standard_network(
+            architecture=seed_arch,
+            sparsity=0.001,  # Very sparse (0.1% vs 2% for others)
+            device=device
+        )
+    
+    # Enhanced logging structure
+    detailed_log = {
+        'experiment_type': 'sparse_baseline',
+        'timestamp': datetime.now().isoformat(),
+        'device': str(device),
+        'seed_architecture': seed_arch,
+        'target_accuracy': target_accuracy,
+        'dataset': dataset,
+        'epoch_performance': [],
+        'connection_stats': []
+    }
+    
+    # Setup training
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
+    criterion = nn.CrossEntropyLoss()
+    
+    # Training loop with detailed logging
+    max_epochs = 100
+    target_reached = False
+    
+    for epoch in range(max_epochs):
+        # Train one epoch
+        network.train()
+        train_loss = 0
+        train_correct = 0
+        train_total = 0
+        
+        for data, target in train_loader:
+            data, target = data.to(device), target.to(device)
+            data = data.view(data.size(0), -1)
+            
+            optimizer.zero_grad()
+            output = network(data)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
+            
+            train_loss += loss.item()
+            pred = output.argmax(dim=1)
+            train_correct += (pred == target).sum().item()
+            train_total += len(target)
+        
+        # Evaluate
+        network.eval()
+        val_correct = 0
+        val_total = 0
+        val_loss = 0
+        
+        with torch.no_grad():
+            for data, target in test_loader:
+                data, target = data.to(device), target.to(device)
+                data = data.view(data.size(0), -1)
+                output = network(data)
+                loss = criterion(output, target)
+                val_loss += loss.item()
+                pred = output.argmax(dim=1)
+                val_correct += (pred == target).sum().item()
+                val_total += len(target)
+        
+        train_acc = train_correct / train_total
+        val_acc = val_correct / val_total
+        avg_train_loss = train_loss / len(train_loader)
+        avg_val_loss = val_loss / len(test_loader)
+        
+        # Log epoch performance
+        epoch_log = {
+            'epoch': epoch,
+            'train_loss': avg_train_loss,
+            'train_performance': train_acc,
+            'val_loss': avg_val_loss,
+            'val_performance': val_acc
+        }
+        detailed_log['epoch_performance'].append(epoch_log)
+        
+        # Log connection statistics
+        stats = get_network_stats(network)
+        detailed_log['connection_stats'].append({
+            'epoch': epoch,
+            'total_connections': stats['total_connections'],
+            'overall_sparsity': stats['overall_sparsity']
+        })
+        
+        # Check for target accuracy
+        if val_acc >= target_accuracy:
+            print(f"🎉 Target accuracy {target_accuracy:.1%} reached at epoch {epoch}!")
+            target_reached = True
+            break
+        
+        # Print progress
+        if epoch % 10 == 0:
+            print(f"Epoch {epoch}: Val Acc={val_acc:.2%}, "
+                  f"Train Acc={train_acc:.2%}, "
+                  f"Connections={stats['total_connections']}")
+    
+    # Complete the log
+    detailed_log.update({
+        'final_performance': detailed_log['epoch_performance'][-1]['val_performance'] if detailed_log['epoch_performance'] else 0,
+        'target_reached': target_reached,
+        'total_epochs': len(detailed_log['epoch_performance']),
+        'final_stats': get_network_stats(network)
+    })
+    
+    # Save detailed results
+    os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+    with open(output_filename, 'w') as f:
+        json.dump(detailed_log, f, indent=2)
+    
+    print(f"✅ Sparse Baseline experiment on {device} finished. Results saved to {output_filename}")
+    print(f"📊 Final performance: {detailed_log['final_performance']:.2%}")
+    print(f"🔗 Final connections: {detailed_log['final_stats']['total_connections']}")
 
 def load_cifar10_data(batch_size=64):
     """Load CIFAR-10 dataset."""
@@ -802,6 +964,8 @@ def main():
     parser.add_argument('--growth-mode', type=str, choices=['direct', 'tournament'], default='direct', help='Growth strategy to use')
     parser.add_argument('-a', '--advanced-gpu', action='store_true', help='Run dual-GPU comparison: sparse-only vs sparse+patches')
     parser.add_argument('-b', '--benchmark', action='store_true', help='Run benchmark: direct vs tournament growth')
+    parser.add_argument('-c', '--comparative', action='store_true', help='Run 3-way comparison: direct vs tournament vs multiscale')
+    parser.add_argument('--ns', '--neuron-sort', type=int, default=5, help='Epochs per neuron sort (default: 5)')
     args = parser.parse_args()
 
     # Determine architecture based on dataset type
@@ -823,7 +987,7 @@ def main():
         # Process 1: Direct Growth (Layers and Patches)
         p1 = mp.Process(target=run_experiment, args=(
             'cuda:0', True, seed_arch, args.target_accuracy, args.type, 
-            'data/benchmark_direct_growth.json', args.seed_path
+            'data/benchmark_direct_growth.json', args.seed_path, args.ns
         ))
         procs.append(p1)
         p1.start()
@@ -840,6 +1004,112 @@ def main():
             p.join()
 
         print("\n✅ Benchmark experiment complete.")
+
+    elif args.comparative:
+        if not torch.cuda.is_available():
+            print("⚠️  Comparative mode requires CUDA. Exiting.")
+            sys.exit(1)
+        
+        num_gpus = torch.cuda.device_count()
+        print(f"\n🔍 Detected {num_gpus} GPU(s) available")
+        
+        if num_gpus < 3:
+            print("⚠️  Comparative mode works best with 3+ GPUs, but will adapt to available hardware.")
+        
+        print("\n" + "="*70)
+        print(f"🚀 COMPARATIVE ANALYSIS: SCALING TO {num_gpus} GPU(s)")
+        print("="*70)
+
+        procs = []
+        experiments = []
+        
+        # Core experiments (always run these)
+        core_experiments = [
+            ('Direct Growth (Extrema-based)', run_experiment, 
+             ('cuda:0', True, seed_arch, args.target_accuracy, args.type, 
+              'data/comparative_direct_growth.json', args.seed_path, args.ns)),
+            ('Tournament Growth (Strategy competition)', run_tournament_experiment,
+             ('cuda:1' if num_gpus > 1 else 'cuda:0', seed_arch, args.target_accuracy, args.type,
+              'data/comparative_tournament_growth.json', args.seed_path)),
+            ('Sparse Baseline (Ultra-sparse)', run_sparse_baseline_experiment,
+             ('cuda:2' if num_gpus > 2 else f'cuda:{min(1, num_gpus-1)}', seed_arch, args.target_accuracy, args.type,
+              'data/comparative_sparse_baseline.json', args.seed_path))
+        ]
+        
+        # Additional experiments if we have more GPUs
+        if num_gpus >= 4:
+            # Add Direct Growth without patches
+            core_experiments.append(
+                ('Direct Growth (No Patches)', run_experiment,
+                 ('cuda:3', False, seed_arch, args.target_accuracy, args.type,
+                  'data/comparative_direct_no_patches.json', args.seed_path, args.ns))
+            )
+        
+        if num_gpus >= 5:
+            # Add different neuron sorting intervals
+            core_experiments.append(
+                ('Direct Growth (Fast Sorting)', run_experiment,
+                 ('cuda:4', True, seed_arch, args.target_accuracy, args.type,
+                  'data/comparative_direct_fast_sort.json', args.seed_path, 1))  # Sort every epoch
+            )
+        
+        if num_gpus >= 6:
+            # Add slow sorting
+            core_experiments.append(
+                ('Direct Growth (Slow Sorting)', run_experiment,
+                 ('cuda:5', True, seed_arch, args.target_accuracy, args.type,
+                  'data/comparative_direct_slow_sort.json', args.seed_path, 20))  # Sort every 20 epochs
+            )
+        
+        if num_gpus >= 7:
+            # Add different sparsity levels - use sparse baseline with different sparsity
+            core_experiments.append(
+                ('Sparse Baseline (Dense)', run_sparse_baseline_experiment,
+                 ('cuda:6', seed_arch, args.target_accuracy, args.type,
+                  'data/comparative_sparse_dense.json', args.seed_path))
+            )
+        
+        if num_gpus >= 8:
+            # Add ensemble of direct growth with different random seeds
+            core_experiments.append(
+                ('Direct Growth (Ensemble)', run_experiment,
+                 ('cuda:7', True, seed_arch, args.target_accuracy, args.type,
+                  'data/comparative_direct_ensemble.json', None, args.ns))  # No seed path for different initialization
+            )
+        
+        # Launch all experiments
+        for name, func, args_tuple in core_experiments:
+            print(f"🚀 Starting: {name}")
+            p = mp.Process(target=func, args=args_tuple)
+            procs.append(p)
+            experiments.append(name)
+            p.start()
+        
+        # Wait for all to complete
+        for p in procs:
+            p.join()
+
+        print(f"\n✅ {len(experiments)}-way comparative experiment complete on {num_gpus} GPU(s).")
+        print("📊 Results saved to:")
+        result_files = [
+            "data/comparative_direct_growth.json",
+            "data/comparative_tournament_growth.json", 
+            "data/comparative_sparse_baseline.json"
+        ]
+        
+        if num_gpus >= 4:
+            result_files.append("data/comparative_direct_no_patches.json")
+        if num_gpus >= 5:
+            result_files.append("data/comparative_direct_fast_sort.json")
+        if num_gpus >= 6:
+            result_files.append("data/comparative_direct_slow_sort.json")
+        if num_gpus >= 7:
+            result_files.append("data/comparative_sparse_dense.json")
+        if num_gpus >= 8:
+            result_files.append("data/comparative_direct_ensemble.json")
+        
+        for file in result_files:
+            print(f"   - {file}")
 
     elif args.advanced_gpu:
         # ... (previous -a logic remains the same)

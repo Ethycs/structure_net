@@ -18,6 +18,20 @@ from .advanced_layers import (
     apply_neuron_sorting, 
     sort_all_network_layers
 )
+from .adaptive_learning_rates import (
+    ExponentialBackoffScheduler,
+    LayerwiseAdaptiveRates,
+    SoftClampingScheduler,
+    ScaleDependentRates,
+    GrowthPhaseScheduler,
+    AdaptiveLearningRateManager,
+    create_adaptive_training_loop,
+    # Advanced combination systems
+    ExtremaPhaseScheduler,
+    LayerAgeAwareLR,
+    MultiScaleLearning,
+    UnifiedAdaptiveLearning
+)
 
 __version__ = "1.2.0"  # Updated version with advanced components
 __author__ = "Structure Net Team"
@@ -35,5 +49,18 @@ __all__ = [
     'TemporaryPatchModule',
     'lsuv_init_layer',
     'apply_neuron_sorting',
-    'sort_all_network_layers'
+    'sort_all_network_layers',
+    # Adaptive Learning Rate Strategies
+    'ExponentialBackoffScheduler',
+    'LayerwiseAdaptiveRates',
+    'SoftClampingScheduler',
+    'ScaleDependentRates',
+    'GrowthPhaseScheduler',
+    'AdaptiveLearningRateManager',
+    'create_adaptive_training_loop',
+    # Advanced combination systems
+    'ExtremaPhaseScheduler',
+    'LayerAgeAwareLR',
+    'MultiScaleLearning',
+    'UnifiedAdaptiveLearning'
 ]
