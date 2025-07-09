@@ -9,11 +9,19 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import math
-from sklearn.feature_selection import mutual_info_regression
-from sklearn.neighbors import NearestNeighbors
 from typing import Dict, Any
 import time
 import logging
+
+try:
+    import cupy as cp
+    from cuml.feature_selection import mutual_info_regression
+    from cuml.neighbors import NearestNeighbors
+    CUPY_AVAILABLE = True
+except ImportError:
+    from sklearn.feature_selection import mutual_info_regression
+    from sklearn.neighbors import NearestNeighbors
+    CUPY_AVAILABLE = False
 
 from .base import BaseMetricAnalyzer, StatisticalUtilsMixin
 
@@ -205,21 +213,36 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
     
     def _knn_mi(self, X: torch.Tensor, Y: torch.Tensor) -> Dict[str, float]:
         """k-NN based MI estimator."""
-        X_np = X.cpu().numpy()
-        Y_np = Y.cpu().numpy()
-        
-        # Use sklearn's implementation
-        mi_values = []
-        for i in range(Y_np.shape[1]):
-            mi = mutual_info_regression(X_np, Y_np[:, i], n_neighbors=3)
-            mi_values.extend(mi)
-        
-        mi = np.mean(mi_values)
-        
-        # Estimate entropies using k-NN
-        h_x = self._knn_entropy(X_np)
-        h_y = self._knn_entropy(Y_np)
-        h_xy = self._knn_entropy(np.hstack([X_np, Y_np]))
+        if X.is_cuda and CUPY_AVAILABLE:
+            X_gpu = cp.asarray(X)
+            Y_gpu = cp.asarray(Y)
+            
+            mi_values = []
+            for i in range(Y_gpu.shape[1]):
+                mi = mutual_info_regression(X_gpu, Y_gpu[:, i], n_neighbors=3)
+                mi_values.extend(mi)
+            
+            mi = cp.mean(cp.array(mi_values)).get()
+            
+            h_x = self._knn_entropy(X_gpu)
+            h_y = self._knn_entropy(Y_gpu)
+            h_xy = self._knn_entropy(cp.hstack([X_gpu, Y_gpu]))
+        else:
+            X_np = X.cpu().numpy()
+            Y_np = Y.cpu().numpy()
+            
+            # Use sklearn's implementation
+            mi_values = []
+            for i in range(Y_np.shape[1]):
+                mi = mutual_info_regression(X_np, Y_np[:, i], n_neighbors=3)
+                mi_values.extend(mi)
+            
+            mi = np.mean(mi_values)
+            
+            # Estimate entropies using k-NN
+            h_x = self._knn_entropy(X_np)
+            h_y = self._knn_entropy(Y_np)
+            h_xy = self._knn_entropy(np.hstack([X_np, Y_np]))
         
         return {
             'mi': mi,
@@ -251,20 +274,27 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
             'entropy_XY': h_x + h_y - mi_upper.item()
         }
     
-    def _knn_entropy(self, X: np.ndarray, k: int = 3) -> float:
+    def _knn_entropy(self, X, k: int = 3) -> float:
         """Estimate entropy using k-NN distances."""
         if X.shape[0] < k + 1:
             return 0.0
-            
-        nbrs = NearestNeighbors(n_neighbors=k+1, algorithm='ball_tree').fit(X)
+        
+        is_cupy = 'cupy' in str(type(X))
+        
+        nbrs = NearestNeighbors(n_neighbors=k+1).fit(X)
         distances, _ = nbrs.kneighbors(X)
         rho = distances[:, k]
         
         d = X.shape[1]
-        volume = (np.pi ** (d/2)) / np.exp(np.log(math.gamma(d/2 + 1)))
-        h = np.log(rho + 1e-10).mean() * d + np.log(volume) + np.log(X.shape[0]) - np.log(k)
         
-        return h / np.log(2)
+        if is_cupy:
+            volume = (cp.pi ** (d/2)) / cp.exp(cp.log(math.gamma(d/2 + 1)))
+            h = cp.log(rho + 1e-10).mean() * d + cp.log(volume) + cp.log(X.shape[0]) - cp.log(k)
+            return h.get() / np.log(2)
+        else:
+            volume = (np.pi ** (d/2)) / np.exp(np.log(math.gamma(d/2 + 1)))
+            h = np.log(rho + 1e-10).mean() * d + np.log(volume) + np.log(X.shape[0]) - np.log(k)
+            return h / np.log(2)
     
     def _differential_entropy(self, X: torch.Tensor) -> float:
         """Estimate differential entropy."""

@@ -13,6 +13,12 @@ from typing import Dict, Any, Optional
 import time
 import logging
 
+try:
+    import cupy as cp
+    CUPY_AVAILABLE = True
+except ImportError:
+    CUPY_AVAILABLE = False
+
 from .base import BaseMetricAnalyzer, NetworkAnalyzerMixin
 
 logger = logging.getLogger(__name__)
@@ -90,12 +96,21 @@ class SensitivityAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
             result = self._zero_sensli_metrics()
         else:
             # Aggregate metrics
-            avg_gradient_sensitivity = np.mean(gradient_sensitivities)
-            max_gradient_sensitivity = np.max(gradient_sensitivities)
-            std_gradient_sensitivity = np.std(gradient_sensitivities)
-            
-            avg_bottleneck_score = np.mean(bottleneck_scores)
-            max_bottleneck_score = np.max(bottleneck_scores)
+            use_gpu = torch.cuda.is_available() and CUPY_AVAILABLE
+            if use_gpu:
+                gradient_sensitivities_gpu = cp.array(gradient_sensitivities)
+                bottleneck_scores_gpu = cp.array(bottleneck_scores)
+                avg_gradient_sensitivity = gradient_sensitivities_gpu.mean().get()
+                max_gradient_sensitivity = gradient_sensitivities_gpu.max().get()
+                std_gradient_sensitivity = gradient_sensitivities_gpu.std().get()
+                avg_bottleneck_score = bottleneck_scores_gpu.mean().get()
+                max_bottleneck_score = bottleneck_scores_gpu.max().get()
+            else:
+                avg_gradient_sensitivity = np.mean(gradient_sensitivities)
+                max_gradient_sensitivity = np.max(gradient_sensitivities)
+                std_gradient_sensitivity = np.std(gradient_sensitivities)
+                avg_bottleneck_score = np.mean(bottleneck_scores)
+                max_bottleneck_score = np.max(bottleneck_scores)
             
             # Determine suggested action
             suggested_action = self._determine_suggested_action(
@@ -331,10 +346,16 @@ class SensitivityAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
         if not gradient_sensitivities:
             return 0.0
         
-        # Healthy gradient flow should be stable and moderate
-        mean_sens = np.mean(gradient_sensitivities)
-        std_sens = np.std(gradient_sensitivities)
+        use_gpu = torch.cuda.is_available() and CUPY_AVAILABLE
+        if use_gpu:
+            gradient_sensitivities_gpu = cp.array(gradient_sensitivities)
+            mean_sens = gradient_sensitivities_gpu.mean()
+            std_sens = gradient_sensitivities_gpu.std()
+        else:
+            mean_sens = np.mean(gradient_sensitivities)
+            std_sens = np.std(gradient_sensitivities)
         
+        # Healthy gradient flow should be stable and moderate
         # Penalize very high or very low sensitivity
         magnitude_score = 1.0 - min(1.0, abs(mean_sens - 1.0))
         

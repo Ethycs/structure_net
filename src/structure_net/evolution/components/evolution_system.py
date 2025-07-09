@@ -107,6 +107,13 @@ class StandardNetworkTrainer(NetworkTrainer, FullyConfigurableComponent):
         network = context.network
         data_loader = context.data_loader
         device = context.device
+
+        if data_loader is None:
+            return {
+                'val_loss': 0.0,
+                'val_accuracy': 0.0,
+                'batches_evaluated': 0
+            }
         
         network.eval()
         total_loss = 0.0
@@ -132,10 +139,11 @@ class StandardNetworkTrainer(NetworkTrainer, FullyConfigurableComponent):
                 if batch_idx >= 5:
                     break
         
+        batches_evaluated = batch_idx + 1 if 'batch_idx' in locals() else 0
         return {
-            'val_loss': total_loss / (batch_idx + 1),
+            'val_loss': total_loss / batches_evaluated if batches_evaluated > 0 else 0.0,
             'val_accuracy': correct / total if total > 0 else 0.0,
-            'batches_evaluated': batch_idx + 1
+            'batches_evaluated': batches_evaluated
         }
     
     # Configurable interface

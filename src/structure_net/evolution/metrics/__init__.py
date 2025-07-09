@@ -44,6 +44,38 @@ try:
 except ImportError:
     pass
 
+# Import new homological and topological analyzers
+try:
+    from .homological_analysis import (
+        HomologicalAnalyzer, 
+        ChainData, 
+        create_homological_analyzer
+    )
+except ImportError:
+    pass
+
+try:
+    from .topological_analysis import (
+        TopologicalAnalyzer,
+        ExtremaInfo,
+        PersistencePoint,
+        TopologicalSignature,
+        create_topological_analyzer
+    )
+except ImportError:
+    pass
+
+try:
+    from .compactification_metrics import (
+        CompactificationAnalyzer,
+        CompressionStats,
+        PatchEffectiveness,
+        MemoryProfile,
+        create_compactification_analyzer
+    )
+except ImportError:
+    pass
+
 __all__ = [
     # Base classes
     'ThresholdConfig',
@@ -58,5 +90,20 @@ __all__ = [
     'ActivityAnalyzer',
     'SensitivityAnalyzer', 
     'GraphAnalyzer',
-    'CompleteMetricsSystem'
+    'CompleteMetricsSystem',
+    
+    # Homological and Topological Analyzers
+    'HomologicalAnalyzer',
+    'ChainData',
+    'create_homological_analyzer',
+    'TopologicalAnalyzer',
+    'ExtremaInfo',
+    'PersistencePoint',
+    'TopologicalSignature',
+    'create_topological_analyzer',
+    'CompactificationAnalyzer',
+    'CompressionStats',
+    'PatchEffectiveness',
+    'MemoryProfile',
+    'create_compactification_analyzer'
 ]

@@ -20,16 +20,35 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
 # Import structure_net with new adaptive learning rate capabilities
-from src.structure_net import (
-    create_standard_network,
-    ExponentialBackoffScheduler,
-    LayerwiseAdaptiveRates,
-    SoftClampingScheduler,
-    ScaleDependentRates,
-    GrowthPhaseScheduler,
-    AdaptiveLearningRateManager,
-    create_adaptive_training_loop
-)
+from structure_net.core.network_factory import create_standard_network
+# Try to import from new modular structure first
+try:
+    from structure_net.evolution.adaptive_learning_rates import (
+        AdaptiveLearningRateManager,
+        create_adaptive_training_loop
+    )
+    from structure_net.evolution.adaptive_learning_rates.phase_schedulers import (
+        ExponentialBackoffScheduler,
+        GrowthPhaseScheduler
+    )
+    from structure_net.evolution.adaptive_learning_rates.layer_schedulers import (
+        LayerwiseAdaptiveRates
+    )
+    from structure_net.evolution.adaptive_learning_rates.connection_schedulers import (
+        SoftClampingScheduler,
+        ScaleDependentRates
+    )
+except ImportError:
+    # Fall back to deprecated monolithic module
+    from structure_net.evolution.adaptive_learning_rates_deprecated import (
+        ExponentialBackoffScheduler,
+        LayerwiseAdaptiveRates,
+        SoftClampingScheduler,
+        ScaleDependentRates,
+        GrowthPhaseScheduler,
+        AdaptiveLearningRateManager,
+        create_adaptive_training_loop
+    )
 
 
 def load_mnist_data(batch_size=64):
@@ -79,7 +98,8 @@ def example_2_layerwise_adaptive():
     )
     
     n_layers = 5
-    rates = layerwise.get_layer_rates(n_layers)
+    layerwise.total_layers = n_layers  # Set the total layers
+    rates = layerwise.get_layer_rates()
     
     print("Layer-wise learning rates:")
     for i, rate in enumerate(rates):
@@ -102,7 +122,7 @@ def example_3_soft_clamping():
     connection_id = "layer_0_conn_5_10"
     
     for age in [0, 10, 25, 50, 75, 100, 150]:
-        clamp_factor = soft_clamp.soft_clamping(connection_id, age)
+        clamp_factor = soft_clamp.get_connection_rate(connection_id, age) / soft_clamp.base_lr
         print(f"  Age {age:3d}: Clamp factor = {clamp_factor:.3f}")
     
     print("\n💡 Use case: Old connections adapt slowly but don't freeze completely")
@@ -125,15 +145,13 @@ def example_4_scale_dependent():
     
     # Test different connection scenarios
     scenarios = [
-        (0, 5, 0.8, "Early layer, strong connection"),
-        (2, 5, 0.3, "Middle layer, medium connection"),
-        (4, 5, 0.05, "Late layer, weak connection"),
-        (1, 5, 0.9, "Early layer, very strong connection")
+        ('coarse_scale', "Major pathways"),
+        ('medium_scale', "Feature connections"),
+        ('fine_scale', "Detail connections")
     ]
     
-    for layer_idx, n_layers, strength, description in scenarios:
-        rate = scale_rates.get_connection_rate(layer_idx, n_layers, strength)
-        scale = scale_rates.determine_connection_scale(layer_idx, n_layers, strength)
+    for scale, description in scenarios:
+        rate = scale_rates.get_scale_rate(scale)
         print(f"  {description}: {rate:.3f} ({scale})")
     
     print("\n💡 Use case: Major pathways learn slowly, details learn fast")
@@ -156,8 +174,8 @@ def example_5_growth_phases():
     
     print("Growth phase progression:")
     for epoch in [5, 15, 25, 35, 45, 55, 75]:
-        lr = phase_scheduler.phase_based_lr(epoch)
-        phase = phase_scheduler.get_current_phase(epoch)
+        lr = phase_scheduler.get_learning_rate(epoch=epoch)
+        phase = phase_scheduler.detect_phase(epoch)
         print(f"  Epoch {epoch:2d}: LR = {lr:.3f} ({phase} phase)")
     
     print("\n💡 Use case: Aggressive early → moderate middle → gentle late learning")
@@ -191,7 +209,11 @@ def example_6_unified_manager():
     # Create adaptive optimizer
     optimizer = lr_manager.create_adaptive_optimizer()
     
-    print(f"Created adaptive optimizer with {len(optimizer.param_groups)} parameter groups")
+    # The optimizer is wrapped, so we need to access the inner optimizer
+    if hasattr(optimizer, 'optimizer'):
+        print(f"Created adaptive optimizer with {len(optimizer.optimizer.param_groups)} parameter groups")
+    else:
+        print(f"Created adaptive optimizer")
     
     # Simulate training progression
     print("\nLearning rate progression over epochs:")
@@ -210,7 +232,8 @@ def example_6_unified_manager():
             print(f"  Current phase: {phase} (LR: {phase_lr:.4f})")
         
         # Show first few layer rates
-        for i, group in enumerate(optimizer.param_groups[:3]):
+        param_groups = optimizer.optimizer.param_groups if hasattr(optimizer, 'optimizer') else []
+        for i, group in enumerate(param_groups[:3]):
             if 'layer_idx' in group:
                 print(f"  Layer {group['layer_idx']} LR: {group['lr']:.6f}")
     
@@ -248,11 +271,7 @@ def example_7_complete_training():
         val_loader=test_loader,
         epochs=30,
         base_lr=0.001,
-        enable_exponential_backoff=True,
-        enable_layerwise_rates=True,
-        enable_soft_clamping=True,
-        enable_scale_dependent=True,
-        enable_phase_based=True
+        strategy='comprehensive'  # Use comprehensive strategy with all schedulers
     )
     
     # Show results

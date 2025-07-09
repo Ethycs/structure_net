@@ -1,11 +1,21 @@
 """
-Multi-scale network models.
+Models module for Structure Net
+
+Contains various neural network architectures and model implementations.
 """
 
-# Temporarily commented out due to missing dependencies
-# from .multi_scale_network import MultiScaleNetwork, create_multi_scale_network
+from .multi_scale_network import MultiScaleNetwork
+from .fiber_bundle_network import (
+    FiberBundle, 
+    FiberBundleConfig, 
+    FiberBundleBuilder,
+    StructuredConnection
+)
 
 __all__ = [
-    # "MultiScaleNetwork",
-    # "create_multi_scale_network"
+    'MultiScaleNetwork',
+    'FiberBundle',
+    'FiberBundleConfig', 
+    'FiberBundleBuilder',
+    'StructuredConnection'
 ]

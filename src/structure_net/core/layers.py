@@ -46,7 +46,7 @@ class StandardSparseLayer(nn.Module):
         """
         # Ensure mask is on the same device as the weight
         mask = self.mask.to(self.linear.weight.device)
-        return F.linear(x, self.linear.weight * mask, self.linear.bias)
+        return torch.nn.functional.linear(x, self.linear.weight * mask, self.linear.bias)
     
     def get_connection_count(self) -> int:
         """Get number of active connections in this layer."""

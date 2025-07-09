@@ -12,6 +12,12 @@ from typing import Dict, Any
 import time
 import logging
 
+try:
+    import cupy as cp
+    CUPY_AVAILABLE = True
+except ImportError:
+    CUPY_AVAILABLE = False
+
 from .base import BaseMetricAnalyzer, StatisticalUtilsMixin
 
 logger = logging.getLogger(__name__)
@@ -150,14 +156,25 @@ class ActivityAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
     
     def _compute_gini_coefficient(self, activity_rates: torch.Tensor) -> float:
         """Compute Gini coefficient of activity distribution."""
-        sorted_rates = torch.sort(activity_rates)[0]
-        n = len(sorted_rates)
-        if n == 0:
-            return 0.0
-        cumsum = torch.cumsum(sorted_rates, dim=0)
-        if cumsum[-1] == 0:
-            return 0.0
-        return (n + 1 - 2 * torch.sum(cumsum) / cumsum[-1]) / n
+        if activity_rates.is_cuda and CUPY_AVAILABLE:
+            activity_rates_cp = cp.asarray(activity_rates)
+            sorted_rates = cp.sort(activity_rates_cp)
+            n = len(sorted_rates)
+            if n == 0:
+                return 0.0
+            cumsum = cp.cumsum(sorted_rates)
+            if cumsum[-1] == 0:
+                return 0.0
+            return ((n + 1 - 2 * cp.sum(cumsum) / cumsum[-1]) / n).get()
+        else:
+            sorted_rates = torch.sort(activity_rates)[0]
+            n = len(sorted_rates)
+            if n == 0:
+                return 0.0
+            cumsum = torch.cumsum(sorted_rates, dim=0)
+            if cumsum[-1] == 0:
+                return 0.0
+            return (n + 1 - 2 * torch.sum(cumsum) / cumsum[-1]) / n
     
     def _compute_layer_health(self, active_ratio: float, max_activation: float, 
                             activity_entropy: float) -> float:

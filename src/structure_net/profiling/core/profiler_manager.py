@@ -14,7 +14,7 @@ from pathlib import Path
 import json
 
 from .base_profiler import BaseProfiler, ProfilerConfig, ProfilerLevel
-from ....logging import create_profiling_logger, StandardizedLogger
+from structure_net.logging import create_profiling_logger, StandardizedLogger
 # Import evolution profiler - others will be added as they're implemented
 try:
     from ..components.evolution_profiler import EvolutionProfiler

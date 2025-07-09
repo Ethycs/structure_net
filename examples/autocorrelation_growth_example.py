@@ -7,6 +7,9 @@ to discover which metrics predict learning success and automatically
 optimize growth strategies based on learned patterns.
 """
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+
 import torch
 import torch.nn as nn
 import torchvision
@@ -14,9 +17,6 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import sys
 import os
-
-# Add the src directory to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from structure_net.core.network_factory import create_standard_network
 from structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
@@ -62,11 +62,10 @@ def main():
     # Create initial network
     print("\n🏗️ Creating initial sparse network...")
     network = create_standard_network(
-        input_size=784,
-        hidden_sizes=[128, 64],
-        output_size=10,
-        sparsity=0.1
-    ).to(device)
+        architecture=[784, 128, 64, 10],
+        sparsity=0.1,
+        device=str(device)
+    )
     
     print(f"Initial network: {[784, 128, 64, 10]} with 10% sparsity")
     

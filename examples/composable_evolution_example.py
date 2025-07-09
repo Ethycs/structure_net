@@ -20,8 +20,8 @@ import numpy as np
 import sys
 import os
 
-# Add project root to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# Set CUDA devices before importing torch
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 
 # Import the new composable system
 from structure_net.evolution.components import (
