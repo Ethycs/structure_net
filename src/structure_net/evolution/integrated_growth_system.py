@@ -1,11 +1,131 @@
 #!/usr/bin/env python3
 """
-Integrated Growth System with Tournament-Based Strategy Selection
+Integrated Growth System - MIGRATED TO COMPOSABLE ARCHITECTURE
 
-This module implements a sophisticated, tournament-based growth system.
-It evaluates multiple growth strategies in parallel and selects the most
-promising one to apply to the base network.
+⚠️  IMPORTANT MIGRATION NOTICE ⚠️
+
+This module has been migrated to use the new composable evolution architecture.
+Your existing code will continue to work without changes, but now uses an
+optimized, modular backend.
+
+AUTOMATIC MIGRATION:
+- All imports from this module now use the new composable system
+- Same API, better performance and modularity
+- No code changes required
+
+RECOMMENDED MIGRATION:
+For new code, use the composable system directly:
+
+    from structure_net.evolution.components import (
+        create_standard_evolution_system,
+        NetworkContext
+    )
+    
+    system = create_standard_evolution_system()
+    context = NetworkContext(network, train_loader, device)
+    evolved_context = system.evolve_network(context, num_iterations=3)
+
+MIGRATION RESOURCES:
+- Migration Guide: docs/integrated_growth_system_migration.md
+- Composable Guide: docs/composable_evolution_guide.md
+- Migration Helper: structure_net.evolution.migration_helper
+- Examples: examples/composable_evolution_example.py
+
+BENEFITS OF NEW SYSTEM:
+✅ Modular components you can mix and match
+✅ Individual component configuration
+✅ Better monitoring and metrics
+✅ Easier testing and debugging
+✅ Future-proof architecture
+✅ Backward compatible
 """
+
+import warnings
+import logging
+
+# Import the new system that provides backward compatibility
+from .integrated_growth_system_v2 import (
+    IntegratedGrowthSystem,
+    ParallelGrowthTournament,
+    AdaptiveThresholdManager,
+    create_legacy_integrated_system
+)
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Show migration notice when module is imported
+def _show_migration_notice():
+    """Show migration notice when the old module is imported."""
+    logger.info("""
+🔄 INTEGRATED GROWTH SYSTEM MIGRATION NOTICE
+
+This module now uses the new composable evolution architecture as its backend.
+Your existing code will continue to work without changes.
+
+WHAT CHANGED:
+✅ Same API, better performance
+✅ Modular architecture under the hood
+✅ Enhanced monitoring and debugging
+✅ Future-proof design
+
+MIGRATION OPTIONS:
+1. NO CHANGES NEEDED - Your code works automatically with new backend
+2. GRADUAL MIGRATION - Use new composable API for new features
+3. FULL MIGRATION - Migrate to composable system for maximum benefits
+
+RESOURCES:
+📖 Migration Guide: docs/integrated_growth_system_migration.md
+🔧 Migration Helper: from structure_net.evolution.migration_helper import MigrationHelper
+📝 Examples: examples/composable_evolution_example.py
+
+Your code continues to work exactly as before, now with improved performance!
+""")
+
+# Show migration notice
+_show_migration_notice()
+
+# Export all classes for backward compatibility
+__all__ = [
+    'IntegratedGrowthSystem',
+    'ParallelGrowthTournament',
+    'AdaptiveThresholdManager',
+    'create_legacy_integrated_system'
+]
+
+# Add deprecation warnings for direct class usage
+def _deprecated_class_wrapper(cls, new_location):
+    """Wrapper to add deprecation warnings to classes."""
+    class DeprecatedWrapper(cls):
+        def __init__(self, *args, **kwargs):
+            warnings.warn(
+                f"{cls.__name__} is deprecated. Consider migrating to the new composable "
+                f"evolution system. See {new_location} for migration guidance.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+            super().__init__(*args, **kwargs)
+    
+    DeprecatedWrapper.__name__ = cls.__name__
+    DeprecatedWrapper.__qualname__ = cls.__qualname__
+    return DeprecatedWrapper
+
+# Wrap classes with deprecation warnings
+IntegratedGrowthSystem = _deprecated_class_wrapper(
+    IntegratedGrowthSystem, 
+    "docs/integrated_growth_system_migration.md"
+)
+
+ParallelGrowthTournament = _deprecated_class_wrapper(
+    ParallelGrowthTournament,
+    "docs/composable_evolution_guide.md"
+)
+
+AdaptiveThresholdManager = _deprecated_class_wrapper(
+    AdaptiveThresholdManager,
+    "docs/composable_evolution_guide.md"
+)
 
 import torch
 import torch.nn as nn
