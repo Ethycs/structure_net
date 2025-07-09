@@ -64,7 +64,7 @@ class GraphAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
         
         # Build active network graph
         if self.use_gpu:
-            G, active_neurons = self._build_active_graph_gpu(activation_data)
+            G, active_neurons, node_map = self._build_active_graph_gpu(activation_data)
         else:
             G, active_neurons = self._build_active_graph_cpu(activation_data)
         
@@ -98,8 +98,11 @@ class GraphAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
                 result.update(self._compute_spectral_metrics(G))
             
             # Path Analysis
-            result.update(self._compute_path_metrics(G, active_neurons))
-            
+            if self.use_gpu:
+                result.update(self._compute_path_metrics_gpu(G, active_neurons, node_map))
+            else:
+                result.update(self._compute_path_metrics_cpu(G, active_neurons))
+
             # Motif Analysis
             if num_nodes < 1000 and not self.use_gpu: # Motif analysis not yet in cugraph
                 result.update(self._compute_motif_metrics(G))
@@ -223,13 +226,13 @@ class GraphAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
                         edges.append((node_map[src_node_name], node_map[dst_node_name]))
 
         if not edges:
-            return cugraph.Graph(directed=True), active_neurons
+            return cugraph.Graph(directed=True), active_neurons, node_map
 
         edge_df = cudf.DataFrame(edges, columns=['src', 'dst'])
         G = cugraph.Graph(directed=True)
         G.from_cudf_edgelist(edge_df, source='src', destination='dst')
         
-        return G, active_neurons
+        return G, active_neurons, node_map
     
     def _compute_basic_graph_metrics(self, G):
         """Basic graph statistics."""
@@ -369,8 +372,9 @@ class GraphAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
         metrics = {}
         
         if self.use_gpu:
-            # cugraph does not have a direct equivalent of eigsh for Laplacian.
-            # This part will remain on CPU for now.
+            # cugraph spectral analysis is more limited than networkx/scipy
+            # We can get the laplacian and then would need to use cupy for eigenvalues
+            # For now, we will skip the GPU implementation of spectral analysis
             # TODO: Explore GPU-accelerated spectral methods.
             return metrics
 
@@ -408,8 +412,8 @@ class GraphAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
             
         return metrics
     
-    def _compute_path_metrics(self, G, active_neurons):
-        """Path-based analysis."""
+    def _compute_path_metrics_cpu(self, G, active_neurons):
+        """Path-based analysis using networkx."""
         metrics = {}
         
         # Find input and output layers
@@ -420,69 +424,97 @@ class GraphAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
         input_layer = layer_indices[0]
         output_layer = layer_indices[-1]
         
-        if self.use_gpu:
-            # cugraph SSSP is efficient for path calculations
-            # We'll sample a few source nodes and compute paths to all other nodes
-            input_nodes = [f"L{input_layer}_N{n}" for n in active_neurons[input_layer]]
-            k = min(10, len(input_nodes))
-            if k == 0:
-                return metrics
-            sample_sources = np.random.choice(input_nodes, k, replace=False).tolist()
-            
-            # This part is complex with cugraph and requires node ID mapping.
-            # For now, we'll skip GPU path metrics.
-            # TODO: Implement GPU-accelerated path metrics.
-            return metrics
-        else:
-            input_nodes = [f"L{input_layer}_N{n}" for n in active_neurons[input_layer]]
-            output_nodes = [f"L{output_layer}_N{n}" for n in active_neurons[output_layer]]
-            
-            # Sample paths
-            num_paths = 0
-            path_lengths = []
-            critical_paths = []
-            
-            # Sample random input-output pairs
-            n_samples = min(10, len(input_nodes) * len(output_nodes))
-            
-            for _ in range(n_samples):
-                if not input_nodes or not output_nodes:
-                    break
-                    
-                src = np.random.choice(input_nodes)
-                dst = np.random.choice(output_nodes)
+        input_nodes = [f"L{input_layer}_N{n}" for n in active_neurons[input_layer]]
+        output_nodes = [f"L{output_layer}_N{n}" for n in active_neurons[output_layer]]
+        
+        # Sample paths
+        num_paths = 0
+        path_lengths = []
+        critical_paths = []
+        
+        # Sample random input-output pairs
+        n_samples = min(10, len(input_nodes) * len(output_nodes))
+        
+        for _ in range(n_samples):
+            if not input_nodes or not output_nodes:
+                break
                 
-                try:
-                    path = nx.shortest_path(G, src, dst)
-                    num_paths += 1
-                    path_lengths.append(len(path) - 1)
-                    
-                    # Compute path weight
-                    path_weight = 1.0
-                    for i in range(len(path) - 1):
-                        if G.has_edge(path[i], path[i+1]):
-                            path_weight *= abs(G[path[i]][path[i+1]]['weight'])
-                    
-                    critical_paths.append({
-                        'path': path,
-                        'length': len(path) - 1,
-                        'weight': path_weight
-                    })
-                    
-                except nx.NetworkXNoPath:
-                    pass
+            src = np.random.choice(input_nodes)
+            dst = np.random.choice(output_nodes)
             
-            metrics['num_paths_sampled'] = num_paths
-            metrics['avg_path_length'] = np.mean(path_lengths) if path_lengths else 0
-            metrics['min_path_length'] = min(path_lengths) if path_lengths else 0
-            metrics['max_path_length'] = max(path_lengths) if path_lengths else 0
+            try:
+                path = nx.shortest_path(G, src, dst)
+                num_paths += 1
+                path_lengths.append(len(path) - 1)
+                
+                # Compute path weight
+                path_weight = 1.0
+                for i in range(len(path) - 1):
+                    if G.has_edge(path[i], path[i+1]):
+                        path_weight *= abs(G[path[i]][path[i+1]]['weight'])
+                
+                critical_paths.append({
+                    'path': path,
+                    'length': len(path) - 1,
+                    'weight': path_weight
+                })
+                
+            except nx.NetworkXNoPath:
+                pass
+        
+        metrics['num_paths_sampled'] = num_paths
+        metrics['avg_path_length'] = np.mean(path_lengths) if path_lengths else 0
+        metrics['min_path_length'] = min(path_lengths) if path_lengths else 0
+        metrics['max_path_length'] = max(path_lengths) if path_lengths else 0
+        
+        # Top critical paths
+        critical_paths.sort(key=lambda x: x['weight'], reverse=True)
+        metrics['top_critical_paths'] = critical_paths[:5]
+        
+        # Reachability
+        metrics['input_output_reachability'] = num_paths / n_samples if n_samples > 0 else 0
+        
+        return metrics
+
+    def _compute_path_metrics_gpu(self, G, active_neurons, node_map):
+        """Path-based analysis using cugraph."""
+        metrics = {}
+        
+        # Find input and output layers
+        layer_indices = sorted(active_neurons.keys())
+        if not layer_indices:
+            return metrics
             
-            # Top critical paths
-            critical_paths.sort(key=lambda x: x['weight'], reverse=True)
-            metrics['top_critical_paths'] = critical_paths[:5]
-            
-            # Reachability
-            metrics['input_output_reachability'] = num_paths / n_samples if n_samples > 0 else 0
+        input_layer = layer_indices[0]
+        output_layer = layer_indices[-1]
+        
+        input_node_names = [f"L{input_layer}_N{n}" for n in active_neurons[input_layer]]
+        output_node_names = [f"L{output_layer}_N{n}" for n in active_neurons[output_layer]]
+        
+        k = min(10, len(input_node_names))
+        if k == 0:
+            return metrics
+        
+        sample_source_names = np.random.choice(input_node_names, k, replace=False).tolist()
+        sample_source_ids = [node_map[name] for name in sample_source_names]
+        
+        # Compute SSSP
+        distances = cugraph.sssp(G, source=sample_source_ids[0])
+        
+        # Filter for paths to output nodes
+        output_node_ids = [node_map[name] for name in output_node_names if name in node_map]
+        paths_to_output = distances[distances['vertex'].isin(output_node_ids)]
+        
+        # Path lengths
+        path_lengths = paths_to_output['distance'].to_arrow().to_pylist()
+        
+        metrics['num_paths_sampled'] = len(paths_to_output)
+        metrics['avg_path_length'] = np.mean(path_lengths) if path_lengths else 0
+        metrics['min_path_length'] = min(path_lengths) if path_lengths else 0
+        metrics['max_path_length'] = max(path_lengths) if path_lengths else 0
+        
+        # Reachability
+        metrics['input_output_reachability'] = len(paths_to_output) / len(output_node_ids) if output_node_ids else 0
         
         return metrics
     

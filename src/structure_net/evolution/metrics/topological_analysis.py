@@ -204,20 +204,27 @@ class TopologicalAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin, StatisticalU
     
     def _find_local_maxima(self, gradient_magnitude: torch.Tensor) -> List[Tuple[int, int]]:
         """Find local maxima in gradient magnitude."""
-        maxima = []
-        h, w = gradient_magnitude.shape
-        
-        # Use a sliding window to find local maxima
-        for i in range(1, h - 1):
-            for j in range(1, w - 1):
-                center = gradient_magnitude[i, j]
-                
-                # Check if it's a local maximum
-                neighborhood = gradient_magnitude[i-1:i+2, j-1:j+2]
-                if center == neighborhood.max() and center > neighborhood.mean():
-                    maxima.append((i, j))
-        
-        return maxima
+        if gradient_magnitude.is_cuda:
+            pooled = F.max_pool2d(gradient_magnitude.unsqueeze(0).unsqueeze(0), 
+                                  kernel_size=3, stride=1, padding=1).squeeze()
+            maxima_mask = (gradient_magnitude == pooled) & (gradient_magnitude > gradient_magnitude.mean())
+            coords = torch.where(maxima_mask)
+            return list(zip(coords[0].tolist(), coords[1].tolist()))
+        else:
+            maxima = []
+            h, w = gradient_magnitude.shape
+            
+            # Use a sliding window to find local maxima
+            for i in range(1, h - 1):
+                for j in range(1, w - 1):
+                    center = gradient_magnitude[i, j]
+                    
+                    # Check if it's a local maximum
+                    neighborhood = gradient_magnitude[i-1:i+2, j-1:j+2]
+                    if center == neighborhood.max() and center > neighborhood.mean():
+                        maxima.append((i, j))
+            
+            return maxima
     
     def _score_patch_locations(self, weight_matrix: torch.Tensor,
                               candidates: List[Tuple[int, int]]) -> List[Tuple[Tuple[int, int], float, float]]:
@@ -374,6 +381,12 @@ class TopologicalAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin, StatisticalU
     
     def _count_connected_components_binary(self, binary_matrix: torch.Tensor) -> int:
         """Count connected components in binary matrix."""
+        if binary_matrix.is_cuda and CUPY_AVAILABLE:
+            from cupyx.scipy.ndimage import label
+            binary_matrix_cp = cp.asarray(binary_matrix)
+            _, num_features = label(binary_matrix_cp)
+            return num_features
+
         visited = torch.zeros_like(binary_matrix, dtype=torch.bool)
         components = 0
         h, w = binary_matrix.shape
