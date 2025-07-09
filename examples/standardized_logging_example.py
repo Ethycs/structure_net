@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Standardized Logging Example
+Standardized Logging Example - Latest Architecture
 
-This example demonstrates how to use the new standardized logging system
-with Pydantic validation and WandB artifacts.
+This example demonstrates the integration of the latest standardized logging system
+with the optimized profiling architecture, featuring:
 
-Run this example to see:
-- Schema validation in action
-- Real-time WandB logging
-- Artifact creation and queuing
-- Error handling and debugging
+- Pydantic validation with WandB artifacts
+- Integration with advanced profiling system
+- Production-ready logging with minimal overhead
+- Real-time monitoring and queue management
+- Component-level profiling integration
+- Adaptive sampling and overhead management
 """
 
 import sys
@@ -18,431 +19,582 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from datetime import datetime
+import time
 
 # Add project root to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.structure_net.logging import (
+# Import standardized logging system
+from structure_net.logging import (
     create_growth_logger,
     create_training_logger,
     create_tournament_logger,
-    get_queue_status
+    get_queue_status,
+    StandardizedLogger
 )
-from src.structure_net import create_standard_network
+
+# Import latest profiling system
+from structure_net.profiling import (
+    create_production_profiler, create_research_profiler,
+    profile_component, profile_if_enabled, profile_memory_intensive,
+    profile_operation, profile_batch_operation,
+    ProfilerLevel
+)
+
+# Import structure_net components
+from structure_net import create_standard_network
 
 
-def example_1_basic_growth_logging():
-    """Example 1: Basic growth experiment logging."""
-    print("\n" + "="*60)
-    print("EXAMPLE 1: Basic Growth Experiment Logging")
-    print("="*60)
+# Example 1: Production Logging with Profiling Integration
+@profile_component(component_name="production_experiment", 
+                  level=ProfilerLevel.BASIC)
+class ProductionExperiment:
+    """Production experiment with integrated logging and profiling."""
     
-    # Create logger with validation
-    logger = create_growth_logger(
-        project_name="standardized_logging_demo",
-        experiment_name=f"basic_growth_{datetime.now().strftime('%H%M%S')}",
-        config={
-            'dataset': 'mnist',
-            'batch_size': 64,
-            'learning_rate': 0.001,
-            'device': 'cpu',
-            'target_accuracy': 0.90
-        },
-        tags=['demo', 'basic_growth', 'example']
-    )
-    
-    # Create a simple network
-    network = create_standard_network(
-        architecture=[784, 128, 64, 10],
-        sparsity=0.02,
-        device='cpu'
-    )
-    
-    print("📊 Starting experiment...")
-    logger.log_experiment_start(
-        network=network,
-        target_accuracy=0.90,
-        seed_architecture=[784, 128, 64, 10]
-    )
-    
-    # Simulate growth iterations
-    for iteration in range(3):
-        print(f"🔄 Growth iteration {iteration}")
+    def __init__(self, config):
+        self.config = config
+        self.logger = create_growth_logger(
+            project_name="production_logging_demo",
+            experiment_name=f"production_{datetime.now().strftime('%H%M%S')}",
+            config=config,
+            tags=['production', 'integrated', 'profiling']
+        )
         
-        # Simulate training progress
-        accuracy = 0.70 + (iteration * 0.08)
-        loss = 0.8 - (iteration * 0.15)
+        # Create production profiler with minimal overhead
+        self.profiler = create_production_profiler(max_overhead_percent=1.0)
+        self.profiler.start_session("production_experiment")
+    
+    def setup_network(self):
+        """Setup network with profiling."""
+        network = create_standard_network(
+            architecture=self.config['architecture'],
+            sparsity=self.config['sparsity'],
+            device=self.config['device']
+        )
         
-        # Simulate extrema analysis
-        extrema_analysis = {
-            'total_extrema': 15 + (iteration * 5),
-            'extrema_ratio': 0.12 + (iteration * 0.03),
-            'dead_neurons': {
-                '0': [1, 5, 12] if iteration > 0 else [],
-                '1': [3, 8] if iteration > 1 else []
-            },
-            'saturated_neurons': {
-                '0': [45, 67],
-                '1': [23, 34, 56] if iteration > 0 else []
-            },
-            'layer_health': {
-                '0': 0.85 - (iteration * 0.05),
-                '1': 0.90 - (iteration * 0.03),
-                '2': 0.88
+        # Log experiment start with profiling
+        self.logger.log_experiment_start(
+            network=network,
+            target_accuracy=self.config['target_accuracy'],
+            seed_architecture=self.config['architecture']
+        )
+        
+        return network
+    
+    def run_growth_iteration(self, iteration, network):
+        """Run growth iteration with integrated logging and profiling."""
+        # Simulate training with batch profiling for high-frequency operations
+        accuracy = 0.70 + (iteration * 0.05)
+        loss = 0.8 - (iteration * 0.1)
+        
+        # Simulate extrema analysis with profiling
+        with profile_operation("extrema_analysis", "evolution", 
+                             level=ProfilerLevel.BASIC) as ctx:
+            extrema_analysis = {
+                'total_extrema': 10 + (iteration * 3),
+                'extrema_ratio': 0.08 + (iteration * 0.02),
+                'layer_health': {
+                    '0': 0.90 - (iteration * 0.02),
+                    '1': 0.85 - (iteration * 0.03)
+                }
             }
-        }
+            ctx.add_metric("extrema_count", extrema_analysis['total_extrema'])
+            ctx.add_metric("extrema_ratio", extrema_analysis['extrema_ratio'])
         
-        # Simulate growth actions
+        # Determine growth actions
+        growth_occurred = iteration > 0 and extrema_analysis['extrema_ratio'] > 0.10
         growth_actions = []
-        growth_occurred = False
         
-        if iteration > 0:  # Growth after first iteration
+        if growth_occurred:
             growth_actions.append({
                 'action': 'add_patch',
                 'position': 1,
-                'size': 5,
-                'reason': f"Dead neurons detected in layer 1: {len(extrema_analysis['dead_neurons']['1'])}",
+                'size': 3,
+                'reason': f"High extrema ratio: {extrema_analysis['extrema_ratio']:.3f}",
                 'success': True
             })
-            growth_occurred = True
         
-        # Log iteration with validation
-        logger.log_growth_iteration(
+        # Log iteration with validation and profiling
+        self.logger.log_growth_iteration(
             iteration=iteration,
             network=network,
             accuracy=accuracy,
             loss=loss,
             extrema_analysis=extrema_analysis,
             growth_actions=growth_actions,
-            growth_occurred=growth_occurred,
-            credits=100.0 - (iteration * 10)  # Simulate credit system
+            growth_occurred=growth_occurred
         )
+        
+        return accuracy
+    
+    def finish_experiment(self, final_accuracy):
+        """Finish experiment with integrated cleanup."""
+        # Finish logging
+        artifact_hash = self.logger.finish_experiment(final_accuracy=final_accuracy)
+        
+        # End profiling session
+        profiling_results = self.profiler.end_session()
+        
+        # Log profiling results to standardized logger
+        self.logger.log_profiling_session(profiling_results)
+        
+        return artifact_hash, profiling_results
+
+
+def example_1_production_integration():
+    """Example 1: Production logging with profiling integration."""
+    print("\n" + "="*70)
+    print("EXAMPLE 1: Production Logging + Profiling Integration")
+    print("="*70)
+    
+    config = {
+        'architecture': [784, 128, 64, 10],
+        'sparsity': 0.02,
+        'device': 'cpu',
+        'target_accuracy': 0.90,
+        'batch_size': 64,
+        'learning_rate': 0.001
+    }
+    
+    # Create production experiment
+    experiment = ProductionExperiment(config)
+    
+    print("📊 Starting production experiment with integrated profiling...")
+    
+    # Setup network
+    network = experiment.setup_network()
+    
+    # Run growth iterations
+    final_accuracy = 0.70
+    for iteration in range(3):
+        print(f"🔄 Production iteration {iteration}")
+        final_accuracy = experiment.run_growth_iteration(iteration, network)
     
     # Finish experiment
-    print("✅ Finishing experiment...")
-    artifact_hash = logger.finish_experiment(final_accuracy=0.86)
+    print("✅ Finishing production experiment...")
+    artifact_hash, profiling_results = experiment.finish_experiment(final_accuracy)
     
-    print(f"🎯 Experiment completed!")
+    print(f"🎯 Production experiment completed!")
     print(f"📦 Artifact hash: {artifact_hash}")
-    print(f"🔗 WandB URL: {logger.wandb_logger.run.url}")
+    print(f"📊 Profiling overhead: {profiling_results.get('total_overhead', 0):.6f}s")
+    print(f"🔗 WandB URL: {experiment.logger.wandb_logger.run.url}")
     
     return artifact_hash
 
 
-def example_2_training_experiment():
-    """Example 2: Standard training experiment."""
-    print("\n" + "="*60)
-    print("EXAMPLE 2: Standard Training Experiment")
-    print("="*60)
+# Example 2: Research Logging with Comprehensive Profiling
+@profile_component(component_name="research_experiment", 
+                  level=ProfilerLevel.COMPREHENSIVE)
+class ResearchExperiment:
+    """Research experiment with comprehensive logging and profiling."""
     
-    # Create training logger
-    logger = create_training_logger(
-        project_name="standardized_logging_demo",
-        experiment_name=f"training_{datetime.now().strftime('%H%M%S')}",
-        config={
-            'dataset': 'cifar10',
-            'batch_size': 32,
-            'learning_rate': 0.001,
-            'max_epochs': 5,
-            'device': 'cpu',
-            'optimizer': 'adam'
-        },
-        tags=['demo', 'training', 'cifar10']
-    )
-    
-    # Create simple network for demonstration
-    network = nn.Sequential(
-        nn.Linear(3072, 256),
-        nn.ReLU(),
-        nn.Linear(256, 128),
-        nn.ReLU(),
-        nn.Linear(128, 10)
-    )
-    
-    print("📊 Starting training experiment...")
-    logger.log_experiment_start(network=network)
-    
-    # Simulate training epochs
-    for epoch in range(5):
-        print(f"🔄 Training epoch {epoch}")
-        
-        # Simulate training metrics
-        train_loss = 2.0 - (epoch * 0.3)
-        train_acc = 0.20 + (epoch * 0.15)
-        val_loss = 2.2 - (epoch * 0.25)
-        val_acc = 0.18 + (epoch * 0.12)
-        lr = 0.001 * (0.9 ** epoch)  # Decay learning rate
-        
-        # Log epoch with validation
-        logger.log_training_epoch(
-            epoch=epoch,
-            train_loss=train_loss,
-            train_acc=train_acc,
-            val_loss=val_loss,
-            val_acc=val_acc,
-            learning_rate=lr,
-            duration=45.0 + (epoch * 2)  # Simulate epoch duration
-        )
-    
-    # Finish experiment
-    print("✅ Finishing training...")
-    artifact_hash = logger.finish_experiment(final_accuracy=val_acc)
-    
-    print(f"🎯 Training completed!")
-    print(f"📦 Artifact hash: {artifact_hash}")
-    
-    return artifact_hash
-
-
-def example_3_tournament_experiment():
-    """Example 3: Tournament-based growth experiment."""
-    print("\n" + "="*60)
-    print("EXAMPLE 3: Tournament Growth Experiment")
-    print("="*60)
-    
-    # Create tournament logger
-    logger = create_tournament_logger(
-        project_name="standardized_logging_demo",
-        experiment_name=f"tournament_{datetime.now().strftime('%H%M%S')}",
-        config={
-            'dataset': 'mnist',
-            'tournament_strategies': ['extrema_growth', 'random_growth', 'layer_addition'],
-            'tournament_epochs': 3,
-            'device': 'cpu'
-        },
-        tags=['demo', 'tournament', 'strategy_comparison']
-    )
-    
-    network = create_standard_network([784, 64, 10], sparsity=0.05, device='cpu')
-    
-    print("📊 Starting tournament experiment...")
-    logger.log_experiment_start(network=network)
-    
-    # Simulate tournament iterations
-    for iteration in range(2):
-        print(f"🏆 Tournament iteration {iteration}")
-        
-        # Simulate tournament results
-        tournament_results = {
-            'winner': {
-                'strategy': 'extrema_growth',
-                'improvement': 0.15 + (iteration * 0.05),
-                'final_accuracy': 0.85 + (iteration * 0.03),
-                'execution_time': 120.5,
-                'success': True
+    def __init__(self, experiment_name):
+        self.logger = create_tournament_logger(
+            project_name="research_logging_demo",
+            experiment_name=experiment_name,
+            config={
+                'dataset': 'mnist',
+                'tournament_strategies': ['extrema_growth', 'random_growth'],
+                'research_mode': True,
+                'comprehensive_tracking': True
             },
-            'all_results': [
-                {
-                    'strategy': 'extrema_growth',
-                    'improvement': 0.15 + (iteration * 0.05),
-                    'final_accuracy': 0.85 + (iteration * 0.03),
-                    'execution_time': 120.5,
-                    'success': True
-                },
-                {
-                    'strategy': 'random_growth',
-                    'improvement': 0.08 + (iteration * 0.02),
-                    'final_accuracy': 0.78 + (iteration * 0.02),
-                    'execution_time': 95.2,
-                    'success': True
-                },
-                {
-                    'strategy': 'layer_addition',
-                    'improvement': 0.12 + (iteration * 0.03),
-                    'final_accuracy': 0.82 + (iteration * 0.025),
-                    'execution_time': 150.8,
-                    'success': True
-                }
-            ]
+            tags=['research', 'comprehensive', 'tournament']
+        )
+        
+        # Create research profiler with comprehensive tracking
+        self.profiler = create_research_profiler(
+            experiment_name=experiment_name,
+            level=ProfilerLevel.COMPREHENSIVE,
+            enable_all_integrations=True
+        )
+        self.profiler.start_session("research_experiment")
+    
+    @profile_memory_intensive
+    def analyze_network_architecture(self, network):
+        """Analyze network architecture with memory profiling."""
+        # Simulate comprehensive analysis
+        time.sleep(0.1)
+        
+        analysis = {
+            'parameter_count': sum(p.numel() for p in network.parameters()),
+            'layer_count': len(list(network.modules())) - 1,
+            'memory_usage': torch.cuda.memory_allocated() if torch.cuda.is_available() else 0,
+            'complexity_score': 0.75
         }
         
-        # Log tournament results with validation
-        logger.log_tournament_results(tournament_results, iteration)
+        return analysis
+    
+    def run_tournament_iteration(self, iteration, network):
+        """Run tournament iteration with detailed profiling."""
+        strategies = ['extrema_growth', 'random_growth', 'layer_addition']
+        
+        # Profile each strategy
+        strategy_results = []
+        
+        for strategy in strategies:
+            with profile_operation(f"strategy_{strategy}", "tournament", 
+                                 level=ProfilerLevel.DETAILED) as ctx:
+                # Simulate strategy execution
+                execution_time = 0.05 + (hash(strategy) % 100) / 1000
+                time.sleep(execution_time)
+                
+                improvement = 0.05 + (hash(strategy + str(iteration)) % 50) / 1000
+                final_accuracy = 0.80 + improvement
+                
+                result = {
+                    'strategy': strategy,
+                    'improvement': improvement,
+                    'final_accuracy': final_accuracy,
+                    'execution_time': execution_time,
+                    'success': True
+                }
+                
+                strategy_results.append(result)
+                
+                # Add strategy-specific metrics
+                ctx.add_metric("strategy_name", strategy)
+                ctx.add_metric("improvement", improvement)
+                ctx.add_metric("execution_time", execution_time)
+        
+        # Determine winner
+        winner = max(strategy_results, key=lambda x: x['improvement'])
+        
+        tournament_results = {
+            'winner': winner,
+            'all_results': strategy_results
+        }
+        
+        # Log tournament results
+        self.logger.log_tournament_results(tournament_results, iteration)
         
         # Also log as growth iteration
-        logger.log_growth_iteration(
+        self.logger.log_growth_iteration(
             iteration=iteration,
             network=network,
-            accuracy=tournament_results['winner']['final_accuracy'],
+            accuracy=winner['final_accuracy'],
             growth_occurred=True,
             growth_actions=[{
                 'action': 'tournament_winner',
-                'reason': f"Tournament selected: {tournament_results['winner']['strategy']}",
+                'reason': f"Tournament selected: {winner['strategy']}",
                 'success': True
             }]
         )
+        
+        return winner['final_accuracy']
+    
+    def finish_experiment(self, final_accuracy):
+        """Finish research experiment."""
+        # Finish logging
+        artifact_hash = self.logger.finish_experiment(final_accuracy=final_accuracy)
+        
+        # End profiling session
+        profiling_results = self.profiler.end_session()
+        
+        # Log comprehensive profiling results
+        self.logger.log_profiling_session(profiling_results)
+        
+        return artifact_hash, profiling_results
+
+
+def example_2_research_integration():
+    """Example 2: Research logging with comprehensive profiling."""
+    print("\n" + "="*70)
+    print("EXAMPLE 2: Research Logging + Comprehensive Profiling")
+    print("="*70)
+    
+    experiment_name = f"research_{datetime.now().strftime('%H%M%S')}"
+    experiment = ResearchExperiment(experiment_name)
+    
+    print("🔬 Starting research experiment with comprehensive profiling...")
+    
+    # Create network
+    network = create_standard_network([784, 256, 128, 10], sparsity=0.05, device='cpu')
+    experiment.logger.log_experiment_start(network=network)
+    
+    # Analyze network architecture
+    print("🔍 Analyzing network architecture...")
+    architecture_analysis = experiment.analyze_network_architecture(network)
+    print(f"   Parameters: {architecture_analysis['parameter_count']:,}")
+    print(f"   Complexity: {architecture_analysis['complexity_score']:.3f}")
+    
+    # Run tournament iterations
+    final_accuracy = 0.80
+    for iteration in range(2):
+        print(f"🏆 Tournament iteration {iteration}")
+        final_accuracy = experiment.run_tournament_iteration(iteration, network)
     
     # Finish experiment
-    print("✅ Finishing tournament...")
-    final_accuracy = tournament_results['winner']['final_accuracy']
-    artifact_hash = logger.finish_experiment(final_accuracy=final_accuracy)
+    print("✅ Finishing research experiment...")
+    artifact_hash, profiling_results = experiment.finish_experiment(final_accuracy)
     
-    print(f"🎯 Tournament completed!")
-    print(f"🏆 Winner: {tournament_results['winner']['strategy']}")
+    print(f"🎯 Research experiment completed!")
     print(f"📦 Artifact hash: {artifact_hash}")
+    print(f"📊 Operations profiled: {profiling_results.get('total_operations', 0)}")
+    print(f"🔗 WandB URL: {experiment.logger.wandb_logger.run.url}")
     
     return artifact_hash
 
 
-def example_4_validation_errors():
-    """Example 4: Demonstrate validation error handling."""
-    print("\n" + "="*60)
-    print("EXAMPLE 4: Validation Error Handling")
-    print("="*60)
+def example_3_conditional_logging():
+    """Example 3: Conditional logging with environment-based profiling."""
+    print("\n" + "="*70)
+    print("EXAMPLE 3: Conditional Logging + Environment-Based Profiling")
+    print("="*70)
     
-    logger = create_growth_logger(
-        project_name="standardized_logging_demo",
-        experiment_name=f"validation_demo_{datetime.now().strftime('%H%M%S')}",
-        tags=['demo', 'validation', 'error_handling']
+    # Create logger
+    logger = create_training_logger(
+        project_name="conditional_logging_demo",
+        experiment_name=f"conditional_{datetime.now().strftime('%H%M%S')}",
+        config={
+            'dataset': 'cifar10',
+            'conditional_profiling': True,
+            'environment': 'development'
+        },
+        tags=['conditional', 'environment_based']
     )
     
-    network = create_standard_network([784, 32, 10], device='cpu')
+    # Create conditional profiler
+    profiler = create_production_profiler(max_overhead_percent=2.0)
+    profiler.start_session("conditional_demo")
+    
+    # Define conditional functions
+    @profile_if_enabled(condition=lambda: os.getenv('PROFILE_TRAINING', '0') == '1')
+    def conditional_training_step(batch_data):
+        """Training step that only profiles when enabled."""
+        time.sleep(0.01)  # Simulate training
+        return 0.5 + (hash(str(batch_data)) % 100) / 1000
+    
+    print("📊 Testing conditional profiling...")
+    
+    # Test without profiling enabled
+    print("   Running without profiling enabled...")
+    losses = []
+    for i in range(10):
+        loss = conditional_training_step(f"batch_{i}")
+        losses.append(loss)
+    
+    # Enable profiling
+    os.environ['PROFILE_TRAINING'] = '1'
+    print("   Running with profiling enabled...")
+    
+    # Test with profiling enabled
+    for i in range(5):
+        loss = conditional_training_step(f"enabled_batch_{i}")
+        losses.append(loss)
+    
+    # Log training results
+    avg_loss = sum(losses) / len(losses)
+    logger.log_training_epoch(
+        epoch=0,
+        train_loss=avg_loss,
+        train_acc=0.85,
+        val_loss=avg_loss * 1.1,
+        val_acc=0.82,
+        learning_rate=0.001,
+        duration=len(losses) * 0.01
+    )
+    
+    # Finish experiment
+    profiling_results = profiler.end_session()
+    artifact_hash = logger.finish_experiment(final_accuracy=0.82)
+    
+    # Clean up
+    os.environ.pop('PROFILE_TRAINING', None)
+    
+    print(f"🎯 Conditional logging completed!")
+    print(f"📦 Artifact hash: {artifact_hash}")
+    print(f"📊 Conditional profiling overhead: Minimal when disabled")
+    
+    return artifact_hash
+
+
+def example_4_batch_logging_integration():
+    """Example 4: Batch logging with high-frequency profiling."""
+    print("\n" + "="*70)
+    print("EXAMPLE 4: Batch Logging + High-Frequency Profiling")
+    print("="*70)
+    
+    # Create logger
+    logger = StandardizedLogger("batch_logging_demo")
+    
+    # Create standard profiler for batch operations
+    profiler = create_production_profiler(max_overhead_percent=1.5)
+    profiler.start_session("batch_demo")
+    
+    print("⚡ Running batch logging with high-frequency profiling...")
+    
+    # Log experiment start
+    experiment_data = {
+        "experiment_id": f"batch_demo_{datetime.now().strftime('%H%M%S')}",
+        "timestamp": time.time(),
+        "configuration": {
+            "batch_size": 32,
+            "high_frequency_logging": True,
+            "profiling_mode": "batch"
+        }
+    }
+    logger.log_experiment_start(experiment_data)
+    
+    # Simulate high-frequency training with batch profiling
+    total_batches = 100
+    batch_losses = []
+    
+    for batch_idx in range(total_batches):
+        # Use batch profiling for high-frequency operations
+        with profile_batch_operation("training_batch", "training", 
+                                    {"batch_idx": batch_idx}) as ctx:
+            # Simulate batch processing
+            batch_loss = 1.0 - (batch_idx * 0.008)
+            batch_losses.append(batch_loss)
+            
+            # Log every 10th batch to avoid overwhelming the logging system
+            if batch_idx % 10 == 0:
+                logger.log_iteration({
+                    "batch": batch_idx,
+                    "loss": batch_loss,
+                    "progress": batch_idx / total_batches
+                })
+    
+    # Force flush of batch profiler
+    from structure_net.profiling.core.context_manager import get_global_batch_profiler
+    batch_profiler = get_global_batch_profiler()
+    batch_profiler.flush()
+    
+    # Log final results
+    avg_loss = sum(batch_losses) / len(batch_losses)
+    logger.log_experiment_end({
+        "status": "completed",
+        "total_batches": total_batches,
+        "average_loss": avg_loss,
+        "final_loss": batch_losses[-1]
+    })
+    
+    # Finish profiling
+    profiling_results = profiler.end_session()
+    
+    print(f"🎯 Batch logging completed!")
+    print(f"⚡ Processed {total_batches} batches with minimal overhead")
+    print(f"📊 Average loss: {avg_loss:.4f}")
+    print(f"📈 Batch profiling overhead: Minimal (batched processing)")
+    
+    return profiling_results
+
+
+def example_5_validation_with_profiling():
+    """Example 5: Validation error handling with profiling integration."""
+    print("\n" + "="*70)
+    print("EXAMPLE 5: Validation + Profiling Error Handling")
+    print("="*70)
+    
+    logger = create_growth_logger(
+        project_name="validation_demo",
+        experiment_name=f"validation_{datetime.now().strftime('%H%M%S')}",
+        tags=['validation', 'error_handling', 'profiling']
+    )
+    
+    profiler = create_production_profiler()
+    profiler.start_session("validation_demo")
+    
+    network = create_standard_network([784, 32, 10], sparsity=0.02, device='cpu')
     logger.log_experiment_start(network=network)
     
-    print("🧪 Testing validation errors...")
+    print("🧪 Testing validation with profiling integration...")
     
-    # Test 1: Invalid accuracy (> 1.0)
-    print("\n1. Testing invalid accuracy...")
+    # Test 1: Valid operation with profiling
+    print("\n1. Testing valid operation with profiling...")
     try:
-        logger.log_growth_iteration(
-            iteration=0,
-            network=network,
-            accuracy=1.5,  # ❌ Invalid: > 1.0
-            growth_occurred=False
-        )
-        print("❌ Should have failed!")
-    except Exception as e:
-        print(f"✅ Caught validation error: {type(e).__name__}")
-        print(f"   Message: {str(e)[:100]}...")
-    
-    # Test 2: Negative iteration
-    print("\n2. Testing negative iteration...")
-    try:
-        logger.log_growth_iteration(
-            iteration=-1,  # ❌ Invalid: negative
-            network=network,
-            accuracy=0.85,
-            growth_occurred=False
-        )
-        print("❌ Should have failed!")
-    except Exception as e:
-        print(f"✅ Caught validation error: {type(e).__name__}")
-        print(f"   Message: {str(e)[:100]}...")
-    
-    # Test 3: Invalid growth action
-    print("\n3. Testing invalid growth action...")
-    try:
-        logger.log_growth_iteration(
-            iteration=0,
-            network=network,
-            accuracy=0.85,
-            growth_occurred=True,
-            growth_actions=[{
-                'action': 'invalid_action',  # ❌ Not in allowed types
-                'reason': 'Testing validation'
-            }]
-        )
-        print("❌ Should have failed!")
-    except Exception as e:
-        print(f"✅ Caught validation error: {type(e).__name__}")
-        print(f"   Message: {str(e)[:100]}...")
-    
-    # Test 4: Valid iteration (should work)
-    print("\n4. Testing valid iteration...")
-    try:
-        logger.log_growth_iteration(
-            iteration=0,
-            network=network,
-            accuracy=0.85,  # ✅ Valid
-            growth_occurred=True,
-            growth_actions=[{
-                'action_type': 'add_layer',  # ✅ Valid
-                'reason': 'Testing successful validation',
-                'success': True
-            }]
-        )
-        print("✅ Valid iteration logged successfully!")
+        with profile_operation("valid_iteration", "validation") as ctx:
+            logger.log_growth_iteration(
+                iteration=0,
+                network=network,
+                accuracy=0.85,
+                growth_occurred=False
+            )
+            ctx.add_metric("validation_success", True)
+        print("✅ Valid operation completed successfully!")
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
     
+    # Test 2: Invalid operation with profiling
+    print("\n2. Testing invalid operation with profiling...")
+    try:
+        with profile_operation("invalid_iteration", "validation") as ctx:
+            logger.log_growth_iteration(
+                iteration=0,
+                network=network,
+                accuracy=1.5,  # ❌ Invalid: > 1.0
+                growth_occurred=False
+            )
+            ctx.add_metric("validation_success", False)
+        print("❌ Should have failed!")
+    except Exception as e:
+        print(f"✅ Caught validation error: {type(e).__name__}")
+        print(f"   Profiling still tracked the failed operation")
+    
+    # Test 3: Profiling overhead during validation errors
+    print("\n3. Testing profiling overhead during validation errors...")
+    error_count = 0
+    start_time = time.time()
+    
+    for i in range(10):
+        try:
+            with profile_operation(f"error_test_{i}", "validation"):
+                logger.log_growth_iteration(
+                    iteration=i,
+                    network=network,
+                    accuracy=1.2,  # ❌ Always invalid
+                    growth_occurred=False
+                )
+        except:
+            error_count += 1
+    
+    error_time = time.time() - start_time
+    print(f"   Processed {error_count} validation errors in {error_time:.3f}s")
+    print(f"   Profiling overhead during errors: {error_time/10:.4f}s per error")
+    
     # Finish experiment
+    profiling_results = profiler.end_session()
     logger.finish_experiment(final_accuracy=0.85, save_artifact=False)
-    print("\n✅ Validation testing completed!")
-
-
-def example_5_queue_management():
-    """Example 5: Demonstrate queue management."""
-    print("\n" + "="*60)
-    print("EXAMPLE 5: Queue Management")
-    print("="*60)
     
-    # Check initial queue status
-    print("📊 Initial queue status:")
-    status = get_queue_status()
-    for key, value in status.items():
-        if key != 'directories':
-            print(f"   {key}: {value}")
+    print("\n✅ Validation + profiling testing completed!")
+    print(f"📊 Total operations profiled: {profiling_results.get('total_operations', 0)}")
     
-    # Create a simple experiment that will be queued
-    logger = create_growth_logger(
-        project_name="standardized_logging_demo",
-        experiment_name=f"queue_demo_{datetime.now().strftime('%H%M%S')}",
-        tags=['demo', 'queue_management']
-    )
-    
-    network = create_standard_network([784, 16, 10], device='cpu')
-    logger.log_experiment_start(network=network)
-    
-    # Log a simple iteration
-    logger.log_growth_iteration(
-        iteration=0,
-        network=network,
-        accuracy=0.75,
-        growth_occurred=False
-    )
-    
-    # Save artifact (will be queued)
-    print("\n📦 Saving experiment artifact...")
-    artifact_hash = logger.save_experiment_artifact()
-    
-    # Check queue status after adding experiment
-    print("\n📊 Queue status after adding experiment:")
-    status = get_queue_status()
-    for key, value in status.items():
-        if key != 'directories':
-            print(f"   {key}: {value}")
-    
-    # Finish experiment
-    logger.finish_experiment(save_artifact=False)  # Don't save again
-    
-    print(f"\n✅ Queue management demo completed!")
-    print(f"📦 Artifact {artifact_hash} is queued for upload")
-    print("\n💡 To process the queue, run:")
-    print("   python -m structure_net.logging.cli process")
+    return profiling_results
 
 
 def main():
-    """Run all examples."""
-    print("🚀 STANDARDIZED LOGGING SYSTEM EXAMPLES")
-    print("="*60)
-    print("This demo shows the new logging system with:")
-    print("✅ Pydantic validation")
-    print("✅ WandB artifact creation")
-    print("✅ Local-first queue system")
-    print("✅ Real-time monitoring")
-    print("✅ Error handling")
+    """Run all integrated logging and profiling examples."""
+    print("🚀 INTEGRATED LOGGING + PROFILING SYSTEM EXAMPLES")
+    print("="*80)
+    print("This demo shows the integration of:")
+    print("✅ Standardized logging with Pydantic validation")
+    print("✅ Advanced profiling with adaptive overhead management")
+    print("✅ Production-ready configurations")
+    print("✅ Conditional and batch profiling")
+    print("✅ Real-time monitoring and queue management")
+    print("✅ Error handling and validation")
     
     try:
-        # Run examples
-        example_1_basic_growth_logging()
-        example_2_training_experiment()
-        example_3_tournament_experiment()
-        example_4_validation_errors()
-        example_5_queue_management()
+        # Run all examples
+        artifact_1 = example_1_production_integration()
+        artifact_2 = example_2_research_integration()
+        artifact_3 = example_3_conditional_logging()
+        profiling_4 = example_4_batch_logging_integration()
+        profiling_5 = example_5_validation_with_profiling()
         
-        print("\n" + "="*60)
-        print("🎉 ALL EXAMPLES COMPLETED SUCCESSFULLY!")
-        print("="*60)
+        print("\n" + "="*80)
+        print("🎉 ALL INTEGRATED EXAMPLES COMPLETED SUCCESSFULLY!")
+        print("="*80)
+        
+        print(f"\n🎯 Integration Features Demonstrated:")
+        print(f"   ✅ Production logging with minimal profiling overhead")
+        print(f"   ✅ Research logging with comprehensive profiling")
+        print(f"   ✅ Conditional profiling based on environment variables")
+        print(f"   ✅ Batch profiling for high-frequency operations")
+        print(f"   ✅ Error handling with profiling integration")
+        print(f"   ✅ Component-level automatic profiling")
+        print(f"   ✅ Memory-intensive operation profiling")
+        print(f"   ✅ Real-time WandB integration")
         
         # Final queue status
         print("\n📊 Final queue status:")
@@ -451,19 +603,26 @@ def main():
             if key != 'directories':
                 print(f"   {key}: {value}")
         
-        print("\n💡 Next steps:")
-        print("1. Check your WandB project for real-time metrics")
-        print("2. Process the artifact queue:")
-        print("   python -m structure_net.logging.cli process")
-        print("3. View artifacts in WandB for persistent data")
-        print("4. Try the CLI tools:")
-        print("   python -m structure_net.logging.cli status")
+        print(f"\n💡 Best Practices Demonstrated:")
+        print(f"   • Use production profilers for minimal overhead logging")
+        print(f"   • Use research profilers for comprehensive analysis")
+        print(f"   • Use conditional profiling for environment-specific behavior")
+        print(f"   • Use batch profiling for high-frequency operations")
+        print(f"   • Integrate profiling results with standardized logging")
+        print(f"   • Handle validation errors gracefully with profiling")
+        
+        print(f"\n🔧 Next steps:")
+        print(f"   1. Check WandB projects for real-time metrics and profiling data")
+        print(f"   2. Process artifact queue: python -m structure_net.logging.cli process")
+        print(f"   3. View integrated profiling + logging artifacts in WandB")
+        print(f"   4. Use CLI tools: python -m structure_net.logging.cli status")
         
     except Exception as e:
         print(f"\n❌ Example failed: {e}")
         print("💡 This might be due to missing dependencies or WandB setup")
         print("   Try: wandb login")
-        raise
+        import traceback
+        traceback.print_exc()
 
 
 if __name__ == "__main__":

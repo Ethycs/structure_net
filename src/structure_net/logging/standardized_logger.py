@@ -543,10 +543,29 @@ def create_tournament_logger(project_name: str = "structure_net",
     )
 
 
+def create_profiling_logger(project_name: str = "structure_net",
+                          session_id: str = None,
+                          config: Dict[str, Any] = None,
+                          tags: List[str] = None) -> StandardizedLogger:
+    """Create a standardized logger for profiling experiments."""
+    tags = tags or []
+    if 'profiling' not in tags:
+        tags.append('profiling')
+        
+    return StandardizedLogger(
+        project_name=project_name,
+        experiment_name=session_id,
+        experiment_type="profiling_experiment",
+        config=config,
+        tags=tags
+    )
+
+
 # Export main components
 __all__ = [
     'StandardizedLogger',
     'create_growth_logger',
     'create_training_logger', 
-    'create_tournament_logger'
+    'create_tournament_logger',
+    'create_profiling_logger'
 ]

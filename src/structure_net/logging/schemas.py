@@ -285,13 +285,28 @@ class ExperimentSummary(BaseExperimentSchema):
     summary_statistics: Dict[str, Any] = Field(default_factory=dict, description="Summary statistics")
 
 
+class ProfilingResultSchema(BaseModel):
+    """Schema for the results of a single profiler."""
+    summary_stats: Dict[str, Any] = Field(..., description="Summary statistics from the profiler")
+    specialized_metrics: Dict[str, Any] = Field(default_factory=dict, description="Specialized metrics from the profiler")
+    operations_count: int = Field(..., ge=0, description="Number of operations recorded by the profiler")
+
+
+class ProfilingExperiment(BaseExperimentSchema):
+    """Schema for profiling session experiments."""
+    
+    experiment_type: Literal["profiling_experiment"] = "profiling_experiment"
+    session_duration: float = Field(..., ge=0, description="Total duration of the profiling session in seconds")
+    profilers: Dict[str, ProfilingResultSchema] = Field(..., description="Results from each profiler in the session")
+
 # Union type for all experiment schemas
 ExperimentSchema = Union[
     GrowthExperiment,
     TrainingExperiment, 
     TournamentExperiment,
     ComparativeExperiment,
-    ExperimentSummary
+    ExperimentSummary,
+    ProfilingExperiment
 ]
 
 
@@ -316,7 +331,8 @@ def validate_experiment_data(data: Dict[str, Any]) -> ExperimentSchema:
         'training_experiment': TrainingExperiment,
         'tournament_experiment': TournamentExperiment,
         'comparative_experiment': ComparativeExperiment,
-        'experiment_summary': ExperimentSummary
+        'experiment_summary': ExperimentSummary,
+        'profiling_experiment': ProfilingExperiment
     }
     
     if experiment_type not in schema_map:

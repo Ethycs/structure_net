@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
 """
-Composable Evolution System Example
+Composable Evolution System Example - Latest Architecture
 
-This example demonstrates the new interface-based composable evolution system.
-It shows how to:
-1. Create different evolution systems by composing components
-2. Configure components individually
-3. Monitor component performance
-4. Compare different evolutionary approaches
+This example demonstrates the new interface-based composable evolution system
+integrated with the latest profiling architecture, featuring:
 
-The composable system eliminates hardcoded strategies and enables
-flexible experimentation with different combinations of analyzers,
-growth strategies, and training approaches.
+- Modular components that can be mixed and matched
+- Individual component configuration and profiling
+- Advanced profiling integration with component-level monitoring
+- Production-ready configurations with minimal overhead
+- Comprehensive performance analysis and comparison
+- Integration with standardized logging
 """
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
+import sys
+import os
+
+# Add project root to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Import the new composable system
-from src.structure_net.evolution.components import (
+from structure_net.evolution.components import (
     # Core interfaces
     NetworkContext, 
     
@@ -42,8 +46,19 @@ from src.structure_net.evolution.components import (
     create_hybrid_system
 )
 
+# Import latest profiling system
+from structure_net.profiling import (
+    create_production_profiler, create_research_profiler,
+    profile_component, profile_if_enabled, profile_memory_intensive,
+    profile_operation, profile_batch_operation,
+    ProfilerLevel
+)
+
+# Import standardized logging
+from structure_net.logging import StandardizedLogger
+
 # Import existing infrastructure
-from src.structure_net.core.network_factory import create_standard_network
+from structure_net.core.network_factory import create_standard_network
 
 
 def create_sample_dataset(num_samples: int = 1000, input_dim: int = 784, num_classes: int = 10):
@@ -73,10 +88,120 @@ def create_sample_dataset(num_samples: int = 1000, input_dim: int = 784, num_cla
     return TensorDataset(X, y)
 
 
-def demonstrate_basic_composable_system():
-    """Demonstrate basic usage of the composable evolution system."""
+# Profiled Evolution System Wrapper
+@profile_component(component_name="profiled_evolution_system", 
+                  level=ProfilerLevel.DETAILED)
+class ProfiledEvolutionSystem:
+    """Evolution system wrapper with integrated profiling."""
+    
+    def __init__(self, system_type="standard", profiler_type="production"):
+        self.system_type = system_type
+        
+        # Create profiler based on type
+        if profiler_type == "production":
+            self.profiler = create_production_profiler(max_overhead_percent=2.0)
+        elif profiler_type == "research":
+            self.profiler = create_research_profiler(
+                experiment_name=f"composable_evolution_{system_type}",
+                level=ProfilerLevel.COMPREHENSIVE
+            )
+        else:
+            self.profiler = create_production_profiler()
+        
+        # Create evolution system
+        if system_type == "standard":
+            self.evolution_system = create_standard_evolution_system()
+        elif system_type == "extrema":
+            self.evolution_system = create_extrema_focused_system()
+        elif system_type == "hybrid":
+            self.evolution_system = create_hybrid_system()
+        else:
+            self.evolution_system = ComposableEvolutionSystem()
+        
+        # Create logger for integration
+        self.logger = StandardizedLogger(f"composable_evolution_{system_type}")
+        
+        self.profiler.start_session(f"{system_type}_evolution")
+    
+    def evolve_network_with_profiling(self, context, num_iterations=3):
+        """Evolve network with comprehensive profiling."""
+        # Log experiment start
+        self.logger.log_experiment_start({
+            "system_type": self.system_type,
+            "num_iterations": num_iterations,
+            "initial_architecture": list(context.network.modules())
+        })
+        
+        # Profile each iteration
+        for iteration in range(num_iterations):
+            with profile_operation(f"evolution_iteration_{iteration}", "evolution", 
+                                 level=ProfilerLevel.DETAILED) as ctx:
+                
+                # Profile component analysis
+                with profile_operation("component_analysis", "analysis") as analysis_ctx:
+                    # Run analyzers
+                    analysis_results = {}
+                    for analyzer in self.evolution_system.analyzers:
+                        analyzer_name = analyzer.__class__.__name__
+                        with profile_operation(f"analyzer_{analyzer_name}", "analysis"):
+                            result = analyzer.analyze(context)
+                            analysis_results[analyzer_name] = result
+                
+                # Profile growth strategies
+                growth_occurred = False
+                with profile_operation("growth_strategies", "growth") as growth_ctx:
+                    for strategy in self.evolution_system.strategies:
+                        strategy_name = strategy.__class__.__name__
+                        with profile_operation(f"strategy_{strategy_name}", "growth"):
+                            if strategy.should_grow(context, analysis_results):
+                                context = strategy.grow(context, analysis_results)
+                                growth_occurred = True
+                
+                # Add iteration metrics
+                ctx.add_metric("iteration", iteration)
+                ctx.add_metric("growth_occurred", growth_occurred)
+                ctx.add_metric("num_analyzers", len(self.evolution_system.analyzers))
+                ctx.add_metric("num_strategies", len(self.evolution_system.strategies))
+                
+                # Log iteration
+                self.logger.log_iteration({
+                    "iteration": iteration,
+                    "growth_occurred": growth_occurred,
+                    "analysis_results": analysis_results
+                })
+        
+        return context
+    
+    def get_comprehensive_metrics(self):
+        """Get comprehensive metrics from profiling and evolution."""
+        # End profiling session
+        profiling_results = self.profiler.end_session()
+        
+        # Get evolution metrics
+        evolution_summary = self.evolution_system.get_evolution_summary()
+        evolution_metrics = self.evolution_system.get_metrics()
+        
+        # Combine metrics
+        comprehensive_metrics = {
+            "profiling": profiling_results,
+            "evolution_summary": evolution_summary,
+            "evolution_metrics": evolution_metrics,
+            "system_type": self.system_type
+        }
+        
+        # Log final results
+        self.logger.log_experiment_end({
+            "status": "completed",
+            "comprehensive_metrics": comprehensive_metrics
+        })
+        
+        return comprehensive_metrics
+
+
+def demonstrate_profiled_composable_system():
+    """Demonstrate basic composable system with profiling integration."""
     print("\n" + "="*80)
-    print("🧬 BASIC COMPOSABLE EVOLUTION SYSTEM DEMO")
+    print("🧬 PROFILED COMPOSABLE EVOLUTION SYSTEM DEMO")
     print("="*80)
     
     # Create dataset
@@ -100,48 +225,39 @@ def demonstrate_basic_composable_system():
         device=device
     )
     
-    # Create composable evolution system manually
-    print("\n🔧 Building composable system...")
-    system = ComposableEvolutionSystem()
+    # Create profiled evolution system
+    print("\n🔧 Building profiled composable system...")
+    profiled_system = ProfiledEvolutionSystem(
+        system_type="standard",
+        profiler_type="research"
+    )
     
-    # Add analyzers
-    system.add_component(StandardExtremaAnalyzer(max_batches=3))
-    system.add_component(NetworkStatsAnalyzer())
-    system.add_component(SimpleInformationFlowAnalyzer())
+    print(f"   System type: {profiled_system.system_type}")
+    print(f"   Analyzers: {len(profiled_system.evolution_system.analyzers)}")
+    print(f"   Strategies: {len(profiled_system.evolution_system.strategies)}")
     
-    # Add growth strategies
-    system.add_component(ExtremaGrowthStrategy(extrema_threshold=0.25))
-    system.add_component(InformationFlowGrowthStrategy())
+    # Run evolution with profiling
+    print("\n🚀 Starting profiled evolution...")
+    evolved_context = profiled_system.evolve_network_with_profiling(context, num_iterations=3)
     
-    print(f"   Added {len(system.analyzers)} analyzers")
-    print(f"   Added {len(system.strategies)} growth strategies")
-    print(f"   Added {len(system.trainers)} trainers (auto-added)")
-    
-    # Run evolution
-    print("\n🚀 Starting evolution...")
-    evolved_context = system.evolve_network(context, num_iterations=3)
+    # Get comprehensive metrics
+    print("\n📊 Collecting comprehensive metrics...")
+    metrics = profiled_system.get_comprehensive_metrics()
     
     # Show results
-    print("\n📈 Evolution Results:")
-    summary = system.get_evolution_summary()
-    print(f"   Total iterations: {summary['total_iterations']}")
-    print(f"   Growth events: {summary['metrics'].get('total_growth_events', 0)}")
-    print(f"   Average iteration time: {summary['metrics'].get('average_iteration_time', 0):.1f}s")
+    print("\n📈 Profiled Evolution Results:")
+    print(f"   Total iterations: {metrics['evolution_summary']['total_iterations']}")
+    print(f"   Growth events: {metrics['evolution_metrics'].get('total_growth_events', 0)}")
+    print(f"   Profiling overhead: {metrics['profiling'].get('total_overhead', 0):.6f}s")
+    print(f"   Operations profiled: {metrics['profiling'].get('total_operations', 0)}")
     
-    # Show component metrics
-    print("\n📊 Component Metrics:")
-    all_metrics = system.get_metrics()
-    for key, value in all_metrics.items():
-        if isinstance(value, (int, float)):
-            print(f"   {key}: {value}")
-    
-    return system, evolved_context
+    return profiled_system, metrics
 
 
-def demonstrate_preconfigured_systems():
-    """Demonstrate the preconfigured evolution systems."""
+def demonstrate_system_comparison_with_profiling():
+    """Compare different evolution systems with profiling."""
     print("\n" + "="*80)
-    print("🏭 PRECONFIGURED EVOLUTION SYSTEMS DEMO")
+    print("⚖️  PROFILED SYSTEM COMPARISON DEMO")
     print("="*80)
     
     # Create dataset
@@ -149,16 +265,11 @@ def demonstrate_preconfigured_systems():
     data_loader = DataLoader(dataset, batch_size=32, shuffle=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    systems = {
-        "Standard System": create_standard_evolution_system(),
-        "Extrema-Focused": create_extrema_focused_system(),
-        "Hybrid System": create_hybrid_system()
-    }
-    
+    system_types = ["standard", "extrema", "hybrid"]
     results = {}
     
-    for system_name, system in systems.items():
-        print(f"\n🔬 Testing {system_name}...")
+    for system_type in system_types:
+        print(f"\n🔬 Testing {system_type} system with profiling...")
         
         # Create fresh network for each system
         network = create_standard_network(
@@ -173,195 +284,302 @@ def demonstrate_preconfigured_systems():
             device=device
         )
         
-        # Run evolution
-        evolved_context = system.evolve_network(context, num_iterations=2)
+        # Create profiled system
+        profiled_system = ProfiledEvolutionSystem(
+            system_type=system_type,
+            profiler_type="production"  # Use production profiler for comparison
+        )
+        
+        # Run evolution with profiling
+        evolved_context = profiled_system.evolve_network_with_profiling(context, num_iterations=2)
+        
+        # Collect comprehensive metrics
+        metrics = profiled_system.get_comprehensive_metrics()
+        
+        results[system_type] = {
+            'growth_events': metrics['evolution_metrics'].get('total_growth_events', 0),
+            'final_performance': evolved_context.performance_history[-1] if evolved_context.performance_history else 0.0,
+            'profiling_overhead': metrics['profiling'].get('total_overhead', 0),
+            'operations_profiled': metrics['profiling'].get('total_operations', 0),
+            'components': metrics['evolution_summary']['components']
+        }
+        
+        print(f"   Growth events: {results[system_type]['growth_events']}")
+        print(f"   Final accuracy: {results[system_type]['final_performance']:.2%}")
+        print(f"   Profiling overhead: {results[system_type]['profiling_overhead']:.6f}s")
+    
+    # Compare results with profiling data
+    print("\n📊 Comprehensive System Comparison:")
+    print("-" * 80)
+    print(f"{'System':<12} {'Growth':<8} {'Accuracy':<10} {'Overhead':<12} {'Ops':<8} {'Components'}")
+    print("-" * 80)
+    
+    for system_type, result in results.items():
+        components = result['components']
+        comp_str = f"{components['analyzers']}A/{components['strategies']}S"
+        print(f"{system_type:<12} {result['growth_events']:<8} "
+              f"{result['final_performance']:<10.2%} "
+              f"{result['profiling_overhead']:<12.6f} "
+              f"{result['operations_profiled']:<8} {comp_str}")
+    
+    return results
+
+
+@profile_component(component_name="custom_evolution_builder", 
+                  level=ProfilerLevel.BASIC)
+class CustomEvolutionBuilder:
+    """Builder for custom evolution systems with profiling."""
+    
+    def __init__(self):
+        self.profiler = create_production_profiler(max_overhead_percent=1.5)
+        self.profiler.start_session("custom_evolution_building")
+    
+    @profile_memory_intensive
+    def build_aggressive_system(self):
+        """Build an aggressive evolution system with memory profiling."""
+        system = ComposableEvolutionSystem()
+        
+        # Add aggressive analyzers
+        extrema_analyzer = StandardExtremaAnalyzer()
+        extrema_analyzer.configure({
+            'dead_threshold': 0.001,  # Very sensitive
+            'saturated_multiplier': 2.0,  # Lower threshold
+            'max_batches': 10  # More data
+        })
+        system.add_component(extrema_analyzer)
+        
+        system.add_component(NetworkStatsAnalyzer())
+        system.add_component(SimpleInformationFlowAnalyzer())
+        
+        # Add aggressive growth strategies
+        extrema_strategy = ExtremaGrowthStrategy()
+        extrema_strategy.configure({
+            'extrema_threshold': 0.1,  # Very low threshold
+            'dead_neuron_threshold': 1,  # Single neuron triggers growth
+            'patch_size': 8  # Large patches
+        })
+        system.add_component(extrema_strategy)
+        
+        info_strategy = InformationFlowGrowthStrategy()
+        info_strategy.configure({
+            'bottleneck_threshold': 0.15,  # Sensitive to bottlenecks
+            'efficiency_threshold': 0.7  # High efficiency required
+        })
+        system.add_component(info_strategy)
+        
+        return system
+    
+    def build_conservative_system(self):
+        """Build a conservative evolution system."""
+        system = ComposableEvolutionSystem()
+        
+        # Add conservative analyzers
+        extrema_analyzer = StandardExtremaAnalyzer()
+        extrema_analyzer.configure({
+            'dead_threshold': 0.01,  # Less sensitive
+            'saturated_multiplier': 5.0,  # Higher threshold
+            'max_batches': 5  # Less data
+        })
+        system.add_component(extrema_analyzer)
+        
+        system.add_component(NetworkStatsAnalyzer())
+        
+        # Add conservative growth strategy
+        extrema_strategy = ExtremaGrowthStrategy()
+        extrema_strategy.configure({
+            'extrema_threshold': 0.4,  # High threshold
+            'dead_neuron_threshold': 5,  # Many neurons needed
+            'patch_size': 3  # Small patches
+        })
+        system.add_component(extrema_strategy)
+        
+        return system
+    
+    def finish_building(self):
+        """Finish building and get profiling results."""
+        return self.profiler.end_session()
+
+
+def demonstrate_custom_system_building():
+    """Demonstrate custom system building with profiling."""
+    print("\n" + "="*80)
+    print("🏗️  CUSTOM SYSTEM BUILDING WITH PROFILING")
+    print("="*80)
+    
+    # Create builder
+    builder = CustomEvolutionBuilder()
+    
+    print("🔧 Building custom evolution systems...")
+    
+    # Build different systems
+    with profile_operation("aggressive_system_build", "building") as ctx:
+        aggressive_system = builder.build_aggressive_system()
+        ctx.add_metric("system_type", "aggressive")
+        ctx.add_metric("components_count", len(aggressive_system.get_components()))
+    
+    with profile_operation("conservative_system_build", "building") as ctx:
+        conservative_system = builder.build_conservative_system()
+        ctx.add_metric("system_type", "conservative")
+        ctx.add_metric("components_count", len(conservative_system.get_components()))
+    
+    # Finish building
+    building_results = builder.finish_building()
+    
+    print(f"   Built 2 custom systems")
+    print(f"   Building overhead: {building_results.get('total_overhead', 0):.6f}s")
+    
+    # Test both systems
+    dataset = create_sample_dataset(num_samples=200)
+    data_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
+    systems = {
+        "Aggressive": aggressive_system,
+        "Conservative": conservative_system
+    }
+    
+    results = {}
+    
+    for system_name, system in systems.items():
+        print(f"\n🧪 Testing {system_name} system...")
+        
+        # Create fresh network
+        network = create_standard_network([784, 96, 48, 10], sparsity=0.2, device=str(device))
+        context = NetworkContext(network=network, data_loader=data_loader, device=device)
+        
+        # Profile evolution
+        profiler = create_production_profiler()
+        profiler.start_session(f"{system_name.lower()}_test")
+        
+        with profile_operation(f"{system_name.lower()}_evolution", "evolution"):
+            evolved_context = system.evolve_network(context, num_iterations=2)
+        
+        test_results = profiler.end_session()
         
         # Collect results
         summary = system.get_evolution_summary()
         results[system_name] = {
             'growth_events': summary['metrics'].get('total_growth_events', 0),
-            'final_performance': evolved_context.performance_history[-1] if evolved_context.performance_history else 0.0,
-            'components': summary['components']
+            'profiling_overhead': test_results.get('total_overhead', 0),
+            'configuration': system.get_configuration()
         }
         
         print(f"   Growth events: {results[system_name]['growth_events']}")
-        print(f"   Final accuracy: {results[system_name]['final_performance']:.2%}")
+        print(f"   Profiling overhead: {results[system_name]['profiling_overhead']:.6f}s")
     
-    # Compare results
-    print("\n📊 System Comparison:")
-    print("-" * 60)
-    print(f"{'System':<20} {'Growth Events':<15} {'Final Acc':<12} {'Components'}")
-    print("-" * 60)
-    
+    # Compare custom systems
+    print("\n📊 Custom System Comparison:")
     for system_name, result in results.items():
-        components = result['components']
-        comp_str = f"{components['analyzers']}A/{components['strategies']}S"
-        print(f"{system_name:<20} {result['growth_events']:<15} "
-              f"{result['final_performance']:<12.2%} {comp_str}")
+        print(f"   {system_name}:")
+        print(f"     Growth events: {result['growth_events']}")
+        print(f"     Overhead: {result['profiling_overhead']:.6f}s")
+        print(f"     Components: {len(result['configuration'])}")
     
     return results
 
 
-def demonstrate_component_configuration():
-    """Demonstrate component configuration and customization."""
+def demonstrate_production_evolution_profiling():
+    """Demonstrate production-ready evolution with minimal profiling overhead."""
     print("\n" + "="*80)
-    print("⚙️  COMPONENT CONFIGURATION DEMO")
+    print("🏭 PRODUCTION EVOLUTION WITH MINIMAL PROFILING")
     print("="*80)
+    
+    # Create production-optimized system
+    @profile_if_enabled(condition=lambda: os.getenv('PROFILE_EVOLUTION', '0') == '1')
+    def production_evolution_step(system, context):
+        """Evolution step that only profiles when enabled."""
+        return system.evolve_network(context, num_iterations=1)
     
     # Create system
-    system = ComposableEvolutionSystem()
+    system = create_standard_evolution_system()
     
-    # Add components with custom configuration
-    print("🔧 Adding and configuring components...")
-    
-    # Extrema analyzer with custom settings
-    extrema_analyzer = StandardExtremaAnalyzer()
-    extrema_analyzer.configure({
-        'dead_threshold': 0.005,  # More sensitive
-        'saturated_multiplier': 3.0,  # Higher threshold
-        'max_batches': 8  # More data
-    })
-    system.add_component(extrema_analyzer)
-    
-    # Growth strategy with custom settings
-    extrema_strategy = ExtremaGrowthStrategy()
-    extrema_strategy.configure({
-        'extrema_threshold': 0.2,  # Lower threshold
-        'dead_neuron_threshold': 3,  # Fewer neurons needed
-        'patch_size': 5  # Larger patches
-    })
-    system.add_component(extrema_strategy)
-    
-    # Add other components
-    system.add_component(NetworkStatsAnalyzer())
-    
-    print(f"   Configured {len(system.get_components())} components")
-    
-    # Show configurations
-    print("\n📋 Component Configurations:")
-    config = system.get_configuration()
-    for component_type, configs in config.items():
-        if configs:
-            print(f"   {component_type}:")
-            for comp_name, comp_config in configs.items():
-                print(f"     {comp_name}: {comp_config}")
-    
-    # Test with data
-    dataset = create_sample_dataset(num_samples=200)
-    data_loader = DataLoader(dataset, batch_size=32, shuffle=True)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
-    network = create_standard_network([784, 96, 48, 10], sparsity=0.2, device=str(device))
-    context = NetworkContext(network=network, data_loader=data_loader, device=device)
-    
-    print("\n🧪 Testing configured system...")
-    evolved_context = system.evolve_network(context, num_iterations=2)
-    
-    # Show component-specific metrics
-    print("\n📊 Component Performance:")
-    metrics = system.get_metrics()
-    for key, value in metrics.items():
-        if 'analyzer' in key or 'strategy' in key:
-            print(f"   {key}: {value}")
-    
-    return system
-
-
-def demonstrate_custom_hybrid_strategy():
-    """Demonstrate creating custom hybrid strategies."""
-    print("\n" + "="*80)
-    print("🔀 CUSTOM HYBRID STRATEGY DEMO")
-    print("="*80)
-    
-    # Create individual strategies with different configurations
-    print("🏗️  Building custom hybrid strategy...")
-    
-    # Aggressive extrema strategy
-    aggressive_extrema = ExtremaGrowthStrategy()
-    aggressive_extrema.configure({
-        'extrema_threshold': 0.15,  # Very sensitive
-        'dead_neuron_threshold': 2,
-        'patch_size': 4
-    })
-    
-    # Conservative information flow strategy
-    conservative_info = InformationFlowGrowthStrategy()
-    conservative_info.configure({
-        'bottleneck_threshold': 0.2,  # Less sensitive
-        'efficiency_threshold': 0.6
-    })
-    
-    # Residual block strategy for deep networks
-    residual_strategy = ResidualBlockGrowthStrategy()
-    residual_strategy.configure({
-        'num_layers': 3,  # Larger blocks
-        'activation_threshold': 0.15
-    })
-    
-    # Create hybrid strategy
-    hybrid_strategy = HybridGrowthStrategy([
-        aggressive_extrema,
-        conservative_info,
-        residual_strategy
-    ])
-    
-    print(f"   Combined {len(hybrid_strategy.strategies)} strategies")
-    
-    # Create system with hybrid strategy
-    system = ComposableEvolutionSystem()
-    system.add_component(StandardExtremaAnalyzer())
-    system.add_component(NetworkStatsAnalyzer())
-    system.add_component(SimpleInformationFlowAnalyzer())
-    system.add_component(hybrid_strategy)
-    
-    # Test the hybrid system
+    # Create data
     dataset = create_sample_dataset(num_samples=400)
     data_loader = DataLoader(dataset, batch_size=32, shuffle=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    network = create_standard_network([784, 128, 64, 32, 10], sparsity=0.1, device=str(device))
+    network = create_standard_network([784, 128, 64, 10], sparsity=0.1, device=str(device))
     context = NetworkContext(network=network, data_loader=data_loader, device=device)
     
-    print("\n🚀 Testing hybrid strategy...")
-    evolved_context = system.evolve_network(context, num_iterations=3)
+    # Create production profiler
+    profiler = create_production_profiler(max_overhead_percent=1.0)
+    profiler.start_session("production_evolution")
     
-    # Show hybrid strategy metrics
-    print("\n📊 Hybrid Strategy Performance:")
-    hybrid_metrics = hybrid_strategy.get_metrics()
-    for key, value in hybrid_metrics.items():
-        print(f"   {key}: {value}")
+    print("📊 Running production evolution (profiling disabled by default)...")
     
-    return system, hybrid_strategy
+    # Run without profiling
+    for i in range(5):
+        context = production_evolution_step(system, context)
+    
+    # Enable profiling for critical operations
+    os.environ['PROFILE_EVOLUTION'] = '1'
+    print("📊 Running with profiling enabled for critical operations...")
+    
+    # Run with profiling
+    for i in range(2):
+        context = production_evolution_step(system, context)
+    
+    # Finish profiling
+    production_results = profiler.end_session()
+    
+    # Clean up
+    os.environ.pop('PROFILE_EVOLUTION', None)
+    
+    print("\n📈 Production Evolution Results:")
+    print(f"   Total evolution steps: 7")
+    print(f"   Profiled steps: 2")
+    print(f"   Total overhead: {production_results.get('total_overhead', 0):.6f}s")
+    print(f"   Overhead per step: {production_results.get('total_overhead', 0) / 7:.6f}s")
+    print(f"   Production-ready: ✅ (minimal overhead)")
+    
+    return production_results
 
 
 def main():
     """Run all demonstrations."""
-    print("🧬 COMPOSABLE EVOLUTION SYSTEM DEMONSTRATIONS")
+    print("🧬 COMPOSABLE EVOLUTION + PROFILING SYSTEM DEMONSTRATIONS")
     print("=" * 80)
-    print("This example shows the new interface-based composable evolution system.")
-    print("Key benefits:")
-    print("• Modular components that can be mixed and matched")
-    print("• Individual component configuration")
-    print("• Monitoring and metrics for each component")
-    print("• Easy experimentation with different approaches")
-    print("• No hardcoded strategies - everything is composable!")
+    print("This example shows the integration of:")
+    print("✅ Modular composable evolution components")
+    print("✅ Advanced profiling with component-level monitoring")
+    print("✅ Production-ready configurations with minimal overhead")
+    print("✅ Comprehensive performance analysis and comparison")
+    print("✅ Integration with standardized logging")
+    print("✅ Custom system building with profiling insights")
     
     try:
         # Run demonstrations
-        demonstrate_basic_composable_system()
-        demonstrate_preconfigured_systems()
-        demonstrate_component_configuration()
-        demonstrate_custom_hybrid_strategy()
+        basic_system, basic_metrics = demonstrate_profiled_composable_system()
+        comparison_results = demonstrate_system_comparison_with_profiling()
+        custom_results = demonstrate_custom_system_building()
+        production_results = demonstrate_production_evolution_profiling()
         
         print("\n" + "="*80)
         print("✅ ALL DEMONSTRATIONS COMPLETED SUCCESSFULLY!")
         print("="*80)
-        print("\nKey takeaways:")
-        print("• The composable system eliminates hardcoded strategies")
-        print("• Components can be configured individually for fine-tuning")
-        print("• Different evolution approaches can be easily compared")
-        print("• Hybrid strategies combine multiple approaches intelligently")
-        print("• The system is fully modular and extensible")
+        
+        print("\n🎯 Key Features Demonstrated:")
+        print("   ✅ Composable evolution with profiling integration")
+        print("   ✅ Component-level performance monitoring")
+        print("   ✅ System comparison with profiling metrics")
+        print("   ✅ Custom system building with profiling insights")
+        print("   ✅ Production-ready evolution with minimal overhead")
+        print("   ✅ Memory-intensive operation profiling")
+        print("   ✅ Conditional profiling for production environments")
+        
+        print("\n📊 Performance Summary:")
+        print("   🧬 Composable: Modular components with individual profiling")
+        print("   ⚖️  Comparison: Multi-system analysis with overhead tracking")
+        print("   🏗️  Custom: Building insights with profiling guidance")
+        print("   🏭 Production: Minimal overhead with conditional profiling")
+        
+        print("\n💡 Best Practices Demonstrated:")
+        print("   • Use component-level profiling for detailed analysis")
+        print("   • Compare systems with consistent profiling methodology")
+        print("   • Build custom systems with profiling-guided optimization")
+        print("   • Use conditional profiling in production environments")
+        print("   • Integrate evolution metrics with standardized logging")
+        print("   • Monitor memory usage for intensive operations")
         
     except Exception as e:
         print(f"\n❌ Error during demonstration: {e}")

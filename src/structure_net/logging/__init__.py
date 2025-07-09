@@ -19,7 +19,8 @@ from .standardized_logger import (
     StandardizedLogger,
     create_growth_logger,
     create_training_logger,
-    create_tournament_logger
+    create_tournament_logger,
+    create_profiling_logger
 )
 
 from .artifact_manager import (
@@ -49,6 +50,8 @@ from .schemas import (
     TournamentExperiment,
     ComparativeExperiment,
     ExperimentSummary,
+    ProfilingExperiment,
+    ProfilingResultSchema,
     
     # Utilities
     validate_experiment_data,
@@ -69,6 +72,7 @@ __all__ = [
     'create_growth_logger',
     'create_training_logger',
     'create_tournament_logger',
+    'create_profiling_logger',
     
     # Artifact management
     'ArtifactManager',
@@ -93,6 +97,8 @@ __all__ = [
     'TournamentExperiment',
     'ComparativeExperiment',
     'ExperimentSummary',
+    'ProfilingExperiment',
+    'ProfilingResultSchema',
     'validate_experiment_data',
     'migrate_legacy_data',
     
