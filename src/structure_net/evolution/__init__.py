@@ -8,7 +8,7 @@ model standard for perfect compatibility across the project.
 from .network_evolver import OptimalGrowthEvolver
 from .extrema_analyzer import analyze_layer_extrema, detect_network_extrema
 from .information_theory import estimate_mi_proxy, analyze_information_flow
-from .integrated_growth_system import IntegratedGrowthSystem
+from .integrated_growth_system_v2 import IntegratedGrowthSystem
 from .advanced_layers import (
     ThresholdConfig,
     MetricsConfig,

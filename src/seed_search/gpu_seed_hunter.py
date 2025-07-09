@@ -188,6 +188,8 @@ class ModelCheckpointer:
         return saved_files
 
 
+import warnings
+
 class GPUSeedHunter:
     """
     GPU-accelerated seed hunter using canonical model standard.
@@ -199,6 +201,14 @@ class GPUSeedHunter:
     def __init__(self, num_gpus: int = 1, device: str = 'cuda', 
                  save_promising: bool = True, dataset: str = 'mnist', 
                  save_threshold: float = 0.25, keep_top_k: int = 3):
+        
+        warnings.warn(
+            "GPUSeedHunter is deprecated and will be removed in a future version. "
+            "Please use the NAL-powered seed search in src/seed_search/nal_seed_search.py.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         self.num_gpus = num_gpus
         self.device = device
         self.save_promising = save_promising

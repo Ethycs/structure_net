@@ -7,7 +7,7 @@
 /extended_experiment_results
 /aggressive_experiment_results
 /fixed
-# data/*
+data/*
 Breakthroughs.md
 .env
 *.json

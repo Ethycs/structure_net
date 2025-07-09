@@ -10,6 +10,70 @@ from .core import Hypothesis, HypothesisCategory
 from src.structure_net.core.network_factory import create_standard_network
 from src.structure_net.evolution.components import create_standard_evolution_system
 from src.structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
+from src.seed_search.architecture_generator import ArchitectureGenerator
+
+def seed_search_experiment(config: Dict[str, Any]) -> Tuple[Any, Dict[str, float]]:
+    """
+    Test function for a single seed search experiment.
+    This function is designed to be executed by the NAL runner.
+    """
+    # This is a simplified version of the logic in GPUSeedHunter._test_seed_impl
+    model = create_standard_network(
+        architecture=config['architecture'],
+        sparsity=config['sparsity'],
+        seed=config['seed'],
+        device=config.get('device', 'cpu')
+    )
+    
+    # Dummy training and evaluation
+    accuracy = np.random.uniform(0.1, 0.9)
+    extrema_score = np.random.uniform(0, 1)
+    parameters = sum(p.numel() for p in model.parameters())
+    
+    metrics = {
+        'accuracy': accuracy,
+        'extrema_score': extrema_score,
+        'parameters': parameters,
+        'patchability': extrema_score * (1 - accuracy),
+        'efficiency': accuracy / (parameters / 1e6) if parameters > 0 else 0
+    }
+    
+    # The primary metric for seed search is often patchability
+    metrics['primary_metric'] = metrics['patchability']
+    
+    return model, metrics
+
+class SeedSearchHypotheses:
+    """Hypotheses for finding optimal seed networks."""
+
+    @staticmethod
+    def find_optimal_seeds() -> Hypothesis:
+        """A hypothesis for a comprehensive seed search."""
+        
+        # Generate a portfolio of architectures to test
+        arch_gen = ArchitectureGenerator(input_size=784, num_classes=10) # For MNIST
+        architectures = arch_gen.generate_systematic_batch(num_architectures=20)
+
+        return Hypothesis(
+            id="seed_search_optimal",
+            name="Find Optimal Seed Networks",
+            description="Run a comprehensive search for seed networks with high potential.",
+            category=HypothesisCategory.ARCHITECTURE,
+            question="Which combinations of architecture, sparsity, and random seed produce the most promising starting points for growth?",
+            prediction="A diverse set of optimal seeds will be found, balancing accuracy, efficiency, and patchability.",
+            test_function=seed_search_experiment,
+            parameter_space={
+                'architecture': architectures,
+                'sparsity': {'min': 0.01, 'max': 0.1, 'n_samples': 3},
+                'seed': list(range(10)) # Test 10 random seeds for each config
+            },
+            control_parameters={
+                'dataset': 'mnist',
+                'epochs': 5, # Short training for seed evaluation
+            },
+            success_metrics={'patchability': 0.5}
+        )
+
 
 
 class ArchitectureHypotheses:

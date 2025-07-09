@@ -39,10 +39,10 @@ from .schemas import (
 class ArtifactConfig:
     """Configuration for artifact management."""
     
-    queue_dir: str = "experiments/queue"
-    sent_dir: str = "experiments/sent"
-    rejected_dir: str = "experiments/rejected"
-    logs_dir: str = "experiments/logs"
+    queue_dir: str = "data/experiments/queue"
+    sent_dir: str = "data/experiments/sent"
+    rejected_dir: str = "data/experiments/rejected"
+    logs_dir: str = "data/experiments/logs"
     
     # Upload settings
     max_retries: int = 3

@@ -1,168 +1,459 @@
-# Structure Net: A Composable Framework for Dynamic Network Growth
+# Structure Net: Dynamic Neural Architecture Evolution Framework
 
-A PyTorch implementation of a modular, metrics-driven framework for dynamically growing neural networks during training. This project has been refactored to a composable architecture that allows for flexible and extensible research into network evolution.
+A PyTorch-based research framework for evolving neural network architectures dynamically during training. Structure Net implements a composable, metrics-driven approach to network growth, enabling networks to adapt their topology based on internal state analysis.
 
 ## Overview
 
-This project provides a framework for creating and training neural networks that evolve their own structure. Instead of a fixed architecture, networks start with minimal connectivity and grow based on a deep analysis of their internal state. The core of the project is the **Composable Evolution System**, an interface-based framework that allows researchers to easily mix and match different components to create novel growth strategies.
+Structure Net enables neural networks to evolve their architecture during training, starting from minimal connectivity and growing based on comprehensive internal state analysis. The framework provides:
+
+- **Dynamic Architecture Evolution**: Networks grow from sparse to complex topologies guided by performance metrics
+- **Composable Evolution System**: Mix and match analyzers, growth strategies, and trainers to create custom evolution pipelines
+- **Multi-Scale Growth**: Support for coarse-to-fine network development through phased evolution
+- **Advanced Metrics Suite**: GPU-accelerated analysis including extrema detection, information flow, topological features, and homological analysis
+- **Neural Architecture Lab (NAL)**: Scientific framework for systematic hypothesis testing on network architectures
 
 ## Key Features
 
 ### 🧬 Composable Evolution System
-- **Modular by Design:** The evolution system is built from a set of clean, interchangeable components:
-    - **Analyzers:** Inspect the network's state (e.g., `StandardExtremaAnalyzer`, `GraphAnalyzer`).
-    - **Growth Strategies:** Propose and execute changes to the network architecture (e.g., `ExtremaGrowthStrategy`).
-    - **Trainers:** Handle the training loop for each evolution cycle.
-- **Flexible & Extensible:** Easily create new components and combine them to build custom evolution systems without modifying the core framework.
+- **Modular Architecture**: Clean, interface-based design with swappable components:
+  - **Analyzers**: Examine network state (extrema, information flow, topology, homology)
+  - **Growth Strategies**: Execute architectural changes (layer addition, connection growth, residual blocks)
+  - **Trainers**: Manage training loops with configurable parameters
+- **Pre-built Components**: Rich library of analyzers and strategies ready to use
+- **Custom Components**: Simple interface for creating your own evolution logic
 
-### 📊 Standardized Logging & Artifacts
-- **Schema-Driven:** All experiment results are validated against Pydantic schemas, ensuring data consistency.
-- **WandB Integration:** Automatically saves each experiment as a versioned, immutable artifact in Weights & Biases.
-- **Offline-First:** A local queuing system ensures that no data is lost, even without a network connection.
+### 🔬 Neural Architecture Lab (NAL)
+- **Hypothesis-Driven Research**: Formalize architectural insights as testable hypotheses
+- **Automated Experimentation**: Run systematic experiments with statistical analysis
+- **Insight Extraction**: Automatically identify patterns and generate new hypotheses
+- **Result Tracking**: Comprehensive logging and visualization of experiment outcomes
 
-### 🚀 GPU Acceleration
-- **Optimized Metrics:** Key metrics computations, including graph analysis, are accelerated on the GPU using `cuGraph` and `cuPy`.
-- **CPU Fallback:** The system gracefully falls back to CPU-based computation if a compatible GPU is not available.
+### 📊 Advanced Metrics & Analysis
+- **Extrema Detection**: Identify dead and saturated neurons for targeted growth
+- **Information Flow**: Analyze bottlenecks and efficiency in network communication
+- **Topological Analysis**: Compute persistence diagrams and Betti numbers
+- **Homological Features**: Track network complexity through homology groups
+- **Graph Metrics**: Analyze connectivity patterns, clustering, and centrality
+- **GPU Acceleration**: Fast computation using cuGraph and cuPy when available
+
+### 🎯 Growth Strategies
+- **Extrema-Based Growth**: Add connections/layers based on activation patterns
+- **Information-Driven Growth**: Optimize architecture for information flow
+- **Residual Blocks**: Add skip connections for deeper networks
+- **Hybrid Strategies**: Combine multiple growth approaches
+- **Multi-Scale Evolution**: Phased growth from coarse to fine structures
+
+### 📝 Logging & Reproducibility
+- **Standardized Schemas**: Pydantic-validated data structures
+- **WandB Integration**: Automatic artifact versioning and tracking
+- **Offline Queue**: Reliable data persistence without network dependency
+- **Comprehensive Profiling**: Performance analysis and bottleneck identification
 
 ## Installation
 
+### Using Pixi (Recommended)
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd structure_net
 
-# Install with pixi (recommended)
+# Install with pixi
 pixi install
+
+# Install PyTorch with CUDA support
+pixi run install-torch
+
+# Verify CUDA installation
+pixi run test-cuda
+```
+
+### Using pip
+```bash
+# Clone and install in development mode
+git clone <repository-url>
+cd structure_net
+pip install -e .
+
+# Install PyTorch with CUDA support
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 ```
 
 ## Quick Start
 
-The following example demonstrates how to use the new composable system to create a standard network and evolve it for a few iterations.
+### Basic Network Evolution
 
 ```python
 import torch
-from src.structure_net.core.network_factory import create_standard_network
-from src.structure_net.evolution.components import (
+from structure_net import create_standard_network
+from structure_net.evolution.components import (
     create_standard_evolution_system,
     NetworkContext
 )
 
-# 1. Create a standard sparse network
+# Create a sparse network
 network = create_standard_network(
     architecture=[784, 256, 128, 10],
     sparsity=0.01
 )
+
+# Setup device and data
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 network.to(device)
 
-# 2. Create a synthetic dataset
-X = torch.randn(1000, 784)
-y = torch.randint(0, 10, (1000,))
-dataloader = torch.utils.data.DataLoader(
-    torch.utils.data.TensorDataset(X, y),
-    batch_size=32
-)
+# Create dataset (using your actual data)
+train_loader = create_your_dataloader()
 
-# 3. Create a standard evolution system
+# Create evolution system and evolve
 evolution_system = create_standard_evolution_system()
+context = NetworkContext(network, train_loader, device)
+evolved_context = evolution_system.evolve_network(context, num_iterations=5)
 
-# 4. Create a network context
-context = NetworkContext(network, dataloader, device)
-
-# 5. Evolve the network
-evolved_context = evolution_system.evolve_network(context, num_iterations=3)
-
-print("Evolution complete!")
-print(f"Final network has {evolved_context.network.get_network_stats()['total_connections']} connections.")
+print(f"Network grew from {context.network.get_network_stats()['total_connections']} to "
+      f"{evolved_context.network.get_network_stats()['total_connections']} connections")
 ```
 
-## Usage
+### Custom Evolution Pipeline
+
+```python
+from structure_net.evolution.components import (
+    ComposableEvolutionSystem,
+    StandardExtremaAnalyzer,
+    ExtremaGrowthStrategy,
+    StandardNetworkTrainer
+)
+
+# Build custom evolution system
+evolution_system = ComposableEvolutionSystem()
+
+# Add analyzer to detect dead/saturated neurons
+evolution_system.add_component(
+    StandardExtremaAnalyzer(
+        max_batches=10,
+        dead_threshold=0.01,
+        saturated_multiplier=2.5
+    )
+)
+
+# Add growth strategy
+evolution_system.add_component(
+    ExtremaGrowthStrategy(
+        extrema_threshold=0.3,
+        patch_size=20,
+        add_layer_on_extrema=True
+    )
+)
+
+# Add trainer
+evolution_system.add_component(
+    StandardNetworkTrainer(epochs=5, learning_rate=0.01)
+)
+
+# Evolve network
+evolved_context = evolution_system.evolve_network(context, num_iterations=3)
+```
+
+### Using the Neural Architecture Lab
+
+```python
+from src.neural_architecture_lab import (
+    NeuralArchitectureLab,
+    LabConfig,
+    Hypothesis,
+    HypothesisCategory
+)
+
+# Configure lab
+config = LabConfig(
+    max_parallel_experiments=4,
+    results_dir="./nal_results",
+    device="cuda"
+)
+
+# Create lab
+lab = NeuralArchitectureLab(config)
+
+# Define hypothesis
+hypothesis = Hypothesis(
+    name="extrema_growth_efficiency",
+    category=HypothesisCategory.GROWTH_DYNAMICS,
+    question="Does extrema-based growth lead to more efficient networks?",
+    prediction="Networks grown with extrema detection will achieve higher accuracy with fewer parameters"
+)
+
+# Register and test hypothesis
+lab.register_hypothesis(hypothesis)
+results = lab.run_hypothesis_test(hypothesis.id)
+
+# View insights
+insights = lab.extract_insights()
+print(lab.generate_report())
+```
+
+## Core Components
+
+### Network Layers
+- **StandardSparseLayer**: Base sparse layer with configurable connectivity
+- **ExtremaAwareSparseLayer**: Tracks activation extrema for growth decisions
+- **TemporaryPatchLayer**: Temporary connections for testing growth impact
+
+### Analyzers
+- **StandardExtremaAnalyzer**: Detects dead and saturated neurons
+- **NetworkStatsAnalyzer**: Computes basic network statistics
+- **SimpleInformationFlowAnalyzer**: Identifies information bottlenecks
+- **GraphAnalyzer**: Analyzes network topology (clustering, centrality)
+- **TopologicalAnalyzer**: Computes persistence diagrams
+- **HomologicalAnalyzer**: Tracks homology groups
+
+### Growth Strategies
+- **ExtremaGrowthStrategy**: Grows based on neuron activation patterns
+- **InformationFlowGrowthStrategy**: Optimizes for information transmission
+- **ResidualBlockGrowthStrategy**: Adds skip connections
+- **HybridGrowthStrategy**: Combines multiple strategies
+- **PruningGrowthStrategy**: Removes ineffective connections
+
+### Adaptive Learning Rates
+- **ExponentialBackoffScheduler**: Reduces LR on performance plateaus
+- **LayerwiseAdaptiveRates**: Per-layer learning rate adjustment
+- **GrowthPhaseScheduler**: Different rates for growth vs. training
+- **UnifiedAdaptiveLearning**: Combines multiple LR strategies
+
+## Usage Examples
 
 ### Running Experiments
 
-The project includes several example experiments that demonstrate how to use the framework.
-
 ```bash
-# Run the main example for the composable evolution system
+# Basic evolution example
 pixi run python examples/composable_evolution_example.py
 
-# Run an experiment focused on modular metrics
+# Multi-scale network evolution
+pixi run python examples/modern_multi_scale_evolution.py
+
+# Modular metrics demonstration
 pixi run python examples/modular_metrics_example.py
+
+# Neural Architecture Lab experiments
+pixi run python examples/nal_example.py
 ```
 
 ### Running Tests
 
-The project uses `pytest` for testing.
-
 ```bash
-# Run the full test suite
-pixi run pytest tests/
+# Run all tests
+pixi run pytest
+
+# Run specific test modules
+pixi run pytest tests/test_core_functionality.py
+pixi run pytest tests/test_evolution.py
+pixi run pytest tests/test_nal.py
+
+# Run with coverage
+pixi run pytest --cov=src/structure_net
 ```
 
 ## Architecture
 
-The project has been refactored to a modular, composable architecture. The core components are:
+### Design Principles
 
-1.  **`ComposableEvolutionSystem`** (`src/structure_net/evolution/components/evolution_system.py`)
-    - The central orchestrator that manages the evolution process.
-    - Coordinates the execution of analyzers, strategies, and trainers.
+1. **Composable Components**: All evolution logic is built from interchangeable components
+2. **Interface-Driven**: Clean interfaces enable easy extension without modifying core code
+3. **Metrics-First**: All decisions are based on quantitative network analysis
+4. **GPU-Optimized**: Critical paths use GPU acceleration when available
 
-2.  **Analyzers** (`src/structure_net/evolution/components/analyzers.py`)
-    - Components that inspect the network and produce metrics.
-    - Examples: `StandardExtremaAnalyzer`, `NetworkStatsAnalyzer`.
-
-3.  **Growth Strategies** (`src/structure_net/evolution/components/strategies.py`)
-    - Components that use the analysis results to propose and execute changes to the network.
-    - Examples: `ExtremaGrowthStrategy`, `InformationFlowGrowthStrategy`.
-
-4.  **`StandardNetworkTrainer`** (`src/structure_net/evolution/components/evolution_system.py`)
-    - A dedicated component that handles the training loop within an evolution cycle.
-
-5.  **Core Network Components** (`src/structure_net/core/`)
-    - **`StandardSparseLayer`**: The fundamental building block for all sparse networks.
-    - **`create_standard_network`**: The canonical factory function for creating new networks.
-
-6.  **Standardized Logging** (`src/structure_net/logging/`)
-    - A robust system for logging experiment data, using Pydantic schemas and a local queue to ensure data integrity and offline support.
-
-## File Structure
+### Core Architecture
 
 ```
 structure_net/
-├── examples/                   # Example implementations
-│   ├── composable_evolution_example.py
-│   └── modular_metrics_example.py
-├── src/structure_net/          # Core package
-│   ├── core/                   # Core network components (layers, factory)
-│   ├── evolution/              # The evolution system
-│   │   ├── components/         # Analyzers, strategies, trainers
-│   │   ├── metrics/            # GPU-accelerated metrics
-│   │   └── interfaces.py       # Core interfaces for the composable system
-│   ├── logging/                # Standardized logging system
-│   └── profiling/              # Performance profiling system
-├── tests/                      # Pytest test suite
-│   ├── conftest.py
-│   ├── test_core_functionality.py
-│   └── test_evolution.py
-├── pyproject.toml             # Project configuration
-└── README.md                  # This documentation
+├── core/                          # Foundation components
+│   ├── layers.py                  # Sparse layer implementations
+│   ├── network_factory.py         # Network construction utilities
+│   ├── validation.py              # Model quality validation
+│   └── lsuv.py                    # Layer-sequential unit variance init
+│
+├── evolution/                     # Evolution system
+│   ├── components/                # Composable building blocks
+│   │   ├── evolution_system.py    # Main orchestrator
+│   │   ├── analyzers.py           # Network analysis components
+│   │   └── strategies.py          # Growth strategy implementations
+│   │
+│   ├── metrics/                   # Advanced analysis metrics
+│   │   ├── extrema_analyzer.py    # Dead/saturated neuron detection
+│   │   ├── topological_analysis.py # Persistence diagrams
+│   │   ├── homological_analysis.py # Homology computation
+│   │   └── graph_analysis.py      # Network topology metrics
+│   │
+│   └── adaptive_learning_rates/   # Learning rate strategies
+│
+├── models/                        # Network architectures
+│   ├── minimal_network.py         # Baseline sparse network
+│   └── modern_multi_scale_network.py # Multi-scale growth support
+│
+├── neural_architecture_lab/       # Hypothesis testing framework
+│   ├── lab.py                     # Main lab implementation
+│   ├── runners.py                 # Experiment execution
+│   └── analyzers.py               # Result analysis
+│
+└── logging/                       # Experiment tracking
+    ├── standardized_logging.py    # Schema-based logging
+    ├── artifact_manager.py        # WandB integration
+    └── schemas.py                 # Data validation schemas
 ```
 
-## Research Context
+## Advanced Usage
 
-This project is a research platform for exploring:
+### Creating Custom Analyzers
 
-- **Dynamic Network Growth**: How networks can grow from minimal to full connectivity in a metrics-driven way.
-- **Composable Evolution**: Building complex growth behaviors from simple, reusable components.
-- **Metrics-Driven Architecture Search**: Using deep analysis of a network's internal state to guide its evolution.
+```python
+from structure_net.evolution.interfaces import Analyzer
+from structure_net.evolution.components import NetworkContext
+
+class MyCustomAnalyzer(Analyzer):
+    def analyze(self, context: NetworkContext) -> dict:
+        # Perform your analysis
+        metrics = {
+            "my_metric": compute_something(context.network),
+            "another_metric": analyze_something_else(context)
+        }
+        return metrics
+```
+
+### Creating Custom Growth Strategies
+
+```python
+from structure_net.evolution.interfaces import GrowthStrategy
+from structure_net.evolution.components import NetworkContext
+
+class MyGrowthStrategy(GrowthStrategy):
+    def should_grow(self, context: NetworkContext, analysis: dict) -> bool:
+        # Decide whether to grow based on analysis
+        return analysis.get("my_metric", 0) > self.threshold
+    
+    def grow(self, context: NetworkContext, analysis: dict) -> NetworkContext:
+        # Implement growth logic
+        # Modify network architecture
+        return updated_context
+```
+
+### Multi-Scale Evolution Example
+
+```python
+# Phase 1: Coarse structure (few connections, basic topology)
+coarse_system = ComposableEvolutionSystem()
+coarse_system.add_component(StandardExtremaAnalyzer())
+coarse_system.add_component(ExtremaGrowthStrategy(patch_size=50))
+coarse_system.add_component(StandardNetworkTrainer(epochs=10))
+
+# Phase 2: Medium detail (add layers, increase connectivity)
+medium_system = ComposableEvolutionSystem()
+medium_system.add_component(StandardExtremaAnalyzer())
+medium_system.add_component(ExtremaGrowthStrategy(add_layer_on_extrema=True))
+medium_system.add_component(StandardNetworkTrainer(epochs=5))
+
+# Phase 3: Fine detail (optimize connections, add residuals)
+fine_system = ComposableEvolutionSystem()
+fine_system.add_component(SimpleInformationFlowAnalyzer())
+fine_system.add_component(ResidualBlockGrowthStrategy())
+fine_system.add_component(StandardNetworkTrainer(epochs=3))
+
+# Execute phased evolution
+context = NetworkContext(network, train_loader, device)
+context = coarse_system.evolve_network(context, num_iterations=3)
+context = medium_system.evolve_network(context, num_iterations=2)
+context = fine_system.evolve_network(context, num_iterations=1)
+```
+
+## Research Applications
+
+Structure Net provides a platform for exploring several research directions:
+
+### Dynamic Architecture Search
+- **Metrics-Driven Growth**: Networks evolve based on quantitative analysis rather than random search
+- **Efficient Exploration**: Start sparse and grow only where needed
+- **Multi-Scale Development**: Mimic biological development from coarse to fine structures
+
+### Network Science
+- **Topology Evolution**: Study how network structure emerges from local growth rules
+- **Information Theory**: Analyze information flow and bottlenecks in evolving networks
+- **Homological Analysis**: Track topological features through growth phases
+
+### Sparse Neural Networks
+- **Adaptive Sparsity**: Networks maintain efficiency while growing capacity
+- **Connection Importance**: Identify critical pathways through extrema analysis
+- **Pruning Strategies**: Remove connections that don't contribute to performance
+
+### Scientific ML Research
+- **Hypothesis Testing**: Formalize architectural insights as testable hypotheses
+- **Systematic Experimentation**: Run controlled experiments with statistical validation
+- **Insight Generation**: Automatically identify patterns across experiments
+
+## Performance Considerations
+
+### GPU Acceleration
+- Metrics computation uses cuGraph and cuPy when available
+- Automatic fallback to CPU for unsupported operations
+- Profiling system tracks performance bottlenecks
+
+### Memory Efficiency
+- Sparse representations reduce memory footprint
+- Lazy metric computation avoids unnecessary calculations
+- Batch processing for large networks
+
+### Scalability
+- Distributed experiment execution in Neural Architecture Lab
+- Parallel hypothesis testing
+- Efficient serialization for large models
 
 ## Contributing
 
-1.  Fork the repository.
-2.  Create a feature branch.
-3.  Make changes and add corresponding tests in the `tests/` directory.
-4.  Submit a pull request.
+We welcome contributions! Please follow these guidelines:
+
+1. **Fork and Clone**: Fork the repository and clone locally
+2. **Create Branch**: Use descriptive branch names (e.g., `feature/new-analyzer`)
+3. **Write Tests**: Add tests for new functionality in `tests/`
+4. **Documentation**: Update docstrings and README as needed
+5. **Code Style**: Follow existing patterns and conventions
+6. **Pull Request**: Submit PR with clear description of changes
+
+### Development Setup
+
+```bash
+# Clone your fork
+git clone https://github.com/your-username/structure_net.git
+cd structure_net
+
+# Install in development mode
+pixi install
+pixi run install-torch
+
+# Run tests to verify setup
+pixi run pytest
+
+# Create new branch
+git checkout -b feature/my-new-feature
+```
+
+## Citation
+
+If you use Structure Net in your research, please cite:
+
+```bibtex
+@software{structure_net,
+  title = {Structure Net: Dynamic Neural Architecture Evolution Framework},
+  author = {Ethycs},
+  year = {2024},
+  url = {https://github.com/ethycs/structure_net}
+}
+```
 
 ## License
 
-[Add your license here]
+This project is licensed under the MIT License - see LICENSE file for details.
+
+## Acknowledgments
+
+- PyTorch team for the excellent deep learning framework
+- RAPIDS team for GPU-accelerated graph analytics
+- The broader neural architecture search community for inspiration
+
+---
+
+For questions, issues, or discussions, please open an issue on GitHub.

@@ -4,54 +4,49 @@ Test script for the refactored GPU seed hunter
 """
 
 from src.structure_net.seed_search import GPUSeedHunter
-from src.structure_net.core.model_io import test_save_load_compatibility
+from src.structure_net.core.io_operations import test_save_load_compatibility
 
-def test_canonical_standard():
+def test_save_load_compatibility():
     """Test the canonical model I/O standard"""
     print("🧪 Testing canonical model I/O standard...")
+    from src.structure_net.core.io_operations import test_save_load_compatibility
     success = test_save_load_compatibility()
-    print(f"Canonical standard test: {'✅ PASSED' if success else '❌ FAILED'}")
-    return success
+    assert success, "Save/load compatibility test failed."
+    print(f"Canonical standard test: {'✅ PASSED'}")
 
 def test_refactored_seed_hunter():
     """Test the refactored GPU seed hunter"""
     print("\n🧪 Testing refactored GPU seed hunter...")
     
-    try:
-        hunter = GPUSeedHunter(dataset='mnist', save_promising=False)
-        print("✅ GPU seed hunter initialized successfully with canonical standard!")
-        print(f"   Input size: {hunter.input_size}")
-        print(f"   Architecture generator: {type(hunter.arch_generator).__name__}")
-        print(f"   Device: {hunter.device}")
-        print(f"   Batch size: {hunter.batch_size}")
-        return True
-    except Exception as e:
-        print(f"❌ Failed to initialize GPU seed hunter: {e}")
-        return False
+    hunter = GPUSeedHunter(dataset='mnist', save_promising=False)
+    assert hunter is not None, "Failed to initialize GPU seed hunter."
+    print("✅ GPU seed hunter initialized successfully with canonical standard!")
+    print(f"   Input size: {hunter.input_size}")
+    print(f"   Architecture generator: {type(hunter.arch_generator).__name__}")
+    print(f"   Device: {hunter.device}")
+    print(f"   Batch size: {hunter.batch_size}")
 
 def test_architecture_generation():
     """Test architecture generation"""
     print("\n🧪 Testing architecture generation...")
     
-    try:
-        from src.structure_net.seed_search import ArchitectureGenerator
-        
-        # Test MNIST architectures
-        mnist_gen = ArchitectureGenerator(784, 10)
-        mnist_archs = mnist_gen.generate_mnist_architectures(10)
-        print(f"✅ Generated {len(mnist_archs)} MNIST architectures")
-        print(f"   Sample: {mnist_archs[0]}")
-        
-        # Test CIFAR-10 architectures  
-        cifar_gen = ArchitectureGenerator(3072, 10)
-        cifar_archs = cifar_gen.generate_cifar10_architectures(10)
-        print(f"✅ Generated {len(cifar_archs)} CIFAR-10 architectures")
-        print(f"   Sample: {cifar_archs[0]}")
-        
-        return True
-    except Exception as e:
-        print(f"❌ Failed architecture generation test: {e}")
-        return False
+    from src.structure_net.seed_search import ArchitectureGenerator
+    
+    # Test MNIST architectures
+    mnist_gen = ArchitectureGenerator(784, 10)
+    mnist_archs = mnist_gen.generate_mnist_architectures(10)
+    assert len(mnist_archs) == 10, "Failed to generate MNIST architectures."
+    print(f"✅ Generated {len(mnist_archs)} MNIST architectures")
+    print(f"   Sample: {mnist_archs[0]}")
+    
+    # Test CIFAR-10 architectures  
+    cifar_gen = ArchitectureGenerator(3072, 10)
+    cifar_archs = cifar_gen.generate_cifar10_architectures(10)
+    assert len(cifar_archs) == 10, "Failed to generate CIFAR-10 architectures."
+    print(f"✅ Generated {len(cifar_archs)} CIFAR-10 architectures")
+    print(f"   Sample: {cifar_archs[0]}")
+
+
 
 def main():
     """Run all tests"""

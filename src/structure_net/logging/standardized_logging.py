@@ -28,7 +28,7 @@ import logging
 
 import torch
 import wandb
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class ExperimentConfig(BaseModel):
     random_seed: Optional[int] = Field(None, description="Random seed")
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
     
-    @validator('experiment_id')
+    @field_validator('experiment_id')
     def validate_experiment_id(cls, v):
         if not v or len(v) < 3:
             raise ValueError('experiment_id must be at least 3 characters')
@@ -163,6 +163,7 @@ class ExperimentResult(BaseModel):
     class Config:
         # Allow arbitrary types for torch tensors, etc.
         arbitrary_types_allowed = True
+        validate_by_name = True
 
 
 # ============================================================================
@@ -173,9 +174,9 @@ class ExperimentResult(BaseModel):
 class LoggingConfig:
     """Configuration for the logging system."""
     project_name: str = "structure_net"
-    queue_dir: str = "experiment_queue"
-    sent_dir: str = "experiment_sent"
-    rejected_dir: str = "experiment_rejected"
+    queue_dir: str = "data/experiment_queue"
+    sent_dir: str = "data/experiment_sent"
+    rejected_dir: str = "data/experiment_rejected"
     enable_wandb: bool = True
     enable_local_backup: bool = True
     auto_upload: bool = True

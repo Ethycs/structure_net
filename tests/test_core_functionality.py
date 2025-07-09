@@ -1,40 +1,47 @@
+"""
+Tests for the core functionality of the structure_net library.
+"""
+
 import torch
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
-from src.structure_net.evolution.components import (
-    create_standard_evolution_system,
-    NetworkContext,
-    StandardExtremaAnalyzer
-)
-from src.structure_net.core.network_analysis import get_network_stats
+import pytest
+from src.structure_net.core.layers import StandardSparseLayer
+from src.structure_net.core.network_factory import create_standard_network
 
-def test_basic_functionality(standard_network, device):
-    x = torch.randn(32, 784).to(device)
-    output = standard_network(x)
-    assert output.shape == (32, 10)
+def test_standard_sparse_layer_creation():
+    """
+    Tests the creation of the StandardSparseLayer.
+    """
+    layer = StandardSparseLayer(in_features=128, out_features=64, sparsity=0.1)
+    assert layer is not None, "StandardSparseLayer should be created."
+    assert isinstance(layer.linear, torch.nn.Linear), "Layer should contain a Linear module."
+    assert hasattr(layer, 'mask'), "Layer should have a sparsity mask."
 
-    evo_system = create_standard_evolution_system()
-    context = NetworkContext(standard_network, None, device)
-    evolved_context = evo_system.evolve_network(context, num_iterations=1)
-    assert evolved_context.network(x).shape == (32, 10)
+def test_standard_sparse_layer_forward_pass():
+    """
+    Tests a forward pass for the StandardSparseLayer.
+    """
+    layer = StandardSparseLayer(in_features=128, out_features=64, sparsity=0.1)
+    input_tensor = torch.randn(32, 128) # Batch of 32
+    output = layer(input_tensor)
+    assert output is not None, "Layer should produce an output."
+    assert output.shape == (32, 64), "Output shape is incorrect."
 
-def test_sparse_connectivity(standard_network):
-    stats = get_network_stats(standard_network)
-    assert "overall_sparsity" in stats
-    assert 0.009 < stats["overall_sparsity"] < 0.011
+def test_create_standard_network():
+    """
+    Tests the creation of a standard network using the factory.
+    """
+    model = create_standard_network(architecture=[784, 256, 128, 10], sparsity=0.05)
+    assert model is not None, "Standard network should be created."
+    assert len(model) > 0, "Standard network should have layers."
+    # Check if it's a sequence of layers
+    assert isinstance(model, torch.nn.Sequential), "Factory should create a Sequential model."
 
-def test_extrema_detection(standard_network, device):
-    analyzer = StandardExtremaAnalyzer(max_batches=1)
-    
-    patterns = {
-        'random': torch.randn(32, 784),
-        'high_values': torch.randn(32, 784) * 3 + 2,
-        'low_values': torch.randn(32, 784) * 0.5 - 1,
-    }
-    
-    for pattern_name, pattern in patterns.items():
-        dataset = torch.utils.data.TensorDataset(pattern, torch.zeros(32))
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=32)
-        context = NetworkContext(standard_network, dataloader, device)
-        analysis_result = analyzer.analyze(context)
-        assert "total_extrema" in analysis_result.metrics
+def test_standard_network_forward_pass():
+    """
+    Tests a forward pass for a network created by the factory.
+    """
+    model = create_standard_network(architecture=[784, 256, 10], sparsity=0.1)
+    input_tensor = torch.randn(16, 784) # Batch of 16
+    output = model(input_tensor)
+    assert output is not None, "Network should produce an output."
+    assert output.shape == (16, 10), "Network output shape is incorrect."

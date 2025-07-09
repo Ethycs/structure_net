@@ -19,7 +19,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Import both old and new systems for comparison
-from src.structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
+from src.structure_net.evolution.integrated_growth_system_v2 import IntegratedGrowthSystem
 from src.structure_net.evolution.components import (
     create_standard_evolution_system,
     NetworkContext

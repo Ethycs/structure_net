@@ -21,7 +21,7 @@ from dataclasses import dataclass
 import time
 
 from .base import BaseMetricAnalyzer, NetworkAnalyzerMixin, StatisticalUtilsMixin, MetricResult
-from ..profiling import profile_component, profile_operation, ProfilerLevel
+from ...profiling import profile_component, profile_operation, ProfilerLevel
 
 
 @dataclass

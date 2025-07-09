@@ -9,7 +9,8 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 
 import torch
-from src.structure_net.core.model_io import validate_model_quality, load_model_seed
+from src.structure_net.core.validation import validate_model_quality
+from src.structure_net.core.io_operations import load_model_seed
 
 def test_cifar10_seed():
     """Test loading and validating a CIFAR-10 seed."""

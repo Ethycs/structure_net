@@ -27,9 +27,8 @@ import logging
 from typing import Dict, List, Any, Tuple, Optional
 from pathlib import Path
 
-# Import both old and new systems
-from .integrated_growth_system import IntegratedGrowthSystem as OldIntegratedGrowthSystem
-from .integrated_growth_system_v2 import IntegratedGrowthSystem as NewIntegratedGrowthSystem
+# Import only from v2 to avoid migration notices
+from .integrated_growth_system_v2 import IntegratedGrowthSystem
 from .components import (
     ComposableEvolutionSystem,
     NetworkContext,
@@ -145,7 +144,7 @@ class MigrationHelper:
             old_network = copy.deepcopy(network)
             start_time = time.time()
             
-            old_system = NewIntegratedGrowthSystem(old_network, config)
+            old_system = IntegratedGrowthSystem(old_network, config)
             old_system.grow_network(train_loader, val_loader, growth_iterations=iterations)
             
             old_time = time.time() - start_time

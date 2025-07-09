@@ -21,6 +21,18 @@ from .runners import AsyncExperimentRunner
 from .analyzers import InsightExtractor, StatisticalAnalyzer
 
 
+class NumpyJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        return super(NumpyJSONEncoder, self).default(obj)
+
 class NeuralArchitectureLab:
     """
     The main lab for running systematic neural architecture experiments.
@@ -232,6 +244,9 @@ class NeuralArchitectureLab:
             for follow_up in follow_ups:
                 self.register_hypothesis(follow_up)
         
+        if hypothesis_id in self.pending_hypotheses:
+            self.pending_hypotheses.remove(hypothesis_id)
+
         return hypothesis_result
     
     def _analyze_hypothesis_results(
@@ -448,7 +463,7 @@ class NeuralArchitectureLab:
         }
         
         with open(results_file, 'w') as f:
-            json.dump(data, f, indent=2)
+            json.dump(data, f, indent=2, cls=NumpyJSONEncoder)
     
     async def run_all_hypotheses(self) -> Dict[str, HypothesisResult]:
         """

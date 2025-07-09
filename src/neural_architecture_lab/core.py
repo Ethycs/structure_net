@@ -169,7 +169,7 @@ class LabConfig:
     checkpoint_frequency: int = 10  # epochs
     
     # Logging and output
-    results_dir: str = "nal_results"
+    results_dir: str = "data/nal_results"
     save_all_models: bool = False
     save_best_models: bool = True
     verbose: bool = True

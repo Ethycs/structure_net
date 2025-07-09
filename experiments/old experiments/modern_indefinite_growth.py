@@ -37,11 +37,8 @@ from src.structure_net import (
     get_network_stats,
     sort_all_network_layers
 )
-from src.structure_net.evolution.integrated_growth_system import (
-    IntegratedGrowthSystem,
-    ThresholdConfig,
-    MetricsConfig
-)
+from src.structure_net.evolution.integrated_growth_system_v2 import IntegratedGrowthSystem
+from src.structure_net.evolution.advanced_layers import ThresholdConfig, MetricsConfig
 # MultiScaleNetwork import removed due to missing dependencies
 # Will use alternative implementation for comparative mode
 

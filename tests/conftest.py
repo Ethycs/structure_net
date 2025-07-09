@@ -2,9 +2,15 @@ import pytest
 import torch
 from src.structure_net.core.network_factory import create_standard_network
 
+@pytest.fixture(scope="session", autouse=True)
+def check_gpu_availability():
+    """Fails the test suite if a CUDA-enabled GPU is not available."""
+    if not torch.cuda.is_available():
+        pytest.fail("GPU not available. This test suite requires a CUDA-enabled GPU.")
+
 @pytest.fixture(scope="session")
 def device():
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    return torch.device("cuda")
 
 @pytest.fixture(scope="module")
 def synthetic_data(device):

@@ -15,8 +15,16 @@ from typing import Dict, Any
 from .gpu_seed_hunter import GPUSeedHunter, SparsitySweepConfig
 
 
+import warnings
+
 def main():
     """Main entry point for the seed hunter CLI"""
+    warnings.warn(
+        "This CLI is deprecated and will be removed in a future version. "
+        "Please use the NAL-powered seed search in src/seed_search/nal_seed_search.py.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     parser = argparse.ArgumentParser(description='GPU Seed Hunter with Canonical Standard')
     parser.add_argument('--mode', type=str, default='single', 
                        choices=['single', 'sweep', 'range'],

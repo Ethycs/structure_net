@@ -28,6 +28,7 @@ wandb = ">=0.21.0,<0.22"
 seaborn = ">=0.13.2,<0.14"
 pydantic = ">=2.0.0,<3"
 jsonschema = ">=4.0.0,<5"
+pytest-asyncio = ">=1.0.0,<2"
 
 [tool.pixi.pypi-dependencies]
 structure_net = { path = ".", editable = true }

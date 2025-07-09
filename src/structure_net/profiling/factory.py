@@ -18,7 +18,7 @@ except ImportError:
 
 
 def create_standard_profiler(level: ProfilerLevel = ProfilerLevel.BASIC,
-                           output_dir: str = "profiling_results",
+                           output_dir: str = "data/profiling_results",
                            enable_memory: bool = True,
                            enable_compute: bool = False) -> ProfilerManager:
     """
@@ -53,7 +53,7 @@ def create_standard_profiler(level: ProfilerLevel = ProfilerLevel.BASIC,
     return manager
 
 
-def create_lightweight_profiler(output_dir: str = "profiling_results") -> ProfilerManager:
+def create_lightweight_profiler(output_dir: str = "data/profiling_results") -> ProfilerManager:
     """
     Create a lightweight profiler with minimal overhead.
     
@@ -86,7 +86,7 @@ def create_lightweight_profiler(output_dir: str = "profiling_results") -> Profil
     return manager
 
 
-def create_comprehensive_profiler(output_dir: str = "profiling_results",
+def create_comprehensive_profiler(output_dir: str = "data/profiling_results",
                                 enable_wandb: bool = False) -> ProfilerManager:
     """
     Create a comprehensive profiler with all features enabled.
