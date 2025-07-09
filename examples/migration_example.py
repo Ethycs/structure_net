@@ -19,13 +19,13 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Import both old and new systems for comparison
-from structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
-from structure_net.evolution.components import (
+from src.structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
+from src.structure_net.evolution.components import (
     create_standard_evolution_system,
     NetworkContext
 )
-from structure_net.core.network_factory import create_standard_network
-from structure_net.evolution.advanced_layers import ThresholdConfig, MetricsConfig
+from src.structure_net.core.network_factory import create_standard_network
+from src.structure_net.evolution.advanced_layers import ThresholdConfig, MetricsConfig
 
 
 def load_mnist_data(batch_size=64):
@@ -121,7 +121,7 @@ def custom_composable_example():
     print("🔧 CUSTOM COMPOSABLE SYSTEM")
     print("="*60)
     
-    from structure_net.evolution.components import (
+    from src.structure_net.evolution.components import (
         ComposableEvolutionSystem,
         StandardExtremaAnalyzer,
         ExtremaGrowthStrategy,

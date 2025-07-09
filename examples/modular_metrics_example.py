@@ -11,7 +11,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
 # Import the new modular components
-from structure_net.evolution.metrics import (
+from src.structure_net.evolution.metrics import (
     CompleteMetricsSystem, 
     ThresholdConfig, 
     MetricsConfig,
@@ -21,13 +21,13 @@ from structure_net.evolution.metrics import (
 
 # Import autocorrelation framework
 try:
-    from structure_net.evolution.autocorrelation import PerformanceAnalyzer
+    from src.structure_net.evolution.autocorrelation import PerformanceAnalyzer
     AUTOCORR_AVAILABLE = True
 except ImportError:
     AUTOCORR_AVAILABLE = False
     print("⚠️  Autocorrelation framework not available")
 
-from structure_net.core.network_factory import create_standard_network
+from src.structure_net.core.network_factory import create_standard_network
 
 
 def create_sample_data(batch_size=64, input_size=784, num_classes=10, num_samples=1000):

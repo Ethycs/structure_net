@@ -13,12 +13,13 @@ The system has been refactored into specialized components:
 - Autocorrelation Framework (autocorrelation.*)
 
 For new code, prefer importing from the specific modules:
-    from structure_net.evolution.metrics import CompleteMetricsSystem
-    from structure_net.evolution.autocorrelation import PerformanceAnalyzer
+    from ..evolution.metrics import CompleteMetricsSystem
+    from ..evolution.autocorrelation import PerformanceAnalyzer
 """
 
 import logging
 import warnings
+import traceback
 from typing import Dict, Any
 
 # Import the new modular components
@@ -173,18 +174,28 @@ __all__ = [
 # Show deprecation warning when importing old classes
 def _show_migration_info():
     """Show information about migrating to the new modular system."""
-    logger.info("""
-🔄 METRICS SYSTEM MIGRATION NOTICE:
+    # Get the calling file information
+    stack = traceback.extract_stack()
+    calling_file = None
+    for frame in reversed(stack):
+        if frame.filename != __file__ and not frame.filename.endswith('importlib/_bootstrap.py'):
+            calling_file = frame.filename
+            break
+    
+    caller_info = f"\n📍 Called from: {calling_file}" if calling_file else ""
+    
+    logger.info(f"""
+🔄 METRICS SYSTEM MIGRATION NOTICE:{caller_info}
 
 The complete metrics system has been refactored into modular components for better maintainability.
 
 NEW RECOMMENDED IMPORTS:
-  from structure_net.evolution.metrics import CompleteMetricsSystem
-  from structure_net.evolution.metrics import MutualInformationAnalyzer, ActivityAnalyzer
-  from structure_net.evolution.autocorrelation import PerformanceAnalyzer
+  from ..evolution.metrics import CompleteMetricsSystem
+  from ..evolution.metrics import MutualInformationAnalyzer, ActivityAnalyzer
+  from ..evolution.autocorrelation import PerformanceAnalyzer
 
 OLD IMPORTS (still work but deprecated):
-  from structure_net.evolution.complete_metrics_system import CompleteMetricsSystem
+  from ..evolution.complete_metrics_system import CompleteMetricsSystem
 
 The new modular system provides:
 ✅ Better performance through optimized data collection

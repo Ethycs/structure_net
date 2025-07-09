@@ -17,3 +17,4 @@ Breakthroughs.md
 *.yaml
 *.wandb
 *.gz
+*.pt

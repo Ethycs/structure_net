@@ -9,10 +9,10 @@ This monolithic module has been replaced by the modular adaptive_learning_rates 
 MIGRATION REQUIRED:
 
 OLD (DEPRECATED):
-    from src.structure_net.evolution.adaptive_learning_rates import AdaptiveLearningRateManager
+    from ..evolution.adaptive_learning_rates import AdaptiveLearningRateManager
     
 NEW (RECOMMENDED):
-    from src.structure_net.evolution.adaptive_learning_rates import AdaptiveLearningRateManager
+    from ..evolution.adaptive_learning_rates import AdaptiveLearningRateManager
 
 The new modular system provides:
 ✅ Better organization and maintainability
@@ -24,15 +24,15 @@ The new modular system provides:
 QUICK MIGRATION EXAMPLES:
 
 # OLD WAY (still works but deprecated)
-from src.structure_net.evolution.adaptive_learning_rates import AdaptiveLearningRateManager
+from ..evolution.adaptive_learning_rates import AdaptiveLearningRateManager
 manager = AdaptiveLearningRateManager(network, base_lr=0.001)
 
 # NEW WAY (recommended)
-from src.structure_net.evolution.adaptive_learning_rates import create_comprehensive_manager
+from ..evolution.adaptive_learning_rates import create_comprehensive_manager
 manager = create_comprehensive_manager(network, base_lr=0.001)
 
 # CUSTOM CONFIGURATIONS
-from src.structure_net.evolution.adaptive_learning_rates import (
+from ..evolution.adaptive_learning_rates import (
     ExtremaPhaseScheduler, LayerAgeAwareLR, MultiScaleLearning
 )
 
@@ -54,7 +54,7 @@ warnings.warn(
     "Please migrate to the modular adaptive_learning_rates package.\n"
     "\n"
     "Quick fix: Replace imports with:\n"
-    "from src.structure_net.evolution.adaptive_learning_rates import ...\n"
+    "from ..evolution.adaptive_learning_rates import ...\n"
     "\n"
     "See docs/adaptive_learning_rates_migration.md for full guide.\n"
     "="*80,
@@ -125,10 +125,10 @@ with a modular package for better maintainability and composability.
 STEP 1: Update Imports
 ---------------------
 OLD:
-    from src.structure_net.evolution.adaptive_learning_rates import AdaptiveLearningRateManager
+    from ..evolution.adaptive_learning_rates import AdaptiveLearningRateManager
     
 NEW:
-    from src.structure_net.evolution.adaptive_learning_rates import AdaptiveLearningRateManager
+    from ..evolution.adaptive_learning_rates import AdaptiveLearningRateManager
 
 STEP 2: Use Factory Functions (Recommended)
 ------------------------------------------
@@ -144,14 +144,14 @@ OLD:
     )
 
 NEW:
-    from src.structure_net.evolution.adaptive_learning_rates import create_comprehensive_manager
+    from ..evolution.adaptive_learning_rates import create_comprehensive_manager
     manager = create_comprehensive_manager(network, base_lr=0.001)
 
 STEP 3: Custom Configurations
 ----------------------------
 For custom setups, import specific components:
 
-    from src.structure_net.evolution.adaptive_learning_rates import (
+    from ..evolution.adaptive_learning_rates import (
         ExtremaPhaseScheduler,
         LayerAgeAwareLR,
         MultiScaleLearning,

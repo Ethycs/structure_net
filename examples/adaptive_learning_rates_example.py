@@ -20,27 +20,27 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
 # Import structure_net with new adaptive learning rate capabilities
-from structure_net.core.network_factory import create_standard_network
+from src.structure_net.core.network_factory import create_standard_network
 # Try to import from new modular structure first
 try:
-    from structure_net.evolution.adaptive_learning_rates import (
+    from src.structure_net.evolution.adaptive_learning_rates import (
         AdaptiveLearningRateManager,
         create_adaptive_training_loop
     )
-    from structure_net.evolution.adaptive_learning_rates.phase_schedulers import (
+    from src.structure_net.evolution.adaptive_learning_rates.phase_schedulers import (
         ExponentialBackoffScheduler,
         GrowthPhaseScheduler
     )
-    from structure_net.evolution.adaptive_learning_rates.layer_schedulers import (
+    from src.structure_net.evolution.adaptive_learning_rates.layer_schedulers import (
         LayerwiseAdaptiveRates
     )
-    from structure_net.evolution.adaptive_learning_rates.connection_schedulers import (
+    from src.structure_net.evolution.adaptive_learning_rates.connection_schedulers import (
         SoftClampingScheduler,
         ScaleDependentRates
     )
 except ImportError:
     # Fall back to deprecated monolithic module
-    from structure_net.evolution.adaptive_learning_rates_deprecated import (
+    from src.structure_net.evolution.adaptive_learning_rates_deprecated import (
         ExponentialBackoffScheduler,
         LayerwiseAdaptiveRates,
         SoftClampingScheduler,

@@ -28,6 +28,83 @@ from .extrema_analyzer import detect_network_extrema, print_extrema_analysis
 #     print_information_analysis
 # )
 
+class PlateauDetector:
+    """Detect when single-layer additions stop helping."""
+    
+    def __init__(self, patience=3, min_improvement=0.01):
+        self.patience = patience
+        self.min_improvement = min_improvement
+        self.single_layer_history = []
+        
+    def add_result(self, improvement: float):
+        self.single_layer_history.append(improvement)
+
+    def should_switch_to_multilayer(self) -> tuple[bool, str]:
+        """Check if it's time to switch to multi-layer insertions."""
+        if len(self.single_layer_history) < self.patience:
+            return False, "Not enough history for single-layer additions."
+            
+        recent_improvements = self.single_layer_history[-self.patience:]
+        avg_improvement = np.mean(recent_improvements)
+        
+        if avg_improvement < self.min_improvement:
+            return True, f"Single layers plateaued (avg. improvement {avg_improvement:.2%})"
+            
+        return False, f"Single layers still effective (avg. improvement {avg_improvement:.2%})"
+
+class AdaptiveLayerInsertionStrategy:
+    """Switch from single to multi-layer insertion based on plateau detection."""
+    
+    def __init__(self):
+        self.mode = 'single'
+        self.plateau_detector = PlateauDetector()
+        
+    def determine_growth_action(self, evolver: 'OptimalGrowthEvolver', analysis: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Decide on the insertion strategy based on performance history."""
+        if self.mode == 'single':
+            # First, try a single layer insertion strategy
+            action = self._single_layer_strategy(evolver, analysis)
+            
+            # Simulate (or use historical data) the improvement from this action
+            # For this example, we'll assume the evolver tracks accuracy and we can get the improvement.
+            improvement = evolver.current_accuracy - evolver.previous_accuracy if hasattr(evolver, 'previous_accuracy') else 0.01
+            self.plateau_detector.add_result(improvement)
+            
+            # Check if we should switch modes
+            should_switch, reason = self.plateau_detector.should_switch_to_multilayer()
+            
+            if should_switch:
+                print(f"Switching to multi-layer mode: {reason}")
+                self.mode = 'multi'
+                # Since we've just detected a plateau, we'll try a multi-layer strategy next time.
+                # For now, we still return the single-layer action that was just calculated.
+                return action
+            else:
+                return action
+                
+        else:  # Already in multi mode
+            return self._multi_layer_strategy(evolver, analysis)
+
+    def _single_layer_strategy(self, evolver: 'OptimalGrowthEvolver', analysis: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """The original strategy of inserting a single layer at the worst bottleneck."""
+        # This logic is adapted from the original determine_growth_action
+        # In a real scenario, this would be more sophisticated.
+        # For now, let's assume we always find a place to grow.
+        position = len(evolver.current_architecture) // 2
+        width = evolver.current_architecture[position]
+        return {'type': 'insert_layer', 'position': position, 'width': width}
+
+    def _multi_layer_strategy(self, evolver: 'OptimalGrowthEvolver', analysis: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """When single layers plateau, try inserting multiple layers."""
+        print("Executing multi-layer growth strategy.")
+        # For simplicity, let's insert two layers.
+        # A more advanced implementation would have different multi-layer patterns.
+        position = len(evolver.current_architecture) // 2
+        width1 = evolver.current_architecture[position]
+        width2 = width1 // 2
+        return {'type': 'insert_multiple_layers', 'position': position, 'widths': [width1, width2]}
+
+
 
 class OptimalGrowthEvolver:
     """
@@ -53,6 +130,8 @@ class OptimalGrowthEvolver:
         self.sort_frequency = sort_frequency
         self.evolution_step_count = 0
         self.seed = seed
+        self.adaptive_strategy = AdaptiveLayerInsertionStrategy()
+        self.previous_accuracy = 0.0
         
         # Create network using canonical standard
         self.network = create_standard_network(
@@ -91,6 +170,7 @@ class OptimalGrowthEvolver:
         self.network = loaded_model
         
         # Update our tracking
+        self.previous_accuracy = self.current_accuracy
         self.current_accuracy = checkpoint_data.get('accuracy', 0.0)
         
         print(f"   ✅ Loaded pretrained scaffold")
@@ -139,15 +219,15 @@ class OptimalGrowthEvolver:
         }
 
     def determine_growth_action(self, analysis: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Determine the optimal growth action based on direct extrema analysis."""
-        # Direct extrema-driven approach (no MI bottlenecks)
-        print("\n✅ No significant bottlenecks found - no growth needed")
-        return None
+        """Determine the optimal growth action based on the adaptive strategy."""
+        return self.adaptive_strategy.determine_growth_action(self, analysis)
 
     def apply_growth_action(self, action: Dict[str, Any]):
         """Apply the calculated optimal growth action."""
         if action['type'] == 'insert_layer':
             self._insert_layer(action['position'], action['width'])
+        elif action['type'] == 'insert_multiple_layers':
+            self._insert_multiple_layers(action['position'], action['widths'])
         elif action['type'] == 'add_skip_connection':
             print(f"   ⚠️  Skip connections not yet implemented")
             self.history.append(f"Skipped: {action['type']} at position {action['position']}")
@@ -191,6 +271,33 @@ class OptimalGrowthEvolver:
         
         print(f"   ✅ Layer insertion complete")
 
+    def _insert_multiple_layers(self, position: int, widths: List[int]):
+        """Insert multiple new layers at the specified position."""
+        print(f"\n🌱 INSERTING MULTIPLE NEW LAYERS")
+        print(f"   Position: {position}")
+        print(f"   Widths: {widths}")
+
+        current_arch = self.current_architecture
+        new_arch = current_arch[:position] + widths + current_arch[position:]
+
+        print(f"   Old architecture: {current_arch}")
+        print(f"   New architecture: {new_arch}")
+
+        new_network = create_standard_network(
+            architecture=new_arch,
+            sparsity=self.base_sparsity,
+            seed=self.seed,
+            device=str(self.device)
+        )
+
+        # A more complex weight-copying mechanism would be needed for multi-layer insertion
+        # to preserve function. For now, we'll just copy the parts before the insertion.
+        self._copy_weights_to_new_network(self.network, new_network, position)
+
+        self.network = new_network
+        self.history.append(f"Inserted multiple layers of widths {widths} at position {position}")
+        print(f"   ✅ Multi-layer insertion complete")
+
     def _copy_weights_to_new_network(self, old_network: nn.Sequential, 
                                    new_network: nn.Sequential, 
                                    insert_position: int):
@@ -214,9 +321,11 @@ class OptimalGrowthEvolver:
                     print(f"      Copied layer {old_layer_idx} -> {new_layer_idx}")
                     new_layer_idx += 1
                 elif new_layer_idx == insert_position:
-                    # Skip the new inserted layer (keep random initialization)
-                    print(f"      Skipped new layer at position {new_layer_idx}")
-                    new_layer_idx += 1
+                    # This logic needs to be smarter for multi-layer insertion
+                    # For now, we just advance the new_layer_idx past the new layers
+                    num_inserted = len(new_sparse_layers) - len(old_sparse_layers)
+                    print(f"      Skipping {num_inserted} new layer(s) at position {new_layer_idx}")
+                    new_layer_idx += num_inserted
                     
                     # Copy the current old layer to the next position
                     if new_layer_idx < len(new_sparse_layers):

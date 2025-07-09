@@ -19,10 +19,10 @@ import torch.cuda as cuda
 # Add structure_net to path if needed
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from structure_net.core.io_operations import load_model_seed
-from structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
-from structure_net.evolution.advanced_layers import ThresholdConfig, MetricsConfig
-from structure_net.core.network_analysis import get_network_stats
+from src.structure_net.core.io_operations import load_model_seed
+from src.structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
+from src.structure_net.evolution.advanced_layers import ThresholdConfig, MetricsConfig
+from src.structure_net.core.network_analysis import get_network_stats
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset
 

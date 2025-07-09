@@ -16,7 +16,7 @@ AUTOMATIC MIGRATION:
 RECOMMENDED MIGRATION:
 For new code, use the composable system directly:
 
-    from structure_net.evolution.components import (
+    from ..evolution.components import (
         create_standard_evolution_system,
         NetworkContext
     )
@@ -42,6 +42,8 @@ BENEFITS OF NEW SYSTEM:
 
 import warnings
 import logging
+import inspect
+import traceback
 
 # Import the new system that provides backward compatibility
 from .integrated_growth_system_v2 import (
@@ -58,8 +60,18 @@ logger = logging.getLogger(__name__)
 # Show migration notice when module is imported
 def _show_migration_notice():
     """Show migration notice when the old module is imported."""
-    logger.info("""
-🔄 INTEGRATED GROWTH SYSTEM MIGRATION NOTICE
+    # Get the calling file information
+    stack = traceback.extract_stack()
+    calling_file = None
+    for frame in reversed(stack):
+        if frame.filename != __file__ and not frame.filename.endswith('importlib/_bootstrap.py'):
+            calling_file = frame.filename
+            break
+    
+    caller_info = f"\n📍 Called from: {calling_file}" if calling_file else ""
+    
+    logger.info(f"""
+🔄 INTEGRATED GROWTH SYSTEM MIGRATION NOTICE{caller_info}
 
 This module now uses the new composable evolution architecture as its backend.
 Your existing code will continue to work without changes.
@@ -77,7 +89,7 @@ MIGRATION OPTIONS:
 
 RESOURCES:
 📖 Migration Guide: docs/integrated_growth_system_migration.md
-🔧 Migration Helper: from structure_net.evolution.migration_helper import MigrationHelper
+🔧 Migration Helper: from ..evolution.migration_helper import MigrationHelper
 📝 Examples: examples/composable_evolution_example.py
 
 Your code continues to work exactly as before, now with improved performance!

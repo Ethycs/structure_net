@@ -76,6 +76,11 @@ try:
 except ImportError:
     pass
 
+try:
+    from .catastrophe_analysis import CatastropheAnalyzer
+except ImportError:
+    pass
+
 __all__ = [
     # Base classes
     'ThresholdConfig',
@@ -105,5 +110,6 @@ __all__ = [
     'CompressionStats',
     'PatchEffectiveness',
     'MemoryProfile',
-    'create_compactification_analyzer'
+    'create_compactification_analyzer',
+    'CatastropheAnalyzer'
 ]

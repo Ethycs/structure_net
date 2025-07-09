@@ -86,7 +86,8 @@ class PerformanceMetrics(BaseModel):
     recall: Optional[float] = Field(None, ge=0.0, le=1.0, description="Recall score")
     f1_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="F1 score")
     
-    @validator('accuracy')
+    @field_validator('accuracy')
+    @classmethod
     def validate_accuracy(cls, v):
         """Ensure accuracy is reasonable."""
         if v < 0.0 or v > 1.0:
@@ -103,7 +104,8 @@ class ExtremaAnalysis(BaseModel):
     saturated_neurons: Dict[str, List[int]] = Field(default_factory=dict, description="Saturated neurons by layer")
     layer_health: Dict[str, float] = Field(default_factory=dict, description="Health score by layer")
     
-    @validator('extrema_ratio')
+    @field_validator('extrema_ratio')
+    @classmethod
     def validate_extrema_ratio(cls, v):
         """Ensure extrema ratio is valid."""
         if v < 0.0 or v > 1.0:
@@ -120,7 +122,8 @@ class GrowthAction(BaseModel):
     reason: str = Field(..., description="Reason for taking this action")
     success: bool = Field(default=True, description="Whether action was successful")
     
-    @validator('reason')
+    @field_validator('reason')
+    @classmethod
     def validate_reason(cls, v):
         """Ensure reason is provided."""
         if not v or not v.strip():
@@ -139,7 +142,8 @@ class TrainingEpoch(BaseModel):
     learning_rate: Optional[float] = Field(None, gt=0.0, description="Learning rate used")
     duration: Optional[float] = Field(None, ge=0.0, description="Epoch duration in seconds")
     
-    @validator('train_accuracy', 'val_accuracy')
+    @field_validator('train_accuracy', 'val_accuracy')
+    @classmethod
     def validate_accuracy_range(cls, v):
         """Ensure accuracy is in valid range."""
         if v is not None and (v < 0.0 or v > 1.0):
@@ -158,7 +162,8 @@ class GrowthIteration(BaseModel):
     growth_occurred: bool = Field(default=False, description="Whether growth occurred")
     credits: Optional[float] = Field(None, ge=0.0, description="Credits in growth economy")
     
-    @validator('iteration')
+    @field_validator('iteration')
+    @classmethod
     def validate_iteration(cls, v):
         """Ensure iteration is non-negative."""
         if v < 0:
@@ -175,7 +180,8 @@ class TournamentResult(BaseModel):
     execution_time: Optional[float] = Field(None, ge=0.0, description="Time taken to execute strategy")
     success: bool = Field(default=True, description="Whether strategy executed successfully")
     
-    @validator('strategy_name')
+    @field_validator('strategy_name')
+    @classmethod
     def validate_strategy_name(cls, v):
         """Ensure strategy name is valid."""
         if not v or not v.strip():
@@ -194,7 +200,8 @@ class ExperimentConfig(BaseModel):
     random_seed: Optional[int] = Field(None, description="Random seed for reproducibility")
     target_accuracy: Optional[float] = Field(None, ge=0.0, le=1.0, description="Target accuracy")
     
-    @validator('dataset')
+    @field_validator('dataset')
+    @classmethod
     def validate_dataset(cls, v):
         """Ensure dataset name is valid."""
         if not v or not v.strip():
@@ -213,14 +220,16 @@ class GrowthExperiment(BaseExperimentSchema):
     final_performance: Optional[PerformanceMetrics] = Field(None, description="Final performance metrics")
     total_iterations: int = Field(default=0, ge=0, description="Total growth iterations")
     
-    @validator('scaffold_sparsity')
+    @field_validator('scaffold_sparsity')
+    @classmethod
     def validate_sparsity(cls, v):
         """Ensure sparsity is in valid range."""
         if v < 0.0 or v > 1.0:
             raise ValueError("scaffold_sparsity must be between 0.0 and 1.0")
         return v
     
-    @root_validator
+    @model_validator(mode='before')
+    @classmethod
     def validate_consistency(cls, values):
         """Ensure data consistency across fields."""
         growth_history = values.get('growth_history', [])
@@ -242,7 +251,8 @@ class TrainingExperiment(BaseExperimentSchema):
     final_performance: Optional[PerformanceMetrics] = Field(None, description="Final performance metrics")
     total_epochs: int = Field(default=0, ge=0, description="Total training epochs")
     
-    @root_validator
+    @model_validator(mode='before')
+    @classmethod
     def validate_training_consistency(cls, values):
         """Ensure training data consistency."""
         training_history = values.get('training_history', [])

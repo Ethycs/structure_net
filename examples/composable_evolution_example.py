@@ -24,7 +24,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 
 # Import the new composable system
-from structure_net.evolution.components import (
+from src.structure_net.evolution.components import (
     # Core interfaces
     NetworkContext, 
     
@@ -47,7 +47,7 @@ from structure_net.evolution.components import (
 )
 
 # Import latest profiling system
-from structure_net.profiling import (
+from src.structure_net.profiling import (
     create_production_profiler, create_research_profiler,
     profile_component, profile_if_enabled, profile_memory_intensive,
     profile_operation, profile_batch_operation,
@@ -55,10 +55,11 @@ from structure_net.profiling import (
 )
 
 # Import standardized logging
-from structure_net.logging import StandardizedLogger
+from src.structure_net.logging import create_profiling_logger, StandardizedLogger
+
 
 # Import existing infrastructure
-from structure_net.core.network_factory import create_standard_network
+from src.structure_net.core.network_factory import create_standard_network
 
 
 def create_sample_dataset(num_samples: int = 1000, input_dim: int = 784, num_classes: int = 10):
@@ -119,19 +120,12 @@ class ProfiledEvolutionSystem:
             self.evolution_system = ComposableEvolutionSystem()
         
         # Create logger for integration
-        self.logger = StandardizedLogger(f"composable_evolution_{system_type}")
+        self.logger = create_profiling_logger(session_id=f"composable_evolution_{system_type}")
         
         self.profiler.start_session(f"{system_type}_evolution")
     
     def evolve_network_with_profiling(self, context, num_iterations=3):
         """Evolve network with comprehensive profiling."""
-        # Log experiment start
-        self.logger.log_experiment_start({
-            "system_type": self.system_type,
-            "num_iterations": num_iterations,
-            "initial_architecture": list(context.network.modules())
-        })
-        
         # Profile each iteration
         for iteration in range(num_iterations):
             with profile_operation(f"evolution_iteration_{iteration}", "evolution", 
@@ -162,38 +156,28 @@ class ProfiledEvolutionSystem:
                 ctx.add_metric("growth_occurred", growth_occurred)
                 ctx.add_metric("num_analyzers", len(self.evolution_system.analyzers))
                 ctx.add_metric("num_strategies", len(self.evolution_system.strategies))
-                
-                # Log iteration
-                self.logger.log_iteration({
-                    "iteration": iteration,
-                    "growth_occurred": growth_occurred,
-                    "analysis_results": analysis_results
-                })
         
         return context
     
     def get_comprehensive_metrics(self):
         """Get comprehensive metrics from profiling and evolution."""
         # End profiling session
-        profiling_results = self.profiler.end_session()
+        profiling_results = self.profiler.end_session(save_results=False)
         
         # Get evolution metrics
         evolution_summary = self.evolution_system.get_evolution_summary()
-        evolution_metrics = self.evolution_system.get_metrics()
         
+        # Log profiling results
+        if self.logger:
+            self.logger.log_profiling_session(profiling_results)
+            self.logger.finish_experiment()
+
         # Combine metrics
         comprehensive_metrics = {
             "profiling": profiling_results,
             "evolution_summary": evolution_summary,
-            "evolution_metrics": evolution_metrics,
             "system_type": self.system_type
         }
-        
-        # Log final results
-        self.logger.log_experiment_end({
-            "status": "completed",
-            "comprehensive_metrics": comprehensive_metrics
-        })
         
         return comprehensive_metrics
 

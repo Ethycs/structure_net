@@ -5,6 +5,10 @@ A PyTorch implementation of neural networks that grow dynamically during trainin
 based on extrema detection and multi-scale snapshot preservation.
 """
 
+# Configure environment before any torch imports
+from .config import setup_cuda_devices
+setup_cuda_devices()
+
 # Legacy components temporarily disabled due to dependencies on deleted modules
 # from .models.multi_scale_network import MultiScaleNetwork, create_multi_scale_network
 # from .snapshots.snapshot_manager import SnapshotManager

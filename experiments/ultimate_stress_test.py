@@ -15,10 +15,14 @@ This experiment is designed to push the structure_net system to its absolute lim
 This is the most comprehensive test of the entire structure_net ecosystem.
 """
 
+# IMPORTANT: Set spawn method BEFORE importing torch
+import multiprocessing as mp
+if __name__ == "__main__":
+    mp.set_start_method('spawn', force=True)
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.multiprocessing as mp
 from torch.cuda.amp import autocast, GradScaler
 import numpy as np
 import time
@@ -92,7 +96,7 @@ class StressTestConfig:
     def __post_init__(self):
         if self.learning_rate_strategies is None:
             self.learning_rate_strategies = [
-                'BASIC', 'ADVANCED', 'COMPREHENSIVE', 'ULTIMATE'
+                'basic', 'advanced', 'comprehensive', 'ultimate'
             ]
 
 
@@ -133,6 +137,253 @@ class GPUMemoryManager:
         torch.cuda.set_device(device_id)
         torch.cuda.empty_cache()
         gc.collect()
+
+
+def tournament_worker(config: StressTestConfig, device_id: int, process_id: int, 
+                      work_queue: mp.Queue, results_queue: mp.Queue):
+    """Worker function for parallel tournament evaluation."""
+    # Create a minimal tournament instance for evaluation
+    memory_manager = GPUMemoryManager(config.max_memory_per_gpu)
+    
+    while True:
+        try:
+            item = work_queue.get(timeout=1)
+            if item is None:  # Sentinel value to stop
+                break
+            competitor, idx = item
+            # Directly evaluate the competitor
+            result = evaluate_competitor_standalone(
+                competitor, device_id, process_id, config, memory_manager
+            )
+            results_queue.put((idx, result))
+        except queue.Empty:
+            break
+        except Exception as e:
+            print(f"Worker GPU {device_id} Process {process_id} error: {e}")
+            import traceback
+            traceback.print_exc()
+            break
+
+
+def evaluate_competitor_standalone(competitor: Dict[str, Any], device_id: int, 
+                                  process_id: int, config: StressTestConfig,
+                                  memory_manager: GPUMemoryManager) -> Dict[str, Any]:
+    """Standalone competitor evaluation function that can be called in a subprocess."""
+    torch.cuda.set_device(device_id)
+    device = f'cuda:{device_id}'
+    
+    try:
+        # Create network
+        model = create_standard_network(
+            architecture=competitor['architecture'],
+            sparsity=competitor['sparsity'],
+            device=device
+        )
+        
+        # Add residual blocks if enabled
+        if config.enable_residual_blocks and len(competitor['architecture']) >= 5:
+            residual_positions = [2, 4]  # Add residual blocks at positions 2 and 4
+            model = create_residual_network(
+                competitor['architecture'],
+                competitor['sparsity'],
+                residual_positions,
+                device
+            )
+        
+        # Setup adaptive learning rates
+        # Ensure lr_strategy is a string (not np.str_)
+        lr_strategy = str(competitor['lr_strategy'])
+        lr_manager = AdaptiveLearningRateManager(
+            network=model,
+            base_lr=0.001,
+            strategy=lr_strategy,
+            enable_extrema_phase=True,
+            enable_layer_age_aware=True,
+            enable_multi_scale=True,
+            enable_unified_system=True
+        )
+        
+        # Create optimizer
+        optimizer = lr_manager.create_adaptive_optimizer(
+            optimizer_class=optim.AdamW,
+            weight_decay=1e-4
+        )
+        
+        # Setup metrics system
+        if config.enable_comprehensive_metrics:
+            threshold_config = ThresholdConfig()
+            metrics_config = MetricsConfig(
+                compute_mi=True,
+                compute_activity=True,
+                compute_sensli=True,
+                compute_graph=True
+            )
+            metrics_system = CompleteMetricsSystem(model, threshold_config, metrics_config)
+        else:
+            metrics_system = None
+        
+        # Setup growth system
+        if config.enable_growth:
+            growth_system = IntegratedGrowthSystem(
+                network=model,
+                config=ThresholdConfig(),
+                metrics_config=MetricsConfig()
+            )
+        else:
+            growth_system = None
+        
+        # Load CIFAR-10 data
+        # GPUSeedHunter expects device_id as integer, not 'cuda:X' string
+        hunter = GPUSeedHunter(num_gpus=1, device=device_id, dataset='cifar10')
+        hunter.cache_dataset_gpu()
+        dataset = hunter.get_cached_dataset()
+        
+        # Optimize batch size for this GPU
+        model_params = sum(p.numel() for p in model.parameters())
+        batch_size = memory_manager.optimize_batch_size(
+            device_id, config.batch_size_base, model_params
+        )
+        
+        print(f"🔥 GPU {device_id} Process {process_id}: Training {competitor['id']}")
+        print(f"   Architecture: {competitor['architecture']}")
+        print(f"   LR Strategy: {lr_strategy}")
+        print(f"   Batch size: {batch_size}")
+        
+        # Training loop with all features
+        scaler = GradScaler() if config.mixed_precision else None
+        best_accuracy = 0.0
+        growth_events = []
+        
+        for epoch in range(config.epochs_per_generation):
+            model.train()
+            epoch_loss = 0.0
+            
+            # Training batches
+            num_batches = len(dataset['train_x']) // batch_size
+            for batch_idx in range(num_batches):
+                start_idx = batch_idx * batch_size
+                end_idx = min(start_idx + batch_size, len(dataset['train_x']))
+                
+                x = dataset['train_x'][start_idx:end_idx]
+                y = dataset['train_y'][start_idx:end_idx]
+                
+                optimizer.zero_grad()
+                
+                if scaler and config.mixed_precision:
+                    with autocast():
+                        output = model(x)
+                        loss = nn.functional.cross_entropy(output, y)
+                    scaler.scale(loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    output = model(x)
+                    loss = nn.functional.cross_entropy(output, y)
+                    loss.backward()
+                    optimizer.step()
+                
+                epoch_loss += loss.item()
+            
+            # Update learning rates
+            lr_manager.update_learning_rates(
+                optimizer, epoch,
+                network=model,
+                data_loader=None,  # We'll use cached data
+                device=device
+            )
+            
+            # Evaluation
+            if epoch % 2 == 0:  # Evaluate every 2 epochs
+                model.eval()
+                correct = 0
+                total = 0
+                
+                with torch.no_grad():
+                    test_batches = len(dataset['test_x']) // batch_size
+                    for batch_idx in range(test_batches):
+                        start_idx = batch_idx * batch_size
+                        end_idx = min(start_idx + batch_size, len(dataset['test_x']))
+                        
+                        x = dataset['test_x'][start_idx:end_idx]
+                        y = dataset['test_y'][start_idx:end_idx]
+                        
+                        output = model(x)
+                        pred = output.argmax(dim=1)
+                        correct += (pred == y).sum().item()
+                        total += y.size(0)
+                
+                accuracy = correct / total
+                best_accuracy = max(best_accuracy, accuracy)
+                
+                print(f"     Epoch {epoch}: Acc={accuracy:.3f}, Loss={epoch_loss/num_batches:.4f}")
+            
+            # Memory cleanup
+            if epoch % config.memory_cleanup_frequency == 0:
+                memory_manager.cleanup_gpu_memory(device_id)
+        
+        # Final evaluation
+        model.eval()
+        final_correct = 0
+        final_total = 0
+        
+        with torch.no_grad():
+            test_batches = len(dataset['test_x']) // batch_size
+            for batch_idx in range(test_batches):
+                start_idx = batch_idx * batch_size
+                end_idx = min(start_idx + batch_size, len(dataset['test_x']))
+                
+                x = dataset['test_x'][start_idx:end_idx]
+                y = dataset['test_y'][start_idx:end_idx]
+                
+                output = model(x)
+                pred = output.argmax(dim=1)
+                final_correct += (pred == y).sum().item()
+                final_total += y.size(0)
+        
+        final_accuracy = final_correct / final_total
+        
+        # Calculate fitness (combination of accuracy and efficiency)
+        network_stats = get_network_stats(model)
+        efficiency = final_accuracy / (network_stats['total_parameters'] / 1000)  # Acc per K params
+        fitness = final_accuracy * 0.7 + efficiency * 0.3
+        
+        result = {
+            'id': competitor['id'],
+            'fitness': fitness,
+            'accuracy': final_accuracy,
+            'efficiency': efficiency,
+            'parameters': network_stats['total_parameters'],
+            'growth_events': len(growth_events),
+            'final_architecture': [layer.linear.out_features for layer in model 
+                                 if hasattr(layer, 'linear')],
+            'device_id': device_id,
+            'process_id': process_id
+        }
+        
+        print(f"✅ GPU {device_id} Process {process_id}: {competitor['id']} completed")
+        print(f"   Final accuracy: {final_accuracy:.3f}")
+        print(f"   Fitness: {fitness:.4f}")
+        print(f"   Parameters: {network_stats['total_parameters']:,}")
+        
+        return result
+        
+    except Exception as e:
+        print(f"❌ GPU {device_id} Process {process_id}: {competitor['id']} failed: {e}")
+        return {
+            'id': competitor['id'],
+            'fitness': 0.0,
+            'accuracy': 0.0,
+            'efficiency': 0.0,
+            'parameters': 0,
+            'growth_events': 0,
+            'error': str(e),
+            'device_id': device_id,
+            'process_id': process_id
+        }
+    
+    finally:
+        # Cleanup
+        memory_manager.cleanup_gpu_memory(device_id)
 
 
 class ArchitectureTournament:
@@ -190,7 +441,13 @@ class ArchitectureTournament:
                 
                 current_size = 3072
                 for _ in range(num_layers - 2):
-                    next_size = np.random.randint(64, min(current_size, 1024))
+                    # Ensure we have a valid range for random generation
+                    min_size = 64
+                    max_size = min(current_size, 1024)
+                    if min_size >= max_size:
+                        next_size = min_size
+                    else:
+                        next_size = np.random.randint(min_size, max_size)
                     architecture.append(next_size)
                     current_size = next_size
                 
@@ -217,292 +474,10 @@ class ArchitectureTournament:
     def evaluate_competitor_on_gpu(self, competitor: Dict[str, Any], device_id: int, 
                                   process_id: int) -> Dict[str, Any]:
         """Evaluate a single competitor on specified GPU."""
-        torch.cuda.set_device(device_id)
-        device = f'cuda:{device_id}'
-        
-        try:
-            # Create network
-            model = create_standard_network(
-                architecture=competitor['architecture'],
-                sparsity=competitor['sparsity'],
-                device=device
-            )
-            
-            # Add residual blocks if enabled
-            if self.config.enable_residual_blocks and len(competitor['architecture']) >= 5:
-                residual_positions = [2, 4]  # Add residual blocks at positions 2 and 4
-                model = create_residual_network(
-                    competitor['architecture'],
-                    competitor['sparsity'],
-                    residual_positions,
-                    device
-                )
-            
-            # Setup adaptive learning rates
-            lr_manager = AdaptiveLearningRateManager(
-                network=model,
-                base_lr=0.001,
-                strategy=competitor['lr_strategy'],
-                enable_extrema_phase=True,
-                enable_layer_age_aware=True,
-                enable_multi_scale=True,
-                enable_unified_system=True
-            )
-            
-            # Create optimizer
-            optimizer = lr_manager.create_adaptive_optimizer(
-                optimizer_class=optim.AdamW,
-                weight_decay=1e-4
-            )
-            
-            # Setup metrics system
-            if self.config.enable_comprehensive_metrics:
-                threshold_config = ThresholdConfig()
-                metrics_config = MetricsConfig(
-                    compute_mi=True,
-                    compute_activity=True,
-                    compute_sensli=True,
-                    compute_graph=True
-                )
-                metrics_system = CompleteMetricsSystem(model, threshold_config, metrics_config)
-            else:
-                metrics_system = None
-            
-            # Setup growth system
-            if self.config.enable_growth:
-                growth_system = IntegratedGrowthSystem(
-                    network=model,
-                    device=device,
-                    max_layers=self.config.max_layers
-                )
-            else:
-                growth_system = None
-            
-            # Load CIFAR-10 data
-            hunter = GPUSeedHunter(num_gpus=1, device=device, dataset='cifar10')
-            hunter.cache_dataset_gpu()
-            dataset = hunter.get_cached_dataset()
-            
-            # Optimize batch size for this GPU
-            model_params = sum(p.numel() for p in model.parameters())
-            batch_size = self.memory_manager.optimize_batch_size(
-                device_id, self.config.batch_size_base, model_params
-            )
-            
-            print(f"🔥 GPU {device_id} Process {process_id}: Training {competitor['id']}")
-            print(f"   Architecture: {competitor['architecture']}")
-            print(f"   LR Strategy: {competitor['lr_strategy']}")
-            print(f"   Batch size: {batch_size}")
-            
-            # Training loop with all features
-            scaler = GradScaler() if self.config.mixed_precision else None
-            best_accuracy = 0.0
-            growth_events = []
-            
-            for epoch in range(self.config.epochs_per_generation):
-                model.train()
-                epoch_loss = 0.0
-                
-                # Training batches
-                num_batches = len(dataset['train_x']) // batch_size
-                for batch_idx in range(num_batches):
-                    start_idx = batch_idx * batch_size
-                    end_idx = min(start_idx + batch_size, len(dataset['train_x']))
-                    
-                    x = dataset['train_x'][start_idx:end_idx]
-                    y = dataset['train_y'][start_idx:end_idx]
-                    
-                    optimizer.zero_grad()
-                    
-                    if scaler and self.config.mixed_precision:
-                        with autocast():
-                            output = model(x)
-                            loss = nn.functional.cross_entropy(output, y)
-                        scaler.scale(loss).backward()
-                        scaler.step(optimizer)
-                        scaler.update()
-                    else:
-                        output = model(x)
-                        loss = nn.functional.cross_entropy(output, y)
-                        loss.backward()
-                        optimizer.step()
-                    
-                    epoch_loss += loss.item()
-                
-                # Update learning rates
-                lr_manager.update_learning_rates(
-                    optimizer, epoch,
-                    network=model,
-                    data_loader=None,  # We'll use cached data
-                    device=device
-                )
-                
-                # Evaluation
-                if epoch % 2 == 0:  # Evaluate every 2 epochs
-                    model.eval()
-                    correct = 0
-                    total = 0
-                    
-                    with torch.no_grad():
-                        test_batches = len(dataset['test_x']) // batch_size
-                        for batch_idx in range(test_batches):
-                            start_idx = batch_idx * batch_size
-                            end_idx = min(start_idx + batch_size, len(dataset['test_x']))
-                            
-                            x = dataset['test_x'][start_idx:end_idx]
-                            y = dataset['test_y'][start_idx:end_idx]
-                            
-                            output = model(x)
-                            pred = output.argmax(dim=1)
-                            correct += (pred == y).sum().item()
-                            total += y.size(0)
-                    
-                    accuracy = correct / total
-                    best_accuracy = max(best_accuracy, accuracy)
-                    
-                    print(f"     Epoch {epoch}: Acc={accuracy:.3f}, Loss={epoch_loss/num_batches:.4f}")
-                
-                # Growth and metrics
-                if (epoch + 1) % self.config.growth_frequency == 0:
-                    # Compute comprehensive metrics
-                    if metrics_system and epoch % self.config.metrics_frequency == 0:
-                        try:
-                            # Create a small data loader for metrics
-                            metrics_data = []
-                            for i in range(0, min(1000, len(dataset['test_x'])), 100):
-                                end_i = min(i + 100, len(dataset['test_x']))
-                                metrics_data.append((
-                                    dataset['test_x'][i:end_i],
-                                    dataset['test_y'][i:end_i]
-                                ))
-                            
-                            complete_metrics = metrics_system.compute_all_metrics(
-                                metrics_data, num_batches=5
-                            )
-                            
-                            # Log metrics
-                            metrics_data_obj = MetricsData(
-                                accuracy=accuracy,
-                                loss=epoch_loss / num_batches,
-                                epoch=epoch,
-                                total_parameters=model_params,
-                                sparsity=competitor['sparsity'],
-                                architecture=competitor['architecture']
-                            )
-                            
-                            self.logger.log_metrics(competitor['id'], metrics_data_obj)
-                            
-                        except Exception as e:
-                            print(f"     ⚠️  Metrics computation failed: {e}")
-                    
-                    # Growth
-                    if growth_system:
-                        try:
-                            extrema_analysis = detect_network_extrema(
-                                model, dataset['train_x'][:500], device
-                            )
-                            
-                            if extrema_analysis.get('extrema_ratio', 0) > 0.3:
-                                print(f"     🌱 Attempting growth at epoch {epoch}")
-                                
-                                old_arch = [layer.linear.out_features for layer in model 
-                                          if hasattr(layer, 'linear')]
-                                
-                                grown_model = growth_system.grow_network(
-                                    extrema_analysis, accuracy
-                                )
-                                
-                                if grown_model is not model:  # Growth occurred
-                                    model = grown_model
-                                    
-                                    new_arch = [layer.linear.out_features for layer in model 
-                                              if hasattr(layer, 'linear')]
-                                    
-                                    growth_event = {
-                                        'epoch': epoch,
-                                        'growth_type': "extrema_driven",
-                                        'accuracy_before': accuracy,
-                                        'accuracy_after': accuracy,  # Will be updated later
-                                        'architecture_before': old_arch,
-                                        'architecture_after': new_arch
-                                    }
-                                    
-                                    growth_events.append(growth_event)
-                                    # Skip logging growth event for now to avoid schema issues
-                                    # self.logger.log_growth_event(competitor['id'], growth_event)
-                                    
-                                    print(f"     ✅ Growth successful: {old_arch} -> {new_arch}")
-                        
-                        except Exception as e:
-                            print(f"     ⚠️  Growth failed: {e}")
-                
-                # Memory cleanup
-                if epoch % self.config.memory_cleanup_frequency == 0:
-                    self.memory_manager.cleanup_gpu_memory(device_id)
-            
-            # Final evaluation
-            model.eval()
-            final_correct = 0
-            final_total = 0
-            
-            with torch.no_grad():
-                test_batches = len(dataset['test_x']) // batch_size
-                for batch_idx in range(test_batches):
-                    start_idx = batch_idx * batch_size
-                    end_idx = min(start_idx + batch_size, len(dataset['test_x']))
-                    
-                    x = dataset['test_x'][start_idx:end_idx]
-                    y = dataset['test_y'][start_idx:end_idx]
-                    
-                    output = model(x)
-                    pred = output.argmax(dim=1)
-                    final_correct += (pred == y).sum().item()
-                    final_total += y.size(0)
-            
-            final_accuracy = final_correct / final_total
-            
-            # Calculate fitness (combination of accuracy and efficiency)
-            network_stats = get_network_stats(model)
-            efficiency = final_accuracy / (network_stats['total_parameters'] / 1000)  # Acc per K params
-            fitness = final_accuracy * 0.7 + efficiency * 0.3
-            
-            result = {
-                'id': competitor['id'],
-                'fitness': fitness,
-                'accuracy': final_accuracy,
-                'efficiency': efficiency,
-                'parameters': network_stats['total_parameters'],
-                'growth_events': len(growth_events),
-                'final_architecture': [layer.linear.out_features for layer in model 
-                                     if hasattr(layer, 'linear')],
-                'device_id': device_id,
-                'process_id': process_id
-            }
-            
-            print(f"✅ GPU {device_id} Process {process_id}: {competitor['id']} completed")
-            print(f"   Final accuracy: {final_accuracy:.3f}")
-            print(f"   Fitness: {fitness:.4f}")
-            print(f"   Parameters: {network_stats['total_parameters']:,}")
-            
-            return result
-            
-        except Exception as e:
-            print(f"❌ GPU {device_id} Process {process_id}: {competitor['id']} failed: {e}")
-            return {
-                'id': competitor['id'],
-                'fitness': 0.0,
-                'accuracy': 0.0,
-                'efficiency': 0.0,
-                'parameters': 0,
-                'growth_events': 0,
-                'error': str(e),
-                'device_id': device_id,
-                'process_id': process_id
-            }
-        
-        finally:
-            # Cleanup
-            self.memory_manager.cleanup_gpu_memory(device_id)
+        # Just delegate to the standalone function
+        return evaluate_competitor_standalone(
+            competitor, device_id, process_id, self.config, self.memory_manager
+        )
     
     def run_generation_parallel(self, population: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Run a generation with full parallelization across all GPUs."""
@@ -510,28 +485,18 @@ class ArchitectureTournament:
         
         # Start profiling if enabled
         if self.profiler:
-            self.profiler.start_profiling(f"generation_{self.generation}")
+            self.profiler.start_session(f"generation_{self.generation}")
         
         results = []
         
-        # Create work queue
-        work_queue = queue.Queue()
+        # Create work queue (multiprocessing queue, not threading queue)
+        work_queue = mp.Queue()
         for i, competitor in enumerate(population):
             work_queue.put((competitor, i))
         
-        # Worker function for each process
-        def worker(device_id: int, process_id: int, work_queue: queue.Queue, results_queue: queue.Queue):
-            while True:
-                try:
-                    competitor, idx = work_queue.get(timeout=1)
-                    result = self.evaluate_competitor_on_gpu(competitor, device_id, process_id)
-                    results_queue.put((idx, result))
-                    work_queue.task_done()
-                except queue.Empty:
-                    break
-                except Exception as e:
-                    print(f"Worker GPU {device_id} Process {process_id} error: {e}")
-                    break
+        # Add sentinel values to stop workers
+        for _ in range(self.config.num_gpus * self.config.processes_per_gpu):
+            work_queue.put(None)
         
         # Start all worker processes
         results_queue = mp.Queue()
@@ -540,8 +505,8 @@ class ArchitectureTournament:
         for gpu_id in range(self.config.num_gpus):
             for proc_id in range(self.config.processes_per_gpu):
                 p = mp.Process(
-                    target=worker,
-                    args=(gpu_id, proc_id, work_queue, results_queue)
+                    target=tournament_worker,
+                    args=(self.config, gpu_id, proc_id, work_queue, results_queue)
                 )
                 p.start()
                 processes.append(p)
@@ -573,7 +538,7 @@ class ArchitectureTournament:
         
         # Stop profiling
         if self.profiler:
-            self.profiler.stop_profiling()
+            self.profiler.end_session()
         
         return results
     
@@ -741,8 +706,8 @@ def calculate_optimal_memory_usage():
         gpu_info[f'gpu_{i}'] = {
             'name': props.name,
             'memory_gb': memory_gb,
-            'multiprocessor_count': props.multiprocessor_count,
-            'max_threads_per_multiprocessor': props.max_threads_per_multiprocessor
+            'multiprocessor_count': props.multi_processor_count,
+            'max_threads_per_multiprocessor': props.max_threads_per_multi_processor
         }
     
     # Calculate optimal configuration

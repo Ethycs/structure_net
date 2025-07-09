@@ -18,9 +18,11 @@ from torch.utils.data import DataLoader
 import sys
 import os
 
-from structure_net.core.network_factory import create_standard_network
-from structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
-from structure_net.evolution.advanced_layers import ThresholdConfig, MetricsConfig
+from src.structure_net.core.network_factory import create_standard_network
+from src.structure_net.evolution.components import create_standard_evolution_system, NetworkContext
+from src.structure_net.evolution.metrics import CompleteMetricsSystem, ThresholdConfig, MetricsConfig
+from src.structure_net.evolution.autocorrelation import PerformanceAnalyzer
+
 
 def create_sample_data():
     """Create sample MNIST data for demonstration."""
@@ -69,56 +71,48 @@ def main():
     
     print(f"Initial network: {[784, 128, 64, 10]} with 10% sparsity")
     
-    # Configure thresholds and metrics
-    threshold_config = ThresholdConfig()
-    threshold_config.adaptive = True  # Enable adaptive thresholds
-    threshold_config.activation_threshold = 0.01
+    # Create composable evolution system
+    evolution_system = create_standard_evolution_system()
     
-    metrics_config = MetricsConfig()
-    metrics_config.compute_mi = True
-    metrics_config.compute_activity = True
-    metrics_config.compute_sensli = True
-    metrics_config.compute_graph = True
+    # Create autocorrelation framework
+    performance_analyzer = PerformanceAnalyzer()
     
-    # Create integrated growth system with autocorrelation framework
-    print("\n🧠 Initializing Integrated Growth System with Autocorrelation Framework...")
-    growth_system = IntegratedGrowthSystem(
-        network=network,
-        config=threshold_config,
-        metrics_config=metrics_config
-    )
+    # Create metrics system
+    threshold_config = ThresholdConfig(adaptive=True, activation_threshold=0.01)
+    metrics_config = MetricsConfig(compute_mi=True, compute_activity=True, compute_sensli=True, compute_graph=True)
+    metrics_system = CompleteMetricsSystem(network, threshold_config, metrics_config)
     
-    print("✅ System initialized with:")
-    print("   - MetricPerformanceAnalyzer for correlation discovery")
-    print("   - Learned strategy weighting")
-    print("   - Comprehensive metrics collection")
-    print("   - Adaptive threshold management")
+    print("\n🧠 Initializing Composable Evolution System with Autocorrelation Framework...")
     
     # Run growth with autocorrelation learning
     print("\n🌱 Starting growth with meta-learning...")
-    print("This will:")
-    print("  1. Collect comprehensive metrics at each step")
-    print("  2. Analyze correlations between metrics and performance")
-    print("  3. Learn which strategies work best under which conditions")
-    print("  4. Automatically weight strategies based on learned patterns")
-    print("  5. Provide insights into the 'laws of neural network growth'")
     
     try:
-        final_network = growth_system.grow_network(
-            train_loader=train_loader,
-            val_loader=val_loader,
-            growth_iterations=3,  # Small number for demo
-            epochs_per_iteration=10,  # Reduced for faster execution
-            tournament_epochs=3
-        )
-        
+        context = NetworkContext(network, train_loader, device, {'val_loader': val_loader})
+        for i in range(3): # Small number for demo
+            context = evolution_system.evolve_network(context, num_iterations=1)
+            
+            # Collect data for autocorrelation
+            performance_metrics = {
+                'train_acc': context.performance_history[-1] if context.performance_history else 0.0,
+                'val_acc': context.performance_history[-1] if context.performance_history else 0.0,
+            }
+            performance_analyzer.collect_checkpoint_data(
+                network=context.network,
+                dataloader=train_loader,
+                epoch=i,
+                performance_metrics=performance_metrics
+            )
+            complete_metrics = metrics_system.compute_all_metrics(train_loader)
+            performance_analyzer.update_metrics_from_complete_system(i, complete_metrics)
+
         print("\n🎉 Growth complete!")
         
         # Demonstrate learned insights
         print("\n🔍 Analyzing learned patterns...")
         
         # Get strategy effectiveness summary
-        effectiveness = growth_system.performance_analyzer.get_strategy_effectiveness_summary()
+        effectiveness = performance_analyzer.get_strategy_effectiveness_summary()
         if effectiveness:
             print("\n📈 Strategy Effectiveness Learned:")
             for strategy, stats in effectiveness.items():
@@ -127,26 +121,16 @@ def main():
                 print(f"    Avg Improvement: {stats['avg_improvement']:+.3f}")
         
         # Show correlation insights if available
-        if growth_system.performance_analyzer.correlation_results:
+        correlation_results = performance_analyzer.analyze_metric_correlations()
+        if correlation_results:
             print("\n🧬 Top Predictive Metrics Discovered:")
-            top_metrics = growth_system.performance_analyzer._find_top_predictive_metrics(
-                growth_system.performance_analyzer.correlation_results, top_n=3
+            top_metrics = performance_analyzer._find_top_predictive_metrics(
+                correlation_results, top_n=3
             )
             for i, metric_info in enumerate(top_metrics):
                 print(f"  {i+1}. {metric_info['metric']}")
                 print(f"     Correlation: {metric_info['val_correlation']:.3f}")
                 print(f"     Significant: {metric_info['significant']}")
-        
-        # Show learned strategy weights
-        print("\n⚖️ Learned Strategy Weights:")
-        for strategy, weight in growth_system.learned_strategy_weights.items():
-            print(f"  {strategy}: {weight:.2f}")
-        
-        print("\n✨ Key Insights:")
-        print("  - The system learned which metrics predict performance improvements")
-        print("  - Strategy weights were automatically adjusted based on effectiveness")
-        print("  - Future growth decisions will be guided by these learned patterns")
-        print("  - This creates a self-improving growth system!")
         
     except Exception as e:
         print(f"\n❌ Error during growth: {e}")
@@ -155,3 +139,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

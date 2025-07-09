@@ -38,8 +38,17 @@ from .residual_blocks import (
     ResidualGrowthStrategy,
     create_residual_network
 )
+from .gauge_theory import (
+    GaugeInvariantOptimizer,
+    compress_network_gauge_aware,
+    GaugeAwareNAS,
+    GaugeAugmentedTraining,
+    fuse_models_gauge_aware,
+    CatastropheMinimizingGauge,
+    GaugeInvariantMetrics
+)
 
-__version__ = "1.2.0"  # Updated version with advanced components
+__version__ = "1.3.0"  # Updated version with gauge theory components
 __author__ = "Structure Net Team"
 
 __all__ = [
@@ -73,5 +82,19 @@ __all__ = [
     'SparseResidualBlock',
     'AdaptiveResidualInsertion',
     'ResidualGrowthStrategy',
-    'create_residual_network'
+    'create_residual_network',
+    # Gauge Theory Components
+    'GaugeInvariantOptimizer',
+    'compress_network_gauge_aware',
+    'GaugeAwareNAS',
+    'GaugeAugmentedTraining',
+    'fuse_models_gauge_aware',
+    'CatastropheMinimizingGauge',
+    'GaugeInvariantMetrics',
+    # Hierarchical Bootstrapping
+    'HierarchicalBootstrapNetwork',
+    'ProgressiveRefinementNetwork',
+    'ResidualPhaseNetwork',
+    'CoarseToFineInitialization',
+    'ExtremaEvolution'
 ]

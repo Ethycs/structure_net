@@ -8,6 +8,12 @@ with different configurations and safety checks.
 
 import sys
 import os
+
+# IMPORTANT: Set spawn method BEFORE importing torch
+import multiprocessing as mp
+if __name__ == "__main__":
+    mp.set_start_method('spawn', force=True)
+
 import torch
 import argparse
 from datetime import datetime

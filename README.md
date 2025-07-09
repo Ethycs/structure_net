@@ -1,40 +1,28 @@
-# Structure Net: Multi-Scale Snapshots Neural Network
+# Structure Net: A Composable Framework for Dynamic Network Growth
 
-A PyTorch implementation of neural networks that grow dynamically during training based on extrema detection and multi-scale snapshot preservation, implementing the "Experiment 1: Multi-Scale Snapshots" from the research specification.
+A PyTorch implementation of a modular, metrics-driven framework for dynamically growing neural networks during training. This project has been refactored to a composable architecture that allows for flexible and extensible research into network evolution.
 
 ## Overview
 
-This implementation creates neural networks that:
-- Start with minimal connectivity (0.01% of possible connections)
-- Grow dynamically based on gradient variance spikes and extrema detection
-- Route connections from high extrema to low extrema
-- Save multi-scale snapshots at different growth phases
-- Support ensemble inference across different scales
+This project provides a framework for creating and training neural networks that evolve their own structure. Instead of a fixed architecture, networks start with minimal connectivity and grow based on a deep analysis of their internal state. The core of the project is the **Composable Evolution System**, an interface-based framework that allows researchers to easily mix and match different components to create novel growth strategies.
 
 ## Key Features
 
-### 🌱 Dynamic Growth
-- **Minimal Start**: Networks begin with only 0.01% connectivity
-- **Gradient-Based Triggers**: Growth occurs when gradient variance spikes are detected
-- **Credit System**: 10 credits per gradient spike, 100 credits trigger growth
-- **Phase-Based Limits**: Coarse (10), Medium (50), Fine (200) structures per phase
+### 🧬 Composable Evolution System
+- **Modular by Design:** The evolution system is built from a set of clean, interchangeable components:
+    - **Analyzers:** Inspect the network's state (e.g., `StandardExtremaAnalyzer`, `GraphAnalyzer`).
+    - **Growth Strategies:** Propose and execute changes to the network architecture (e.g., `ExtremaGrowthStrategy`).
+    - **Trainers:** Handle the training loop for each evolution cycle.
+- **Flexible & Extensible:** Easily create new components and combine them to build custom evolution systems without modifying the core framework.
 
-### 🎯 Extrema-Based Routing
-- **High→Low Routing**: Connections route from saturated to unsaturated neurons
-- **Fan-out Control**: Maximum 3-4 connections per high extrema
-- **Load Balancing**: Prevents overconnection to single neurons
-- **Reciprocal Connections**: 20% chance of bidirectional connections
+### 📊 Standardized Logging & Artifacts
+- **Schema-Driven:** All experiment results are validated against Pydantic schemas, ensuring data consistency.
+- **WandB Integration:** Automatically saves each experiment as a versioned, immutable artifact in Weights & Biases.
+- **Offline-First:** A local queuing system ensures that no data is lost, even without a network connection.
 
-### 📸 Multi-Scale Snapshots
-- **Growth-Triggered Saves**: Snapshots saved at each growth event
-- **Performance-Based**: Save when performance improves >2%
-- **Delta Compression**: Efficient storage using weight deltas
-- **Phase Preservation**: Separate snapshots for coarse, medium, fine phases
-
-### 🔄 Renormalization Flow
-- **Scale Separation**: Different phases handle different feature scales
-- **Information Flow**: Extrema indicate when to change scales
-- **Multi-Scale Inference**: Can use individual snapshots or ensembles
+### 🚀 GPU Acceleration
+- **Optimized Metrics:** Key metrics computations, including graph analysis, are accelerated on the GPU using `cuGraph` and `cuPy`.
+- **CPU Fallback:** The system gracefully falls back to CPU-based computation if a compatible GPU is not available.
 
 ## Installation
 
@@ -45,306 +33,136 @@ cd structure_net
 
 # Install with pixi (recommended)
 pixi install
-
-# Or install with pip
-pip install -e .
 ```
 
 ## Quick Start
 
-### Basic Usage
+The following example demonstrates how to use the new composable system to create a standard network and evolve it for a few iterations.
 
 ```python
-from src.structure_net import create_multi_scale_network
 import torch
-
-# Create a multi-scale network
-network = create_multi_scale_network(
-    input_size=784,      # MNIST: 28x28 flattened
-    hidden_sizes=[256, 128],
-    output_size=10,      # 10 classes
-    sparsity=0.0001,     # 0.01% initial connectivity
-    activation='tanh'
+from src.structure_net.core.network_factory import create_standard_network
+from src.structure_net.evolution.components import (
+    create_standard_evolution_system,
+    NetworkContext
 )
 
-# Check initial connectivity
-stats = network.network.get_connectivity_stats()
-print(f"Initial connectivity: {stats['connectivity_ratio']:.6f}")
-print(f"Total connections: {stats['total_active_connections']}")
+# 1. Create a standard sparse network
+network = create_standard_network(
+    architecture=[784, 256, 128, 10],
+    sparsity=0.01
+)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+network.to(device)
 
-# Forward pass
-x = torch.randn(32, 784)
-output = network(x)
-print(f"Output shape: {output.shape}")
+# 2. Create a synthetic dataset
+X = torch.randn(1000, 784)
+y = torch.randint(0, 10, (1000,))
+dataloader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(X, y),
+    batch_size=32
+)
+
+# 3. Create a standard evolution system
+evolution_system = create_standard_evolution_system()
+
+# 4. Create a network context
+context = NetworkContext(network, dataloader, device)
+
+# 5. Evolve the network
+evolved_context = evolution_system.evolve_network(context, num_iterations=3)
+
+print("Evolution complete!")
+print(f"Final network has {evolved_context.network.get_network_stats()['total_connections']} connections.")
 ```
 
-### Training with Growth
+## Usage
 
-```python
-import torch.nn as nn
-import torch.optim as optim
+### Running Experiments
 
-# Setup training
-optimizer = optim.Adam(network.parameters(), lr=0.001)
-criterion = nn.CrossEntropyLoss()
-
-# Training loop with automatic growth
-for epoch in range(50):
-    epoch_stats = network.train_epoch(
-        train_loader, optimizer, criterion, epoch
-    )
-    
-    if epoch_stats['growth_events'] > 0:
-        print(f"Growth at epoch {epoch}: "
-              f"{epoch_stats['connections_added']} connections added")
-```
-
-### Main Experiment
-
-Run the main Experiment 1 implementation:
+The project includes several example experiments that demonstrate how to use the framework.
 
 ```bash
-# Run Experiment 1 with default settings
-pixi run python experiment_1.py
+# Run the main example for the composable evolution system
+pixi run python examples/composable_evolution_example.py
 
-# Custom settings
-pixi run python experiment_1.py \
-    --epochs 100 \
-    --batch-size 64 \
-    --learning-rate 0.002 \
-    --device auto
+# Run an experiment focused on modular metrics
+pixi run python examples/modular_metrics_example.py
 ```
 
-### Multi-GPU Experiment
+### Running Tests
 
-Run Experiment 1 with both RTX 2060 SUPER GPUs:
-
-```bash
-# Run Multi-GPU Experiment 1 with both GPUs (synchronized training)
-pixi run python experiment_1_multi_gpu.py
-
-# Custom settings for multi-GPU
-pixi run python experiment_1_multi_gpu.py \
-    --epochs 100 \
-    --batch-size 64 \
-    --learning-rate 0.002 \
-    --world-size 2
-```
-
-### Parallel GPU Experiment
-
-Run independent experiments on both RTX 2060 GPUs simultaneously for 2x speedup:
+The project uses `pytest` for testing.
 
 ```bash
-# Run parallel experiments on both RTX 2060 GPUs
-pixi run python experiment_1_parallel.py --gpus 1,2
-
-# Custom settings for parallel execution
-pixi run python experiment_1_parallel.py \
-    --epochs 50 \
-    --batch-size 64 \
-    --learning-rate 0.002 \
-    --experiments-per-gpu 1 \
-    --gpus 1,2
-```
-
-**Note:** Use `--gpus 1,2` to target the RTX 2060 SUPER and RTX 2060 (avoiding the RTX 6000).
-
-### Maximum GPU Utilization System
-
-Run continuous parameter sweeps to maximize GPU utilization:
-
-```bash
-# Run maximum utilization with parameter sweep
-pixi run python experiment_1_max_utilization.py --experiment-type parameter_sweep --num-experiments 20
-
-# Focus on specific aspects
-pixi run python experiment_1_max_utilization.py --experiment-type growth_focused --num-experiments 15
-pixi run python experiment_1_max_utilization.py --experiment-type architecture_focused --num-experiments 25
-pixi run python experiment_1_max_utilization.py --experiment-type performance_focused --num-experiments 30
-
-# Custom configuration
-pixi run python experiment_1_max_utilization.py \
-    --experiment-type parameter_sweep \
-    --num-experiments 50 \
-    --max-workers 2
-```
-
-**Features:**
-- 🔄 **Queue Management**: Keeps GPUs constantly busy with experiments
-- 📊 **Parameter Sweeps**: Automatic generation of experiment configurations
-- 🎯 **Memory-Aware**: Optimizes batch sizes based on GPU memory
-- 📈 **Real-time Monitoring**: Progress tracking and resource utilization
-- 🏆 **Best Configuration Discovery**: Automatically finds optimal hyperparameters
-
-### MNIST Experiment
-
-Run the complete MNIST experiment:
-
-```bash
-# Run with default settings
-pixi run python examples/mnist_experiment.py
-
-# Custom settings
-pixi run python examples/mnist_experiment.py \
-    --epochs 100 \
-    --sparsity 0.0001 \
-    --activation tanh \
-    --hidden-sizes 256 128 \
-    --lr 0.001
+# Run the full test suite
+pixi run pytest tests/
 ```
 
 ## Architecture
 
-### Core Components
+The project has been refactored to a modular, composable architecture. The core components are:
 
-1. **MinimalNetwork** (`src/structure_net/core/minimal_network.py`)
-   - Sparse neural network with dynamic connectivity
-   - Extrema detection for growth triggers
-   - Connection mask management
+1.  **`ComposableEvolutionSystem`** (`src/structure_net/evolution/components/evolution_system.py`)
+    - The central orchestrator that manages the evolution process.
+    - Coordinates the execution of analyzers, strategies, and trainers.
 
-2. **GrowthScheduler** (`src/structure_net/core/growth_scheduler.py`)
-   - Gradient variance spike detection
-   - Credit system management
-   - Growth phase determination
+2.  **Analyzers** (`src/structure_net/evolution/components/analyzers.py`)
+    - Components that inspect the network and produce metrics.
+    - Examples: `StandardExtremaAnalyzer`, `NetworkStatsAnalyzer`.
 
-3. **ConnectionRouter** (`src/structure_net/core/connection_router.py`)
-   - High→Low extrema routing
-   - Fan-out and load balancing
-   - Reciprocal connection generation
+3.  **Growth Strategies** (`src/structure_net/evolution/components/strategies.py`)
+    - Components that use the analysis results to propose and execute changes to the network.
+    - Examples: `ExtremaGrowthStrategy`, `InformationFlowGrowthStrategy`.
 
-4. **SnapshotManager** (`src/structure_net/snapshots/snapshot_manager.py`)
-   - Multi-scale snapshot saving
-   - Delta-based compression
-   - Performance-triggered saves
+4.  **`StandardNetworkTrainer`** (`src/structure_net/evolution/components/evolution_system.py`)
+    - A dedicated component that handles the training loop within an evolution cycle.
 
-5. **MultiScaleNetwork** (`src/structure_net/models/multi_scale_network.py`)
-   - Main integration class
-   - Training orchestration
-   - Growth coordination
+5.  **Core Network Components** (`src/structure_net/core/`)
+    - **`StandardSparseLayer`**: The fundamental building block for all sparse networks.
+    - **`create_standard_network`**: The canonical factory function for creating new networks.
 
-### Growth Rules Implementation
-
-The implementation follows all 13 rules from the experiment specification:
-
-1. **Initialization**: 0.01% connectivity, Xavier/He weights
-2. **Growth Detection**: Gradient variance spikes (50% change)
-3. **Extrema Detection**: >0.95 (high), <0.05 (low) for tanh/sigmoid
-4. **Connection Routing**: High→Low with 3-layer search radius
-5. **Vertical Cloning**: Adjacent layer clones with 0.7x weights
-6. **Growth Economy**: 10 credits/spike, 100 threshold
-7. **Structural Limits**: 10/50/200 for coarse/medium/fine
-8. **Snapshot Saving**: Growth events + performance improvements
-9. **Load Balancing**: Max 5 incoming connections per neuron
-10. **Training Continuation**: 10-epoch stabilization periods
-11. **Multi-Scale Preservation**: Phase-based snapshot organization
-12. **Termination**: Epoch limits or extrema absence
-13. **Ensemble Inference**: Individual or combined snapshot usage
-
-## Experiment Results
-
-### Expected Behavior
-
-- **Phase 1 (Epochs 0-50)**: Coarse features, sparse growth
-- **Phase 2 (Epochs 50-100)**: Medium features, moderate growth  
-- **Phase 3 (Epochs 100+)**: Fine features, dense growth
-
-### Performance Metrics
-
-- **Connectivity Growth**: From 0.01% to ~1-5% over training
-- **Accuracy**: Competitive with standard networks despite sparsity
-- **Growth Events**: 5-15 growth events across all phases
-- **Snapshots**: 3-8 snapshots capturing different scales
-
-## Hardware Requirements
-
-### Recommended Setup
-- **GPU**: NVIDIA GeForce RTX 2060s or better
-- **Memory**: 8GB+ RAM, 6GB+ VRAM
-- **Storage**: 1GB+ for snapshots and data
-
-### CPU Fallback
-The implementation automatically falls back to CPU if CUDA is unavailable, though training will be slower.
+6.  **Standardized Logging** (`src/structure_net/logging/`)
+    - A robust system for logging experiment data, using Pydantic schemas and a local queue to ensure data integrity and offline support.
 
 ## File Structure
 
 ```
 structure_net/
-├── experiment_1.py             # 🎯 Main Experiment 1 implementation
-├── src/structure_net/          # Core package
-│   ├── core/                   # Core components
-│   │   ├── minimal_network.py  # Sparse network implementation
-│   │   ├── growth_scheduler.py # Growth detection and scheduling
-│   │   └── connection_router.py # Extrema-based routing
-│   ├── models/                 # High-level models
-│   │   └── multi_scale_network.py # Main network class
-│   ├── snapshots/              # Snapshot management
-│   │   └── snapshot_manager.py # Multi-scale snapshot saving
-│   └── __init__.py            # Package exports
 ├── examples/                   # Example implementations
-│   ├── mnist_experiment.py    # MNIST-specific experiment
-│   ├── true_multiscale_experiment.py # Multi-scale concept demo
-│   └── improved_multiscale_experiment.py # Transfer learning demo
-├── comprehensive_test_suite.py # Complete test suite
-├── test_basic.py              # Basic functionality tests
-├── check_cuda.py              # CUDA availability check
-├── experiment 1.md            # Experiment specification
+│   ├── composable_evolution_example.py
+│   └── modular_metrics_example.py
+├── src/structure_net/          # Core package
+│   ├── core/                   # Core network components (layers, factory)
+│   ├── evolution/              # The evolution system
+│   │   ├── components/         # Analyzers, strategies, trainers
+│   │   ├── metrics/            # GPU-accelerated metrics
+│   │   └── interfaces.py       # Core interfaces for the composable system
+│   ├── logging/                # Standardized logging system
+│   └── profiling/              # Performance profiling system
+├── tests/                      # Pytest test suite
+│   ├── conftest.py
+│   ├── test_core_functionality.py
+│   └── test_evolution.py
 ├── pyproject.toml             # Project configuration
 └── README.md                  # This documentation
 ```
 
-## Testing
-
-### Basic Test
-```bash
-pixi run python test_basic.py
-```
-
-### Full MNIST Test
-```bash
-pixi run python examples/mnist_experiment.py --epochs 10
-```
-
 ## Research Context
 
-This implementation is based on the "Multi-Scale Snapshots" experiment, which explores:
+This project is a research platform for exploring:
 
-- **Dynamic Network Growth**: How networks can grow from minimal to full connectivity
-- **Extrema-Based Routing**: Using activation extrema as growth signals
-- **Multi-Scale Learning**: Capturing different feature scales in separate snapshots
-- **Renormalization Theory**: Applying physics concepts to neural network growth
-
-### Key Insights
-
-1. **Sparse Start**: Networks can achieve good performance starting from minimal connectivity
-2. **Gradient Signals**: Gradient variance spikes indicate when growth is needed
-3. **Scale Separation**: Different growth phases naturally capture different feature scales
-4. **Snapshot Ensembles**: Multiple snapshots can be combined for better performance
+- **Dynamic Network Growth**: How networks can grow from minimal to full connectivity in a metrics-driven way.
+- **Composable Evolution**: Building complex growth behaviors from simple, reusable components.
+- **Metrics-Driven Architecture Search**: Using deep analysis of a network's internal state to guide its evolution.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make changes with tests
-4. Submit a pull request
+1.  Fork the repository.
+2.  Create a feature branch.
+3.  Make changes and add corresponding tests in the `tests/` directory.
+4.  Submit a pull request.
 
 ## License
 
 [Add your license here]
-
-## Citation
-
-If you use this implementation in your research, please cite:
-
-```bibtex
-@software{structure_net_2025,
-  title={Structure Net: Multi-Scale Snapshots Neural Network},
-  author={Ethycs},
-  year={2025},
-  url={https://github.com/Ethycs/structure_net}
-}
-```
-
-## Acknowledgments
-
-This implementation is based on research into dynamic neural network growth and multi-scale learning, drawing inspiration from renormalization group theory in physics.

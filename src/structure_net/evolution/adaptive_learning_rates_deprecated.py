@@ -7,10 +7,10 @@ This module has been DEPRECATED and replaced by the modular adaptive_learning_ra
 Please use the new modular system instead:
 
 OLD (DEPRECATED):
-    from src.structure_net.evolution.adaptive_learning_rates import AdaptiveLearningRateManager
+    from ..evolution.adaptive_learning_rates import AdaptiveLearningRateManager
     
 NEW (RECOMMENDED):
-    from src.structure_net.evolution.adaptive_learning_rates import AdaptiveLearningRateManager
+    from ..evolution.adaptive_learning_rates import AdaptiveLearningRateManager
 
 The new modular system provides:
 - Better organization and maintainability

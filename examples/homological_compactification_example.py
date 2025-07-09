@@ -26,19 +26,19 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Import the revolutionary compactification system
-from structure_net.compactification import (
+from src.structure_net.compactification import (
     create_homological_network,
     PatchCompactifier
 )
 
 # Import profiling for performance analysis
-from structure_net.profiling import (
+from src.structure_net.profiling import (
     create_research_profiler, profile_operation,
     ProfilerLevel
 )
 
 # Import standardized logging
-from structure_net.logging import (
+from src.structure_net.logging import (
     create_growth_logger,
     create_training_logger,
     StandardizedLogger,

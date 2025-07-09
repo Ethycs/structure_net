@@ -12,7 +12,7 @@ Features:
 - Migration validation
 
 Usage:
-    from structure_net.evolution.migration_helper import MigrationHelper
+    from ..evolution.migration_helper import MigrationHelper
     
     helper = MigrationHelper()
     helper.analyze_existing_code("my_experiment.py")
@@ -95,8 +95,8 @@ class MigrationHelper:
         if self.analysis_results['old_system_usage']:
             suggestions.append({
                 'type': 'import_change',
-                'old': 'from structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem',
-                'new': 'from structure_net.evolution.components import create_standard_evolution_system',
+                'old': 'from ..evolution.integrated_growth_system import IntegratedGrowthSystem',
+                'new': 'from ..evolution.components import create_standard_evolution_system',
                 'reason': 'Use new composable system for better modularity'
             })
         
@@ -217,7 +217,7 @@ class MigrationHelper:
             validation_results['syntax_valid'] = True
             
             # Check imports (simplified)
-            if 'from structure_net.evolution.components import' in new_code:
+            if 'from ..evolution.components import' in new_code:
                 validation_results['imports_valid'] = True
             
             # Check API compatibility (simplified)
@@ -250,7 +250,7 @@ class MigrationHelper:
             '"""',
             "",
             "# NEW IMPORTS (composable system)",
-            "from structure_net.evolution.components import (",
+            "from ..evolution.components import (",
             "    create_standard_evolution_system,",
             "    create_extrema_focused_system,",
             "    create_hybrid_system,",
@@ -443,8 +443,8 @@ def create_migration_example() -> str:
     """
     return '''
 # BEFORE (Old Hardcoded System)
-from structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
-from structure_net.evolution.advanced_layers import ThresholdConfig
+from ..evolution.integrated_growth_system import IntegratedGrowthSystem
+from ..evolution.advanced_layers import ThresholdConfig
 
 def old_way(network, train_loader, val_loader):
     config = ThresholdConfig()
@@ -453,7 +453,7 @@ def old_way(network, train_loader, val_loader):
     return grown_network
 
 # AFTER (New Composable System)
-from structure_net.evolution.components import (
+from ..evolution.components import (
     create_standard_evolution_system,
     NetworkContext
 )
@@ -479,8 +479,8 @@ if __name__ == "__main__":
     
     # Create example for demonstration
     example_code = '''
-from structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
-from structure_net.evolution.advanced_layers import ThresholdConfig
+from ..evolution.integrated_growth_system import IntegratedGrowthSystem
+from ..evolution.advanced_layers import ThresholdConfig
 
 def my_experiment():
     system = IntegratedGrowthSystem(network, config)

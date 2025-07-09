@@ -16,7 +16,7 @@ Usage (Backward Compatible):
     grown_network = system.grow_network(train_loader, val_loader)
 
 New Usage (Recommended):
-    from structure_net.evolution.components import create_standard_evolution_system
+    from ..evolution.components import create_standard_evolution_system
     system = create_standard_evolution_system()
     context = NetworkContext(network, train_loader, device)
     evolved_context = system.evolve_network(context, num_iterations=3)
@@ -184,7 +184,7 @@ CURRENT (still works):
     system.grow_network(train_loader, val_loader)
 
 RECOMMENDED (new composable API):
-    from structure_net.evolution.components import create_standard_evolution_system
+    from ..evolution.components import create_standard_evolution_system
     system = create_standard_evolution_system()
     context = NetworkContext(network, train_loader, device)
     evolved_context = system.evolve_network(context, num_iterations=3)
@@ -258,7 +258,7 @@ class IntegratedGrowthSystem:
         # Show deprecation warning
         warnings.warn(
             "IntegratedGrowthSystem is deprecated. Use ComposableEvolutionSystem from "
-            "structure_net.evolution.components for new code. See migration guide in docs.",
+            "..evolution.components for new code. See migration guide in docs.",
             DeprecationWarning,
             stacklevel=2
         )
@@ -408,7 +408,7 @@ def create_legacy_integrated_system(network,
     """
     warnings.warn(
         "create_legacy_integrated_system is deprecated. Use create_standard_evolution_system() "
-        "from structure_net.evolution.components instead.",
+        "from ..evolution.components instead.",
         DeprecationWarning,
         stacklevel=2
     )
@@ -441,8 +441,8 @@ MIGRATION BENEFITS:
 ✅ Future-proof design for new research directions
 
 RECOMMENDED MIGRATION:
-  OLD: from structure_net.evolution.integrated_growth_system import IntegratedGrowthSystem
-  NEW: from structure_net.evolution.components import create_standard_evolution_system
+  OLD: from ..evolution.integrated_growth_system import IntegratedGrowthSystem
+  NEW: from ..evolution.components import create_standard_evolution_system
 
 See docs/composable_evolution_guide.md for complete migration guide.
 """)

@@ -31,7 +31,7 @@ import multiprocessing as mp
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Import the new composable system
-from structure_net.evolution.components import (
+from src.structure_net.evolution.components import (
     ComposableEvolutionSystem,
     NetworkContext,
     StandardExtremaAnalyzer,
@@ -48,9 +48,9 @@ from structure_net.evolution.components import (
 )
 
 # Import existing infrastructure
-from structure_net.core.network_factory import create_standard_network
-from structure_net.core.network_analysis import get_network_stats
-from structure_net.core.io_operations import save_model_seed, load_model_seed
+from src.structure_net.core.network_factory import create_standard_network
+from src.structure_net.core.network_analysis import get_network_stats
+from src.structure_net.core.io_operations import save_model_seed, load_model_seed
 
 
 class ModernComposableGrowth:
