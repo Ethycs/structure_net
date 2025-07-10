@@ -15,7 +15,6 @@ from structure_net.logging.schemas import (
     GrowthExperiment,
     TrainingExperiment
 )
-from neural_architecture_lab.core import Hypothesis, ExperimentResult
 
 
 class ExperimentEmbedder:
@@ -283,15 +282,32 @@ def embed_architecture(architecture: Union[List[int], NetworkArchitecture, Dict[
     return embedder.embed(architecture)
 
 
-def embed_hypothesis(hypothesis: Hypothesis) -> np.ndarray:
+def embed_hypothesis(hypothesis: Union[Dict[str, Any], Any]) -> np.ndarray:
     """
     Create an embedding for a hypothesis based on its description and parameters.
     
     This is a simple embedding based on hashing the text content.
     In production, you might want to use a proper text embedding model.
+    
+    Args:
+        hypothesis: Either a dict with hypothesis fields or a hypothesis object
+                   with name, description, question, and prediction attributes
     """
+    # Extract text fields
+    if isinstance(hypothesis, dict):
+        name = hypothesis.get('name', '')
+        description = hypothesis.get('description', '')
+        question = hypothesis.get('question', '')
+        prediction = hypothesis.get('prediction', '')
+    else:
+        # Assume it's an object with attributes
+        name = getattr(hypothesis, 'name', '')
+        description = getattr(hypothesis, 'description', '')
+        question = getattr(hypothesis, 'question', '')
+        prediction = getattr(hypothesis, 'prediction', '')
+    
     # Combine relevant text fields
-    text = f"{hypothesis.name} {hypothesis.description} {hypothesis.question} {hypothesis.prediction}"
+    text = f"{name} {description} {question} {prediction}"
     
     # Create a hash-based embedding
     hash_object = hashlib.sha256(text.encode())

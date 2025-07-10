@@ -13,7 +13,7 @@ import json
 from .embedder import ExperimentEmbedder, ArchitectureEmbedder, embed_experiment, embed_architecture
 from .chroma_client import ChromaSearchClient, get_chroma_client, ChromaConfig
 from structure_net.logging.schemas import ExperimentSchema
-from neural_architecture_lab.core import ExperimentResult
+
 
 logger = logging.getLogger(__name__)
 

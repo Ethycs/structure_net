@@ -21,7 +21,7 @@ from src.data_factory.time_series_storage import (
     TimeSeriesStorage,
     HybridExperimentStorage
 )
-from src.data_factory.nal_integration import NALChromaIntegration
+from src.neural_architecture_lab.data_factory_integration import NALChromaIntegration
 
 
 @pytest.fixture
@@ -371,7 +371,7 @@ class TestNALChromaIntegration:
     
     def test_memory_efficient_nal(self, chroma_config, timeseries_config):
         """Test memory-efficient NAL wrapper."""
-        from src.data_factory.nal_integration import MemoryEfficientNAL
+        from src.neural_architecture_lab.data_factory_integration import MemoryEfficientNAL
         
         # Create wrapper
         nal_config = type('LabConfig', (), {

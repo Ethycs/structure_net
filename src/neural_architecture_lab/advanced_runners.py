@@ -44,6 +44,7 @@ from structure_net.evolution.metrics import CompleteMetricsSystem
 from structure_net.evolution.residual_blocks import create_residual_network
 from structure_net.profiling.factory import create_comprehensive_profiler
 from structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
+from data_factory import create_dataset, get_dataset_config
 
 
 class GPUMemoryManager:
@@ -208,39 +209,20 @@ def run_advanced_experiment(
         
         # Setup data loaders with optimized batch size
         dataset_name = params.get('dataset', 'cifar10').lower()
-        
-        if dataset_name == 'mnist':
-            transform = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize((0.1307,), (0.3081,))
-            ])
-            train_dataset = torchvision.datasets.MNIST(
-                root='./data', train=True, download=True, transform=transform
-            )
-            test_dataset = torchvision.datasets.MNIST(
-                root='./data', train=False, download=True, transform=transform
-            )
-            expected_input_dim = 784
-            input_channels = 1
-        else:  # cifar10
-            transform = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ])
-            train_dataset = torchvision.datasets.CIFAR10(
-                root='./data', train=True, download=True, transform=transform
-            )
-            test_dataset = torchvision.datasets.CIFAR10(
-                root='./data', train=False, download=True, transform=transform
-            )
-            expected_input_dim = 3072  # 32*32*3
-            input_channels = 3
+        dataset = create_dataset(
+            dataset_name,
+            batch_size=optimized_batch_size,
+            subset_size=5000 if params.get('quick_test', False) else None
+        )
+        train_loader = dataset['train_loader']
+        test_loader = dataset['test_loader']
         
         # Validate architecture matches dataset
-        if params['architecture'][0] != expected_input_dim:
+        dataset_config = get_dataset_config(dataset_name)
+        if params['architecture'][0] != dataset_config.input_size:
             # Fix the architecture to match the dataset
-            params['architecture'][0] = expected_input_dim
-            print(f"Adjusted architecture input dimension to {expected_input_dim} for {dataset_name}")
+            params['architecture'][0] = dataset_config.input_size
+            print(f"Adjusted architecture input dimension to {dataset_config.input_size} for {dataset_name}")
             
             # Recreate model with corrected architecture
             model = create_standard_network(
@@ -250,31 +232,6 @@ def run_advanced_experiment(
             )
             stats = get_network_stats(model)
             model_size = stats['total_parameters']
-        
-        # Subset for faster experiments if specified
-        if params.get('quick_test', False):
-            train_dataset = torch.utils.data.Subset(train_dataset, range(5000))
-            test_dataset = torch.utils.data.Subset(test_dataset, range(1000))
-        
-        # Create data loaders with pin_memory for faster GPU transfer
-        train_loader = DataLoader(
-            train_dataset,
-            batch_size=optimized_batch_size,
-            shuffle=True,
-            num_workers=4,
-            pin_memory=True,
-            persistent_workers=True,
-            prefetch_factor=2
-        )
-        test_loader = DataLoader(
-            test_dataset,
-            batch_size=optimized_batch_size,
-            shuffle=False,
-            num_workers=4,
-            pin_memory=True,
-            persistent_workers=True,
-            prefetch_factor=2
-        )
         
         # Setup optimizer with adaptive learning rate if specified
         lr_manager = None
@@ -530,14 +487,14 @@ def run_advanced_experiment(
             model_path = f"nal_models/{experiment.id}_best.pt"
             os.makedirs("nal_models", exist_ok=True)
             save_model_seed(
-                model, model_path,
+                model, params['architecture'],
                 accuracy=best_accuracy,
-                architecture=params['architecture'],
-                sparsity=params.get('sparsity', 0.02)
+                sparsity=params.get('sparsity', 0.02),
+                filepath=model_path
             )
             model_checkpoint = model_path
         
-        return ExperimentResult(
+        result = ExperimentResult(
             experiment_id=experiment.id,
             hypothesis_id=experiment.hypothesis_id,
             metrics=metrics,
@@ -549,8 +506,14 @@ def run_advanced_experiment(
             model_checkpoint=model_checkpoint
         )
         
+        # Log the result
+        logger = StandardizedLogger()
+        logger.log_experiment_result(result)
+        
+        return result
+        
     except Exception as e:
-        return ExperimentResult(
+        result = ExperimentResult(
             experiment_id=experiment.id,
             hypothesis_id=experiment.hypothesis_id,
             metrics={},
@@ -560,6 +523,12 @@ def run_advanced_experiment(
             training_time=time.time() - start_time,
             error=f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
         )
+        
+        # Log the error result
+        logger = StandardizedLogger()
+        logger.log_experiment_result(result)
+        
+        return result
     
     finally:
         # Clean up
