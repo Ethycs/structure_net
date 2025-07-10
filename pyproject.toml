@@ -29,6 +29,8 @@ seaborn = ">=0.13.2,<0.14"
 pydantic = ">=2.0.0,<3"
 jsonschema = ">=4.0.0,<5"
 pytest-asyncio = ">=1.0.0,<2"
+chromadb = ">=0.4.0,<0.5"
+h5py = ">=3.14.0,<4"
 
 [tool.pixi.pypi-dependencies]
 structure_net = { path = ".", editable = true }

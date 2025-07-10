@@ -28,7 +28,7 @@ import logging
 
 import torch
 import wandb
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 import numpy as np
 
 logger = logging.getLogger(__name__)

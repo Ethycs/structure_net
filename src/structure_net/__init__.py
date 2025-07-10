@@ -62,10 +62,6 @@ from .evolution.adaptive_learning_rates import (
 # MI analysis removed - using direct extrema-driven approach
 # from .evolution.information_theory import analyze_information_flow, estimate_mi_proxy
 
-# Import seed search (uses canonical standard)
-from .seed_search.gpu_seed_hunter import GPUSeedHunter
-from .seed_search.architecture_generator import ArchitectureGenerator
-
 __version__ = "0.2.0"
 __author__ = "Ethycs"
 
@@ -121,6 +117,5 @@ __all__ = [
     "UnifiedAdaptiveLearning",
     
     # Seed Search
-    "GPUSeedHunter",
     "ArchitectureGenerator"
 ]

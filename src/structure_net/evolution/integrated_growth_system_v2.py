@@ -24,7 +24,6 @@ New Usage (Recommended):
 
 import torch
 import torch.nn as nn
-import warnings
 import logging
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
@@ -67,9 +66,6 @@ class LegacyTournamentAdapter:
         
         # Create composable system with equivalent components
         self.composable_system = self._create_equivalent_system()
-        
-        # Show migration notice
-        self._show_migration_notice()
     
     def _create_equivalent_system(self) -> ComposableEvolutionSystem:
         """Create composable system equivalent to old tournament."""
@@ -118,7 +114,7 @@ class LegacyTournamentAdapter:
         This method maintains the exact same API as the original tournament
         but uses the new composable system internally.
         """
-        logger.info("🏆 Starting Legacy Tournament (using composable system)...")
+        logger.info("🏆 Starting Tournament...")
         
         # Create network context
         device = next(self.base_network.parameters()).device
@@ -171,33 +167,6 @@ class LegacyTournamentAdapter:
                 total += len(target)
         return correct / total
     
-    def _show_migration_notice(self):
-        """Show migration notice to users."""
-        logger.info("""
-🔄 MIGRATION NOTICE: Using Composable Evolution System
-
-You're using the legacy IntegratedGrowthSystem API, which now delegates to 
-the new composable evolution system for better performance and flexibility.
-
-CURRENT (still works):
-    system = IntegratedGrowthSystem(network, config)
-    system.grow_network(train_loader, val_loader)
-
-RECOMMENDED (new composable API):
-    from ..evolution.components import create_standard_evolution_system
-    system = create_standard_evolution_system()
-    context = NetworkContext(network, train_loader, device)
-    evolved_context = system.evolve_network(context, num_iterations=3)
-
-Benefits of migrating:
-✅ Modular components you can mix and match
-✅ Individual component configuration
-✅ Better monitoring and metrics
-✅ Easier testing and debugging
-✅ Future-proof architecture
-
-Your code will continue to work without changes.
-""")
 
 
 class LegacyThresholdAdapter:
@@ -210,12 +179,7 @@ class LegacyThresholdAdapter:
         self.history = defaultdict(list)
         self.adjustment_patience = 3
         
-        warnings.warn(
-            "AdaptiveThresholdManager is deprecated. The new composable system "
-            "handles threshold management automatically through component configuration.",
-            DeprecationWarning,
-            stacklevel=2
-        )
+        # AdaptiveThresholdManager now uses composable system internally
     
     def update_thresholds(self, network_stats: Dict):
         """Legacy threshold update (now mostly a no-op)."""
@@ -223,8 +187,7 @@ class LegacyThresholdAdapter:
         for key, value in network_stats.items():
             self.history[key].append(value)
         
-        # Log that this is now handled by composable system
-        logger.info("📊 Threshold management now handled by composable system components")
+        # Threshold management handled internally
     
     def compute_network_stats(self, network, dataloader):
         """Compute basic network stats for compatibility."""
@@ -236,7 +199,6 @@ class LegacyThresholdAdapter:
             'dead_layers': 0
         }
         
-        logger.info("📊 Network stats computation delegated to composable analyzers")
         return stats
 
 
@@ -255,13 +217,7 @@ class IntegratedGrowthSystem:
                  config: ThresholdConfig = None,
                  metrics_config: MetricsConfig = None):
         
-        # Show deprecation warning
-        warnings.warn(
-            "IntegratedGrowthSystem is deprecated. Use ComposableEvolutionSystem from "
-            "..evolution.components for new code. See migration guide in docs.",
-            DeprecationWarning,
-            stacklevel=2
-        )
+        # IntegratedGrowthSystem now uses composable backend
         
         self.network = network
         self.threshold_config = config or ThresholdConfig()
@@ -279,7 +235,6 @@ class IntegratedGrowthSystem:
         self.growth_history = []
         self.performance_history = []
         
-        logger.info("🔄 IntegratedGrowthSystem initialized with composable backend")
     
     def grow_network(self, 
                     train_loader, 
@@ -295,7 +250,7 @@ class IntegratedGrowthSystem:
         """
         
         logger.info("\n" + "="*80)
-        logger.info("🌱 INTEGRATED GROWTH SYSTEM (Composable Backend)")
+        logger.info("🌱 INTEGRATED GROWTH SYSTEM")
         logger.info("="*80)
         
         # Create network context
@@ -423,29 +378,3 @@ __all__ = [
     'AdaptiveThresholdManager',
     'create_legacy_integrated_system'
 ]
-
-
-# Show migration information when module is imported
-def _show_module_migration_info():
-    """Show migration information when module is imported."""
-    logger.info("""
-🔄 INTEGRATED GROWTH SYSTEM MIGRATION
-
-This module now uses the new composable evolution system as its backend.
-Your existing code will continue to work without changes.
-
-MIGRATION BENEFITS:
-✅ Better performance through optimized components
-✅ Modular architecture for easier customization  
-✅ Enhanced monitoring and debugging capabilities
-✅ Future-proof design for new research directions
-
-RECOMMENDED MIGRATION:
-  OLD: from ..evolution.integrated_growth_system import IntegratedGrowthSystem
-  NEW: from ..evolution.components import create_standard_evolution_system
-
-See docs/composable_evolution_guide.md for complete migration guide.
-""")
-
-# Show migration info when module is imported
-_show_module_migration_info()

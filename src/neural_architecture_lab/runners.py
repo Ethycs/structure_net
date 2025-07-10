@@ -23,15 +23,18 @@ from .core import (
 )
 
 # Import structure_net components
-from src.structure_net.core.network_factory import create_standard_network
-from src.structure_net.core.io_operations import save_model_seed, load_model_seed
-from src.structure_net.core.network_analysis import get_network_stats
-from src.structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
-from src.structure_net.evolution.components import create_standard_evolution_system
-from src.structure_net.evolution.metrics.integrated_system import CompleteMetricsSystem
-from src.structure_net.evolution.residual_blocks import ResidualGrowthStrategy
-from src.structure_net.profiling.factory import create_comprehensive_profiler
-from src.structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
+from structure_net.core.network_factory import create_standard_network
+from structure_net.core.io_operations import save_model_seed, load_model_seed
+from structure_net.core.network_analysis import get_network_stats
+from structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
+from structure_net.evolution.components import create_standard_evolution_system
+from structure_net.evolution.metrics.integrated_system import CompleteMetricsSystem
+from structure_net.evolution.residual_blocks import ResidualGrowthStrategy
+from structure_net.profiling.factory import create_comprehensive_profiler
+from structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
+
+# Import data factory components
+from data_factory import create_dataset
 
 
 def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> ExperimentResult:
@@ -78,39 +81,22 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
         # Get initial stats
         stats = get_network_stats(model)
         
-        # Setup data loaders
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5,), (0.5,))
-        ])
+        # Setup data loaders using data factory
+        dataset_name = params.get('dataset', 'cifar10')
+        subset_fraction = 0.1 if params.get('quick_test', False) else None
         
-        # Use CIFAR-10 for experiments
-        train_dataset = torchvision.datasets.CIFAR10(
-            root='./data', train=True, download=True, transform=transform
-        )
-        test_dataset = torchvision.datasets.CIFAR10(
-            root='./data', train=False, download=True, transform=transform
-        )
-        
-        # Subset for faster experiments if specified
-        if params.get('quick_test', False):
-            train_dataset = torch.utils.data.Subset(train_dataset, range(5000))
-            test_dataset = torch.utils.data.Subset(test_dataset, range(1000))
-        
-        train_loader = DataLoader(
-            train_dataset,
+        dataset_dict = create_dataset(
+            dataset_name=dataset_name,
             batch_size=params.get('batch_size', 128),
-            shuffle=True,
+            subset_fraction=subset_fraction,
             num_workers=2,
-            pin_memory=True
+            pin_memory=True,
+            experiment_id=experiment.id
         )
-        test_loader = DataLoader(
-            test_dataset,
-            batch_size=params.get('batch_size', 128),
-            shuffle=False,
-            num_workers=2,
-            pin_memory=True
-        )
+        
+        train_loader = dataset_dict['train_loader']
+        test_loader = dataset_dict['test_loader']
+        dataset_config = dataset_dict['config']
         
         # Setup optimizer
         optimizer = optim.Adam(model.parameters(), lr=params.get('base_lr', 0.001))
@@ -128,10 +114,11 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
         # Setup growth system if specified
         growth_system = None
         if params.get('enable_growth', False):
+            from structure_net.evolution.integrated_growth_system_v2 import IntegratedGrowthSystem
             growth_system = IntegratedGrowthSystem(
-                growth_interval=params.get('growth_interval', 10),
-                neurons_per_growth=params.get('neurons_per_growth', 32),
-                max_neurons=params.get('max_neurons', 2048)
+                network=model,
+                threshold_config=None,
+                metrics_config=None
             )
         
         # Setup metrics system if specified
@@ -159,8 +146,8 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
             for batch_idx, (inputs, targets) in enumerate(train_loader):
                 inputs, targets = inputs.to(device), targets.to(device)
                 
-                # Flatten inputs if needed (for MNIST-style architectures)
-                if len(params['architecture']) > 0 and params['architecture'][0] == 784:
+                # Flatten inputs if needed (for fully connected architectures)
+                if len(params['architecture']) > 0 and params['architecture'][0] == dataset_config.input_size:
                     inputs = inputs.view(inputs.size(0), -1)
                 
                 optimizer.zero_grad()
@@ -186,7 +173,7 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
                 for batch_idx, (inputs, targets) in enumerate(test_loader):
                     inputs, targets = inputs.to(device), targets.to(device)
                     
-                    if len(params['architecture']) > 0 and params['architecture'][0] == 784:
+                    if len(params['architecture']) > 0 and params['architecture'][0] == dataset_config.input_size:
                         inputs = inputs.view(inputs.size(0), -1)
                     
                     outputs = model(inputs)

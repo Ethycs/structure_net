@@ -1,303 +1,155 @@
 #!/usr/bin/env python3
 """
-Comprehensive Example: Advanced Network Growth with All Metrics
+Comprehensive Example: NAL-Powered Network Growth
 
-This example demonstrates the full capabilities of the integrated growth system,
-including detailed analysis, all metrics, and step-by-step growth process.
+This example demonstrates the full capabilities of the Neural Architecture Lab
+to orchestrate a comprehensive, multi-stage growth experiment.
 """
 
-from src.structure_net import (
-    create_standard_network, 
-    analyze_and_grow_network, 
-    StructureNetGrowthSystem,
-    ThresholdConfig, 
-    MetricsConfig,
-    ExactMutualInformation,
-    get_network_stats
-)
 import torch
-import torch.nn.functional as F
-import numpy as np
+import asyncio
+from typing import Dict, Any, Tuple, List
 
-def create_realistic_data_loader(dataset='mnist', batch_size=32, num_samples=1000):
-    """Create a more realistic data loader for testing."""
-    if dataset == 'mnist':
-        # MNIST-like data
-        data = torch.randn(num_samples, 784) * 0.5 + 0.1
-        # Add some structure to make it more realistic
-        data[:, :100] += torch.randn(num_samples, 100) * 0.3  # Some correlated features
-        data = torch.clamp(data, 0, 1)  # Normalize like MNIST
-        labels = torch.randint(0, 10, (num_samples,))
-    else:
-        # CIFAR-10-like data
-        data = torch.randn(num_samples, 3072) * 0.5 + 0.1
-        data = torch.clamp(data, 0, 1)
-        labels = torch.randint(0, 10, (num_samples,))
-    
-    dataset = torch.utils.data.TensorDataset(data, labels)
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+from src.neural_architecture_lab import (
+    NeuralArchitectureLab,
+    LabConfig,
+    Hypothesis,
+    HypothesisCategory
+)
+from src.structure_net.models.modern_multi_scale_network import ModernMultiScaleNetwork
+from src.structure_net.evolution.components import (
+    ComposableEvolutionSystem,
+    NetworkContext,
+    StandardExtremaAnalyzer,
+    ExtremaGrowthStrategy,
+    StandardNetworkTrainer
+)
 
-def print_detailed_network_stats(network, name="Network"):
-    """Print comprehensive network statistics."""
-    stats = get_network_stats(network)
-    
-    print(f"\n📊 {name} Statistics:")
-    print("=" * 50)
-    print(f"   Architecture: {stats['architecture']}")
-    print(f"   Total parameters: {stats['total_parameters']:,}")
-    print(f"   Total connections: {stats['total_connections']:,}")
-    print(f"   Overall sparsity: {stats['overall_sparsity']:.1%}")
-    
-    print(f"\n   Layer Details:")
-    for i, layer_stats in enumerate(stats['layers']):
-        print(f"     Layer {i}: {layer_stats['in_features']}→{layer_stats['out_features']}")
-        print(f"       Active connections: {layer_stats['active_connections']:,}")
-        print(f"       Sparsity: {layer_stats['sparsity_ratio']:.1%}")
-        print(f"       Parameters: {layer_stats['parameters']:,}")
+# --- NAL Test Function ---
 
-def demonstrate_exact_mi_analysis(network, data_loader):
-    """Demonstrate exact mutual information analysis."""
-    print(f"\n🔬 EXACT MUTUAL INFORMATION ANALYSIS")
-    print("=" * 60)
+def comprehensive_growth_experiment(config: Dict[str, Any]) -> Tuple[Any, Dict[str, float]]:
+    """
+    This function represents a single experiment run, executed by the NAL.
+    It simulates a multi-phase growth process.
+    """
+    device = torch.device(config.get('device', 'cpu'))
     
-    # Create MI analyzer
-    mi_analyzer = ExactMutualInformation(threshold=0.01)
-    
-    # Get activations from network
-    network.eval()
-    activations = []
-    
-    with torch.no_grad():
-        for batch_idx, (data, _) in enumerate(data_loader):
-            if batch_idx >= 5:  # Use 5 batches
-                break
-            
-            x = data.view(data.size(0), -1)
-            layer_acts = []
-            
-            for layer in network:
-                if hasattr(layer, 'linear'):  # StandardSparseLayer
-                    x = layer(x)
-                    layer_acts.append(x.clone())
-                    x = F.relu(x)
-                elif isinstance(layer, torch.nn.ReLU):
-                    x = layer(x)
-            
-            activations.append(layer_acts)
-    
-    # Analyze MI between consecutive layers
-    print(f"\n📈 Layer-by-Layer MI Analysis:")
-    for layer_idx in range(len(activations[0]) - 1):
-        # Concatenate activations across batches
-        acts_i = torch.cat([batch[layer_idx] for batch in activations], dim=0)
-        acts_j = torch.cat([batch[layer_idx + 1] for batch in activations], dim=0)
-        
-        # Apply ReLU to intermediate layers
-        if layer_idx < len(activations[0]) - 2:
-            acts_i = F.relu(acts_i)
-        if layer_idx + 1 < len(activations[0]) - 1:
-            acts_j = F.relu(acts_j)
-        
-        # Compute MI
-        mi_result = mi_analyzer.compute_exact_mi(acts_i, acts_j)
-        
-        print(f"\n   Layer {layer_idx} → Layer {layer_idx + 1}:")
-        print(f"     MI: {mi_result['mi']:.4f} bits")
-        print(f"     Normalized MI: {mi_result['normalized_mi']:.4f}")
-        print(f"     Method: {mi_result['method']}")
-        print(f"     Active neurons: {mi_result['active_neurons_X']} → {mi_result['active_neurons_Y']}")
-        print(f"     Sparsity: {mi_result['sparsity_X']:.1%} → {mi_result['sparsity_Y']:.1%}")
-        print(f"     Entropy X: {mi_result['entropy_X']:.4f} bits")
-        print(f"     Entropy Y: {mi_result['entropy_Y']:.4f} bits")
-        
-        # Calculate efficiency
-        max_entropy = min(mi_result['entropy_X'], mi_result['entropy_Y'])
-        efficiency = mi_result['mi'] / (max_entropy + 1e-10)
-        print(f"     MI Efficiency: {efficiency:.2%}")
-        
-        if efficiency < 0.3:
-            print(f"     ⚠️  BOTTLENECK DETECTED!")
-        elif efficiency > 0.7:
-            print(f"     ✅ Good information flow")
+    # 1. Initial Network
+    network = ModernMultiScaleNetwork(
+        initial_architecture=config['architecture'],
+        initial_sparsity=config['sparsity']
+    ).to(device)
+    initial_stats = network.get_stats()
 
-def demonstrate_comprehensive_analysis(network, data_loader):
-    """Demonstrate the full growth system with all metrics."""
-    print(f"\n🧬 COMPREHENSIVE GROWTH SYSTEM ANALYSIS")
-    print("=" * 60)
-    
-    # Configure thresholds and metrics
-    threshold_config = ThresholdConfig()
-    threshold_config.activation_threshold = 0.01
-    threshold_config.gradient_threshold = 0.001
-    threshold_config.adaptive = True
-    
-    metrics_config = MetricsConfig()
-    metrics_config.compute_betweenness = True
-    metrics_config.compute_spectral = True
-    metrics_config.compute_paths = True
-    
-    # Create growth system
-    growth_system = StructureNetGrowthSystem(
-        network, 
-        threshold_config, 
-        metrics_config
+    # Dummy data for demonstration
+    train_loader = torch.utils.data.DataLoader(
+        torch.utils.data.TensorDataset(
+            torch.randn(100, config['architecture'][0]),
+            torch.randint(0, config['architecture'][-1], (100,))
+        ),
+        batch_size=32
     )
-    
-    # Perform comprehensive analysis
-    print(f"\n🔍 Running comprehensive bottleneck analysis...")
-    analysis_results = growth_system.analyze_network_bottlenecks(
-        data_loader, 
-        num_batches=10
-    )
-    
-    # Print detailed results
-    print(f"\n📊 DETAILED ANALYSIS RESULTS")
-    print("=" * 50)
-    
-    # Layer-by-layer analysis
-    print(f"\n🔬 Layer-by-Layer Analysis:")
-    for layer_pair, analysis in analysis_results['layer_analyses'].items():
-        if 'error' in analysis:
-            continue
-            
-        print(f"\n   {layer_pair}:")
-        print(f"     MI: {analysis['mi']:.4f} bits")
-        print(f"     Normalized MI: {analysis['normalized_mi']:.4f}")
-        print(f"     MI Efficiency: {analysis['mi_efficiency']:.2%}")
-        print(f"     Method: {analysis['method']}")
-        print(f"     Active neurons: {analysis['active_neurons_input']} → {analysis['active_neurons_output']}")
-        print(f"     Dead ratios: {analysis['dead_ratio_input']:.1%} → {analysis['dead_ratio_output']:.1%}")
-        print(f"     Entropies: {analysis['entropy_input']:.3f} → {analysis['entropy_output']:.3f} bits")
-    
-    # Bottleneck summary
-    print(f"\n🚨 Bottleneck Summary:")
-    if analysis_results['bottlenecks']:
-        for i, bottleneck in enumerate(analysis_results['bottlenecks']):
-            print(f"   {i+1}. Layer {bottleneck['layer_pair'][0]}→{bottleneck['layer_pair'][1]}")
-            print(f"      Type: {bottleneck['type']}")
-            print(f"      Severity: {bottleneck['severity']:.2f}")
-            print(f"      MI Efficiency: {bottleneck['mi_efficiency']:.2%}")
-    else:
-        print("   ✅ No significant bottlenecks detected")
-    
-    # Dead zone summary
-    print(f"\n💀 Dead Zone Summary:")
-    if analysis_results['dead_zones']:
-        for i, dead_zone in enumerate(analysis_results['dead_zones']):
-            print(f"   {i+1}. Layer {dead_zone['layer_pair'][0]}→{dead_zone['layer_pair'][1]}")
-            print(f"      Input dead ratio: {dead_zone['dead_ratio_input']:.1%}")
-            print(f"      Output dead ratio: {dead_zone['dead_ratio_output']:.1%}")
-    else:
-        print("   ✅ No significant dead zones detected")
-    
-    # Recommendations
-    print(f"\n💡 Growth Recommendations:")
-    if analysis_results['recommendations']:
-        for i, rec in enumerate(analysis_results['recommendations']):
-            print(f"   {i+1}. {rec['action']} (Priority: {rec['priority']})")
-            print(f"      Reason: {rec['reason']}")
-            print(f"      Expected improvement: {rec['expected_improvement']:.2f}")
-            if 'position' in rec:
-                print(f"      Position: {rec['position']}")
-            if 'factor' in rec:
-                print(f"      Factor: {rec['factor']}")
-    else:
-        print("   ✅ No growth recommendations needed")
-    
-    return analysis_results, growth_system
 
-def demonstrate_step_by_step_growth(network, data_loader):
-    """Demonstrate step-by-step network growth with detailed metrics."""
-    print(f"\n🌱 STEP-BY-STEP NETWORK GROWTH")
-    print("=" * 60)
+    # 2. Evolution System Setup
+    # A system for adding detail (densification)
+    densification_system = ComposableEvolutionSystem()
+    densification_system.add_component(StandardExtremaAnalyzer(max_batches=2))
+    densification_system.add_component(ExtremaGrowthStrategy(add_layer_on_extrema=False, patch_size=10))
+    densification_system.add_component(StandardNetworkTrainer(epochs=1))
+
+    # A system for adding depth
+    depth_system = ComposableEvolutionSystem()
+    depth_system.add_component(StandardExtremaAnalyzer(max_batches=2))
+    depth_system.add_component(ExtremaGrowthStrategy(add_layer_on_extrema=True, new_layer_size=config.get('growth_layer_size', 64)))
+    depth_system.add_component(StandardNetworkTrainer(epochs=1))
+
+    # 3. Run Growth Phases
+    context = NetworkContext(network, train_loader, device)
+
+    # Coarse phase: Densification
+    context = densification_system.evolve_network(context, num_iterations=1)
     
-    current_network = network
+    # Medium phase: Add depth
+    context = depth_system.evolve_network(context, num_iterations=1)
     
-    for iteration in range(3):
-        print(f"\n🔄 Growth Iteration {iteration + 1}")
-        print("-" * 40)
-        
-        # Print current network stats
-        print_detailed_network_stats(current_network, f"Iteration {iteration + 1} Network")
-        
-        # Analyze and grow
-        print(f"\n🔍 Analyzing network...")
-        analysis_results, growth_system = demonstrate_comprehensive_analysis(current_network, data_loader)
-        
-        if analysis_results['recommendations']:
-            print(f"\n🌱 Applying growth recommendations...")
-            improved_network = growth_system.apply_growth_recommendations(
-                analysis_results['recommendations'], 
-                max_actions=2
-            )
-            
-            # Check if network actually changed
-            old_stats = get_network_stats(current_network)
-            new_stats = get_network_stats(improved_network)
-            
-            if old_stats['architecture'] != new_stats['architecture']:
-                print(f"\n📈 Network Growth Applied:")
-                print(f"   Before: {old_stats['architecture']}")
-                print(f"   After:  {new_stats['architecture']}")
-                print(f"   Parameter change: {new_stats['total_parameters'] - old_stats['total_parameters']:+,}")
-                current_network = improved_network
-            else:
-                print(f"\n📊 No architectural changes applied")
-                break
-        else:
-            print(f"\n✅ Network is already optimal - no growth needed")
-            break
+    # Fine phase: Final densification
+    context = densification_system.evolve_network(context, num_iterations=1)
     
-    return current_network
+    final_network = context.network
+    final_stats = final_network.get_stats()
+
+    # 4. Collect Metrics
+    metrics = {
+        'final_accuracy': torch.rand(1).item(), # Dummy accuracy
+        'parameters_added': final_stats['total_parameters'] - initial_stats['total_parameters'],
+        'connection_increase': final_stats['active_connections'] - initial_stats['active_connections'],
+        'depth_increase': final_stats['depth'] - initial_stats['depth'],
+    }
+    metrics['primary_metric'] = metrics['final_accuracy']
+
+    return final_network, metrics
+
+# --- Main Execution ---
 
 def main():
-    """Main demonstration function."""
-    print("🚀 COMPREHENSIVE INTEGRATED GROWTH SYSTEM DEMONSTRATION")
-    print("=" * 80)
+    """Configures and runs the NAL experiment."""
+    print("🚀 Comprehensive Growth Example (NAL-Powered) 🚀")
+
+    # 1. Define the Hypothesis
+    growth_hypothesis = Hypothesis(
+        id="comprehensive_growth_demo",
+        name="Demonstrate Comprehensive Multi-Phase Growth",
+        description="Test a multi-phase growth strategy (densify -> deepen -> densify) on various initial architectures.",
+        category=HypothesisCategory.GROWTH,
+        question="Can a structured, multi-phase growth strategy effectively evolve different initial network architectures?",
+        prediction="The strategy will successfully increase the complexity and performance of all tested architectures.",
+        test_function=comprehensive_growth_experiment,
+        parameter_space={
+            'architecture': [
+                [784, 64, 10],
+                [784, 128, 64, 10],
+                [784, 32, 32, 32, 10]
+            ],
+            'sparsity': [0.02, 0.05],
+            'growth_layer_size': [32, 64]
+        },
+        control_parameters={'device': 'cuda' if torch.cuda.is_available() else 'cpu'},
+        success_metrics={'final_accuracy': 0.1} # Low bar for a demo
+    )
+
+    # 2. Configure and run the Lab
+    lab_config = LabConfig(
+        max_parallel_experiments=2,
+        min_experiments_per_hypothesis=4,
+        results_dir="nal_comprehensive_growth_results"
+    )
     
-    # Create initial network
-    print(f"\n🏗️  Creating initial network...")
-    network = create_standard_network([784, 128, 64, 10], sparsity=0.02, device='cpu')
-    print_detailed_network_stats(network, "Initial Network")
-    
-    # Create realistic data
-    print(f"\n📦 Creating realistic data loader...")
-    train_loader = create_realistic_data_loader('mnist', batch_size=32, num_samples=500)
-    print(f"   ✅ Created MNIST-like dataset with 500 samples")
-    
-    # Demonstrate exact MI analysis
-    demonstrate_exact_mi_analysis(network, train_loader)
-    
-    # Demonstrate comprehensive analysis
-    print(f"\n" + "="*80)
-    analysis_results, growth_system = demonstrate_comprehensive_analysis(network, train_loader)
-    
-    # Demonstrate step-by-step growth
-    print(f"\n" + "="*80)
-    final_network = demonstrate_step_by_step_growth(network, train_loader)
-    
-    # Final comparison
-    print(f"\n🏁 FINAL COMPARISON")
-    print("=" * 50)
-    print_detailed_network_stats(network, "Original Network")
-    print_detailed_network_stats(final_network, "Final Grown Network")
-    
-    # Calculate improvement metrics
-    original_stats = get_network_stats(network)
-    final_stats = get_network_stats(final_network)
-    
-    param_increase = final_stats['total_parameters'] - original_stats['total_parameters']
-    connection_increase = final_stats['total_connections'] - original_stats['total_connections']
-    
-    print(f"\n📈 Growth Summary:")
-    print(f"   Architecture: {original_stats['architecture']} → {final_stats['architecture']}")
-    print(f"   Parameters: {original_stats['total_parameters']:,} → {final_stats['total_parameters']:,} ({param_increase:+,})")
-    print(f"   Connections: {original_stats['total_connections']:,} → {final_stats['total_connections']:,} ({connection_increase:+,})")
-    print(f"   Layers added: {len(final_stats['architecture']) - len(original_stats['architecture'])}")
-    
-    print(f"\n🎯 Demonstration complete!")
-    print(f"   The integrated growth system successfully analyzed and improved the network")
-    print(f"   using exact mutual information and information theory principles.")
+    lab = NeuralArchitectureLab(lab_config)
+    lab.register_hypothesis(growth_hypothesis)
+
+    # 3. Run the experiment
+    loop = asyncio.get_event_loop()
+    results = loop.run_until_complete(lab.run_all_hypotheses())
+
+    # 4. Print results
+    result = results.get("comprehensive_growth_demo")
+    if result:
+        print("\n" + "="*60)
+        print("Comprehensive Growth Experiment Results")
+        print("="*60)
+        print(f"Hypothesis Confirmed: {result.confirmed}")
+        print(f"Key Insights:")
+        for insight in result.key_insights:
+            print(f"- {insight}")
+        
+        best_params = result.best_parameters
+        best_metrics = result.best_metrics
+        
+        print("\n🏆 Best Performing Configuration:")
+        print(f"  - Initial Architecture: {best_params.get('architecture')}")
+        print(f"  - Initial Sparsity: {best_params.get('sparsity')}")
+        print(f"  - Final Accuracy: {best_metrics.get('final_accuracy'):.2%}")
+        print(f"  - Parameters Added: {best_metrics.get('parameters_added')}")
 
 if __name__ == "__main__":
     main()

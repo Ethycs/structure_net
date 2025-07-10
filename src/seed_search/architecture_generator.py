@@ -82,14 +82,32 @@ class ArchitectureGenerator:
     
     def generate_cifar10_architectures(self, num_architectures: int = 50) -> List[List[int]]:
         """Generate architectures optimized for CIFAR-10."""
-        if self.input_size != 3072:
-            raise ValueError("CIFAR-10 architectures require input_size=3072")
-        
+        # Note: This method is kept for backward compatibility
+        # The generic generate_systematic_batch now handles all datasets
         return self.generate_systematic_batch(num_architectures)
     
     def generate_mnist_architectures(self, num_architectures: int = 50) -> List[List[int]]:
         """Generate architectures optimized for MNIST."""
-        if self.input_size != 784:
-            raise ValueError("MNIST architectures require input_size=784")
-        
+        # Note: This method is kept for backward compatibility
+        # The generic generate_systematic_batch now handles all datasets
         return self.generate_systematic_batch(num_architectures)
+    
+    @classmethod
+    def from_dataset(cls, dataset_name: str, num_architectures: int = 50) -> 'ArchitectureGenerator':
+        """Create an ArchitectureGenerator for a specific dataset.
+        
+        Args:
+            dataset_name: Name of the dataset
+            num_architectures: Number of architectures to generate
+            
+        Returns:
+            ArchitectureGenerator instance configured for the dataset
+        """
+        from data_factory import get_dataset_config
+        
+        config = get_dataset_config(dataset_name)
+        generator = cls(
+            input_size=config.input_size,
+            num_classes=config.num_classes
+        )
+        return generator

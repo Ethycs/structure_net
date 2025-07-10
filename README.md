@@ -49,6 +49,13 @@ Structure Net enables neural networks to evolve their architecture during traini
 - **Offline Queue**: Reliable data persistence without network dependency
 - **Comprehensive Profiling**: Performance analysis and bottleneck identification
 
+### 💾 Data System & Storage
+- **Flexible Dataset Management**: Easy dataset switching without code changes
+- **ChromaDB Integration**: Semantic search for experiments and architectures
+- **Time Series Storage**: Efficient HDF5-based storage for large training histories
+- **Memory-Efficient NAL**: Automatic offloading of experiment data to prevent memory accumulation
+- **Optimized Stress Test**: Dataset sharing, disk caching, and aggressive cleanup for large-scale experiments
+
 ## Installation
 
 ### Using Pixi (Recommended)

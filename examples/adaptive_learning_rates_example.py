@@ -1,340 +1,140 @@
 #!/usr/bin/env python3
 """
-Adaptive Learning Rates Example
+NAL-Powered Adaptive Learning Rates Example
 
-This example demonstrates how to use the new adaptive learning rate strategies
-in structure_net for sophisticated training with phase-based, layer-wise,
-and connection-age-aware learning rate adaptation.
-
-Key strategies demonstrated:
-1. Exponential Backoff for Loss
-2. Layer-wise Adaptive Growth Rates  
-3. Soft Clamping (Gradual Freezing)
-4. Scale-Dependent Learning Rates
-5. Growth Phase-Based Adjustment
+This example uses the Neural Architecture Lab (NAL) to systematically
+compare different adaptive learning rate strategies.
 """
 
 import torch
-import torch.nn as nn
-from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
+import asyncio
+from typing import Dict, Any, Tuple
 
-# Import structure_net with new adaptive learning rate capabilities
+from src.neural_architecture_lab import (
+    NeuralArchitectureLab,
+    LabConfig,
+    Hypothesis,
+    HypothesisCategory
+)
 from src.structure_net.core.network_factory import create_standard_network
-# Try to import from new modular structure first
-try:
-    from src.structure_net.evolution.adaptive_learning_rates import (
-        AdaptiveLearningRateManager,
-        create_adaptive_training_loop
-    )
-    from src.structure_net.evolution.adaptive_learning_rates.phase_schedulers import (
-        ExponentialBackoffScheduler,
-        GrowthPhaseScheduler
-    )
-    from src.structure_net.evolution.adaptive_learning_rates.layer_schedulers import (
-        LayerwiseAdaptiveRates
-    )
-    from src.structure_net.evolution.adaptive_learning_rates.connection_schedulers import (
-        SoftClampingScheduler,
-        ScaleDependentRates
-    )
-except ImportError:
-    # Fall back to deprecated monolithic module
-    from src.structure_net.evolution.adaptive_learning_rates_deprecated import (
-        ExponentialBackoffScheduler,
-        LayerwiseAdaptiveRates,
-        SoftClampingScheduler,
-        ScaleDependentRates,
-        GrowthPhaseScheduler,
-        AdaptiveLearningRateManager,
-        create_adaptive_training_loop
-    )
+from src.structure_net.evolution.adaptive_learning_rates import create_adaptive_training_loop
 
+# --- NAL Test Function ---
 
-def load_mnist_data(batch_size=64):
-    """Load MNIST dataset for demonstration."""
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
+def lr_strategy_experiment(config: Dict[str, Any]) -> Tuple[Any, Dict[str, float]]:
+    """
+    This is the core test function for evaluating a learning rate strategy.
+    """
+    device = torch.device(config.get('device', 'cpu'))
     
-    train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
-    test_dataset = datasets.MNIST('./data', train=False, download=True, transform=transform)
-    
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    
-    return train_loader, test_loader
-
-
-def example_1_exponential_backoff():
-    """Example 1: Exponential Backoff Scheduler"""
-    print("\n" + "="*60)
-    print("🎯 EXAMPLE 1: EXPONENTIAL BACKOFF SCHEDULER")
-    print("="*60)
-    
-    # Create scheduler with aggressive early → gentle late learning
-    scheduler = ExponentialBackoffScheduler(initial_lr=1.0, decay_rate=0.95)
-    
-    print("Exponential backoff progression:")
-    for epoch in range(0, 50, 5):
-        weight = scheduler.get_loss_weight(epoch)
-        print(f"  Epoch {epoch:2d}: Loss weight = {weight:.4f}")
-    
-    print("\n💡 Use case: Natural curriculum from finding major highways to refining local roads")
-
-
-def example_2_layerwise_adaptive():
-    """Example 2: Layer-wise Adaptive Rates"""
-    print("\n" + "="*60)
-    print("🎯 EXAMPLE 2: LAYER-WISE ADAPTIVE RATES")
-    print("="*60)
-    
-    # Create layer-wise adaptive rates
-    layerwise = LayerwiseAdaptiveRates(
-        early_rate=0.02,    # Fast growth for feature extraction
-        middle_rate=0.01,   # Medium growth for feature combination
-        late_rate=0.005     # Slow growth for sparse bridges
-    )
-    
-    n_layers = 5
-    layerwise.total_layers = n_layers  # Set the total layers
-    rates = layerwise.get_layer_rates()
-    
-    print("Layer-wise learning rates:")
-    for i, rate in enumerate(rates):
-        layer_type = "Early" if i < n_layers//3 else "Late" if i > 2*n_layers//3 else "Middle"
-        print(f"  Layer {i}: {rate:.3f} ({layer_type})")
-    
-    print("\n💡 Use case: Early layers learn features fast, late layers form sparse bridges slowly")
-
-
-def example_3_soft_clamping():
-    """Example 3: Soft Clamping (Gradual Freezing)"""
-    print("\n" + "="*60)
-    print("🎯 EXAMPLE 3: SOFT CLAMPING (GRADUAL FREEZING)")
-    print("="*60)
-    
-    # Create soft clamping scheduler
-    soft_clamp = SoftClampingScheduler(max_age=100, min_clamp_factor=0.1)
-    
-    print("Connection aging progression:")
-    connection_id = "layer_0_conn_5_10"
-    
-    for age in [0, 10, 25, 50, 75, 100, 150]:
-        clamp_factor = soft_clamp.get_connection_rate(connection_id, age) / soft_clamp.base_lr
-        print(f"  Age {age:3d}: Clamp factor = {clamp_factor:.3f}")
-    
-    print("\n💡 Use case: Old connections adapt slowly but don't freeze completely")
-
-
-def example_4_scale_dependent():
-    """Example 4: Scale-Dependent Learning Rates"""
-    print("\n" + "="*60)
-    print("🎯 EXAMPLE 4: SCALE-DEPENDENT LEARNING RATES")
-    print("="*60)
-    
-    # Create scale-dependent rates
-    scale_rates = ScaleDependentRates(
-        coarse_scale_lr=0.001,   # Slow for major pathways
-        medium_scale_lr=0.01,    # Moderate for features
-        fine_scale_lr=0.1        # Fast for details
-    )
-    
-    print("Scale-dependent rates for different connection types:")
-    
-    # Test different connection scenarios
-    scenarios = [
-        ('coarse_scale', "Major pathways"),
-        ('medium_scale', "Feature connections"),
-        ('fine_scale', "Detail connections")
-    ]
-    
-    for scale, description in scenarios:
-        rate = scale_rates.get_scale_rate(scale)
-        print(f"  {description}: {rate:.3f} ({scale})")
-    
-    print("\n💡 Use case: Major pathways learn slowly, details learn fast")
-
-
-def example_5_growth_phases():
-    """Example 5: Growth Phase-Based Adjustment"""
-    print("\n" + "="*60)
-    print("🎯 EXAMPLE 5: GROWTH PHASE-BASED ADJUSTMENT")
-    print("="*60)
-    
-    # Create growth phase scheduler
-    phase_scheduler = GrowthPhaseScheduler(
-        early_lr=0.1,           # Aggressive for structure discovery
-        middle_lr=0.01,         # Moderate for feature development
-        late_lr=0.001,          # Gentle for fine-tuning
-        early_phase_end=20,
-        middle_phase_end=50
-    )
-    
-    print("Growth phase progression:")
-    for epoch in [5, 15, 25, 35, 45, 55, 75]:
-        lr = phase_scheduler.get_learning_rate(epoch=epoch)
-        phase = phase_scheduler.detect_phase(epoch)
-        print(f"  Epoch {epoch:2d}: LR = {lr:.3f} ({phase} phase)")
-    
-    print("\n💡 Use case: Aggressive early → moderate middle → gentle late learning")
-
-
-def example_6_unified_manager():
-    """Example 6: Unified Adaptive Learning Rate Manager"""
-    print("\n" + "="*60)
-    print("🎯 EXAMPLE 6: UNIFIED ADAPTIVE MANAGER")
-    print("="*60)
-    
-    # Create a sample network
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # 1. Create Network
     network = create_standard_network(
-        architecture=[784, 128, 64, 10],
-        sparsity=0.02,
+        architecture=config['architecture'],
+        sparsity=config['sparsity'],
         device=str(device)
     )
-    
-    # Create unified manager with all strategies enabled
-    lr_manager = AdaptiveLearningRateManager(
-        network=network,
-        base_lr=0.001,
-        enable_exponential_backoff=True,
-        enable_layerwise_rates=True,
-        enable_soft_clamping=True,
-        enable_scale_dependent=True,
-        enable_phase_based=True
-    )
-    
-    # Create adaptive optimizer
-    optimizer = lr_manager.create_adaptive_optimizer()
-    
-    # The optimizer is wrapped, so we need to access the inner optimizer
-    if hasattr(optimizer, 'optimizer'):
-        print(f"Created adaptive optimizer with {len(optimizer.optimizer.param_groups)} parameter groups")
-    else:
-        print(f"Created adaptive optimizer")
-    
-    # Simulate training progression
-    print("\nLearning rate progression over epochs:")
-    for epoch in [0, 10, 25, 50]:
-        lr_manager.update_learning_rates(optimizer, epoch)
-        summary = lr_manager.get_current_rates_summary()
-        
-        print(f"\nEpoch {epoch}:")
-        if 'exponential_backoff' in summary['strategies']:
-            weight = summary['strategies']['exponential_backoff']['current_weight']
-            print(f"  Exponential backoff weight: {weight:.4f}")
-        
-        if 'phase_based' in summary['strategies']:
-            phase = summary['strategies']['phase_based']['current_phase']
-            phase_lr = summary['strategies']['phase_based']['current_lr']
-            print(f"  Current phase: {phase} (LR: {phase_lr:.4f})")
-        
-        # Show first few layer rates
-        param_groups = optimizer.optimizer.param_groups if hasattr(optimizer, 'optimizer') else []
-        for i, group in enumerate(param_groups[:3]):
-            if 'layer_idx' in group:
-                print(f"  Layer {group['layer_idx']} LR: {group['lr']:.6f}")
-    
-    print("\n💡 Use case: All strategies working together for sophisticated adaptation")
 
-
-def example_7_complete_training():
-    """Example 7: Complete Training Loop with Adaptive Rates"""
-    print("\n" + "="*60)
-    print("🎯 EXAMPLE 7: COMPLETE ADAPTIVE TRAINING")
-    print("="*60)
-    
-    # Load data
-    print("Loading MNIST data...")
-    train_loader, test_loader = load_mnist_data(batch_size=128)
-    
-    # Create network
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    network = create_standard_network(
-        architecture=[784, 256, 128, 10],
-        sparsity=0.02,
-        device=str(device)
+    # 2. Load Data (using dummy data for this example)
+    train_loader = torch.utils.data.DataLoader(
+        torch.utils.data.TensorDataset(
+            torch.randn(100, config['architecture'][0]),
+            torch.randint(0, config['architecture'][-1], (100,))
+        ),
+        batch_size=32
     )
-    
-    print(f"Created network on {device}")
-    print(f"Network architecture: [784, 256, 128, 10]")
-    print(f"Network sparsity: 2%")
-    
-    # Run adaptive training
-    print("\nStarting adaptive training with all strategies...")
-    
+    val_loader = train_loader # Use same data for validation in this simple example
+
+    # 3. Run Training with the specified LR strategy
     trained_network, history = create_adaptive_training_loop(
         network=network,
         train_loader=train_loader,
-        val_loader=test_loader,
-        epochs=30,
-        base_lr=0.001,
-        strategy='comprehensive'  # Use comprehensive strategy with all schedulers
+        val_loader=val_loader,
+        epochs=config['epochs'],
+        base_lr=config['base_lr'],
+        strategy=config['lr_strategy']
     )
     
-    # Show results
-    final_acc = history[-1]['val_acc']
-    print(f"\n✅ Training complete!")
-    print(f"Final validation accuracy: {final_acc:.2%}")
+    # 4. Collect Metrics
+    final_metrics = history[-1] if history else {}
+    accuracy = final_metrics.get('val_acc', 0.0)
     
-    # Show learning rate evolution
-    print("\nLearning rate strategy evolution:")
-    for epoch_data in history[::10]:  # Every 10th epoch
-        epoch = epoch_data['epoch']
-        val_acc = epoch_data['val_acc']
-        lr_data = epoch_data['learning_rates']
-        
-        print(f"  Epoch {epoch:2d}: Val Acc = {val_acc:.2%}")
-        
-        if 'exponential_backoff' in lr_data['strategies']:
-            weight = lr_data['strategies']['exponential_backoff']['current_weight']
-            print(f"    Backoff weight: {weight:.4f}")
-        
-        if 'phase_based' in lr_data['strategies']:
-            phase = lr_data['strategies']['phase_based']['current_phase']
-            print(f"    Phase: {phase}")
+    metrics = {
+        'final_accuracy': accuracy,
+        'convergence_epochs': len(history),
+        'final_loss': final_metrics.get('val_loss', 99.0)
+    }
+    metrics['primary_metric'] = metrics['final_accuracy']
     
-    print("\n💡 Complete example showing all adaptive strategies in action!")
+    return trained_network, metrics
 
+# --- Main Execution ---
 
 def main():
-    """Run all adaptive learning rate examples."""
-    print("🚀 ADAPTIVE LEARNING RATES EXAMPLES")
-    print("=" * 80)
-    print("Demonstrating sophisticated differential learning rate strategies")
-    print("for structure_net neural networks")
-    
-    # Run all examples
-    example_1_exponential_backoff()
-    example_2_layerwise_adaptive()
-    example_3_soft_clamping()
-    example_4_scale_dependent()
-    example_5_growth_phases()
-    example_6_unified_manager()
-    
-    # Ask user if they want to run the complete training example
-    print("\n" + "="*60)
-    response = input("Run complete training example? (y/n): ").lower().strip()
-    if response in ['y', 'yes']:
-        example_7_complete_training()
-    else:
-        print("Skipping complete training example.")
-    
-    print("\n" + "="*80)
-    print("✅ ALL EXAMPLES COMPLETE")
-    print("=" * 80)
-    print("These adaptive learning rate strategies provide:")
-    print("  🎯 Exponential Backoff: Aggressive early → gentle late")
-    print("  🏗️  Layer-wise Rates: Different rates for different layer types")
-    print("  🔒 Soft Clamping: Gradual freezing instead of hard stops")
-    print("  📏 Scale-Dependent: Different rates for different connection scales")
-    print("  📈 Phase-Based: Learning rates that adapt to training phase")
-    print("  🎛️  Unified Manager: All strategies working together")
-    print("\nThese create a natural curriculum: aggressive early learning")
-    print("that gradually becomes gentler as the network matures!")
+    """Configures and runs the NAL experiment for LR strategies."""
+    print("🚀 NAL Example: Comparing Adaptive Learning Rate Strategies 🚀")
 
+    # 1. Define the Hypothesis
+    lr_hypothesis = Hypothesis(
+        id="lr_strategy_comparison",
+        name="Compare Adaptive Learning Rate Strategies",
+        description="Determine which adaptive learning rate strategy yields the best performance.",
+        category=HypothesisCategory.TRAINING,
+        question="Which high-level adaptive LR strategy (basic, advanced, comprehensive, ultimate) results in the highest accuracy?",
+        prediction="More complex strategies will yield better results, with 'comprehensive' or 'ultimate' performing best.",
+        test_function=lr_strategy_experiment,
+        parameter_space={
+            'lr_strategy': ['basic', 'advanced', 'comprehensive', 'ultimate'],
+        },
+        control_parameters={
+            'architecture': [784, 128, 64, 10],
+            'sparsity': 0.05,
+            'epochs': 10, # Short for a quick example
+            'base_lr': 0.001,
+            'device': 'cuda' if torch.cuda.is_available() else 'cpu'
+        },
+        success_metrics={'final_accuracy': 0.1} # Low bar for a demo
+    )
+
+    # 2. Configure and run the Lab
+    lab_config = LabConfig(
+        max_parallel_experiments=4,
+        min_experiments_per_hypothesis=4, # Run each strategy once
+        results_dir=f"nal_lr_strategy_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    )
+    
+    lab = NeuralArchitectureLab(lab_config)
+    lab.register_hypothesis(lr_hypothesis)
+
+    # 3. Run the experiment
+    loop = asyncio.get_event_loop()
+    results = loop.run_until_complete(lab.run_all_hypotheses())
+    
+    # 4. Print results
+    result = results.get("lr_strategy_comparison")
+    if result:
+        print("\n" + "="*60)
+        print("Learning Rate Strategy Comparison Results")
+        print("="*60)
+        
+        # Create a simple ranking
+        strategy_performance = []
+        for exp_res in result.experiment_results:
+            strategy = exp_res.experiment.parameters['lr_strategy']
+            accuracy = exp_res.metrics.get('final_accuracy', 0)
+            strategy_performance.append({'strategy': strategy, 'accuracy': accuracy})
+            
+        # Sort by accuracy
+        strategy_performance.sort(key=lambda x: x['accuracy'], reverse=True)
+        
+        print("🏆 Performance Ranking:")
+        for i, res in enumerate(strategy_performance):
+            print(f"  {i+1}. Strategy: {res['strategy']:<15} | Accuracy: {res['accuracy']:.2%}")
+
+        print("\nKey Insights:")
+        for insight in result.key_insights:
+            print(f"- {insight}")
+    else:
+        print("Experiment did not produce a result.")
 
 if __name__ == "__main__":
     main()

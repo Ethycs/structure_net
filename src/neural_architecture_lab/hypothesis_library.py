@@ -5,18 +5,24 @@ Pre-defined hypothesis collections for common neural architecture questions.
 from typing import Dict, Any, List, Callable
 import torch
 import torch.nn as nn
+import numpy as np
 
 from .core import Hypothesis, HypothesisCategory
-from src.structure_net.core.network_factory import create_standard_network
-from src.structure_net.evolution.components import create_standard_evolution_system
-from src.structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
-from src.seed_search.architecture_generator import ArchitectureGenerator
+from structure_net.core.network_factory import create_standard_network
+from structure_net.evolution.components import create_standard_evolution_system
+from structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
+from seed_search.architecture_generator import ArchitectureGenerator
+from data_factory import get_dataset_config, create_dataset
 
-def seed_search_experiment(config: Dict[str, Any]) -> Tuple[Any, Dict[str, float]]:
+def seed_search_experiment(config: Dict[str, Any]) -> tuple[Any, Dict[str, float]]:
     """
     Test function for a single seed search experiment.
     This function is designed to be executed by the NAL runner.
     """
+    # Get dataset configuration
+    dataset_name = config.get('dataset', 'mnist')
+    dataset_config = get_dataset_config(dataset_name)
+    
     # This is a simplified version of the logic in GPUSeedHunter._test_seed_impl
     model = create_standard_network(
         architecture=config['architecture'],
@@ -47,17 +53,27 @@ class SeedSearchHypotheses:
     """Hypotheses for finding optimal seed networks."""
 
     @staticmethod
-    def find_optimal_seeds() -> Hypothesis:
-        """A hypothesis for a comprehensive seed search."""
+    def find_optimal_seeds(dataset_name: str = 'mnist') -> Hypothesis:
+        """A hypothesis for a comprehensive seed search.
+        
+        Args:
+            dataset_name: Name of dataset to use for seed search
+        """
+        
+        # Get dataset configuration
+        dataset_config = get_dataset_config(dataset_name)
         
         # Generate a portfolio of architectures to test
-        arch_gen = ArchitectureGenerator(input_size=784, num_classes=10) # For MNIST
+        arch_gen = ArchitectureGenerator(
+            input_size=dataset_config.input_size, 
+            num_classes=dataset_config.num_classes
+        )
         architectures = arch_gen.generate_systematic_batch(num_architectures=20)
 
         return Hypothesis(
-            id="seed_search_optimal",
-            name="Find Optimal Seed Networks",
-            description="Run a comprehensive search for seed networks with high potential.",
+            id=f"seed_search_optimal_{dataset_name}",
+            name=f"Find Optimal Seed Networks for {dataset_name.upper()}",
+            description=f"Run a comprehensive search for seed networks with high potential on {dataset_name}.",
             category=HypothesisCategory.ARCHITECTURE,
             question="Which combinations of architecture, sparsity, and random seed produce the most promising starting points for growth?",
             prediction="A diverse set of optimal seeds will be found, balancing accuracy, efficiency, and patchability.",
@@ -65,10 +81,11 @@ class SeedSearchHypotheses:
             parameter_space={
                 'architecture': architectures,
                 'sparsity': {'min': 0.01, 'max': 0.1, 'n_samples': 3},
-                'seed': list(range(10)) # Test 10 random seeds for each config
+                'seed': list(range(10)), # Test 10 random seeds for each config
+                'dataset': [dataset_name]  # Pass dataset as parameter
             },
             control_parameters={
-                'dataset': 'mnist',
+                'dataset': dataset_name,
                 'epochs': 5, # Short training for seed evaluation
             },
             success_metrics={'patchability': 0.5}
@@ -283,8 +300,15 @@ class GrowthHypotheses:
     """Hypotheses about network growth strategies."""
     
     @staticmethod
-    def growth_timing() -> Hypothesis:
-        """When is the best time to grow a network?"""
+    def growth_timing(dataset_name: str = 'cifar10') -> Hypothesis:
+        """When is the best time to grow a network?
+        
+        Args:
+            dataset_name: Name of dataset to use for testing
+        """
+        
+        # Get dataset configuration
+        dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
             from src.structure_net.evolution.components import create_standard_evolution_system
@@ -292,9 +316,13 @@ class GrowthHypotheses:
             # Use new composable evolution system
             evolution_system = create_standard_evolution_system()
             
+            # Get dataset info from config
+            ds_name = config.get('dataset', dataset_name)
+            ds_config = get_dataset_config(ds_name)
+            
             # Initial small network
             model = create_standard_network(
-                architecture=[784, 64, 10],
+                architecture=[ds_config.input_size, 64, ds_config.num_classes],
                 sparsity=0.02
             )
             
@@ -322,9 +350,9 @@ class GrowthHypotheses:
                 'growth_amount': {'min': 0.1, 'max': 0.5, 'n_samples': 3}
             },
             control_parameters={
-                'initial_architecture': [784, 64, 10],
+                'initial_architecture': [dataset_config.input_size, 64, dataset_config.num_classes],
                 'max_growth_events': 5,
-                'dataset': 'cifar10',
+                'dataset': dataset_name,
                 'epochs': 100
             },
             success_metrics={
@@ -335,15 +363,26 @@ class GrowthHypotheses:
         )
     
     @staticmethod
-    def growth_location() -> Hypothesis:
-        """Where should new neurons be added?"""
+    def growth_location(dataset_name: str = 'cifar10') -> Hypothesis:
+        """Where should new neurons be added?
+        
+        Args:
+            dataset_name: Name of dataset to use for testing
+        """
+        
+        # Get dataset configuration
+        dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
             # Test different growth locations
             growth_location = config['growth_location']
             
+            # Get dataset info from config
+            ds_name = config.get('dataset', dataset_name)
+            ds_config = get_dataset_config(ds_name)
+            
             model = create_standard_network(
-                architecture=[784, 128, 64, 10],
+                architecture=[ds_config.input_size, 128, 64, ds_config.num_classes],
                 sparsity=0.02
             )
             
@@ -369,9 +408,10 @@ class GrowthHypotheses:
                 'growth_metric': ['gradient_magnitude', 'activation_variance', 'weight_magnitude']
             },
             control_parameters={
-                'architecture': [784, 128, 64, 32, 10],
+                'architecture': [dataset_config.input_size, 128, 64, 32, dataset_config.num_classes],
                 'growth_events': 3,
-                'neurons_per_growth': 32
+                'neurons_per_growth': 32,
+                'dataset': dataset_name
             },
             success_metrics={
                 'accuracy_improvement': 0.05,
@@ -385,8 +425,15 @@ class SparsityHypotheses:
     """Hypotheses about network sparsity."""
     
     @staticmethod
-    def optimal_sparsity() -> Hypothesis:
-        """What is the optimal sparsity level?"""
+    def optimal_sparsity(dataset_name: str = 'cifar10') -> Hypothesis:
+        """What is the optimal sparsity level?
+        
+        Args:
+            dataset_name: Name of dataset to use for testing
+        """
+        
+        # Get dataset configuration
+        dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
             model = create_standard_network(
@@ -415,12 +462,12 @@ class SparsityHypotheses:
             parameter_space={
                 'sparsity': {'min': 0.0, 'max': 0.5, 'n_samples': 10, 'log_scale': True},
                 'architecture': [
-                    [784, 256, 128, 10],
-                    [784, 512, 256, 128, 10]
+                    [dataset_config.input_size, 256, 128, dataset_config.num_classes],
+                    [dataset_config.input_size, 512, 256, 128, dataset_config.num_classes]
                 ]
             },
             control_parameters={
-                'dataset': 'cifar10',
+                'dataset': dataset_name,
                 'epochs': 50,
                 'initialization': 'sparse'
             },
@@ -432,8 +479,15 @@ class SparsityHypotheses:
         )
     
     @staticmethod
-    def dynamic_sparsity() -> Hypothesis:
-        """Should sparsity change during training?"""
+    def dynamic_sparsity(dataset_name: str = 'cifar10') -> Hypothesis:
+        """Should sparsity change during training?
+        
+        Args:
+            dataset_name: Name of dataset to use for testing
+        """
+        
+        # Get dataset configuration
+        dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
             # Test dynamic vs static sparsity
@@ -443,8 +497,12 @@ class SparsityHypotheses:
                 # Implement dynamic sparsity
                 sparsity = config['initial_sparsity']
             
+            # Get dataset info from config
+            ds_name = config.get('dataset', dataset_name)
+            ds_config = get_dataset_config(ds_name)
+            
             model = create_standard_network(
-                architecture=[784, 256, 128, 10],
+                architecture=[ds_config.input_size, 256, 128, ds_config.num_classes],
                 sparsity=sparsity
             )
             
@@ -470,9 +528,10 @@ class SparsityHypotheses:
                 'final_sparsity': [0.1, 0.2, 0.3]
             },
             control_parameters={
-                'architecture': [784, 256, 128, 10],
+                'architecture': [dataset_config.input_size, 256, 128, dataset_config.num_classes],
                 'epochs': 100,
-                'pruning_frequency': 10
+                'pruning_frequency': 10,
+                'dataset': dataset_name
             },
             success_metrics={
                 'final_accuracy': 0.55,
@@ -486,8 +545,15 @@ class TrainingHypotheses:
     """Hypotheses about training strategies."""
     
     @staticmethod
-    def learning_rate_adaptation() -> Hypothesis:
-        """Which adaptive learning rate strategy is most effective?"""
+    def learning_rate_adaptation(dataset_name: str = 'cifar10') -> Hypothesis:
+        """Which adaptive learning rate strategy is most effective?
+        
+        Args:
+            dataset_name: Name of dataset to use for testing
+        """
+        
+        # Get dataset configuration
+        dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
             from src.structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
@@ -496,8 +562,12 @@ class TrainingHypotheses:
                 strategy=config['lr_strategy']
             )
             
+            # Get dataset info from config
+            ds_name = config.get('dataset', dataset_name)
+            ds_config = get_dataset_config(ds_name)
+            
             model = create_standard_network(
-                architecture=[784, 256, 128, 10],
+                architecture=[ds_config.input_size, 256, 128, ds_config.num_classes],
                 sparsity=0.02
             )
             
@@ -527,8 +597,8 @@ class TrainingHypotheses:
                 'lr_warmup': [0, 5, 10]
             },
             control_parameters={
-                'architecture': [784, 256, 128, 10],
-                'dataset': 'cifar10',
+                'architecture': [dataset_config.input_size, 256, 128, dataset_config.num_classes],
+                'dataset': dataset_name,
                 'epochs': 50,
                 'batch_size': 128
             },
@@ -541,8 +611,15 @@ class TrainingHypotheses:
         )
     
     @staticmethod
-    def batch_size_scaling() -> Hypothesis:
-        """How does batch size affect training?"""
+    def batch_size_scaling(dataset_name: str = 'cifar10') -> Hypothesis:
+        """How does batch size affect training?
+        
+        Args:
+            dataset_name: Name of dataset to use for testing
+        """
+        
+        # Get dataset configuration
+        dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
             batch_size = config['batch_size']
@@ -555,8 +632,12 @@ class TrainingHypotheses:
             else:
                 lr = config['base_lr']
             
+            # Get dataset info from config
+            ds_name = config.get('dataset', dataset_name)
+            ds_config = get_dataset_config(ds_name)
+            
             model = create_standard_network(
-                architecture=[784, 256, 128, 10],
+                architecture=[ds_config.input_size, 256, 128, ds_config.num_classes],
                 sparsity=0.02
             )
             
@@ -583,8 +664,8 @@ class TrainingHypotheses:
                 'base_lr': [0.001, 0.01]
             },
             control_parameters={
-                'architecture': [784, 256, 128, 10],
-                'dataset': 'cifar10',
+                'architecture': [dataset_config.input_size, 256, 128, dataset_config.num_classes],
+                'dataset': dataset_name,
                 'epochs': 50
             },
             success_metrics={
@@ -596,16 +677,27 @@ class TrainingHypotheses:
         )
     
     @staticmethod
-    def data_augmentation() -> Hypothesis:
-        """Which data augmentation strategies are most effective?"""
+    def data_augmentation(dataset_name: str = 'cifar10') -> Hypothesis:
+        """Which data augmentation strategies are most effective?
+        
+        Args:
+            dataset_name: Name of dataset to use for testing
+        """
+        
+        # Get dataset configuration
+        dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
             # This would integrate with data loading
             augmentation = config['augmentation_type']
             intensity = config['augmentation_intensity']
             
+            # Get dataset info from config
+            ds_name = config.get('dataset', dataset_name)
+            ds_config = get_dataset_config(ds_name)
+            
             model = create_standard_network(
-                architecture=[784, 256, 128, 10],
+                architecture=[ds_config.input_size, 256, 128, ds_config.num_classes],
                 sparsity=0.02
             )
             
@@ -630,8 +722,8 @@ class TrainingHypotheses:
                 'augmentation_intensity': {'min': 0.0, 'max': 1.0, 'n_samples': 5}
             },
             control_parameters={
-                'architecture': [784, 256, 128, 10],
-                'dataset': 'cifar10',
+                'architecture': [dataset_config.input_size, 256, 128, dataset_config.num_classes],
+                'dataset': dataset_name,
                 'epochs': 50,
                 'base_training': True
             },
@@ -644,35 +736,44 @@ class TrainingHypotheses:
         )
 
 
-def get_all_hypotheses() -> List[Hypothesis]:
-    """Get all pre-defined hypotheses."""
+def get_all_hypotheses(dataset_name: str = 'cifar10') -> List[Hypothesis]:
+    """Get all pre-defined hypotheses.
+    
+    Args:
+        dataset_name: Name of dataset to use for all hypotheses
+    """
     hypotheses = []
     
     # Architecture hypotheses
     hypotheses.extend([
-        ArchitectureHypotheses.depth_vs_width(),
-        ArchitectureHypotheses.pyramid_architecture(),
-        ArchitectureHypotheses.skip_connections()
+        ArchitectureHypotheses.depth_vs_width(dataset_name),
+        ArchitectureHypotheses.pyramid_architecture(dataset_name),
+        ArchitectureHypotheses.skip_connections(dataset_name)
     ])
     
     # Growth hypotheses
     hypotheses.extend([
-        GrowthHypotheses.growth_timing(),
-        GrowthHypotheses.growth_location()
+        GrowthHypotheses.growth_timing(dataset_name),
+        GrowthHypotheses.growth_location(dataset_name)
     ])
     
     # Sparsity hypotheses
     hypotheses.extend([
-        SparsityHypotheses.optimal_sparsity(),
-        SparsityHypotheses.dynamic_sparsity()
+        SparsityHypotheses.optimal_sparsity(dataset_name),
+        SparsityHypotheses.dynamic_sparsity(dataset_name)
     ])
     
     # Training hypotheses
     hypotheses.extend([
-        TrainingHypotheses.learning_rate_adaptation(),
-        TrainingHypotheses.batch_size_scaling(),
-        TrainingHypotheses.data_augmentation()
+        TrainingHypotheses.learning_rate_adaptation(dataset_name),
+        TrainingHypotheses.batch_size_scaling(dataset_name),
+        TrainingHypotheses.data_augmentation(dataset_name)
     ])
+    
+    # Seed search hypothesis
+    hypotheses.append(
+        SeedSearchHypotheses.find_optimal_seeds(dataset_name)
+    )
     
     return hypotheses
 

@@ -2,15 +2,30 @@ import pytest
 import torch
 from src.structure_net.core.network_factory import create_standard_network
 
+def pytest_configure(config):
+    """Configure pytest with custom markers."""
+    config.addinivalue_line(
+        "markers", "gpu: mark test as requiring GPU"
+    )
+    config.addinivalue_line(
+        "markers", "integration: mark test as integration test"
+    )
+
 @pytest.fixture(scope="session", autouse=True)
-def check_gpu_availability():
-    """Fails the test suite if a CUDA-enabled GPU is not available."""
-    if not torch.cuda.is_available():
-        pytest.fail("GPU not available. This test suite requires a CUDA-enabled GPU.")
+def check_gpu_availability(request):
+    """Skip GPU tests if CUDA is not available."""
+    if request.node.get_closest_marker("gpu"):
+        if not torch.cuda.is_available():
+            pytest.skip("GPU not available. This test requires a CUDA-enabled GPU.")
 
 @pytest.fixture(scope="session")
 def device():
-    return torch.device("cuda")
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+@pytest.fixture(scope="session")
+def device_cpu():
+    """CPU device for tests that don't require GPU."""
+    return torch.device("cpu")
 
 @pytest.fixture(scope="module")
 def synthetic_data(device):
