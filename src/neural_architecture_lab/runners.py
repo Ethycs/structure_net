@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 import numpy as np
 import time
 import traceback
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import os
 
@@ -303,56 +303,43 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
         self.device_ids = config.device_ids
         self.max_parallel = config.max_parallel_experiments
     
-    async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
+    async def run_experiment(self, experiment: Experiment, test_function: Callable) -> ExperimentResult:
         """Run a single experiment asynchronously."""
-        # Update experiment status
         experiment.status = ExperimentStatus.RUNNING
         experiment.started_at = time.time()
         
-        # Assign device
-        device_id = experiment.device_id
-        if device_id is None:
-            # Round-robin device assignment
-            device_id = self.device_ids[
-                hash(experiment.id) % len(self.device_ids)
-            ]
+        device_id = experiment.device_id or self.device_ids[hash(experiment.id) % len(self.device_ids)]
         
-        # Run in executor
         loop = asyncio.get_event_loop()
         with ProcessPoolExecutor(max_workers=1) as executor:
             result = await loop.run_in_executor(
                 executor,
-                run_structure_net_experiment,
+                test_function,
                 experiment,
                 device_id
             )
         
-        # Update experiment
         experiment.status = ExperimentStatus.COMPLETED if result.error is None else ExperimentStatus.FAILED
         experiment.completed_at = time.time()
         experiment.result = result
         
         return result
     
-    async def run_experiments(self, experiments: List[Experiment]) -> List[ExperimentResult]:
+    async def run_experiments(self, experiments: List[Experiment], test_function: Callable) -> List[ExperimentResult]:
         """Run multiple experiments with controlled parallelism."""
         results = []
         
-        # Process in batches
         for i in range(0, len(experiments), self.max_parallel):
             batch = experiments[i:i + self.max_parallel]
             
-            # Assign devices round-robin
             for j, exp in enumerate(batch):
                 if exp.device_id is None:
                     exp.device_id = self.device_ids[j % len(self.device_ids)]
             
-            # Run batch
-            batch_tasks = [self.run_experiment(exp) for exp in batch]
+            batch_tasks = [self.run_experiment(exp, test_function) for exp in batch]
             batch_results = await asyncio.gather(*batch_tasks)
             results.extend(batch_results)
             
-            # Brief pause between batches
             if i + self.max_parallel < len(experiments):
                 await asyncio.sleep(1)
         

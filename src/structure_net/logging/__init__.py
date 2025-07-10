@@ -65,6 +65,9 @@ from .wandb_integration import (
     setup_wandb_for_modern_indefinite_growth
 )
 
+# Import argument parser
+from .argument_parser import add_logging_arguments
+
 # Export all public components
 __all__ = [
     # Main logger
@@ -105,7 +108,10 @@ __all__ = [
     # Backward compatibility
     'StructureNetWandBLogger',
     'convert_json_to_wandb',
-    'setup_wandb_for_modern_indefinite_growth'
+    'setup_wandb_for_modern_indefinite_growth',
+
+    # Argument parsing
+    'add_logging_arguments'
 ]
 
 # Version info

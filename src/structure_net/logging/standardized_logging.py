@@ -248,7 +248,7 @@ class StandardizedLogger:
                 raise ValueError(f"Invalid experiment result: {e}")
         
         # Convert to JSON
-        result_dict = result.dict()
+        result_dict = asdict(result)
         json_payload = json.dumps(result_dict, separators=(",", ":"), default=self._json_serializer)
         
         # Generate hash for deduplication

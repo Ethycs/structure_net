@@ -150,6 +150,8 @@ class HypothesisResult:
     completed_at: datetime = field(default_factory=datetime.now)
 
 
+import argparse
+
 @dataclass
 class LabConfig:
     """Configuration for the Neural Architecture Lab."""
@@ -169,14 +171,74 @@ class LabConfig:
     checkpoint_frequency: int = 10  # epochs
     
     # Logging and output
-    results_dir: str = "data/nal_results"
+    project_name: str = "nal_experiments"
+    results_dir: str = "nal_results"
     save_all_models: bool = False
     save_best_models: bool = True
     verbose: bool = True
+    log_level: str = "INFO"
+    module_log_levels: Optional[Dict[str, str]] = None
+    log_file: Optional[str] = None
+    enable_wandb: bool = True
     
     # Adaptive exploration
     enable_adaptive_hypotheses: bool = True
     max_hypothesis_depth: int = 3  # How many follow-up hypotheses to generate
+
+class LabConfigFactory:
+    @staticmethod
+    def add_arguments(parser: argparse.ArgumentParser):
+        """Adds all standard NAL configuration arguments to a parser."""
+        group = parser.add_argument_group('NAL Configuration')
+        group.add_argument('--nal-project-name', type=str, help='Name of the project for logging and organization.')
+        group.add_argument('--nal-results-dir', type=str, help='Directory to save all experiment results and logs.')
+        group.add_argument('--nal-max-parallel', type=int, help='Maximum number of experiments to run in parallel.')
+        group.add_argument('--nal-gpus', type=str, help='Comma-separated list of GPU device IDs to use (e.g., "0,1,2").')
+        group.add_argument('--nal-log-level', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help='Set the global logging level for the lab.')
+        group.add_argument('--nal-log-file', type=str, help='Path to a file to write all logs.')
+        group.add_argument('--nal-enable-wandb', action='store_true', help='Enable logging to Weights & Biases.')
+        group.add_argument('--nal-disable-wandb', action='store_true', help='Disable logging to Weights & Biases.')
+        group.add_argument('--nal-verbose', action='store_true', help='Enable verbose output from the lab.')
+
+    @staticmethod
+    def from_args(args: argparse.Namespace, base_config: Optional[LabConfig] = None) -> LabConfig:
+        """
+        Creates a LabConfig by overriding a base config with provided command-line arguments.
+        
+        Args:
+            args: The parsed arguments from argparse.
+            base_config: A default LabConfig object. If None, a default one is created.
+            
+        Returns:
+            A final, merged LabConfig object.
+        """
+        if base_config is None:
+            base_config = LabConfig()
+
+        # Create a dictionary of provided arguments (excluding defaults)
+        provided_args = {k: v for k, v in vars(args).items() if v is not None}
+
+        if 'nal_project_name' in provided_args:
+            base_config.project_name = provided_args['nal_project_name']
+        if 'nal_results_dir' in provided_args:
+            base_config.results_dir = provided_args['nal_results_dir']
+        if 'nal_max_parallel' in provided_args:
+            base_config.max_parallel_experiments = provided_args['nal_max_parallel']
+        if 'nal_gpus' in provided_args:
+            base_config.device_ids = [int(g.strip()) for g in provided_args['nal_gpus'].split(',')]
+        if 'nal_log_level' in provided_args:
+            base_config.log_level = provided_args['nal_log_level']
+        if 'nal_log_file' in provided_args:
+            base_config.log_file = provided_args['nal_log_file']
+        if 'nal_enable_wandb' in provided_args and provided_args['nal_enable_wandb']:
+            base_config.enable_wandb = True
+        if 'nal_disable_wandb' in provided_args and provided_args['nal_disable_wandb']:
+            base_config.enable_wandb = False
+        if 'nal_verbose' in provided_args:
+            base_config.verbose = True
+            
+        return base_config
+
 
 
 class ExperimentRunnerBase(ABC):

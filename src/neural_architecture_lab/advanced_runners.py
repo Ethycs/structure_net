@@ -212,7 +212,7 @@ def run_advanced_experiment(
         dataset = create_dataset(
             dataset_name,
             batch_size=optimized_batch_size,
-            subset_size=5000 if params.get('quick_test', False) else None
+            subset_fraction=0.1 if params.get('quick_test', False) else None
         )
         train_loader = dataset['train_loader']
         test_loader = dataset['test_loader']
@@ -570,26 +570,16 @@ def calculate_primary_metric(
 class AdvancedExperimentRunner(ExperimentRunnerBase):
     """Advanced experiment runner with full feature support."""
     
-    def __init__(self, config: LabConfig):
+    def __init__(self, config: LabConfig, logger: StandardizedLogger):
         self.config = config
+        self.logger = logger
         self.device_ids = config.device_ids
         self.max_parallel = config.max_parallel_experiments
         self.memory_managers = {
             device_id: GPUMemoryManager(config.max_memory_per_experiment)
             for device_id in self.device_ids
         }
-        
-        # Logging configuration
-        self.logging_config = LoggingConfig(
-            project_name="nal_advanced",
-            queue_dir=os.path.join(config.results_dir, "experiment_queue"),
-            sent_dir=os.path.join(config.results_dir, "experiment_sent"),
-            rejected_dir=os.path.join(config.results_dir, "experiment_rejected"),
-            enable_wandb=False,
-            enable_local_backup=True,
-            auto_upload=False
-        )
-        self.logger = StandardizedLogger(self.logging_config)
+
     
     async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
         """Run a single experiment with advanced features."""

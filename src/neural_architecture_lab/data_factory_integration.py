@@ -41,6 +41,7 @@ class NALChromaIntegration:
     
     def __init__(
         self,
+        nal_config: 'LabConfig',
         chroma_config: Optional[ChromaConfig] = None,
         timeseries_config: Optional[TimeSeriesConfig] = None,
         auto_index: bool = True,
@@ -350,24 +351,32 @@ class MemoryEfficientNAL:
         return result
 
 
-def create_memory_efficient_nal(nal_config, chroma_config: Optional[ChromaConfig] = None):
+def create_memory_efficient_nal(nal_config: 'LabConfig'):
     """
     Create a memory-efficient NAL instance with ChromaDB integration.
     
     Args:
-        nal_config: NAL configuration
-        chroma_config: Optional ChromaDB configuration
+        nal_config: The master NAL configuration object.
         
     Returns:
-        Wrapped NAL instance that automatically offloads to ChromaDB
+        Wrapped NAL instance that automatically offloads to ChromaDB.
     """
-    from neural_architecture_lab.lab import NeuralArchitectureLab
+    from .lab import NeuralArchitectureLab
     
+    # Data factory now owns its path configuration.
+    base_results_dir = Path("data/nal_experiments")
+    run_dir = base_results_dir / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+
     # Create NAL instance
-    nal = NeuralArchitectureLab(nal_config)
+    nal = NeuralArchitectureLab(nal_config, results_dir=run_dir)
     
+    # Configure ChromaDB to use a subdirectory
+    chroma_persist_dir = run_dir / "chroma_db"
+    chroma_config = ChromaConfig(persist_directory=str(chroma_persist_dir))
+
     # Create ChromaDB integration
-    chroma_integration = NALChromaIntegration(chroma_config)
+    chroma_integration = NALChromaIntegration(nal_config, chroma_config)
     
     # Wrap with memory-efficient layer
     wrapped_nal = MemoryEfficientNAL(nal, chroma_integration)

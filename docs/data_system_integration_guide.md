@@ -95,34 +95,28 @@ cifar10 = create_dataset('cifar10', batch_size=128)
 small_dataset = create_dataset('cifar100', subset_size=1000)
 ```
 
-### Using with Hypotheses
+### Using with the Neural Architecture Lab (NAL)
+
+The most common way to use the `data_factory` is indirectly, through the NAL. The NAL is designed to handle all data loading for you automatically.
+
+You simply specify the `dataset_name` in the `control_parameters` of your `Hypothesis`:
 
 ```python
-from neural_architecture_lab.hypothesis_library import find_optimal_seeds
+from neural_architecture_lab import Hypothesis, HypothesisCategory
 
-# Hypotheses now accept dataset_name parameter
-hypothesis = find_optimal_seeds(dataset_name='cifar10')
-
-# Architecture automatically adapts to dataset
-from seed_search.architecture_generator import ArchitectureGenerator
-arch_gen = ArchitectureGenerator.from_dataset('imagenet')
-```
-
-### Running Experiments
-
-```python
-from neural_architecture_lab.runners import run_advanced_experiment
-
-# The runner automatically uses the data factory
-result = run_advanced_experiment(
-    hypothesis_id="custom_hypothesis",
-    dataset_name="mnist",  # Specify dataset
-    config={
-        'epochs': 10,
-        'batch_size': 64
+my_hypothesis = Hypothesis(
+    # ... other hypothesis parameters
+    control_parameters={
+        'dataset': 'cifar10',  # NAL will use the data_factory to load this
+        'epochs': 50,
+        'batch_size': 128
     }
 )
+
+# The NAL's runner will automatically call create_dataset('cifar10')
+# and pass the data loaders to your test function.
 ```
+
 
 ## Dataset Configuration
 

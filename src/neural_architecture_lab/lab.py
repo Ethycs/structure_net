@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Callable
 from datetime import datetime
+from dataclasses import asdict
 import torch
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -19,10 +20,8 @@ from .core import (
 )
 from .runners import AsyncExperimentRunner
 from .analyzers import InsightExtractor, StatisticalAnalyzer
-
-# Delayed imports to avoid circular dependency
-StandardizedLogger = None
-ExperimentSearcher = None
+from src.structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
+import logging
 
 class NumpyJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -51,13 +50,6 @@ class NeuralArchitectureLab:
         Args:
             config: Lab configuration
         """
-        # Lazy import to avoid circular dependency
-        global StandardizedLogger, ExperimentSearcher
-        if StandardizedLogger is None:
-            from src.structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
-        if ExperimentSearcher is None:
-            from data_factory.search import ExperimentSearcher
-        
         self.config = config
         self.hypotheses: Dict[str, Hypothesis] = {}
         
@@ -65,21 +57,15 @@ class NeuralArchitectureLab:
         self.results_dir = Path(config.results_dir)
         self.results_dir.mkdir(parents=True, exist_ok=True)
         
+        # Setup Logging
+        self.setup_logging()
+
         # Initialize components
         self.runner = AsyncExperimentRunner(config)
         self.insight_extractor = InsightExtractor()
         self.statistical_analyzer = StatisticalAnalyzer(
             significance_level=config.significance_level
         )
-        self.logger = StandardizedLogger(LoggingConfig(
-            project_name="neural_architecture_lab",
-            queue_dir=str(self.results_dir / "experiment_queue"),
-            sent_dir=str(self.results_dir / "experiment_sent"),
-            rejected_dir=str(self.results_dir / "experiment_rejected"),
-            enable_wandb=False,
-            enable_local_backup=True
-        ))
-        self.searcher = ExperimentSearcher()
         
         # Lab state
         self.lab_id = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -89,6 +75,47 @@ class NeuralArchitectureLab:
         # Hypothesis tracking
         self.hypothesis_tree = {}
         self.pending_hypotheses = []
+
+    def setup_logging(self):
+        """Configures the logging for the lab based on its own config object."""
+        log_level = getattr(logging, self.config.log_level.upper(), logging.INFO)
+        
+        handlers = [logging.StreamHandler()]
+        if self.config.log_file:
+            log_file_path = self.results_dir / self.config.log_file
+            handlers.append(logging.FileHandler(log_file_path))
+            
+        logging.basicConfig(
+            level=log_level,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=handlers,
+            force=True  # Override any existing basicConfig
+        )
+        
+        if self.config.module_log_levels:
+            for module, level in self.config.module_log_levels.items():
+                level_val = getattr(logging, level.upper(), logging.INFO)
+                logging.getLogger(module).setLevel(level_val)
+
+        # The StandardizedLogger for experiments is configured separately
+        # and doesn't rely on the root logger.
+        logging_config = LoggingConfig(
+            project_name=self.config.project_name,
+            queue_dir=str(self.results_dir / "experiment_queue"),
+            sent_dir=str(self.results_dir / "experiment_sent"),
+            rejected_dir=str(self.results_dir / "experiment_rejected"),
+            enable_wandb=self.config.enable_wandb
+        )
+        self.logger = StandardizedLogger(logging_config)
+
+        if self.config.verbose:
+            logging.info(f"NAL logging initialized for project: {self.config.project_name}")
+            logging.info(f"Log level set to {self.config.log_level}")
+            if self.config.log_file:
+                logging.info(f"Logging to file: {log_file_path}")
+            if self.config.enable_wandb:
+                logging.info("Weights & Biases logging is enabled.")
+
         
     def register_hypothesis(self, hypothesis: Hypothesis) -> str:
         """
@@ -199,19 +226,16 @@ class NeuralArchitectureLab:
         if self.config.verbose:
             print(f"   Generated {len(experiments)} experiments")
         
-        experiment_results = await self.runner.run_experiments(experiments)
+        experiment_results = await self.runner.run_experiments(experiments, hypothesis.test_function)
         
         for result in experiment_results:
             self.logger.log_experiment_result(result)
-            self.searcher.index_experiment(result.experiment.id, result.to_dict())
 
         self.total_experiments_run += len(experiment_results)
         
-        # Now, we fetch the results from our data store for analysis
-        all_results_for_hypothesis = self.searcher.search_by_hypothesis(hypothesis_id)
-
+        # Pass the actual experiment results for analysis
         hypothesis_result = self._analyze_hypothesis_results(
-            hypothesis, all_results_for_hypothesis
+            hypothesis, experiment_results
         )
         
         hypothesis.tested = True
