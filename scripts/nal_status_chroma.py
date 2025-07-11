@@ -47,6 +47,7 @@ def simple_table(data, headers):
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.data_factory.search import ExperimentSearcher
+from src.data_factory.search.chroma_client import ChromaConfig
 
 
 class NALStatusMonitor:
@@ -58,7 +59,9 @@ class NALStatusMonitor:
             path=db_path,
             settings=Settings(anonymized_telemetry=False)
         )
-        self.searcher = ExperimentSearcher(db_path)
+        # Create ChromaConfig for searcher
+        chroma_config = ChromaConfig(persist_directory=db_path)
+        self.searcher = ExperimentSearcher(chroma_config)
         
         # Get collections
         try:
@@ -114,31 +117,37 @@ class NALStatusMonitor:
         """Get experiments from the last N hours."""
         since_timestamp = (datetime.now() - timedelta(hours=hours)).isoformat()
         
-        # Query recent experiments
+        # Query all experiments and filter by timestamp
         results = self.experiments_collection.query(
             query_texts=[""],  # Empty query to get all
-            n_results=1000,
-            where={"timestamp": {"$gte": since_timestamp}}
+            n_results=1000
         )
         
         if not results['ids'][0]:
             return []
         
+        # Filter by timestamp
         experiments = []
-        for i, exp_id in enumerate(results['ids'][0][:limit]):
+        for i, exp_id in enumerate(results['ids'][0]):
             metadata = results['metadatas'][0][i]
-            experiments.append({
-                'id': exp_id,
-                'hypothesis': metadata.get('hypothesis_id', 'Unknown'),
-                'status': metadata.get('status', 'Unknown'),
-                'accuracy': metadata.get('accuracy', 0.0),
-                'parameters': metadata.get('model_parameters', 0),
-                'training_time': metadata.get('training_time', 0.0),
-                'timestamp': metadata.get('timestamp', ''),
-                'error': metadata.get('error', '')
-            })
+            exp_timestamp = metadata.get('timestamp', '')
+            
+            # Skip if no timestamp or if it's older than the cutoff
+            if exp_timestamp and exp_timestamp >= since_timestamp:
+                experiments.append({
+                    'id': exp_id,
+                    'hypothesis': metadata.get('hypothesis_id', 'Unknown'),
+                    'status': metadata.get('status', 'Unknown'),
+                    'accuracy': metadata.get('accuracy', 0.0),
+                    'parameters': metadata.get('model_parameters', 0),
+                    'training_time': metadata.get('training_time', 0.0),
+                    'timestamp': metadata.get('timestamp', ''),
+                    'error': metadata.get('error', '')
+                })
         
-        return sorted(experiments, key=lambda x: x['timestamp'], reverse=True)
+        # Sort by timestamp and limit
+        experiments = sorted(experiments, key=lambda x: x['timestamp'], reverse=True)[:limit]
+        return experiments
     
     def get_hypothesis_performance(self) -> List[Dict]:
         """Get performance statistics by hypothesis."""
@@ -265,11 +274,18 @@ class NALStatusMonitor:
     
     def get_running_experiments(self) -> List[Dict]:
         """Get currently running experiments."""
-        results = self.experiments_collection.query(
-            query_texts=[""],  # Empty query
-            n_results=1000,
-            where={"status": "running"}
-        )
+        # Get all experiments
+        all_experiments = self.experiments_collection.get()
+        
+        if not all_experiments['ids']:
+            return []
+        
+        # Filter for running status
+        results = {'ids': [[]], 'metadatas': [[]]}
+        for i, metadata in enumerate(all_experiments['metadatas']):
+            if metadata.get('status') == 'running':
+                results['ids'][0].append(all_experiments['ids'][i])
+                results['metadatas'][0].append(metadata)
         
         if not results['ids'][0]:
             return []
@@ -484,7 +500,7 @@ class NALStatusMonitor:
             ])
         
         headers = ["ID", "Hypothesis", "Status", "Accuracy", "Params", "Similarity"]
-        print(tabulate(table_data, headers=headers, tablefmt="grid"))
+        print(simple_table(table_data, headers))
         print()
 
 

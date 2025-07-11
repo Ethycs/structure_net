@@ -347,20 +347,6 @@ class TournamentExecutor:
             individual['sparsity'] = np.clip(individual['sparsity'] * np.random.uniform(0.8, 1.2), 0.01, 0.3)
         return individual
 
-@dataclass
-class StressTestConfig:
-    """Configuration for the ultimate stress test."""
-    tournament_size: int = 32
-    generations: int = 5
-    mutation_rate: float = 0.3
-    seed_model_dir: Optional[str] = None
-    epochs_per_generation: int = 10
-    batch_size_base: int = 256  # Increased for better GPU utilization
-    learning_rate_strategies: List[str] = field(default_factory=lambda: ['basic', 'advanced'])
-    enable_growth: bool = True
-    max_layers: int = 15
-    dataset_name: str = 'cifar10'
-
 def get_default_stress_test_config() -> StressTestConfig:
     """Returns a default configuration for the stress test."""
     return StressTestConfig()

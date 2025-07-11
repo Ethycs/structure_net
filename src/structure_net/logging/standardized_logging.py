@@ -185,7 +185,7 @@ class LoggingConfig:
     upload_interval: int = 30  # seconds
     max_retries: int = 3
     enable_chromadb: bool = True
-    chromadb_path: str = "./chroma_db"
+    chromadb_path: str = "data/chroma_db"
 
 
 class StandardizedLogger:

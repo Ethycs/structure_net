@@ -135,17 +135,13 @@ class WorkerRegistry:
         return base_time + param_factor + batch_factor
 
 
-def create_worker_wrapper(test_function: Callable) -> Callable:
-    """
-    Create a wrapped version of a test function that includes worker registration.
+class WorkerWrapper:
+    """Picklable wrapper for test functions with worker registration."""
     
-    Args:
-        test_function: The original test function
-        
-    Returns:
-        Wrapped function with automatic worker registration
-    """
-    def wrapped_function(experiment, device_id):
+    def __init__(self, test_function: Callable):
+        self.test_function = test_function
+    
+    def __call__(self, experiment, device_id):
         # Extract key parameters
         config = experiment.parameters
         if 'params' in config and isinstance(config['params'], dict):
@@ -171,7 +167,7 @@ def create_worker_wrapper(test_function: Callable) -> Callable:
         
         try:
             # Run the actual test function
-            result = test_function(experiment, device_id)
+            result = self.test_function(experiment, device_id)
             
             # Register completion
             if hasattr(result, 'metrics') and result.metrics:
@@ -183,5 +179,16 @@ def create_worker_wrapper(test_function: Callable) -> Callable:
             # Register failure
             registry.register_failure(str(e))
             raise
+
+
+def create_worker_wrapper(test_function: Callable) -> Callable:
+    """
+    Create a wrapped version of a test function that includes worker registration.
     
-    return wrapped_function
+    Args:
+        test_function: The original test function
+        
+    Returns:
+        Wrapped function with automatic worker registration
+    """
+    return WorkerWrapper(test_function)
