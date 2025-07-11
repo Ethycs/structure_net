@@ -30,6 +30,8 @@ import torch
 import wandb
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 import numpy as np
+import chromadb
+from chromadb.config import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +184,8 @@ class LoggingConfig:
     auto_upload: bool = True
     upload_interval: int = 30  # seconds
     max_retries: int = 3
+    enable_chromadb: bool = True
+    chromadb_path: str = "./chroma_db"
 
 
 class StandardizedLogger:
@@ -208,6 +212,13 @@ class StandardizedLogger:
         if self.config.enable_wandb:
             self._initialize_wandb()
         
+        # Initialize ChromaDB if enabled
+        self.chromadb_client = None
+        self.experiments_collection = None
+        self.hypotheses_collection = None
+        if self.config.enable_chromadb:
+            self._initialize_chromadb()
+        
         # Upload daemon state
         self.upload_daemon_running = False
         
@@ -227,6 +238,36 @@ class StandardizedLogger:
         except Exception as e:
             logger.warning(f"Failed to initialize WandB: {e}")
             self.wandb_initialized = False
+    
+    def _initialize_chromadb(self):
+        """Initialize ChromaDB connection."""
+        try:
+            self.chromadb_client = chromadb.PersistentClient(
+                path=self.config.chromadb_path,
+                settings=Settings(anonymized_telemetry=False)
+            )
+            
+            # Get or create collections
+            try:
+                self.experiments_collection = self.chromadb_client.get_collection("experiments")
+            except:
+                self.experiments_collection = self.chromadb_client.create_collection(
+                    name="experiments",
+                    metadata={"description": "Neural architecture experiments"}
+                )
+            
+            try:
+                self.hypotheses_collection = self.chromadb_client.get_collection("hypotheses")
+            except:
+                self.hypotheses_collection = self.chromadb_client.create_collection(
+                    name="hypotheses",
+                    metadata={"description": "Experiment hypotheses"}
+                )
+            
+            logger.info("ChromaDB initialized successfully")
+        except Exception as e:
+            logger.warning(f"Failed to initialize ChromaDB: {e}")
+            self.chromadb_client = None
     
     def log_experiment_result(self, result: Union[ExperimentResult, Dict[str, Any]]) -> str:
         """
@@ -260,11 +301,95 @@ class StandardizedLogger:
         
         logger.info(f"Queued experiment result {content_hash} ({len(json_payload)} bytes)")
         
+        # Log to ChromaDB if enabled
+        if self.chromadb_client and self.experiments_collection:
+            try:
+                # Prepare metadata for ChromaDB
+                metadata = {
+                    'experiment_id': result.experiment_id,
+                    'hypothesis_id': getattr(result, 'hypothesis_id', 'unknown'),
+                    'status': 'failed' if hasattr(result, 'error') and result.error else 'completed',
+                    'accuracy': float(result.metrics.get('accuracy', 0)) if hasattr(result, 'metrics') else 0.0,
+                    'model_parameters': int(result.model_parameters) if hasattr(result, 'model_parameters') else 0,
+                    'training_time': float(result.training_time) if hasattr(result, 'training_time') else 0.0,
+                    'timestamp': datetime.now().isoformat(),
+                    'architecture': str(result.model_architecture) if hasattr(result, 'model_architecture') else '[]',
+                    'primary_metric': float(result.primary_metric) if hasattr(result, 'primary_metric') else 0.0
+                }
+                
+                # Add error if present
+                if hasattr(result, 'error') and result.error:
+                    metadata['error'] = str(result.error)[:500]  # Limit error message length
+                
+                # Create document text for semantic search
+                doc_text = f"Experiment {result.experiment_id} "
+                if hasattr(result, 'hypothesis_id'):
+                    doc_text += f"testing hypothesis {result.hypothesis_id} "
+                doc_text += f"with architecture {metadata['architecture']} "
+                doc_text += f"achieved accuracy {metadata['accuracy']:.4f}"
+                
+                # Add to ChromaDB
+                self.experiments_collection.add(
+                    ids=[content_hash],
+                    documents=[doc_text],
+                    metadatas=[metadata]
+                )
+                logger.debug(f"Logged experiment {content_hash} to ChromaDB")
+            except Exception as e:
+                logger.warning(f"Failed to log to ChromaDB: {e}")
+        
         # Auto-upload if enabled
         if self.config.auto_upload and self.wandb_initialized:
             self._upload_file(queue_file)
         
         return content_hash
+    
+    def log_hypothesis(self, hypothesis: Dict[str, Any]) -> str:
+        """
+        Log a hypothesis to ChromaDB.
+        
+        Args:
+            hypothesis: Hypothesis data dictionary
+            
+        Returns:
+            Hypothesis ID
+        """
+        if not self.chromadb_client or not self.hypotheses_collection:
+            return hypothesis.get('id', 'unknown')
+        
+        try:
+            hyp_id = hypothesis.get('id', 'unknown')
+            
+            # Prepare metadata
+            metadata = {
+                'id': hyp_id,
+                'name': hypothesis.get('name', 'Unknown'),
+                'category': hypothesis.get('category', 'unknown'),
+                'created_at': hypothesis.get('created_at', datetime.now().isoformat()),
+                'tested': hypothesis.get('tested', False),
+                'description': hypothesis.get('description', '')[:500],
+                'question': hypothesis.get('question', '')[:500],
+                'prediction': hypothesis.get('prediction', '')[:500]
+            }
+            
+            # Create document for semantic search
+            doc_text = f"Hypothesis {metadata['name']}: {metadata['description']} "
+            doc_text += f"Question: {metadata['question']} "
+            doc_text += f"Category: {metadata['category']}"
+            
+            # Add to ChromaDB
+            self.hypotheses_collection.add(
+                ids=[hyp_id],
+                documents=[doc_text],
+                metadatas=[metadata]
+            )
+            
+            logger.debug(f"Logged hypothesis {hyp_id} to ChromaDB")
+            return hyp_id
+            
+        except Exception as e:
+            logger.warning(f"Failed to log hypothesis to ChromaDB: {e}")
+            return hypothesis.get('id', 'unknown')
     
     def log_metrics(self, experiment_id: str, metrics: Union[MetricsData, Dict[str, Any]]) -> str:
         """

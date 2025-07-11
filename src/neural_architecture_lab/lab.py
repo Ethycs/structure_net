@@ -133,6 +133,19 @@ class NeuralArchitectureLab:
         self.hypotheses[hypothesis.id] = hypothesis
         self.pending_hypotheses.append(hypothesis.id)
         
+        # Log hypothesis to ChromaDB
+        hyp_dict = {
+            'id': hypothesis.id,
+            'name': hypothesis.name,
+            'description': hypothesis.description,
+            'category': hypothesis.category.value,
+            'question': hypothesis.question,
+            'prediction': hypothesis.prediction,
+            'created_at': hypothesis.created_at.isoformat(),
+            'tested': hypothesis.tested
+        }
+        self.logger.log_hypothesis(hyp_dict)
+        
         if self.config.verbose:
             print(f"📊 Registered hypothesis: {hypothesis.name}")
             print(f"   Category: {hypothesis.category.value}")
@@ -318,8 +331,8 @@ class NeuralArchitectureLab:
         result: HypothesisResult
     ) -> List[Hypothesis]:
         """Generate follow-up hypotheses based on results."""
-        # ... (implementation remains the same)
-        pass
+        # TODO: Implement follow-up hypothesis generation
+        return []
     
     def _refine_parameter_space(
         self,

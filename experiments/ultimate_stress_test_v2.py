@@ -52,11 +52,12 @@ class StressTestConfig:
     mutation_rate: float = 0.3
     seed_model_dir: Optional[str] = None
     epochs_per_generation: int = 10
-    batch_size_base: int = 128
+    batch_size_base: int = 256  # Increased for better GPU utilization
     learning_rate_strategies: List[str] = field(default_factory=lambda: ['basic', 'advanced'])
     enable_growth: bool = True
     max_layers: int = 15
     dataset_name: str = 'cifar10'
+    verbose: bool = False
 
 def evaluate_competitor_task(experiment: Experiment, device_id: int) -> ExperimentResult:
     """
@@ -68,8 +69,21 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
     start_time = time.time()
 
     try:
+        # Extract the actual parameters from the 'params' wrapper
+        if 'params' in config and isinstance(config['params'], dict):
+            # Merge the params dict with the control parameters
+            actual_config = {**config}
+            actual_config.update(config['params'])
+            config = actual_config
+        
         dataset_name = config.get('dataset', 'cifar10')
-        dataset = create_dataset(dataset_name, batch_size=config['batch_size'])
+        # Use num_workers from config (set by auto-balancer)
+        dataset = create_dataset(
+            dataset_name, 
+            batch_size=config.get('batch_size', 128),
+            num_workers=config.get('num_workers', 2),
+            pin_memory=True  # Faster GPU transfer
+        )
         train_loader = dataset['train_loader']
         test_loader = dataset['test_loader']
 
@@ -88,11 +102,29 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
         
         # Training loop
         model.train()
-        for _ in range(config['epochs']):
-            for data, target in train_loader:
+        for epoch in range(config['epochs']):
+            for batch_idx, (data, target) in enumerate(train_loader):
                 data, target = data.to(device), target.to(device)
-                if data.dim() > 2 and hasattr(model, 'layers') and model.layers and isinstance(model.layers[0], nn.Linear):
+                
+                # Debug shape issue on first batch of first epoch
+                if epoch == 0 and batch_idx == 0 and config.get('verbose', False):
+                    print(f"\n🔍 Debug {experiment.id}:")
+                    print(f"   Original data shape: {data.shape}")
+                    print(f"   Data dimensions: {data.dim()}")
+                    print(f"   Architecture: {config['architecture']}")
+                    print(f"   First layer expects: {config['architecture'][0]} inputs")
+                
+                # Flatten images for fully connected networks
+                if data.dim() == 4:  # [batch, channels, height, width]
+                    # CIFAR-10 images are [batch, 3, 32, 32], need to flatten for FC networks
+                    data = data.view(data.size(0), -1)  # Results in [batch, 3072]
+                    if epoch == 0 and batch_idx == 0 and config.get('verbose', False):
+                        print(f"   Flattened data shape: {data.shape}")
+                elif data.dim() == 3:  # Might already be partially flattened
+                    # Flatten to 2D
                     data = data.view(data.size(0), -1)
+                    if epoch == 0 and batch_idx == 0 and config.get('verbose', False):
+                        print(f"   Flattened 3D data shape: {data.shape}")
                 
                 optimizer.zero_grad()
                 output = model(data)
@@ -106,7 +138,10 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
         with torch.no_grad():
             for data, target in test_loader:
                 data, target = data.to(device), target.to(device)
-                if data.dim() > 2 and hasattr(model, 'layers') and model.layers and isinstance(model.layers[0], nn.Linear):
+                # Flatten images for fully connected networks
+                if data.dim() == 4:  # [batch, channels, height, width]
+                    data = data.view(data.size(0), -1)
+                elif data.dim() == 3:  # Might already be partially flattened
                     data = data.view(data.size(0), -1)
                 
                 output = model(data)
@@ -135,6 +170,10 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
         )
 
     except Exception as e:
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        print(f"\n❌ ERROR in {experiment.id}: {error_msg}")
+        if hasattr(e, '__traceback__'):
+            print(f"   Location: {traceback.extract_tb(e.__traceback__)[-1]}")
         return ExperimentResult(
             experiment_id=experiment.id,
             hypothesis_id=experiment.hypothesis_id,
@@ -182,6 +221,7 @@ class TournamentExecutor:
                 'epochs': self.config.epochs_per_generation,
                 'batch_size': self.config.batch_size_base,
                 'enable_growth': self.config.enable_growth,
+                'verbose': self.config.verbose,
             },
             success_metrics={'fitness': 0.0},
             category=HypothesisCategory.ARCHITECTURE
@@ -239,14 +279,35 @@ class TournamentExecutor:
         """Updates the population with the results from the NAL."""
         results_map = {res.metrics['competitor_id']: res for res in result.experiment_results if 'competitor_id' in res.metrics}
         
+        # Track errors for summary
+        errors = []
+        successful = 0
+        
         for competitor in self.population:
             res = results_map.get(competitor['id'])
             if res and not res.error:
                 competitor['fitness'] = res.metrics.get('fitness', 0.0)
                 competitor['accuracy'] = res.metrics.get('accuracy', 0.0)
                 competitor['parameters'] = res.model_parameters
+                successful += 1
             else:
                 competitor['fitness'] = 0.0
+                if res and res.error:
+                    error_line = res.error.split('\n')[0]  # First line of error
+                    errors.append((competitor['id'], error_line))
+        
+        # Print summary if verbose
+        if self.config.verbose and errors:
+            print(f"\n📊 Generation Summary: {successful}/{len(self.population)} succeeded")
+            unique_errors = {}
+            for cid, err in errors:
+                if err not in unique_errors:
+                    unique_errors[err] = []
+                unique_errors[err].append(cid)
+            
+            print("❌ Unique errors:")
+            for err, ids in unique_errors.items():
+                print(f"   {err} ({len(ids)} experiments)")
 
         self.population.sort(key=lambda x: x['fitness'], reverse=True)
         self.generation_results.append(self.population)
@@ -283,7 +344,7 @@ class StressTestConfig:
     mutation_rate: float = 0.3
     seed_model_dir: Optional[str] = None
     epochs_per_generation: int = 10
-    batch_size_base: int = 128
+    batch_size_base: int = 256  # Increased for better GPU utilization
     learning_rate_strategies: List[str] = field(default_factory=lambda: ['basic', 'advanced'])
     enable_growth: bool = True
     max_layers: int = 15
@@ -316,13 +377,21 @@ async def run_stress_test(lab_config: LabConfig, stress_test_config: StressTestC
 
 def get_default_lab_config() -> LabConfig:
     """Returns a default configuration for the NAL lab."""
+    # Optimize for GPU utilization
+    n_gpus = torch.cuda.device_count()
+    n_cpus = mp.cpu_count()
+    
+    # Balance parallel experiments with available resources
+    # Rule of thumb: 2-3 experiments per GPU, but limited by CPU cores
+    max_experiments = min(n_gpus * 2, n_cpus // 2) if n_gpus > 0 else 2
+    
     return LabConfig(
         project_name="ultimate_stress_test",
         results_dir=f"data/nal_stress_test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-        max_parallel_experiments=4,
+        max_parallel_experiments=max_experiments,
         log_level="INFO",
         enable_wandb=False,
-        device_ids=[0]
+        device_ids=list(range(n_gpus)) if n_gpus > 0 else [-1]
     )
 
 def main():
@@ -337,6 +406,8 @@ def main():
     parser.add_argument('--tournament-size', type=int, help=f"Number of competitors per generation (default: {stress_config.tournament_size}).")
     parser.add_argument('--dataset', type=str, help=f"Dataset to use (default: {stress_config.dataset_name}).")
     parser.add_argument('--seed-model-dir', type=str, help="Directory of seed models to start the tournament.")
+    parser.add_argument('--loud', action='store_true', help="Print detailed error messages and experiment results to stdout.")
+    parser.add_argument('--verbose', action='store_true', help="Enable verbose output (same as --loud).")
 
     # 3. Add standard NAL arguments to the parser
     LabConfigFactory.add_arguments(parser)
@@ -356,10 +427,15 @@ def main():
         stress_config.dataset_name = args.dataset
     if args.seed_model_dir is not None:
         stress_config.seed_model_dir = args.seed_model_dir
+    if args.loud or args.verbose:
+        stress_config.verbose = True
+        lab_config.verbose = True
     
     # 7. Run the experiment
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_stress_test(lab_config, stress_config))
 
 if __name__ == "__main__":
+    # Set multiprocessing start method to 'spawn' for CUDA compatibility
+    mp.set_start_method('spawn', force=True)
     main()

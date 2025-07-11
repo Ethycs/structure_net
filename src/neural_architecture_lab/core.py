@@ -184,6 +184,15 @@ class LabConfig:
     # Adaptive exploration
     enable_adaptive_hypotheses: bool = True
     max_hypothesis_depth: int = 3  # How many follow-up hypotheses to generate
+    
+    # Auto-balancing settings
+    auto_balance: bool = True
+    target_cpu_percent: float = 75.0
+    max_cpu_percent: float = 90.0
+    target_gpu_percent: float = 85.0
+    max_gpu_percent: float = 95.0
+    target_memory_percent: float = 80.0
+    max_memory_percent: float = 90.0
 
 class LabConfigFactory:
     @staticmethod
@@ -199,6 +208,11 @@ class LabConfigFactory:
         group.add_argument('--nal-enable-wandb', action='store_true', help='Enable logging to Weights & Biases.')
         group.add_argument('--nal-disable-wandb', action='store_true', help='Disable logging to Weights & Biases.')
         group.add_argument('--nal-verbose', action='store_true', help='Enable verbose output from the lab.')
+        group.add_argument('--nal-disable-autobalance', action='store_true', help='Disable automatic resource balancing.')
+        group.add_argument('--nal-target-cpu', type=float, help='Target CPU utilization percentage (default: 75).')
+        group.add_argument('--nal-max-cpu', type=float, help='Maximum CPU utilization percentage (default: 90).')
+        group.add_argument('--nal-target-gpu', type=float, help='Target GPU utilization percentage (default: 85).')
+        group.add_argument('--nal-max-gpu', type=float, help='Maximum GPU utilization percentage (default: 95).')
 
     @staticmethod
     def from_args(args: argparse.Namespace, base_config: Optional[LabConfig] = None) -> LabConfig:
@@ -236,6 +250,16 @@ class LabConfigFactory:
             base_config.enable_wandb = False
         if 'nal_verbose' in provided_args:
             base_config.verbose = True
+        if 'nal_disable_autobalance' in provided_args and provided_args['nal_disable_autobalance']:
+            base_config.auto_balance = False
+        if 'nal_target_cpu' in provided_args:
+            base_config.target_cpu_percent = provided_args['nal_target_cpu']
+        if 'nal_max_cpu' in provided_args:
+            base_config.max_cpu_percent = provided_args['nal_max_cpu']
+        if 'nal_target_gpu' in provided_args:
+            base_config.target_gpu_percent = provided_args['nal_target_gpu']
+        if 'nal_max_gpu' in provided_args:
+            base_config.max_gpu_percent = provided_args['nal_max_gpu']
             
         return base_config
 

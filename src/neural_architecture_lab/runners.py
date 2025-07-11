@@ -21,6 +21,7 @@ from .core import (
     Experiment, ExperimentResult, ExperimentStatus,
     LabConfig, ExperimentRunnerBase
 )
+from .resource_monitor import get_auto_balancer, ResourceLimits
 
 # Import structure_net components
 from structure_net.core.network_factory import create_standard_network
@@ -296,12 +297,41 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
 
 
 class AsyncExperimentRunner(ExperimentRunnerBase):
-    """Asynchronous experiment runner using multiprocessing."""
+    """Asynchronous experiment runner using multiprocessing with auto-balancing."""
     
     def __init__(self, config: LabConfig):
         self.config = config
         self.device_ids = config.device_ids
         self.max_parallel = config.max_parallel_experiments
+        
+        # Initialize auto-balancer if enabled
+        self.auto_balance = getattr(config, 'auto_balance', True)
+        if self.auto_balance:
+            resource_limits = ResourceLimits(
+                target_cpu_percent=getattr(config, 'target_cpu_percent', 75.0),
+                max_cpu_percent=getattr(config, 'max_cpu_percent', 90.0),
+                target_gpu_percent=getattr(config, 'target_gpu_percent', 85.0),
+                max_gpu_percent=getattr(config, 'max_gpu_percent', 95.0),
+                target_memory_percent=getattr(config, 'target_memory_percent', 80.0),
+                max_memory_percent=getattr(config, 'max_memory_percent', 90.0)
+            )
+            self.balancer = get_auto_balancer(resource_limits)
+            
+            # Get optimal initial settings
+            initial_settings = self.balancer.get_optimal_initial_settings()
+            self.max_parallel = initial_settings['parallel_experiments']
+            self.current_batch_size = initial_settings['batch_size']
+            self.current_workers = initial_settings['num_workers']
+            
+            if config.verbose:
+                print(f"🤖 Auto-balancer initialized:")
+                print(f"   Parallel experiments: {self.max_parallel}")
+                print(f"   Initial batch size: {self.current_batch_size}")
+                print(f"   Data workers: {self.current_workers}")
+        else:
+            self.balancer = None
+            self.current_batch_size = 128
+            self.current_workers = 2
     
     async def run_experiment(self, experiment: Experiment, test_function: Callable) -> ExperimentResult:
         """Run a single experiment asynchronously."""
@@ -326,11 +356,50 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
         return result
     
     async def run_experiments(self, experiments: List[Experiment], test_function: Callable) -> List[ExperimentResult]:
-        """Run multiple experiments with controlled parallelism."""
+        """Run multiple experiments with controlled parallelism and auto-balancing."""
         results = []
         
-        for i in range(0, len(experiments), self.max_parallel):
-            batch = experiments[i:i + self.max_parallel]
+        # Pass runtime parameters to experiments
+        for exp in experiments:
+            if self.auto_balance:
+                exp.parameters['batch_size'] = self.current_batch_size
+                exp.parameters['num_workers'] = self.current_workers
+        
+        i = 0
+        while i < len(experiments):
+            # Check and apply auto-balancing recommendations
+            if self.balancer:
+                recommendations = self.balancer.get_recommendations(
+                    self.max_parallel,
+                    self.current_batch_size,
+                    self.current_workers
+                )
+                
+                # Apply recommendations
+                if recommendations['parallel_experiments'] != self.max_parallel:
+                    self.max_parallel = recommendations['parallel_experiments']
+                    if self.config.verbose:
+                        print(f"🔄 Adjusted parallel experiments to {self.max_parallel}")
+                
+                if recommendations['batch_size'] != self.current_batch_size:
+                    self.current_batch_size = recommendations['batch_size']
+                    # Update remaining experiments
+                    for exp in experiments[i:]:
+                        exp.parameters['batch_size'] = self.current_batch_size
+                    if self.config.verbose:
+                        print(f"🔄 Adjusted batch size to {self.current_batch_size}")
+                
+                if recommendations['num_workers'] != self.current_workers:
+                    self.current_workers = recommendations['num_workers']
+                    # Update remaining experiments
+                    for exp in experiments[i:]:
+                        exp.parameters['num_workers'] = self.current_workers
+                    if self.config.verbose:
+                        print(f"🔄 Adjusted data workers to {self.current_workers}")
+            
+            # Run batch with current settings
+            batch_size = min(self.max_parallel, len(experiments) - i)
+            batch = experiments[i:i + batch_size]
             
             for j, exp in enumerate(batch):
                 if exp.device_id is None:
@@ -340,7 +409,10 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
             batch_results = await asyncio.gather(*batch_tasks)
             results.extend(batch_results)
             
-            if i + self.max_parallel < len(experiments):
+            i += batch_size
+            
+            # Small delay between batches
+            if i < len(experiments):
                 await asyncio.sleep(1)
         
         return results

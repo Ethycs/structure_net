@@ -84,12 +84,14 @@ class StatisticalAnalyzer:
             metric_names = list(results[0].metrics.keys())
             for metric in metric_names:
                 values = [r.metrics.get(metric, 0) for r in results]
-                metrics_summary[metric] = {
-                    'mean': np.mean(values),
-                    'std': np.std(values),
-                    'min': np.min(values),
-                    'max': np.max(values)
-                }
+                # Skip non-numeric metrics
+                if values and isinstance(values[0], (int, float, np.number)):
+                    metrics_summary[metric] = {
+                        'mean': np.mean(values),
+                        'std': np.std(values),
+                        'min': np.min(values),
+                        'max': np.max(values)
+                    }
         
         return {
             'meets_success_criteria': meets_criteria,
