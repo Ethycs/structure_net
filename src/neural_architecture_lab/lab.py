@@ -62,6 +62,7 @@ class NeuralArchitectureLab:
 
         # Initialize components
         self.runner = AsyncExperimentRunner(config)
+        self.runner.logger = self.logger  # Pass logger to runner
         self.insight_extractor = InsightExtractor()
         self.statistical_analyzer = StatisticalAnalyzer(
             significance_level=config.significance_level

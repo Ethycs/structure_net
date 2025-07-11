@@ -33,8 +33,8 @@ class BaseExperimentSchema(BaseModel):
         extra = "allow"
         # Use enum values for serialization
         use_enum_values = True
-        # Allow population by field name or alias
-        allow_population_by_field_name = True
+        # Allow population by field name or alias (renamed in Pydantic v2)
+        populate_by_name = True  # This is the v2 name
     
     def generate_artifact_id(self) -> str:
         """Generate a unique artifact ID based on content hash."""

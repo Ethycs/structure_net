@@ -36,6 +36,7 @@ from src.neural_architecture_lab import (
     ExperimentResult
 )
 from src.neural_architecture_lab.core import LabConfigFactory
+from src.neural_architecture_lab.worker_utils import create_worker_wrapper
 
 # structure_net Imports
 from src.structure_net.core.network_factory import create_standard_network
@@ -67,6 +68,8 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
     config = experiment.parameters
     device = f'cuda:{device_id}' if torch.cuda.is_available() and device_id >= 0 else 'cpu'
     start_time = time.time()
+    
+    # Runner handles status printing now
 
     try:
         # Extract the actual parameters from the 'params' wrapper
@@ -99,6 +102,8 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
         model.to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
         criterion = nn.CrossEntropyLoss()
+        
+        # Runner handles status printing now
         
         # Training loop
         model.train()
@@ -159,6 +164,8 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
             'competitor_id': config.get('competitor_id')
         }
         
+        # Runner handles completion status printing
+        
         return ExperimentResult(
             experiment_id=experiment.id,
             hypothesis_id=experiment.hypothesis_id,
@@ -170,10 +177,9 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
         )
 
     except Exception as e:
+        # Runner handles error printing
         error_msg = f"{type(e).__name__}: {str(e)}"
-        print(f"\n❌ ERROR in {experiment.id}: {error_msg}")
-        if hasattr(e, '__traceback__'):
-            print(f"   Location: {traceback.extract_tb(e.__traceback__)[-1]}")
+        
         return ExperimentResult(
             experiment_id=experiment.id,
             hypothesis_id=experiment.hypothesis_id,
@@ -208,13 +214,16 @@ class TournamentExecutor:
                 'seed_path': c.get('seed_path')
             })
 
+        # Wrap the test function with worker registration
+        wrapped_test_function = create_worker_wrapper(evaluate_competitor_task)
+        
         return Hypothesis(
             id=f"tournament_gen_{generation}",
             name=f"Tournament Generation {generation}",
             description="Evaluate a generation of tournament competitors.",
             question="Which architectures perform best?",
             prediction="Fitter architectures will emerge.",
-            test_function=evaluate_competitor_task,
+            test_function=wrapped_test_function,
             parameter_space={'params': param_list}, # Pass list of configs
             control_parameters={
                 'dataset': self.config.dataset_name,
@@ -265,7 +274,9 @@ class TournamentExecutor:
         self.generate_initial_population()
         
         for generation in range(self.config.generations):
-            print(f"\n--- Generation {generation}/{self.config.generations} ---")
+            print(f"\n{'='*60}")
+            print(f"🏁 Generation {generation+1}/{self.config.generations} - {len(self.population)} competitors")
+            print(f"{'='*60}")
             hypothesis = self.create_hypothesis(generation)
             self.lab.register_hypothesis(hypothesis)
             hypothesis_result = await self.lab.test_hypothesis(hypothesis.id)

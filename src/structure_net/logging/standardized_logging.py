@@ -23,7 +23,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 import torch
@@ -165,7 +165,7 @@ class ExperimentResult(BaseModel):
     class Config:
         # Allow arbitrary types for torch tensors, etc.
         arbitrary_types_allowed = True
-        validate_by_name = True
+        populate_by_name = True  # Pydantic v2 name
 
 
 # ============================================================================
@@ -313,6 +313,7 @@ class StandardizedLogger:
                     'model_parameters': int(result.model_parameters) if hasattr(result, 'model_parameters') else 0,
                     'training_time': float(result.training_time) if hasattr(result, 'training_time') else 0.0,
                     'timestamp': datetime.now().isoformat(),
+                    'completed_at': datetime.now().isoformat(),
                     'architecture': str(result.model_architecture) if hasattr(result, 'model_architecture') else '[]',
                     'primary_metric': float(result.primary_metric) if hasattr(result, 'primary_metric') else 0.0
                 }
@@ -390,6 +391,122 @@ class StandardizedLogger:
         except Exception as e:
             logger.warning(f"Failed to log hypothesis to ChromaDB: {e}")
             return hypothesis.get('id', 'unknown')
+    
+    def register_experiment_start(self, experiment_id: str, hypothesis_id: str, 
+                                 estimated_duration: float = None, pid: int = None, **kwargs) -> str:
+        """
+        Register an experiment when it starts.
+        
+        Args:
+            experiment_id: Unique experiment ID
+            hypothesis_id: Associated hypothesis ID
+            estimated_duration: Estimated duration in seconds
+            pid: Process ID of the experiment
+            **kwargs: Additional metadata
+            
+        Returns:
+            Experiment ID
+        """
+        if not self.chromadb_client or not self.experiments_collection:
+            return experiment_id
+        
+        try:
+            # Get process ID if not provided
+            if pid is None:
+                import os
+                pid = os.getpid()
+            
+            # Prepare metadata
+            metadata = {
+                'experiment_id': experiment_id,
+                'hypothesis_id': hypothesis_id,
+                'status': 'running',
+                'pid': pid,
+                'started_at': datetime.now().isoformat(),
+                'timestamp': datetime.now().isoformat(),
+                'estimated_duration': estimated_duration or 0.0,
+                'estimated_completion': (datetime.now() + timedelta(seconds=estimated_duration)).isoformat() if estimated_duration else None,
+                'accuracy': 0.0,
+                'model_parameters': 0,
+                'training_time': 0.0,
+                'primary_metric': 0.0
+            }
+            
+            # Add any additional metadata
+            for key, value in kwargs.items():
+                if key not in metadata:
+                    metadata[key] = value
+            
+            # Create document
+            doc_text = f"Experiment {experiment_id} started for hypothesis {hypothesis_id}"
+            
+            # Add to ChromaDB
+            self.experiments_collection.add(
+                ids=[experiment_id],
+                documents=[doc_text],
+                metadatas=[metadata]
+            )
+            
+            logger.debug(f"Registered experiment start: {experiment_id}")
+            return experiment_id
+            
+        except Exception as e:
+            logger.warning(f"Failed to register experiment start: {e}")
+            return experiment_id
+    
+    def update_experiment_status(self, experiment_id: str, status: str, **kwargs) -> bool:
+        """
+        Update the status of an experiment.
+        
+        Args:
+            experiment_id: Experiment ID
+            status: New status ('running', 'completed', 'failed', 'cancelled')
+            **kwargs: Additional metadata to update
+            
+        Returns:
+            Success boolean
+        """
+        if not self.chromadb_client or not self.experiments_collection:
+            return False
+        
+        try:
+            # Get existing experiment
+            existing = self.experiments_collection.get(ids=[experiment_id])
+            
+            if not existing['ids']:
+                logger.warning(f"Experiment {experiment_id} not found in ChromaDB")
+                return False
+            
+            # Update metadata
+            metadata = existing['metadatas'][0].copy()
+            metadata['status'] = status
+            metadata['last_updated'] = datetime.now().isoformat()
+            
+            if status in ['completed', 'failed', 'cancelled']:
+                metadata['completed_at'] = datetime.now().isoformat()
+            
+            # Update any additional fields
+            for key, value in kwargs.items():
+                metadata[key] = value
+            
+            # Update document text
+            doc_text = f"Experiment {experiment_id} {status}"
+            if 'accuracy' in kwargs:
+                doc_text += f" with accuracy {kwargs['accuracy']:.4f}"
+            
+            # Update in ChromaDB
+            self.experiments_collection.update(
+                ids=[experiment_id],
+                documents=[doc_text],
+                metadatas=[metadata]
+            )
+            
+            logger.debug(f"Updated experiment {experiment_id} status to {status}")
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Failed to update experiment status: {e}")
+            return False
     
     def log_metrics(self, experiment_id: str, metrics: Union[MetricsData, Dict[str, Any]]) -> str:
         """

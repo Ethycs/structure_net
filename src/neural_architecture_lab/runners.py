@@ -338,7 +338,31 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
         experiment.status = ExperimentStatus.RUNNING
         experiment.started_at = time.time()
         
+        # Register experiment start in ChromaDB if logger available
+        if hasattr(self, 'logger') and self.logger:
+            estimated_duration = experiment.parameters.get('epochs', 10) * 5.0  # Rough estimate
+            self.logger.register_experiment_start(
+                experiment.id,
+                experiment.hypothesis_id,
+                estimated_duration=estimated_duration,
+                architecture=str(experiment.parameters.get('architecture', [])),
+                device_id=experiment.device_id
+            )
+        
         device_id = experiment.device_id or self.device_ids[hash(experiment.id) % len(self.device_ids)]
+        
+        # Print one-line experiment status
+        exp_id = experiment.id.split('_')[-1]  # Get just the experiment number
+        arch = experiment.parameters.get('architecture', [])
+        n_layers = len(arch) - 1 if isinstance(arch, list) else 0
+        epochs = experiment.parameters.get('epochs', 10)
+        lr_strategy = experiment.parameters.get('lr_strategy', 'default')
+        device_str = f'cuda:{device_id}' if device_id >= 0 else 'cpu'
+        
+        print(f"🚀 [{exp_id}] Starting on {device_str} | "
+              f"Arch: {n_layers}L | "
+              f"Strategy: {lr_strategy} | "
+              f"Epochs: {epochs}", flush=True)
         
         loop = asyncio.get_event_loop()
         with ProcessPoolExecutor(max_workers=1) as executor:
@@ -352,6 +376,28 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
         experiment.status = ExperimentStatus.COMPLETED if result.error is None else ExperimentStatus.FAILED
         experiment.completed_at = time.time()
         experiment.result = result
+        
+        # Print completion status
+        duration = experiment.completed_at - experiment.started_at
+        if result.error is None:
+            accuracy = result.metrics.get('accuracy', 0.0) if hasattr(result, 'metrics') else 0.0
+            primary_metric = result.primary_metric if hasattr(result, 'primary_metric') else 0.0
+            print(f"✅ [{exp_id}] Completed in {duration:.1f}s | "
+                  f"Accuracy: {accuracy:.2%} | "
+                  f"Primary metric: {primary_metric:.3f}", flush=True)
+        else:
+            error_msg = str(result.error).split('\n')[0][:50] if hasattr(result, 'error') else 'Unknown error'
+            print(f"❌ [{exp_id}] Failed after {duration:.1f}s | Error: {error_msg}...", flush=True)
+        
+        # Update ChromaDB status if available
+        if hasattr(self, 'logger') and self.logger and result.error is None:
+            self.logger.update_experiment_status(
+                experiment.id,
+                'completed',
+                accuracy=accuracy,
+                primary_metric=primary_metric,
+                training_time=duration
+            )
         
         return result
     

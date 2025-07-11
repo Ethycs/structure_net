@@ -23,10 +23,12 @@ def setup_cuda_devices(devices: str = None):
     
     if "CUDA_VISIBLE_DEVICES" not in os.environ:
         os.environ["CUDA_VISIBLE_DEVICES"] = devices
-        print(f"Set CUDA_VISIBLE_DEVICES={devices}")
+        # Only print when explicitly setting, not when already set
+        if os.environ.get("STRUCTURE_NET_VERBOSE", "").lower() == "true":
+            print(f"Set CUDA_VISIBLE_DEVICES={devices}")
     else:
-        current = os.environ["CUDA_VISIBLE_DEVICES"]
-        print(f"CUDA_VISIBLE_DEVICES already set to: {current}")
+        # Don't print this message - it's too noisy when spawning processes
+        pass
 
 # Automatically configure on import
 setup_cuda_devices()

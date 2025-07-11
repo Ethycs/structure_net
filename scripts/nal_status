@@ -1,0 +1,3 @@
+#!/bin/bash
+# NAL Status shortcut
+python3 /home/rabbit/structure_net/scripts/nal_status_chroma.py "$@"

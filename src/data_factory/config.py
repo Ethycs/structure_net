@@ -75,9 +75,11 @@ _DATASET_REGISTRY: Dict[str, DatasetConfig] = {}
 def register_dataset(config: DatasetConfig) -> None:
     """Register a dataset configuration."""
     if config.name in _DATASET_REGISTRY:
-        logger.warning(f"Overwriting existing dataset config for {config.name}")
+        # Already registered, don't log anything to avoid noise
+        return
     _DATASET_REGISTRY[config.name] = config
-    logger.info(f"Registered dataset: {config.name} ({config.full_name})")
+    # Only log at debug level to avoid noise in multiprocessing
+    logger.debug(f"Registered dataset: {config.name} ({config.full_name})")
 
 
 def get_dataset_config(name: str) -> DatasetConfig:

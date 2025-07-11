@@ -15,7 +15,33 @@ import numpy as np
 from collections import defaultdict, Counter
 import chromadb
 from chromadb.config import Settings
-from tabulate import tabulate
+# from tabulate import tabulate  # Optional dependency
+
+def simple_table(data, headers):
+    """Simple table display without tabulate dependency."""
+    if not data:
+        return ""
+    
+    # Calculate column widths
+    col_widths = [len(h) for h in headers]
+    for row in data:
+        for i, cell in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(str(cell)))
+    
+    # Build table
+    lines = []
+    
+    # Header
+    header_line = " | ".join(h.ljust(col_widths[i]) for i, h in enumerate(headers))
+    lines.append(header_line)
+    lines.append("-" * len(header_line))
+    
+    # Data rows
+    for row in data:
+        row_line = " | ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row))
+        lines.append(row_line)
+    
+    return "\n".join(lines)
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -53,6 +79,7 @@ class NALStatusMonitor:
             return {
                 'total_experiments': 0,
                 'total_hypotheses': 0,
+                'running_experiments': 0,
                 'success_rate': 0.0,
                 'avg_accuracy': 0.0,
                 'avg_training_time': 0.0
@@ -63,18 +90,20 @@ class NALStatusMonitor:
         
         # Calculate statistics
         total_experiments = len(metadatas)
+        running_experiments = sum(1 for m in metadatas if m.get('status') == 'running')
         successful_experiments = sum(1 for m in metadatas if m.get('status') == 'completed')
         failed_experiments = sum(1 for m in metadatas if m.get('status') == 'failed')
         
-        accuracies = [m.get('accuracy', 0) for m in metadatas if m.get('accuracy') is not None]
-        training_times = [m.get('training_time', 0) for m in metadatas if m.get('training_time') is not None]
+        accuracies = [m.get('accuracy', 0) for m in metadatas if m.get('accuracy') is not None and m.get('status') == 'completed']
+        training_times = [m.get('training_time', 0) for m in metadatas if m.get('training_time') is not None and m.get('status') == 'completed']
         
         return {
             'total_experiments': total_experiments,
             'total_hypotheses': len(all_hypotheses['ids']) if all_hypotheses['ids'] else 0,
+            'running_experiments': running_experiments,
             'successful_experiments': successful_experiments,
             'failed_experiments': failed_experiments,
-            'success_rate': (successful_experiments / total_experiments * 100) if total_experiments > 0 else 0,
+            'success_rate': (successful_experiments / (total_experiments - running_experiments) * 100) if (total_experiments - running_experiments) > 0 else 0,
             'avg_accuracy': np.mean(accuracies) if accuracies else 0.0,
             'avg_training_time': np.mean(training_times) if training_times else 0.0,
             'total_parameters': sum(m.get('model_parameters', 0) for m in metadatas),
@@ -234,6 +263,43 @@ class NALStatusMonitor:
             'error_types': dict(error_counts.most_common(10))
         }
     
+    def get_running_experiments(self) -> List[Dict]:
+        """Get currently running experiments."""
+        results = self.experiments_collection.query(
+            query_texts=[""],  # Empty query
+            n_results=1000,
+            where={"status": "running"}
+        )
+        
+        if not results['ids'][0]:
+            return []
+        
+        running = []
+        for i, exp_id in enumerate(results['ids'][0]):
+            metadata = results['metadatas'][0][i]
+            
+            # Calculate progress
+            started = datetime.fromisoformat(metadata.get('started_at', datetime.now().isoformat()))
+            elapsed = (datetime.now() - started).total_seconds()
+            estimated = metadata.get('estimated_duration', 0)
+            progress = min(100, (elapsed / estimated * 100) if estimated > 0 else 0)
+            
+            running.append({
+                'id': exp_id,
+                'hypothesis': metadata.get('hypothesis_id', 'Unknown'),
+                'pid': metadata.get('pid', 'Unknown'),
+                'started_at': metadata.get('started_at', ''),
+                'elapsed_time': elapsed,
+                'estimated_duration': estimated,
+                'progress': progress,
+                'estimated_completion': metadata.get('estimated_completion', ''),
+                'device_id': metadata.get('device_id', 'Unknown'),
+                'current_epoch': metadata.get('current_epoch', 0),
+                'current_accuracy': metadata.get('current_accuracy', 0.0)
+            })
+        
+        return sorted(running, key=lambda x: x['started_at'])
+    
     def display_summary(self):
         """Display summary statistics."""
         stats = self.get_summary_stats()
@@ -242,6 +308,7 @@ class NALStatusMonitor:
         print("=" * 60)
         print(f"Total Experiments:     {stats['total_experiments']}")
         print(f"Total Hypotheses:      {stats['total_hypotheses']}")
+        print(f"Running:               {stats['running_experiments']} 🏃")
         print(f"Successful:            {stats['successful_experiments']}")
         print(f"Failed:                {stats['failed_experiments']}")
         print(f"Success Rate:          {stats['success_rate']:.1f}%")
@@ -278,7 +345,7 @@ class NALStatusMonitor:
             ])
         
         headers = ["ID", "Hypothesis", "Status", "Accuracy", "Params", "Time", "When"]
-        print(tabulate(table_data, headers=headers, tablefmt="grid"))
+        print(simple_table(table_data, headers))
         print()
     
     def display_hypothesis_performance(self):
@@ -306,7 +373,7 @@ class NALStatusMonitor:
             ])
         
         headers = ["Hypothesis", "Category", "Runs", "Success", "Accuracy", "Params", "Time"]
-        print(tabulate(table_data, headers=headers, tablefmt="grid"))
+        print(simple_table(table_data, headers))
         print()
     
     def display_architecture_trends(self):
@@ -330,7 +397,7 @@ class NALStatusMonitor:
                 ])
             
             headers = ["Architecture", "Tested", "Avg Acc", "Max Acc", "Params"]
-            print(tabulate(table_data, headers=headers, tablefmt="grid"))
+            print(simple_table(table_data, headers))
         print()
     
     def display_error_analysis(self):
@@ -345,6 +412,46 @@ class NALStatusMonitor:
             print("\nMost common error types:")
             for error_type, count in errors['error_types'].items():
                 print(f"  {error_type}: {count}")
+        print()
+    
+    def display_running_experiments(self):
+        """Display currently running experiments."""
+        running = self.get_running_experiments()
+        
+        print("🏃 Currently Running Experiments")
+        print("=" * 60)
+        
+        if not running:
+            print("No experiments currently running.")
+            return
+        
+        # Format for table
+        table_data = []
+        for exp in running:
+            elapsed_str = f"{exp['elapsed_time']:.0f}s"
+            if exp['elapsed_time'] > 3600:
+                elapsed_str = f"{exp['elapsed_time']/3600:.1f}h"
+            elif exp['elapsed_time'] > 60:
+                elapsed_str = f"{exp['elapsed_time']/60:.1f}m"
+            
+            progress_bar = "█" * int(exp['progress'] / 10) + "░" * (10 - int(exp['progress'] / 10))
+            
+            # Format current accuracy if available
+            acc_str = f"{exp['current_accuracy']:.1%}" if exp['current_accuracy'] > 0 else "-"
+            
+            table_data.append([
+                exp['id'][:8],
+                str(exp['pid']),
+                exp['hypothesis'][:15],
+                f"GPU {exp['device_id']}",
+                elapsed_str,
+                f"{progress_bar} {exp['progress']:.0f}%",
+                acc_str,
+                datetime.fromisoformat(exp['estimated_completion']).strftime('%H:%M') if exp['estimated_completion'] else "-"
+            ])
+        
+        headers = ["ID", "PID", "Hypothesis", "Device", "Elapsed", "Progress", "Acc", "ETA"]
+        print(simple_table(table_data, headers))
         print()
     
     def search_experiments(self, query: str, limit: int = 10):
@@ -398,6 +505,8 @@ def main():
                        help='Search experiments by description')
     parser.add_argument('--all', action='store_true',
                        help='Show all analyses')
+    parser.add_argument('--running', action='store_true',
+                       help='Show currently running experiments')
     
     args = parser.parse_args()
     
@@ -407,6 +516,8 @@ def main():
     # Display requested information
     if args.search:
         monitor.search_experiments(args.search)
+    elif args.running:
+        monitor.display_running_experiments()
     elif args.recent:
         monitor.display_recent_experiments(args.recent)
     elif args.hypotheses:
@@ -417,14 +528,15 @@ def main():
         monitor.display_error_analysis()
     elif args.all:
         monitor.display_summary()
+        monitor.display_running_experiments()
         monitor.display_recent_experiments(24)
         monitor.display_hypothesis_performance()
         monitor.display_architecture_trends()
         monitor.display_error_analysis()
     else:
-        # Default: show summary and recent
+        # Default: show summary and running
         monitor.display_summary()
-        monitor.display_recent_experiments(24)
+        monitor.display_running_experiments()
 
 
 if __name__ == "__main__":
