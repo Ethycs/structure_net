@@ -55,7 +55,8 @@ class StructureNetWandBLogger:
             name=self.experiment_name,
             config=config or {},
             tags=tags or [],
-            reinit=True  # Allow multiple runs in same process
+            reinit=True,  # Allow multiple runs in same process
+            dir="data"
         )
         
         # Track experiment state

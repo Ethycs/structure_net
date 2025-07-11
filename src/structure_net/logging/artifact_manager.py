@@ -272,7 +272,8 @@ class ArtifactManager:
                 entity=self.config.entity,
                 job_type="artifact_upload",
                 name=f"upload_{artifact_hash}",
-                reinit=True
+                reinit=True,
+                dir="data"
             )
             
             try:

@@ -231,7 +231,8 @@ class StandardizedLogger:
                 wandb.init(
                     project=self.config.project_name,
                     job_type="experiment_logger",
-                    reinit=True
+                    reinit=True,
+                    dir="data"
                 )
             self.wandb_initialized = True
             logger.info("WandB initialized successfully")
