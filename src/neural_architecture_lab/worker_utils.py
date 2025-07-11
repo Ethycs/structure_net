@@ -14,7 +14,7 @@ from src.structure_net.logging.standardized_logging import StandardizedLogger, L
 class WorkerRegistry:
     """Registry for experiment workers to track their status."""
     
-    def __init__(self, experiment_id: str, hypothesis_id: str, chromadb_path: str = "./chroma_db"):
+    def __init__(self, experiment_id: str, hypothesis_id: str, chromadb_path: str = "data/chroma_db"):
         """Initialize worker registry."""
         self.experiment_id = experiment_id
         self.hypothesis_id = hypothesis_id

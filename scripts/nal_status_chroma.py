@@ -53,7 +53,7 @@ from src.data_factory.search.chroma_client import ChromaConfig
 class NALStatusMonitor:
     """Monitor NAL experiments via ChromaDB."""
     
-    def __init__(self, db_path: str = "./chroma_db"):
+    def __init__(self, db_path: str = "data/chroma_db"):
         """Initialize status monitor with ChromaDB connection."""
         self.client = chromadb.PersistentClient(
             path=db_path,
@@ -507,8 +507,8 @@ class NALStatusMonitor:
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(description="NAL Status Monitor - ChromaDB Edition")
-    parser.add_argument('--db-path', '-d', default='./chroma_db',
-                       help='Path to ChromaDB database (default: ./chroma_db)')
+    parser.add_argument('--db-path', '-d', default='data/chroma_db',
+                       help='Path to ChromaDB database (default: data/chroma_db)')
     parser.add_argument('--recent', '-r', type=int, metavar='HOURS',
                        help='Show experiments from last N hours')
     parser.add_argument('--hypotheses', '-y', action='store_true',
