@@ -25,19 +25,69 @@ logger = logging.getLogger(__name__)
 
 class CompleteMetricsSystem:
     """
-    Complete metrics system integrating all analyzers with the autocorrelation framework.
+    DEPRECATED: The metrics system has been migrated to a component-based architecture.
     
-    This is the main entry point for comprehensive network analysis, providing
-    backward compatibility while enabling the new modular architecture.
+    The old monolithic analyzers have been split into:
+    1. Low-level metrics (focused measurements) in src.structure_net.components.metrics
+    2. High-level analyzers (combining metrics) in src.structure_net.components.analyzers
+    
+    For a complete replacement, use the new MetricsOrchestrator pattern:
+    
+    Example migration:
+        # Old way:
+        metrics_system = CompleteMetricsSystem(network, threshold_config, metrics_config)
+        results = metrics_system.compute_all_metrics(data_loader)
+        
+        # New way:
+        from src.structure_net.components.analyzers import (
+            InformationFlowAnalyzer, HomologicalAnalyzer
+        )
+        from src.structure_net.core import EvolutionContext, AnalysisReport
+        
+        # Create analyzers
+        info_analyzer = InformationFlowAnalyzer()
+        homo_analyzer = HomologicalAnalyzer()
+        
+        # Run analysis
+        context = EvolutionContext({'model': network, 'data_loader': data_loader})
+        report = AnalysisReport()
+        
+        info_results = info_analyzer.analyze(network, report, context)
+        homo_results = homo_analyzer.analyze(network, report, context)
+    
+    See MIGRATION_STATUS.md for full migration guide.
     """
     
     def __init__(self, network: nn.Module, threshold_config: ThresholdConfig, metrics_config: MetricsConfig):
+        # Provide helpful migration message before failing
+        migration_msg = (
+            "\n" + "="*80 + "\n"
+            "MIGRATION NOTICE: CompleteMetricsSystem has been replaced by component architecture.\n"
+            "\n"
+            "The metrics system has been redesigned for better modularity and performance.\n"
+            "Old monolithic analyzers are now split into focused metrics and analyzers.\n"
+            "\n"
+            "Quick migration path:\n"
+            "1. For MI/entropy analysis: use InformationFlowAnalyzer\n"
+            "2. For homological analysis: use HomologicalAnalyzer\n" 
+            "3. For specific metrics: import from src.structure_net.components.metrics\n"
+            "\n"
+            "See src/structure_net/evolution/metrics/MIGRATION_STATUS.md for details.\n"
+            + "="*80
+        )
+        logger.warning(migration_msg)
+        
         self.network = network
         self.threshold_config = threshold_config
         self.metrics_config = metrics_config
         
-        # Initialize all analyzers
-        self.mi_analyzer = MutualInformationAnalyzer(threshold_config)
+        # Initialize all analyzers - these will raise deprecation warnings
+        try:
+            self.mi_analyzer = MutualInformationAnalyzer(threshold_config)
+        except DeprecationWarning as e:
+            logger.error(f"Failed to initialize MI analyzer: {e}")
+            raise
+        
         self.activity_analyzer = ActivityAnalyzer(threshold_config)
         self.sensli_analyzer = SensitivityAnalyzer(network, threshold_config)
         self.graph_analyzer = GraphAnalyzer(network, threshold_config)

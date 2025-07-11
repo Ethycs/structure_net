@@ -10,6 +10,11 @@ The core has been modularized into focused components:
 - io_operations.py: Model saving and loading
 - validation.py: Model quality validation and cleanup
 - lsuv.py: LSUV initialization system
+
+New Component Architecture:
+- interfaces.py: Core interfaces and contracts for self-aware components
+- base_components.py: Base implementations for all component types
+- compatibility.py: Component compatibility and registry system
 """
 
 # Import core layer types
@@ -58,9 +63,29 @@ from .lsuv import (
     analyze_network_variance_flow
 )
 
+# Import New Component Architecture (optional imports to avoid breaking existing code)
+try:
+    from .interfaces import (
+        Maturity, ComponentVersion, ResourceLevel, ResourceRequirements,
+        ComponentContract, EvolutionContext, AnalysisReport, EvolutionPlan,
+        IComponent, ILayer, IModel, ITrainer, IMetric, IAnalyzer,
+        IStrategy, IEvolver, IScheduler, IOrchestrator
+    )
+    from .base_components import (
+        BaseComponent, BaseLayer, BaseModel, BaseTrainer, BaseMetric,
+        BaseAnalyzer, BaseStrategy, BaseEvolver, BaseScheduler, BaseOrchestrator
+    )
+    from .compatibility import (
+        CompatibilityLevel, CompatibilityIssue, ComponentRegistry, CompatibilityManager
+    )
+    _COMPONENT_ARCHITECTURE_AVAILABLE = True
+except ImportError:
+    _COMPONENT_ARCHITECTURE_AVAILABLE = False
+
 __version__ = "2.0.0"
 __author__ = "Structure Net Team"
 
+# Build __all__ list dynamically
 __all__ = [
     # Core layer types
     "StandardSparseLayer",
@@ -96,3 +121,16 @@ __all__ = [
     "create_lsuv_initialized_network",
     "analyze_network_variance_flow"
 ]
+
+# Add component architecture exports if available
+if _COMPONENT_ARCHITECTURE_AVAILABLE:
+    __all__.extend([
+        # New Component Architecture
+        "Maturity", "ComponentVersion", "ResourceLevel", "ResourceRequirements",
+        "ComponentContract", "EvolutionContext", "AnalysisReport", "EvolutionPlan",
+        "IComponent", "ILayer", "IModel", "ITrainer", "IMetric", "IAnalyzer",
+        "IStrategy", "IEvolver", "IScheduler", "IOrchestrator",
+        "BaseComponent", "BaseLayer", "BaseModel", "BaseTrainer", "BaseMetric",
+        "BaseAnalyzer", "BaseStrategy", "BaseEvolver", "BaseScheduler", "BaseOrchestrator",
+        "CompatibilityLevel", "CompatibilityIssue", "ComponentRegistry", "CompatibilityManager"
+    ])

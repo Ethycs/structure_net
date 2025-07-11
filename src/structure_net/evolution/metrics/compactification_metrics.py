@@ -61,9 +61,37 @@ class CompactificationAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin, Statist
     
     Analyzes compression ratios, patch effectiveness, memory usage,
     and reconstruction quality for compactified neural networks.
+    
+    DEPRECATED: This class has been migrated to the component architecture.
+    Please use the following components instead:
+    - src.structure_net.components.metrics.CompressionRatioMetric
+    - src.structure_net.components.metrics.PatchEffectivenessMetric
+    - src.structure_net.components.metrics.MemoryEfficiencyMetric
+    - src.structure_net.components.metrics.ReconstructionQualityMetric
+    - src.structure_net.components.analyzers.CompactificationAnalyzer
     """
     
     def __init__(self, threshold_config=None):
+        raise DeprecationWarning(
+            "CompactificationAnalyzer has been migrated to component architecture.\n"
+            "Please use the following components instead:\n"
+            "- For compression metrics: src.structure_net.components.metrics.CompressionRatioMetric\n"
+            "- For patch analysis: src.structure_net.components.metrics.PatchEffectivenessMetric\n"
+            "- For memory analysis: src.structure_net.components.metrics.MemoryEfficiencyMetric\n"
+            "- For quality analysis: src.structure_net.components.metrics.ReconstructionQualityMetric\n"
+            "- For comprehensive analysis: src.structure_net.components.analyzers.CompactificationAnalyzer\n"
+            "\nExample migration:\n"
+            "# Old:\n"
+            "# analyzer = CompactificationAnalyzer()\n"
+            "# metrics = analyzer.compute_metrics(compact_data, original_network)\n"
+            "\n"
+            "# New:\n"
+            "from src.structure_net.components.analyzers import CompactificationAnalyzer\n"
+            "analyzer = CompactificationAnalyzer()\n"
+            "context = EvolutionContext({'compact_data': compact_data, 'original_network': original_network})\n"
+            "report = AnalysisReport()\n"
+            "analysis = analyzer.analyze(None, context, report)"
+        )
         if threshold_config is None:
             from .base import ThresholdConfig
             threshold_config = ThresholdConfig()

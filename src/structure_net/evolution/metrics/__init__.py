@@ -1,12 +1,25 @@
 """
 Metrics package for comprehensive network analysis.
 
-This package provides modular components for analyzing neural networks:
-- Mutual Information Analysis
-- Activity Pattern Analysis  
-- Sensitivity Analysis (SensLI)
-- Graph-theoretic Analysis
-- Integrated Metrics System
+⚠️  MIGRATION NOTICE: This package has been migrated to component architecture.
+
+New location for metrics and analyzers:
+- Low-level metrics: src.structure_net.components.metrics
+- High-level analyzers: src.structure_net.components.analyzers
+
+Migration status:
+✅ MutualInformationAnalyzer → Migrated to components
+✅ HomologicalAnalyzer → Migrated to components  
+✅ ActivityAnalyzer → Migrated to components
+✅ SensitivityAnalyzer → Migrated to components
+✅ GraphAnalyzer → Migrated to components
+✅ TopologicalAnalyzer → Migrated to components
+✅ CatastropheAnalyzer → Migrated to components
+✅ CompactificationAnalyzer → Migrated to components
+
+See MIGRATION_STATUS.md in this directory for details.
+
+All analyzer classes now raise DeprecationWarning with migration instructions.
 """
 
 from .base import (

@@ -35,13 +35,24 @@ class GraphAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
     """
     
     def __init__(self, network: nn.Module, threshold_config):
-        super().__init__(threshold_config)
-        self.network = network
-        self.use_gpu = CUGRAPH_AVAILABLE and torch.cuda.is_available()
-        if self.use_gpu:
-            logger.info("🚀 GraphAnalyzer: GPU acceleration (cuGraph) enabled")
-        else:
-            logger.info("📊 GraphAnalyzer: Using CPU (networkx)")
+        raise DeprecationWarning(
+            "GraphAnalyzer has been migrated to component architecture.\n"
+            "Please use the following components instead:\n"
+            "- src.structure_net.components.metrics.GraphStructureMetric for graph building and basic metrics\n"
+            "- src.structure_net.components.metrics.CentralityMetric for centrality analysis\n"
+            "- src.structure_net.components.metrics.SpectralGraphMetric for spectral properties\n"
+            "- src.structure_net.components.metrics.PathAnalysisMetric for path analysis\n"
+            "- src.structure_net.components.analyzers.GraphAnalyzer for combined analysis\n"
+            "\nExample migration:\n"
+            "# Old code:\n"
+            "analyzer = GraphAnalyzer(network, threshold_config)\n"
+            "metrics = analyzer.compute_metrics(activation_data)\n"
+            "\n"
+            "# New code:\n"
+            "from src.structure_net.components.analyzers import GraphAnalyzer\n"
+            "analyzer = GraphAnalyzer(activation_threshold=0.01)\n"
+            "report = analyzer.analyze(model, report, context)\n"
+        )
         
     def compute_metrics(self, activation_data: Dict) -> Dict[str, Any]:
         """

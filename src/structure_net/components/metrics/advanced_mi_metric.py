@@ -1,16 +1,15 @@
 """
-Mutual Information Analysis Module
+Advanced mutual information metric component.
 
-This module provides comprehensive mutual information analysis for neural networks,
-including exact MI computation, entropy estimation, and information flow analysis.
+This component provides advanced MI estimation methods including
+KNN-based estimation, exact discrete MI, and high-dimensional estimators.
 """
 
+from typing import Dict, Any, Union, Optional, Tuple
 import torch
 import torch.nn.functional as F
 import numpy as np
 import math
-from typing import Dict, Any
-import time
 import logging
 
 try:
@@ -23,71 +22,99 @@ except ImportError:
     from sklearn.neighbors import NearestNeighbors
     CUPY_AVAILABLE = False
 
-from .base import BaseMetricAnalyzer, StatisticalUtilsMixin
+from src.structure_net.core import (
+    BaseMetric, ILayer, IModel, EvolutionContext,
+    ComponentContract, ComponentVersion, Maturity,
+    ResourceRequirements, ResourceLevel
+)
 
-logger = logging.getLogger(__name__)
 
-
-class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
+class AdvancedMIMetric(BaseMetric):
     """
-    DEPRECATED: This class has been migrated to the component architecture.
+    Advanced mutual information estimation for neural networks.
     
-    Please use the following components instead:
-    - Metrics (low-level measurements):
-      * src.structure_net.components.metrics.LayerMIMetric
-      * src.structure_net.components.metrics.EntropyMetric
-      * src.structure_net.components.metrics.AdvancedMIMetric
-      * src.structure_net.components.metrics.InformationFlowMetric
-      * src.structure_net.components.metrics.RedundancyMetric
-    
-    - Analyzer (high-level analysis):
-      * src.structure_net.components.analyzers.InformationFlowAnalyzer
-    
-    Example migration:
-        # Old way:
-        mi_analyzer = MutualInformationAnalyzer(threshold_config)
-        results = mi_analyzer.compute_metrics(X, Y)
-        
-        # New way:
-        from src.structure_net.components.metrics import AdvancedMIMetric
-        mi_metric = AdvancedMIMetric(threshold=threshold_config.activation_threshold)
-        context = EvolutionContext({'X': X, 'Y': Y})
-        results = mi_metric.analyze(None, context)
+    Provides multiple estimation methods optimized for different
+    dimensionalities and data characteristics.
     """
     
-    def __init__(self, threshold_config):
-        raise DeprecationWarning(
-            "MutualInformationAnalyzer has been migrated to component architecture.\n"
-            "Use src.structure_net.components.metrics.AdvancedMIMetric for MI computation\n"
-            "or src.structure_net.components.analyzers.InformationFlowAnalyzer for full analysis.\n"
-            "See class docstring for migration guide."
-        )
-        super().__init__(threshold_config)
-        self.threshold = threshold_config.activation_threshold
-        
-    def compute_metrics(self, X: torch.Tensor, Y: torch.Tensor) -> Dict[str, Any]:
+    def __init__(self, method: str = 'auto', threshold: float = 0.01,
+                 k_neighbors: int = 3, n_bins: int = None, name: str = None):
         """
-        Compute ALL mutual information metrics.
+        Initialize advanced MI metric.
         
         Args:
-            X: Input activations [batch_size, features_X]
-            Y: Output activations [batch_size, features_Y]
+            method: MI estimation method ('auto', 'exact_discrete', 'knn', 'advanced')
+            threshold: Activation threshold for determining active neurons
+            k_neighbors: Number of neighbors for KNN method
+            n_bins: Number of bins for discretization (None for auto)
+            name: Optional custom name
+        """
+        super().__init__(name or "AdvancedMIMetric")
+        self.method = method
+        self.threshold = threshold
+        self.k_neighbors = k_neighbors
+        self.n_bins = n_bins
+        self._measurement_schema = {
+            "mi": float,
+            "entropy_X": float,
+            "entropy_Y": float,
+            "entropy_XY": float,
+            "method_used": str,
+            "active_neurons_X": int,
+            "active_neurons_Y": int,
+            "sparsity_X": float,
+            "sparsity_Y": float
+        }
+    
+    @property
+    def contract(self) -> ComponentContract:
+        """Define the component contract."""
+        return ComponentContract(
+            component_name=self.name,
+            version=ComponentVersion(1, 0, 0),
+            maturity=Maturity.EXPERIMENTAL,
+            required_inputs={"X", "Y"},  # Direct activation tensors
+            provided_outputs={
+                "metrics.mi",
+                "metrics.entropy_X",
+                "metrics.entropy_Y",
+                "metrics.entropy_XY",
+                "metrics.method_used",
+                "metrics.active_neurons",
+                "metrics.sparsity"
+            },
+            resources=ResourceRequirements(
+                memory_level=ResourceLevel.HIGH,
+                requires_gpu=CUPY_AVAILABLE,
+                parallel_safe=False  # KNN methods aren't thread-safe
+            )
+        )
+    
+    def _compute_metric(self, target: Union[ILayer, IModel], 
+                       context: EvolutionContext) -> Dict[str, Any]:
+        """
+        Compute advanced MI metrics.
+        
+        Args:
+            target: Not used directly (metric operates on raw tensors)
+            context: Must contain 'X' and 'Y' activation tensors
             
         Returns:
-            Dict containing comprehensive MI metrics
+            Dictionary containing MI measurements
         """
-        start_time = time.time()
-        self._computation_stats['total_calls'] += 1
+        # Get activation tensors from context
+        X = context.get('X')
+        Y = context.get('Y')
+        
+        if X is None or Y is None:
+            raise ValueError("AdvancedMIMetric requires 'X' and 'Y' tensors in context")
         
         # Validate inputs
-        self._validate_tensor_input(X, "X", expected_dims=2)
-        self._validate_tensor_input(Y, "Y", expected_dims=2)
+        if X.dim() != 2 or Y.dim() != 2:
+            raise ValueError("X and Y must be 2D tensors [batch_size, features]")
         
-        # Check cache
-        cache_key = self._cache_key(X, Y)
-        cached_result = self._get_cached_result(cache_key)
-        if cached_result is not None:
-            return cached_result
+        if X.size(0) != Y.size(0):
+            raise ValueError("X and Y must have same batch size")
         
         # Apply threshold to get active neurons only
         X_active_mask = (X.abs() > self.threshold).any(dim=0)
@@ -101,104 +128,65 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
         n_active_Y = Y_active.shape[1]
         
         if n_active_X == 0 or n_active_Y == 0:
-            result = self._zero_metrics()
-        else:
-            # Choose method based on dimensionality
-            if n_active_X <= 10 and n_active_Y <= 10 and n_samples > 50:
-                result = self._exact_discrete_mi(X_active, Y_active)
-                method = 'exact_discrete'
-            elif n_active_X + n_active_Y <= 50:
-                result = self._knn_mi(X_active, Y_active)
-                method = 'knn_exact'
-            else:
-                result = self._advanced_mi_estimator(X_active, Y_active)
-                method = 'advanced_estimator'
-            
-            # Add all MI metrics
-            mi = result['mi']
-            entropy_X = result['entropy_X']
-            entropy_Y = result['entropy_Y']
-            entropy_XY = result['entropy_XY']
-            
-            # Core MI Metrics
-            normalized_mi = 2 * mi / (entropy_X + entropy_Y + 1e-10)
-            mi_efficiency = mi / (entropy_X + 1e-10)  # What fraction of input info reaches next layer
-            
-            # Information gaps and capacity
-            max_possible_mi = min(entropy_X, entropy_Y)
-            information_gap = max_possible_mi - mi
-            capacity_utilization = mi / (max_possible_mi + 1e-10)
-            
-            # Redundancy and independence
-            redundancy = entropy_X + entropy_Y - entropy_XY
-            independence_ratio = mi / (redundancy + 1e-10)
-            
-            result = {
-                # Core MI Metrics
-                'mi': mi,
-                'normalized_mi': normalized_mi,
-                'mi_efficiency': mi_efficiency,
-                
-                # Entropy Metrics
-                'entropy_X': entropy_X,
-                'entropy_Y': entropy_Y,
-                'entropy_XY': entropy_XY,
-                
-                # Capacity and Gap Analysis
-                'max_possible_mi': max_possible_mi,
-                'information_gap': information_gap,
-                'capacity_utilization': capacity_utilization,
-                
-                # Redundancy Analysis
-                'redundancy': redundancy,
-                'independence_ratio': independence_ratio,
-                
-                # Neuron counts
-                'active_neurons_X': n_active_X,
-                'active_neurons_Y': n_active_Y,
-                'total_neurons_X': X.shape[1],
-                'total_neurons_Y': Y.shape[1],
-                'sparsity_X': n_active_X / X.shape[1],
-                'sparsity_Y': n_active_Y / Y.shape[1],
-                
-                # Method info
-                'method': method,
-                'samples_used': n_samples
+            # No active neurons
+            return {
+                "mi": 0.0,
+                "entropy_X": 0.0,
+                "entropy_Y": 0.0,
+                "entropy_XY": 0.0,
+                "method_used": "zero_active",
+                "active_neurons_X": 0,
+                "active_neurons_Y": 0,
+                "sparsity_X": 0.0,
+                "sparsity_Y": 0.0
             }
         
-        # Update timing stats
-        computation_time = time.time() - start_time
-        self._computation_stats['total_time'] += computation_time
-        result['computation_time'] = computation_time
+        # Choose method
+        if self.method == 'auto':
+            if n_active_X <= 10 and n_active_Y <= 10 and n_samples > 50:
+                method = 'exact_discrete'
+            elif n_active_X + n_active_Y <= 50:
+                method = 'knn'
+            else:
+                method = 'advanced'
+        else:
+            method = self.method
         
-        # Cache result
-        self._cache_result(cache_key, result)
+        # Compute MI using selected method
+        if method == 'exact_discrete':
+            result = self._exact_discrete_mi(X_active, Y_active)
+        elif method == 'knn':
+            result = self._knn_mi(X_active, Y_active)
+        elif method == 'advanced':
+            result = self._advanced_mi_estimator(X_active, Y_active)
+        else:
+            raise ValueError(f"Unknown MI method: {method}")
+        
+        # Add metadata
+        result.update({
+            "method_used": method,
+            "active_neurons_X": n_active_X,
+            "active_neurons_Y": n_active_Y,
+            "sparsity_X": n_active_X / X.shape[1],
+            "sparsity_Y": n_active_Y / Y.shape[1]
+        })
+        
+        self.log(logging.DEBUG, 
+                f"MI computed using {method}: {result['mi']:.3f} "
+                f"(active: {n_active_X}x{n_active_Y})")
         
         return result
     
-    def _zero_metrics(self):
-        """Return zero metrics when no active neurons."""
-        return {
-            'mi': 0.0, 'normalized_mi': 0.0, 'mi_efficiency': 0.0,
-            'entropy_X': 0.0, 'entropy_Y': 0.0, 'entropy_XY': 0.0,
-            'max_possible_mi': 0.0, 'information_gap': 0.0, 'capacity_utilization': 0.0,
-            'redundancy': 0.0, 'independence_ratio': 0.0,
-            'active_neurons_X': 0, 'active_neurons_Y': 0,
-            'total_neurons_X': 0, 'total_neurons_Y': 0,
-            'sparsity_X': 0.0, 'sparsity_Y': 0.0,
-            'method': 'zero_active', 'samples_used': 0
-        }
-    
     def _exact_discrete_mi(self, X: torch.Tensor, Y: torch.Tensor) -> Dict[str, float]:
         """Exact MI computation for discretized values."""
-        n_bins = min(int(np.sqrt(X.shape[0]) / 2), 10)
+        n_bins = self.n_bins or min(int(np.sqrt(X.shape[0]) / 2), 10)
         
         # Discretize
         X_discrete = self._adaptive_discretize(X, n_bins)
         Y_discrete = self._adaptive_discretize(Y, n_bins)
         
         # Compute joint probability distribution
-        joint_hist = torch.zeros(n_bins, n_bins)
+        joint_hist = torch.zeros(n_bins, n_bins, device=X.device)
         for i in range(X.shape[0]):
             for j in range(X.shape[1]):
                 for k in range(Y.shape[1]):
@@ -239,12 +227,12 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
     def _knn_mi(self, X: torch.Tensor, Y: torch.Tensor) -> Dict[str, float]:
         """k-NN based MI estimator."""
         if X.is_cuda and CUPY_AVAILABLE:
-            X_gpu = cp.asarray(X)
-            Y_gpu = cp.asarray(Y)
+            X_gpu = cp.asarray(X.cpu().numpy())
+            Y_gpu = cp.asarray(Y.cpu().numpy())
             
             mi_values = []
             for i in range(Y_gpu.shape[1]):
-                mi = mutual_info_regression(X_gpu, Y_gpu[:, i], n_neighbors=3)
+                mi = mutual_info_regression(X_gpu, Y_gpu[:, i], n_neighbors=self.k_neighbors)
                 mi_values.extend(mi)
             
             mi = cp.mean(cp.array(mi_values)).get()
@@ -259,7 +247,7 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
             # Use sklearn's implementation
             mi_values = []
             for i in range(Y_np.shape[1]):
-                mi = mutual_info_regression(X_np, Y_np[:, i], n_neighbors=3)
+                mi = mutual_info_regression(X_np, Y_np[:, i], n_neighbors=self.k_neighbors)
                 mi_values.extend(mi)
             
             mi = np.mean(mi_values)
@@ -299,8 +287,11 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
             'entropy_XY': h_x + h_y - mi_upper.item()
         }
     
-    def _knn_entropy(self, X, k: int = 3) -> float:
+    def _knn_entropy(self, X, k: int = None) -> float:
         """Estimate entropy using k-NN distances."""
+        if k is None:
+            k = self.k_neighbors
+            
         if X.shape[0] < k + 1:
             return 0.0
         
@@ -327,7 +318,6 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
             return self._histogram_entropy(X.squeeze())
         else:
             cov = torch.cov(X.T)
-            # Ensure identity matrix is on the same device as the covariance matrix
             identity = torch.eye(X.shape[1], device=cov.device, dtype=cov.dtype)
             sign, logdet = torch.linalg.slogdet(cov + 1e-6 * identity)
             d = X.shape[1]
@@ -348,14 +338,10 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
         for j in range(X.shape[1]):
             col = X[:, j]
             if col.std() > 0:
-                bins = torch.quantile(col, torch.linspace(0, 1, n_bins + 1))
+                bins = torch.quantile(col, torch.linspace(0, 1, n_bins + 1, device=col.device))
                 bins[-1] += 1e-5
                 X_discrete[:, j] = torch.bucketize(col, bins) - 1
             else:
                 X_discrete[:, j] = 0
         
         return X_discrete.clamp(0, n_bins - 1)
-
-
-# Export the analyzer
-__all__ = ['MutualInformationAnalyzer']

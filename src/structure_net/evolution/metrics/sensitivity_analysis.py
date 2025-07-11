@@ -32,8 +32,22 @@ class SensitivityAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin):
     """
     
     def __init__(self, network: nn.Module, threshold_config):
-        super().__init__(threshold_config)
-        self.network = network
+        raise DeprecationWarning(
+            "SensitivityAnalyzer has been migrated to component architecture.\n"
+            "Please use the following components instead:\n"
+            "- src.structure_net.components.metrics.GradientSensitivityMetric for gradient-based sensitivity\n"
+            "- src.structure_net.components.metrics.BottleneckMetric for bottleneck detection\n"
+            "- src.structure_net.components.analyzers.SensitivityAnalyzer for combined analysis\n"
+            "\nExample migration:\n"
+            "# Old code:\n"
+            "analyzer = SensitivityAnalyzer(network, threshold_config)\n"
+            "metrics = analyzer.compute_metrics(layer_i, layer_j, data_loader)\n"
+            "\n"
+            "# New code:\n"
+            "from src.structure_net.components.analyzers import SensitivityAnalyzer\n"
+            "analyzer = SensitivityAnalyzer()\n"
+            "report = analyzer.analyze(model, report, context)\n"
+        )
         
     def compute_metrics(self, layer_i: int, layer_j: int, data_loader, 
                        num_batches: int = 10) -> Dict[str, Any]:

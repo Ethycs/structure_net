@@ -16,9 +16,35 @@ class CatastropheAnalyzer(BaseMetricAnalyzer):
     """
     Analyzes the dynamical stability of a network to predict catastrophic forgetting
     or sudden performance drops.
+    
+    DEPRECATED: This class has been migrated to the component architecture.
+    Please use the following components instead:
+    - src.structure_net.components.metrics.ActivationStabilityMetric
+    - src.structure_net.components.metrics.LyapunovMetric
+    - src.structure_net.components.metrics.TransitionEntropyMetric
+    - src.structure_net.components.analyzers.CatastropheAnalyzer
     """
 
     def __init__(self, model, threshold_config=None):
+        raise DeprecationWarning(
+            "CatastropheAnalyzer has been migrated to component architecture.\n"
+            "Please use the following components instead:\n"
+            "- For activation stability: src.structure_net.components.metrics.ActivationStabilityMetric\n"
+            "- For Lyapunov analysis: src.structure_net.components.metrics.LyapunovMetric\n"
+            "- For transition entropy: src.structure_net.components.metrics.TransitionEntropyMetric\n"
+            "- For comprehensive analysis: src.structure_net.components.analyzers.CatastropheAnalyzer\n"
+            "\nExample migration:\n"
+            "# Old:\n"
+            "# analyzer = CatastropheAnalyzer(model)\n"
+            "# metrics = analyzer.compute_metrics(test_data)\n"
+            "\n"
+            "# New:\n"
+            "from src.structure_net.components.analyzers import CatastropheAnalyzer\n"
+            "analyzer = CatastropheAnalyzer()\n"
+            "context = EvolutionContext({'test_data': test_data})\n"
+            "report = AnalysisReport()\n"
+            "analysis = analyzer.analyze(model, context, report)"
+        )
         super().__init__(threshold_config)
         self.model = model
 

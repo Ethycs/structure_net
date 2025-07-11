@@ -978,14 +978,38 @@ MIGRATION_MAP = {
     "models/modern_multi_scale_network.py": "components/models/multi_scale_network.py",
     
     # METRICS: evolution/metrics/ -> components/metrics/
-    "evolution/metrics/activity_analysis.py": "components/metrics/activity_metric.py",
-    "evolution/metrics/topological_analysis.py": "components/metrics/topological_metric.py",
-    "evolution/metrics/homological_analysis.py": "components/metrics/homological_metric.py",
-    "evolution/metrics/graph_analysis.py": "components/metrics/graph_metric.py",
-    "evolution/metrics/sensitivity_analysis.py": "components/metrics/sensitivity_metric.py",
-    "evolution/metrics/catastrophe_analysis.py": "components/metrics/catastrophe_metric.py",
-    "evolution/metrics/compactification_metrics.py": "components/metrics/compactification_metric.py",
-    "evolution/metrics/mutual_information.py": "components/metrics/mutual_information_metric.py",
+    "evolution/metrics/mutual_information.py": [
+        "components/metrics/layer_mi_metric.py",
+        "components/metrics/entropy_metric.py", 
+        "components/metrics/advanced_mi_metric.py",
+        "components/metrics/information_flow_metric.py",
+        "components/metrics/redundancy_metric.py",
+        "components/analyzers/information_flow_analyzer.py"
+    ],
+    "evolution/metrics/homological_analysis.py": [
+        "components/metrics/chain_complex_metric.py",
+        "components/metrics/rank_metric.py",
+        "components/metrics/betti_number_metric.py",
+        "components/metrics/homology_metric.py",
+        "components/metrics/information_efficiency_metric.py",
+        "components/analyzers/homological_analyzer.py"
+    ],
+    "evolution/metrics/sensitivity_analysis.py": [
+        "components/metrics/gradient_sensitivity_metric.py",
+        "components/metrics/bottleneck_metric.py",
+        "components/analyzers/sensitivity_analyzer.py"
+    ],
+    "evolution/metrics/topological_analysis.py": [
+        "components/metrics/extrema_metric.py",
+        "components/metrics/persistence_metric.py",
+        "components/metrics/connectivity_metric.py",
+        "components/metrics/topological_signature_metric.py",
+        "components/analyzers/topological_analyzer.py"
+    ],
+    "evolution/metrics/activity_analysis.py": "components/metrics/activity_metric.py",  # Pending
+    "evolution/metrics/graph_analysis.py": "components/metrics/graph_metric.py",  # Pending
+    "evolution/metrics/catastrophe_analysis.py": "components/metrics/catastrophe_metric.py",  # Pending
+    "evolution/metrics/compactification_metrics.py": "components/metrics/compactification_metric.py",  # Pending
     
     # ANALYZERS: evolution/components/analyzers.py + evolution/extrema_analyzer.py -> components/analyzers/
     "evolution/components/analyzers.py": "components/analyzers/network_analyzer.py",
@@ -1262,7 +1286,140 @@ class ExtremaAnalyzer(BaseAnalyzer):
         return total
 ```
 
-### **4.4 Example Migration: Learning Rate Strategy**
+### **4.4 Example Migration: Monolithic Analyzer to Multiple Components**
+
+```python
+# OLD: evolution/metrics/topological_analysis.py (monolithic)
+class TopologicalAnalyzer:
+    """Single class doing everything - extrema detection, persistence, connectivity, etc."""
+    
+    def __init__(self, threshold_config=None, patch_size: int = 8):
+        self.threshold_config = threshold_config
+        self.patch_size = patch_size
+    
+    def compute_metrics(self, weight_matrix: torch.Tensor) -> Dict[str, Any]:
+        # All logic mixed together in one place
+        extrema_info = self._detect_extrema(weight_matrix)
+        persistence_diagram = self._compute_persistence_diagram(weight_matrix)
+        connectivity_analysis = self._analyze_connectivity(weight_matrix)
+        # ... etc
+        
+        return {
+            'extrema_info': extrema_info,
+            'persistence_diagram': persistence_diagram,
+            'connectivity_analysis': connectivity_analysis,
+            # ... all metrics together
+        }
+
+# NEW: Split into focused metric components and a high-level analyzer
+
+# 1. components/metrics/extrema_metric.py
+class ExtremaMetric(BaseMetric):
+    """Focused on extrema detection only"""
+    
+    @property
+    def contract(self) -> ComponentContract:
+        return ComponentContract(
+            component_name="ExtremaMetric",
+            version=ComponentVersion(1, 0, 0),
+            maturity=Maturity.STABLE,
+            required_inputs={"weight_matrix"},
+            provided_outputs={
+                "metrics.extrema_points",
+                "metrics.num_extrema",
+                "metrics.extrema_density"
+            }
+        )
+    
+    def _compute_metric(self, target: Union[ILayer, IModel], 
+                       context: EvolutionContext) -> Dict[str, Any]:
+        # Only extrema detection logic
+        weight_matrix = context.get('weight_matrix')
+        extrema_points = self._detect_extrema(weight_matrix)
+        return {
+            "extrema_points": extrema_points,
+            "num_extrema": len(extrema_points),
+            "extrema_density": len(extrema_points) / weight_matrix.numel()
+        }
+
+# 2. components/metrics/persistence_metric.py  
+class PersistenceMetric(BaseMetric):
+    """Focused on persistence diagrams only"""
+    
+    @property
+    def contract(self) -> ComponentContract:
+        return ComponentContract(
+            component_name="PersistenceMetric",
+            version=ComponentVersion(1, 0, 0),
+            maturity=Maturity.EXPERIMENTAL,
+            required_inputs={"weight_matrix"},
+            provided_outputs={
+                "metrics.persistence_features",
+                "metrics.persistence_entropy",
+                "metrics.total_persistence"
+            }
+        )
+
+# 3. components/analyzers/topological_analyzer.py
+class TopologicalAnalyzer(BaseAnalyzer):
+    """High-level analyzer that combines multiple topological metrics"""
+    
+    def __init__(self, patch_size: int = 8, name: str = None):
+        super().__init__(name or "TopologicalAnalyzer")
+        
+        # Initialize the metrics we'll use
+        self._extrema_metric = ExtremaMetric(patch_size=patch_size)
+        self._persistence_metric = PersistenceMetric()
+        self._connectivity_metric = ConnectivityMetric()
+        
+        self._required_metrics = {
+            "ExtremaMetric",
+            "PersistenceMetric",
+            "ConnectivityMetric"
+        }
+    
+    @property
+    def contract(self) -> ComponentContract:
+        return ComponentContract(
+            component_name="TopologicalAnalyzer",
+            version=ComponentVersion(1, 0, 0),
+            maturity=Maturity.EXPERIMENTAL,
+            required_inputs={"model"},
+            provided_outputs={
+                "analysis.topological_summary",
+                "analysis.extrema_analysis",
+                "analysis.persistence_analysis",
+                "analysis.patch_placement_suggestions"
+            }
+        )
+    
+    def _perform_analysis(self, model: IModel, report: AnalysisReport, 
+                         context: EvolutionContext) -> Dict[str, Any]:
+        # Combine insights from multiple metrics
+        extrema_analysis = self._aggregate_extrema_analysis(report)
+        persistence_analysis = self._aggregate_persistence_analysis(report)
+        
+        # Generate high-level insights
+        recommendations = self._generate_topological_recommendations(
+            extrema_analysis, persistence_analysis
+        )
+        
+        return {
+            "topological_summary": summary,
+            "extrema_analysis": extrema_analysis,
+            "persistence_analysis": persistence_analysis,
+            "topological_recommendations": recommendations
+        }
+
+# Migration Pattern Benefits:
+# 1. Each metric is focused and reusable
+# 2. Clear contracts for each component
+# 3. Analyzer combines metrics for insights
+# 4. Better testability and maintainability
+# 5. Components can be used independently
+```
+
+### **4.5 Example Migration: Learning Rate Strategy**
 
 ```python
 # OLD: evolution/adaptive_learning_rates/layer_schedulers.py
@@ -2772,6 +2929,28 @@ This guide provides a complete transformation of Structure Net into a world-clas
 1. Refactor existing layers to implement the new interfaces
 2. Migrate metrics from `evolution/metrics/` to the new component structure
 3. Transform analyzers and create the strategy abstraction layer
+
+#### **Migration Status Tracking**
+Track migration progress in `src/structure_net/evolution/metrics/MIGRATION_STATUS.md`:
+
+**✅ Completed Migrations:**
+- **MutualInformationAnalyzer** → 5 metrics + 1 analyzer
+- **HomologicalAnalyzer** → 5 metrics + 1 analyzer  
+- **SensitivityAnalyzer** → 2 metrics + 1 analyzer
+- **TopologicalAnalyzer** → 4 metrics + 1 analyzer
+
+**⏳ Pending Migrations:**
+- ActivityAnalyzer
+- GraphAnalyzer
+- CatastropheAnalyzer
+- CompactificationAnalyzer
+
+**Migration Pattern for Monolithic Analyzers:**
+1. Identify distinct metric computations (low-level measurements)
+2. Create focused IMetric components for each measurement
+3. Create IAnalyzer component that combines metrics for insights
+4. Add deprecation warnings to old classes with migration examples
+5. Update component exports in __init__.py files
 
 ### **Phase 3: Advanced Features (Week 5-6)**
 1. Implement health monitoring and profiling

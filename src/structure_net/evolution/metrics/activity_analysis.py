@@ -32,8 +32,24 @@ class ActivityAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
     """
     
     def __init__(self, threshold_config):
-        super().__init__(threshold_config)
-        self.activation_history = defaultdict(list)
+        raise DeprecationWarning(
+            "ActivityAnalyzer has been migrated to component architecture.\n"
+            "Please use the following components instead:\n"
+            "- src.structure_net.components.metrics.NeuronActivityMetric for basic activity metrics\n"
+            "- src.structure_net.components.metrics.ActivationDistributionMetric for distribution analysis\n"
+            "- src.structure_net.components.metrics.ActivityPatternMetric for pattern analysis\n"
+            "- src.structure_net.components.metrics.LayerHealthMetric for health scoring\n"
+            "- src.structure_net.components.analyzers.ActivityAnalyzer for combined analysis\n"
+            "\nExample migration:\n"
+            "# Old code:\n"
+            "analyzer = ActivityAnalyzer(threshold_config)\n"
+            "metrics = analyzer.compute_metrics(activations, layer_idx)\n"
+            "\n"
+            "# New code:\n"
+            "from src.structure_net.components.analyzers import ActivityAnalyzer\n"
+            "analyzer = ActivityAnalyzer(activation_threshold=0.01)\n"
+            "report = analyzer.analyze(model, report, context)\n"
+        )
         
     def compute_metrics(self, activations: torch.Tensor, layer_idx: int) -> Dict[str, Any]:
         """

@@ -46,13 +46,38 @@ class ChainData:
 @profile_component(component_name="homological_analyzer", level=ProfilerLevel.DETAILED)
 class HomologicalAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin, StatisticalUtilsMixin):
     """
-    Specialized analyzer for homological properties of neural networks.
+    DEPRECATED: This class has been migrated to the component architecture.
     
-    Performs chain complex analysis to understand information flow,
-    bottlenecks, and topological structure of weight matrices.
+    Please use the following components instead:
+    - Metrics (low-level measurements):
+      * src.structure_net.components.metrics.ChainComplexMetric
+      * src.structure_net.components.metrics.RankMetric
+      * src.structure_net.components.metrics.BettiNumberMetric
+      * src.structure_net.components.metrics.HomologyMetric
+      * src.structure_net.components.metrics.InformationEfficiencyMetric
+    
+    - Analyzer (high-level analysis):
+      * src.structure_net.components.analyzers.HomologicalAnalyzer
+    
+    Example migration:
+        # Old way:
+        analyzer = HomologicalAnalyzer(threshold_config)
+        results = analyzer.compute_metrics(weight_matrix, prev_chain)
+        
+        # New way:
+        from src.structure_net.components.analyzers import HomologicalAnalyzer
+        analyzer = HomologicalAnalyzer(tolerance=1e-6)
+        context = EvolutionContext({'weight_matrices': [weight_matrix]})
+        results = analyzer.analyze(model, context)
     """
     
     def __init__(self, threshold_config=None, tolerance: float = 1e-6):
+        raise DeprecationWarning(
+            "HomologicalAnalyzer has been migrated to component architecture.\n"
+            "Use src.structure_net.components.analyzers.HomologicalAnalyzer for full analysis\n"
+            "or individual metrics from src.structure_net.components.metrics for specific measurements.\n"
+            "See class docstring for migration guide."
+        )
         if threshold_config is None:
             from .base import ThresholdConfig
             threshold_config = ThresholdConfig()

@@ -3,6 +3,18 @@ Base classes and interfaces for the metrics system.
 
 This module provides the foundational classes that all metric analyzers inherit from,
 ensuring consistent interfaces and shared functionality.
+
+IMPORTANT: The metrics system is being migrated to a component-based architecture.
+New development should use the component architecture in src.structure_net.components.
+
+Migration Guide:
+- Old analyzers in this module → New components in src.structure_net.components
+- BaseMetricAnalyzer → BaseMetric (for measurements) or BaseAnalyzer (for insights)
+- See MIGRATION_STATUS.md for detailed migration information
+
+The classes in this module are maintained for backward compatibility but will
+eventually be deprecated. All analyzer classes that inherit from BaseMetricAnalyzer
+have been migrated and will raise DeprecationWarning when instantiated.
 """
 
 import torch

@@ -73,13 +73,24 @@ class TopologicalAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin, StatisticalU
     """
     
     def __init__(self, threshold_config=None, patch_size: int = 8, min_density: float = 0.15):
-        if threshold_config is None:
-            from .base import ThresholdConfig
-            threshold_config = ThresholdConfig()
-        
-        super().__init__(threshold_config)
-        self.patch_size = patch_size
-        self.min_density = min_density
+        raise DeprecationWarning(
+            "TopologicalAnalyzer has been migrated to component architecture.\n"
+            "Please use the following components instead:\n"
+            "- src.structure_net.components.metrics.ExtremaMetric for extrema detection\n"
+            "- src.structure_net.components.metrics.PersistenceMetric for persistence analysis\n"
+            "- src.structure_net.components.metrics.ConnectivityMetric for connectivity patterns\n"
+            "- src.structure_net.components.metrics.TopologicalSignatureMetric for signatures\n"
+            "- src.structure_net.components.analyzers.TopologicalAnalyzer for combined analysis\n"
+            "\nExample migration:\n"
+            "# Old code:\n"
+            "analyzer = TopologicalAnalyzer(patch_size=8)\n"
+            "metrics = analyzer.compute_metrics(weight_matrix)\n"
+            "\n"
+            "# New code:\n"
+            "from src.structure_net.components.analyzers import TopologicalAnalyzer\n"
+            "analyzer = TopologicalAnalyzer(patch_size=8)\n"
+            "report = analyzer.analyze(model, context)\n"
+        )
         
     def compute_metrics(self, weight_matrix: torch.Tensor, 
                        target_patches: int = None) -> Dict[str, Any]:
