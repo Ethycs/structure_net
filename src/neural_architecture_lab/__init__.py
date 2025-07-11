@@ -31,6 +31,9 @@ from .core import (
 
 from .lab import NeuralArchitectureLab
 
+# Import config adapter to enable unified config support
+from . import config_adapter
+
 from .hypothesis_library import (
     ArchitectureHypotheses,
     GrowthHypotheses,

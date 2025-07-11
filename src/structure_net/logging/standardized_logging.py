@@ -2,17 +2,16 @@
 """
 Standardized Logging System for Structure Net
 
-Implements a WandB artifact-based logging standard with Pydantic validation.
-This system ensures all experimental data follows a consistent JSON schema
-and is properly uploaded to WandB as versioned artifacts.
+Implements a WandB artifact-based logging standard with component-based validation.
+Following the Photoshop-like composability model with strict schemas for each layer.
 
 Key Features:
-- Pydantic schema validation for all logged data
+- Component-based schema validation (metric, evolver, model, trainer, NAL)
 - WandB artifact standard compliance
 - Local queue system for offline resilience
 - Automatic deduplication via content hashing
-- Schema migration support
-- Comprehensive experiment tracking
+- Template-based experiment composition
+- ChromaDB integration for searchable metadata
 """
 
 import json

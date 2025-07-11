@@ -15,12 +15,42 @@ Key features:
 """
 
 # Import main components
-from .standardized_logger import (
+from .standardized_logging import (
     StandardizedLogger,
-    create_growth_logger,
-    create_training_logger,
-    create_tournament_logger,
-    create_profiling_logger
+    LoggingConfig,
+    initialize_logging,
+    get_logger,
+    log_experiment,
+    log_metrics,
+    log_growth_event
+)
+
+# Import config adapter to enable unified config support
+from . import config_adapter
+
+# Import component-based logging
+from .component_logger import (
+    ComponentLogger,
+    create_evolution_experiment,
+    create_custom_experiment
+)
+
+from .component_schemas import (
+    # Component schemas
+    MetricSchema,
+    EvolverSchema,
+    ModelSchema,
+    TrainerSchema,
+    NALSchema,
+    # Composition schemas
+    ExperimentComposition,
+    ExperimentExecution,
+    ExperimentTemplate,
+    IterationData,
+    # Templates
+    STANDARD_TEMPLATES,
+    # Utilities
+    validate_component_compatibility
 )
 
 from .artifact_manager import (
@@ -65,6 +95,14 @@ from .wandb_integration import (
     setup_wandb_for_modern_indefinite_growth
 )
 
+# Import standardized logger functions
+from .standardized_logger import (
+    create_growth_logger,
+    create_training_logger,
+    create_tournament_logger,
+    create_profiling_logger
+)
+
 # Import argument parser
 from .argument_parser import add_logging_arguments
 
@@ -72,10 +110,30 @@ from .argument_parser import add_logging_arguments
 __all__ = [
     # Main logger
     'StandardizedLogger',
-    'create_growth_logger',
-    'create_training_logger',
-    'create_tournament_logger',
-    'create_profiling_logger',
+    'LoggingConfig',
+    'initialize_logging',
+    'get_logger',
+    'log_experiment',
+    'log_metrics', 
+    'log_growth_event',
+    
+    # Component-based logging
+    'ComponentLogger',
+    'create_evolution_experiment',
+    'create_custom_experiment',
+    
+    # Component schemas
+    'MetricSchema',
+    'EvolverSchema', 
+    'ModelSchema',
+    'TrainerSchema',
+    'NALSchema',
+    'ExperimentComposition',
+    'ExperimentExecution',
+    'ExperimentTemplate',
+    'IterationData',
+    'STANDARD_TEMPLATES',
+    'validate_component_compatibility',
     
     # Artifact management
     'ArtifactManager',
@@ -109,6 +167,12 @@ __all__ = [
     'StructureNetWandBLogger',
     'convert_json_to_wandb',
     'setup_wandb_for_modern_indefinite_growth',
+    
+    # Standardized logger functions
+    'create_growth_logger',
+    'create_training_logger',
+    'create_tournament_logger',
+    'create_profiling_logger',
 
     # Argument parsing
     'add_logging_arguments'

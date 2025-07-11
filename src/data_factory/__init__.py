@@ -9,6 +9,9 @@ Provides a unified interface for dataset management with:
 - ChromaDB integration for search
 """
 
+# Import config adapter to enable unified config support
+from . import config_adapter
+
 from .config import (
     DatasetConfig,
     MNIST_CONFIG,

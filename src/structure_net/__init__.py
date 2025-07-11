@@ -42,7 +42,7 @@ from .core import (
 # Import evolution system (built on canonical standard)
 from .evolution.network_evolver import OptimalGrowthEvolver
 from .evolution.extrema_analyzer import analyze_layer_extrema, detect_network_extrema
-from .evolution.integrated_growth_system_v2 import IntegratedGrowthSystem
+# Removed deprecated IntegratedGrowthSystem - use evolution.components instead
 from .evolution.advanced_layers import ThresholdConfig, MetricsConfig
 # Import adaptive learning rate strategies
 from .evolution.adaptive_learning_rates import (
@@ -97,8 +97,7 @@ __all__ = [
     "analyze_layer_extrema",
     "detect_network_extrema",
     
-    # Integrated Growth System
-    "IntegratedGrowthSystem",
+    # Configuration classes
     "ThresholdConfig",
     "MetricsConfig",
     
