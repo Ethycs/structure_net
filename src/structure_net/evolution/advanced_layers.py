@@ -15,35 +15,6 @@ from typing import List, Dict, Any, Optional
 from ..core.layers import StandardSparseLayer
 
 
-class ThresholdConfig:
-    """Configuration for thresholds used in growth and analysis."""
-    def __init__(self):
-        # Type tag for experiment tracking
-        self.type = "config"
-        
-        self.activation_threshold = 0.01
-        self.weight_threshold = 0.01
-        self.gradient_threshold = 1e-4
-        self.persistence_ratio = 0.8
-        self.adaptive = True
-        self.min_active_ratio = 0.05
-        self.max_active_ratio = 0.5
-
-
-class MetricsConfig:
-    """Configuration for which metrics to compute."""
-    def __init__(self):
-        # Type tag for experiment tracking
-        self.type = "config"
-        
-        self.compute_mi = True
-        self.compute_activity = True
-        self.compute_sensli = True
-        self.compute_graph = True
-        self.compute_betweenness = False
-        self.compute_spectral = False
-
-
 class ExtremaAwareSparseLayer(StandardSparseLayer):
     """
     Advanced sparse layer with extrema-guided connectivity.
@@ -226,8 +197,6 @@ def sort_all_network_layers(network: nn.Module):
 
 # Export all components
 __all__ = [
-    'ThresholdConfig',
-    'MetricsConfig',
     'ExtremaAwareSparseLayer',
     'TemporaryPatchModule',
     'lsuv_init_layer',

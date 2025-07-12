@@ -12,8 +12,9 @@ import numpy as np
 from typing import Dict, Any, Optional
 import logging
 
-from ...core import (
-    BaseLayer, ComponentContract, ComponentVersion,
+from ...core.base_components import BaseLayer
+from ...core.interfaces import (
+    ComponentContract, ComponentVersion,
     Maturity, ResourceRequirements, ResourceLevel
 )
 

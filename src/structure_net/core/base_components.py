@@ -1,228 +1,186 @@
-"""
-Base component implementations providing common functionality.
-
-These abstract base classes implement the boilerplate for each component type,
-allowing concrete implementations to focus on their specific logic.
-"""
-
-from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Set, Union, Optional
-import logging
+from abc import abstractmethod
 import time
-from datetime import datetime
+from typing import Dict, Any, Set, Optional, Union, List
 import torch
 import torch.nn as nn
-
+import logging
 from .interfaces import (
-    IComponent, ILayer, IModel, ITrainer, IMetric, IAnalyzer, 
-    IStrategy, IEvolver, IScheduler, IOrchestrator,
-    ComponentContract, ComponentVersion, Maturity, ResourceRequirements, ResourceLevel,
-    EvolutionContext, AnalysisReport, EvolutionPlan
+    IComponent,
+    ILayer,
+    IModel,
+    IMetric,
+    IAnalyzer,
+    IStrategy,
+    IEvolver,
+    IOrchestrator,
+    ComponentContract,
+    ComponentVersion,
+    Maturity,
+    ResourceRequirements,
+    ResourceLevel,
+    EvolutionContext,
+    AnalysisReport,
+    EvolutionPlan,
+    ITrainer,
 )
 
 
 class BaseComponent(IComponent):
-    """Base implementation for all components with common functionality"""
+    """Provides common functionality for all components"""
     
-    def __init__(self, name: str = None):
+    def __init__(self, name: Optional[str] = None, version: Optional[ComponentVersion] = None):
         super().__init__()
         self._name = name or self.__class__.__name__
-        self._execution_history = []
-        self._error_count = 0
+        self._version = version or ComponentVersion()
+        self._performance_tracker = {
+            'call_count': 0,
+            'total_time': 0.0,
+            'last_call_time': 0.0
+        }
+    
+    def _measure_performance(self, func):
+        """Decorator to measure performance"""
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            try:
+                result = func(*args, **kwargs)
+                duration = time.time() - start
+                
+                self._performance_tracker['call_count'] += 1
+                self._performance_tracker['total_time'] += duration
+                self._performance_tracker['last_call_time'] = duration
+                
+                return result
+            except Exception as e:
+                self.log(logging.ERROR, f"Component {self.name} failed: {str(e)}")
+                raise
+        return wrapper
     
     @property
     def name(self) -> str:
         return self._name
     
-    def _measure_performance(self, func):
-        """Decorator to measure performance of key methods"""
-        def wrapper(*args, **kwargs):
-            start_time = time.time()
-            start_memory = self._get_memory_usage() if torch.cuda.is_available() else 0
-            
-            try:
-                result = func(*args, **kwargs)
-                execution_time = time.time() - start_time
-                memory_delta = (self._get_memory_usage() if torch.cuda.is_available() else 0) - start_memory
-                
-                self._execution_history.append({
-                    'timestamp': datetime.now(),
-                    'method': func.__name__,
-                    'execution_time': execution_time,
-                    'memory_delta': memory_delta,
-                    'success': True
-                })
-                
-                return result
-            except Exception as e:
-                self._error_count += 1
-                self._execution_history.append({
-                    'timestamp': datetime.now(),
-                    'method': func.__name__,
-                    'error': str(e),
-                    'success': False
-                })
-                raise
-        
-        return wrapper
-    
-    def _get_memory_usage(self) -> float:
-        """Get current GPU memory usage in MB"""
-        if torch.cuda.is_available():
-            return torch.cuda.memory_allocated() / 1024 / 1024
-        return 0.0
-    
-    def get_performance_metrics(self) -> Dict[str, Any]:
-        """Get detailed performance metrics"""
-        if not self._execution_history:
-            return {
-                'call_count': 0,
-                'error_count': 0,
-                'average_time': 0.0,
-                'total_time': 0.0
-            }
-        
-        successful_executions = [e for e in self._execution_history if e['success']]
-        
+    def get_performance_metrics(self) -> Dict[str, float]:
+        """Get performance statistics"""
+        count = self._performance_tracker['call_count']
         return {
-            'call_count': len(self._execution_history),
-            'error_count': self._error_count,
-            'success_rate': len(successful_executions) / len(self._execution_history),
-            'average_time': sum(e.get('execution_time', 0) for e in successful_executions) / max(1, len(successful_executions)),
-            'total_time': sum(e.get('execution_time', 0) for e in successful_executions),
-            'average_memory_delta': sum(e.get('memory_delta', 0) for e in successful_executions) / max(1, len(successful_executions))
+            'call_count': count,
+            'total_time': self._performance_tracker['total_time'],
+            'average_time': self._performance_tracker['total_time'] / max(1, count),
+            'last_call_time': self._performance_tracker['last_call_time']
         }
 
-
-class BaseLayer(BaseComponent, ILayer, nn.Module):
+class BaseLayer(BaseComponent, ILayer):
     """Base implementation for neural network layers"""
     
-    def __init__(self, name: str = None):
-        BaseComponent.__init__(self, name)
+    def __init__(self, *args, **kwargs):
+        BaseComponent.__init__(self)
         nn.Module.__init__(self)
         
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Default forward pass - must be overridden"""
-        raise NotImplementedError("Layer must implement forward pass")
-    
     @property
     def contract(self) -> ComponentContract:
-        """Default contract for layers"""
         return ComponentContract(
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
-            maturity=Maturity.EXPERIMENTAL,
-            provided_outputs={"layer.output", "layer.properties"},
+            maturity=Maturity.STABLE,
+            provided_outputs={"layer.weights", "layer.activations"},
             resources=ResourceRequirements(memory_level=ResourceLevel.LOW)
         )
+    
+    def get_analysis_properties(self) -> Dict[str, torch.Tensor]:
+        """Default implementation - override in subclasses"""
+        properties = {}
+        
+        # Add weight information if available
+        for name, param in self.named_parameters():
+            if 'weight' in name:
+                properties[f"weights.{name}"] = param.data
+                
+        return properties
+    
+    def supports_modification(self) -> bool:
+        """Default: layers support modification"""
+        return True
+    
+    def add_connections(self, num_connections: int, **kwargs) -> bool:
+        """Default implementation - override in subclasses"""
+        self.log(logging.WARNING, f"add_connections not implemented for {self.__class__.__name__}")
+        return False
 
-
-class BaseModel(BaseComponent, IModel, nn.Module):
+class BaseModel(BaseComponent, IModel):
     """Base implementation for neural network models"""
     
-    def __init__(self, name: str = None):
-        BaseComponent.__init__(self, name)
+    def __init__(self, *args, **kwargs):
+        BaseComponent.__init__(self)
         nn.Module.__init__(self)
         self._layers: List[ILayer] = []
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Default forward pass - must be overridden"""
-        raise NotImplementedError("Model must implement forward pass")
-    
     @property
     def contract(self) -> ComponentContract:
-        """Default contract for models"""
         return ComponentContract(
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
-            maturity=Maturity.EXPERIMENTAL,
-            provided_outputs={"model.output", "model.architecture"},
-            resources=ResourceRequirements(
-                memory_level=ResourceLevel.MEDIUM,
-                requires_gpu=torch.cuda.is_available()
-            )
+            maturity=Maturity.STABLE,
+            provided_outputs={"model.architecture", "model.parameters", "model.forward"},
+            resources=ResourceRequirements(memory_level=ResourceLevel.MEDIUM)
         )
     
     def get_layers(self) -> List[ILayer]:
-        """Get all layers in this model"""
-        return self._layers
+        """Get all layers that implement ILayer interface"""
+        layers = []
+        for module in self.modules():
+            if isinstance(module, ILayer) and module != self:
+                layers.append(module)
+        return layers
     
     def get_architecture_summary(self) -> Dict[str, Any]:
-        """Default architecture summary"""
+        """Get high-level architecture information"""
+        layers = self.get_layers()
+        total_params = sum(p.numel() for p in self.parameters())
+        
         return {
-            'name': self.name,
-            'num_layers': len(self._layers),
-            'total_parameters': sum(p.numel() for p in self.parameters()),
+            'num_layers': len(layers),
+            'total_parameters': total_params,
+            'layer_types': [type(layer).__name__ for layer in layers],
             'trainable_parameters': sum(p.numel() for p in self.parameters() if p.requires_grad)
         }
     
     def supports_dynamic_growth(self) -> bool:
-        """By default, models don't support dynamic growth"""
-        return False
-
-
-class BaseTrainer(BaseComponent, ITrainer):
-    """Base implementation for training components"""
-    
-    def __init__(self, name: str = None):
-        super().__init__(name)
-        self._steps_completed = 0
-    
-    @property
-    def contract(self) -> ComponentContract:
-        """Default contract for trainers"""
-        return ComponentContract(
-            component_name=self.name,
-            version=ComponentVersion(1, 0, 0),
-            maturity=Maturity.STABLE,
-            required_inputs={"model", "data", "optimizer"},
-            provided_outputs={"training.loss", "training.metrics"},
-            resources=ResourceRequirements(
-                memory_level=ResourceLevel.MEDIUM,
-                requires_gpu=torch.cuda.is_available()
-            )
-        )
-    
-    def supports_online_evolution(self) -> bool:
-        """By default, trainers don't support online evolution"""
-        return False
-
+        """Default: models support growth if all layers do"""
+        return all(layer.supports_modification() for layer in self.get_layers())
 
 class BaseMetric(BaseComponent, IMetric):
-    """Base implementation for metric components"""
+    """Base implementation for metrics"""
     
     def __init__(self, name: str = None):
         super().__init__(name)
-        self._measurement_schema: Dict[str, type] = {}
+        self._schema = {}
     
-    @property
+    @property 
     def contract(self) -> ComponentContract:
-        """Default contract for metrics"""
         return ComponentContract(
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
             maturity=Maturity.STABLE,
-            required_inputs={"target"},
-            provided_outputs={f"metrics.{self.name}"},
+            required_inputs={"model", "layer"},
+            provided_outputs={f"metrics.{self.name.lower()}"},
             resources=ResourceRequirements(memory_level=ResourceLevel.LOW)
         )
     
-    def get_measurement_schema(self) -> Dict[str, type]:
-        """Return the measurement schema"""
-        return self._measurement_schema
-    
     @abstractmethod
     def _compute_metric(self, target: Union[ILayer, IModel], context: EvolutionContext) -> Dict[str, Any]:
-        """Override this to implement metric computation"""
+        """Override this to implement metric logic"""
         pass
     
     def analyze(self, target: Union[ILayer, IModel], context: EvolutionContext) -> Dict[str, Any]:
-        """Public interface with validation"""
+        """Public interface with performance tracking"""
         return self._measure_performance(self._compute_metric)(target, context)
-
+    
+    def get_measurement_schema(self) -> Dict[str, type]:
+        return self._schema
 
 class BaseAnalyzer(BaseComponent, IAnalyzer):
-    """Base implementation for analyzer components"""
+    """Base implementation for analyzers"""
     
     def __init__(self, name: str = None):
         super().__init__(name)
@@ -230,18 +188,16 @@ class BaseAnalyzer(BaseComponent, IAnalyzer):
     
     @property
     def contract(self) -> ComponentContract:
-        """Default contract for analyzers"""
         return ComponentContract(
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
-            maturity=Maturity.EXPERIMENTAL,
-            required_inputs={"model", "analysis_report"}.union(self._required_metrics),
-            provided_outputs={f"analysis.{self.name}"},
+            maturity=Maturity.STABLE,
+            required_inputs=self._required_metrics,
+            provided_outputs={f"analyzers.{self.name.lower()}"},
             resources=ResourceRequirements(memory_level=ResourceLevel.MEDIUM)
         )
     
     def get_required_metrics(self) -> Set[str]:
-        """Return required metrics"""
         return self._required_metrics
     
     @abstractmethod
@@ -250,33 +206,35 @@ class BaseAnalyzer(BaseComponent, IAnalyzer):
         pass
     
     def analyze(self, model: IModel, report: AnalysisReport, context: EvolutionContext) -> Dict[str, Any]:
-        """Public interface with validation"""
-        # Check if required metrics are present
-        missing_metrics = self._required_metrics - set(report.sources)
+        """Public interface with validation and performance tracking"""
+        # Validate required metrics are present
+        missing_metrics = self._required_metrics - set(report.keys())
         if missing_metrics:
-            self.log(logging.WARNING, f"Missing required metrics: {missing_metrics}")
+            raise ValueError(f"Missing required metrics: {missing_metrics}")
         
         return self._measure_performance(self._perform_analysis)(model, report, context)
 
-
 class BaseStrategy(BaseComponent, IStrategy):
-    """Base implementation for strategy components"""
+    """Base implementation for strategies"""
     
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None, strategy_type: str = "generic"):
         super().__init__(name)
+        self._strategy_type = strategy_type
         self._required_analysis: Set[str] = set()
     
     @property
     def contract(self) -> ComponentContract:
-        """Default contract for strategies"""
         return ComponentContract(
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
-            maturity=Maturity.EXPERIMENTAL,
-            required_inputs={"analysis_report"}.union(self._required_analysis),
-            provided_outputs={f"strategy.{self.get_strategy_type()}"},
+            maturity=Maturity.STABLE,
+            required_inputs=self._required_analysis,
+            provided_outputs={f"plans.{self._strategy_type}"},
             resources=ResourceRequirements(memory_level=ResourceLevel.LOW)
         )
+    
+    def get_strategy_type(self) -> str:
+        return self._strategy_type
     
     @abstractmethod
     def _create_plan(self, report: AnalysisReport, context: EvolutionContext) -> EvolutionPlan:
@@ -293,7 +251,6 @@ class BaseStrategy(BaseComponent, IStrategy):
         plan = self._measure_performance(self._create_plan)(report, context)
         plan.created_by = self.name
         return plan
-
 
 class BaseEvolver(BaseComponent, IEvolver):
     """Base implementation for evolvers"""
@@ -333,118 +290,90 @@ class BaseEvolver(BaseComponent, IEvolver):
         
         return self._measure_performance(self._execute_plan)(plan, model, trainer, optimizer)
 
+class BaseTrainer(BaseComponent, ITrainer):
+    """Base implementation for trainers"""
 
-class BaseScheduler(BaseComponent, IScheduler):
-    """Base implementation for scheduler components"""
-    
     def __init__(self, name: str = None):
         super().__init__(name)
-        self._trigger_history: List[int] = []
-    
+
     @property
     def contract(self) -> ComponentContract:
-        """Default contract for schedulers"""
         return ComponentContract(
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
             maturity=Maturity.STABLE,
-            required_inputs={"context"},
-            provided_outputs={"scheduler.trigger_decision"},
-            resources=ResourceRequirements(memory_level=ResourceLevel.LOW)
+            required_inputs={"model", "dataset"},
+            provided_outputs={"training_metrics"},
+            resources=ResourceRequirements(memory_level=ResourceLevel.MEDIUM, requires_gpu=True)
         )
-    
-    def should_trigger(self, context: EvolutionContext) -> bool:
-        """Check if evolution should trigger now"""
-        trigger = self._check_trigger_condition(context)
-        
-        if trigger:
-            self._trigger_history.append(context.step)
-            self.log(logging.INFO, f"Evolution triggered at step {context.step}")
-        
-        return trigger
-    
-    @abstractmethod
-    def _check_trigger_condition(self, context: EvolutionContext) -> bool:
-        """Override this to implement trigger logic"""
-        pass
-    
-    def get_next_trigger_estimate(self, context: EvolutionContext) -> Optional[int]:
-        """Estimate when next trigger will occur"""
-        # Default implementation based on history
-        if len(self._trigger_history) < 2:
-            return None
-        
-        # Calculate average interval
-        intervals = [self._trigger_history[i] - self._trigger_history[i-1] 
-                    for i in range(1, len(self._trigger_history))]
-        avg_interval = sum(intervals) / len(intervals)
-        
-        last_trigger = self._trigger_history[-1]
-        return int(last_trigger + avg_interval)
 
+    def supports_online_evolution(self) -> bool:
+        return True
+
+    @abstractmethod
+    def _train_step(self, model: IModel, batch: Any, context: EvolutionContext) -> Dict[str, float]:
+        """Override this to implement the training logic for a single step."""
+        pass
+
+    def train_step(self, model: IModel, batch: Any, context: EvolutionContext) -> Dict[str, float]:
+        """Public training step with performance tracking."""
+        return self._measure_performance(self._train_step)(model, batch, context)
 
 class BaseOrchestrator(BaseComponent, IOrchestrator):
-    """Base implementation for orchestrator components"""
-    
+    """Base implementation for orchestrators"""
+
     def __init__(self, name: str = None):
         super().__init__(name)
-        self._components: Dict[str, IComponent] = {}
-        self._execution_count = 0
-    
+
     @property
     def contract(self) -> ComponentContract:
-        """Default contract for orchestrators"""
         return ComponentContract(
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
             maturity=Maturity.STABLE,
             required_inputs={"context"},
-            provided_outputs={"orchestration.cycle_results"},
-            resources=ResourceRequirements(
-                memory_level=ResourceLevel.HIGH,
-                requires_gpu=torch.cuda.is_available()
-            )
+            provided_outputs={"system_report"},
+            resources=ResourceRequirements(memory_level=ResourceLevel.LOW)
         )
-    
-    def register_component(self, component: IComponent):
-        """Register a component with the orchestrator"""
-        self._components[component.name] = component
-        self.log(logging.INFO, f"Registered component: {component.name}")
-    
+
+    @abstractmethod
+    def run_cycle(self, context: EvolutionContext) -> Dict[str, Any]:
+        pass
+
     def get_composition_health(self) -> Dict[str, Any]:
-        """Get health status of component composition"""
-        health_status = {
-            'status': 'healthy',
-            'components': {},
-            'issues': []
-        }
+        return {"status": "ok"}
+
+class BaseStrategyOrchestrator(BaseOrchestrator):
+    """Base class for orchestrators that manage and select from multiple strategies."""
+
+    def __init__(self, strategies: List[IComponent], name: str = None):
+        super().__init__(name)
+        self.strategies = strategies
+
+    @abstractmethod
+    def select_best_plan(self, plans: List[EvolutionPlan]) -> EvolutionPlan:
+        """Selects the best plan from a list of proposed plans."""
+        pass
+
+    def run_cycle(self, context: EvolutionContext, report: AnalysisReport) -> EvolutionPlan:
+        """
+        Runs all strategies, collects their proposed plans, and selects the best one.
+        """
+        self.log(logging.INFO, f"Running {len(self.strategies)} strategies to find the best plan.")
+        proposed_plans = []
+        for strategy in self.strategies:
+            if all(req in report for req in strategy.contract.required_inputs):
+                try:
+                    plan = strategy.propose_plan(report, context)
+                    if plan:
+                        proposed_plans.append(plan)
+                except Exception as e:
+                    self.log(logging.ERROR, f"Strategy {strategy.name} failed: {e}")
         
-        for name, component in self._components.items():
-            try:
-                perf_metrics = component.get_performance_metrics()
-                health_status['components'][name] = {
-                    'status': 'healthy',
-                    'call_count': perf_metrics.get('call_count', 0),
-                    'error_count': perf_metrics.get('error_count', 0),
-                    'maturity': component.maturity.value
-                }
-                
-                # Check for issues
-                if perf_metrics.get('error_count', 0) > 0:
-                    health_status['issues'].append(f"{name} has errors")
-                    health_status['components'][name]['status'] = 'degraded'
-                
-            except Exception as e:
-                health_status['components'][name] = {
-                    'status': 'error',
-                    'error': str(e)
-                }
-                health_status['issues'].append(f"{name} health check failed")
-        
-        # Overall status
-        if any(c['status'] == 'error' for c in health_status['components'].values()):
-            health_status['status'] = 'critical'
-        elif health_status['issues']:
-            health_status['status'] = 'degraded'
-        
-        return health_status
+        if not proposed_plans:
+            self.log(logging.INFO, "No plans were proposed by any strategy.")
+            return EvolutionPlan()
+
+        best_plan = self.select_best_plan(proposed_plans)
+        self.log(logging.INFO, f"Selected plan from {best_plan.created_by} with priority {best_plan.priority:.2f}.")
+        return best_plan

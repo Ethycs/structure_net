@@ -19,7 +19,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.structure_net.logging import (
+from src.logging import (
     ComponentLogger,
     create_evolution_experiment,
     MetricSchema,

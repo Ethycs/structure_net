@@ -23,7 +23,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.structure_net.profiling import (
+from src.profiling import (
     # Core profiling system
     ProfilerManager, ProfilerConfig, ProfilerLevel,
     ProfilerContext, BatchProfilerContext,
@@ -48,7 +48,7 @@ from src.structure_net.evolution.components import create_standard_evolution_sys
 from src.structure_net.evolution.interfaces import NetworkContext
 
 # Import standardized logging for integration
-from src.structure_net.logging import StandardizedLogger
+from src.logging import StandardizedLogger
 
 
 # Example 1: Production-Ready Function Profiling
@@ -373,7 +373,7 @@ def demonstrate_batch_profiling():
         print(f"      Train loss: {train_loss:.3f}, Val accuracy: {val_accuracy:.2%}")
     
     # Force flush of batch profiler
-    from src.structure_net.profiling.core.context_manager import get_global_batch_profiler
+    from src.profiling.core.context_manager import get_global_batch_profiler
     batch_profiler = get_global_batch_profiler()
     batch_profiler.flush()
     

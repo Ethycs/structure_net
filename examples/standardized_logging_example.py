@@ -13,7 +13,7 @@ from datetime import datetime
 import time
 
 # Import the standardized logging system
-from src.structure_net.logging.standardized_logging import (
+from src.logging.standardized_logging import (
     StandardizedLogger,
     LoggingConfig,
     ExperimentResult,

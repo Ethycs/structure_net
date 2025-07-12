@@ -18,7 +18,7 @@ import argparse
 # Add parent directory to path to import structure_net
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.structure_net.logging.wandb_integration import convert_json_to_wandb
+from src.logging.wandb_integration import convert_json_to_wandb
 
 
 def main():

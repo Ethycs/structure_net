@@ -8,7 +8,7 @@ import os
 import time
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Callable
-from src.structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
+from src.logging.standardized_logging import StandardizedLogger, LoggingConfig
 
 
 class WorkerRegistry:

@@ -20,7 +20,7 @@ from .core import (
 )
 from .runners import AsyncExperimentRunner
 from .analyzers import InsightExtractor, StatisticalAnalyzer
-from src.structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
+from src.logging.standardized_logging import StandardizedLogger, LoggingConfig
 import logging
 
 class NumpyJSONEncoder(json.JSONEncoder):

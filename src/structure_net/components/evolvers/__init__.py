@@ -7,8 +7,10 @@ parameters, and behavior.
 
 from .compactification_evolver import CompactificationEvolver
 from .input_highway_evolver import InputHighwayEvolver
+from .tournament_evolver import TournamentEvolver
 
 __all__ = [
     'CompactificationEvolver',
-    'InputHighwayEvolver'
+    'InputHighwayEvolver',
+    'TournamentEvolver'
 ]

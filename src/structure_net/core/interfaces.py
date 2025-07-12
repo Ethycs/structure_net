@@ -9,6 +9,14 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Set, Type, Union, Optional, Callable
 from enum import Enum, auto
 from dataclasses import dataclass, field
+
+class ActionType(Enum):
+    """Enum for specifying evolution actions."""
+    GROW = "grow"
+    PRUNE = "prune"
+    ADAPT_LR = "adapt_lr"
+    NO_ACTION = "no_action"
+
 import torch
 import torch.nn as nn
 from datetime import datetime

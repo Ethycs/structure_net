@@ -26,11 +26,11 @@ A comprehensive guide to using the standardized logging system with WandB artifa
 2. **Basic usage** - Replace your old logger:
    ```python
    # OLD WAY
-   from src.structure_net.logging import StructureNetWandBLogger
+   from src.logging import StructureNetWandBLogger
    logger = StructureNetWandBLogger(project_name="my_project")
    
    # NEW WAY (with validation)
-   from src.structure_net.logging import create_growth_logger
+   from src.logging import create_growth_logger
    logger = create_growth_logger(project_name="my_project")
    ```
 
@@ -117,7 +117,7 @@ experiment_data = {
 **Goal:** Log a simple growth experiment with validation.
 
 ```python
-from src.structure_net.logging import create_growth_logger
+from src.logging import create_growth_logger
 from src.structure_net import create_standard_network
 
 # 1. Create logger
@@ -178,7 +178,7 @@ print(f"✅ Experiment saved as artifact: {artifact_hash}")
 **Goal:** Learn to debug validation errors.
 
 ```python
-from src.structure_net.logging import create_growth_logger
+from src.logging import create_growth_logger
 
 logger = create_growth_logger()
 
@@ -216,7 +216,7 @@ except Exception as e:
 
 #### Growth Experiments
 ```python
-from src.structure_net.logging import create_growth_logger
+from src.logging import create_growth_logger
 
 logger = create_growth_logger()
 # Use for: Network growth, architecture evolution, extrema-driven experiments
@@ -224,7 +224,7 @@ logger = create_growth_logger()
 
 #### Training Experiments
 ```python
-from src.structure_net.logging import create_training_logger
+from src.logging import create_training_logger
 
 logger = create_training_logger()
 # Use for: Standard training, hyperparameter sweeps, baseline comparisons
@@ -242,7 +242,7 @@ logger.log_training_epoch(
 
 #### Tournament Experiments
 ```python
-from src.structure_net.logging import create_tournament_logger
+from src.logging import create_tournament_logger
 
 logger = create_tournament_logger()
 # Use for: Strategy competitions, A/B testing, multi-approach comparisons
@@ -326,7 +326,7 @@ python -m structure_net.logging.cli process
 ### Scenario 1: Training a Simple Network
 
 ```python
-from src.structure_net.logging import create_training_logger
+from src.logging import create_training_logger
 import torch.nn as nn
 import torch.optim as optim
 
@@ -371,7 +371,7 @@ logger.finish_experiment(final_accuracy=final_val_acc)
 ### Scenario 2: Running Growth Experiments
 
 ```python
-from src.structure_net.logging import create_growth_logger
+from src.logging import create_growth_logger
 from src.structure_net import create_standard_network
 
 # Setup growth experiment
@@ -482,7 +482,7 @@ for file_path in old_files:
     python -m structure_net.logging.cli queue {file_path} --process-immediately
     
     # Or use the API
-    from src.structure_net.logging import queue_experiment
+    from src.logging import queue_experiment
     import json
     
     with open(file_path, 'r') as f:
@@ -835,7 +835,7 @@ def create_custom_logger(**kwargs) -> StandardizedLogger:
 ### Batch Processing Multiple Experiments
 
 ```python
-from src.structure_net.logging import ArtifactManager
+from src.logging import ArtifactManager
 import json
 from pathlib import Path
 
@@ -1002,7 +1002,7 @@ python -m structure_net.logging.cli process
 
 **Or use the API:**
 ```python
-from src.structure_net.logging import queue_experiment
+from src.logging import queue_experiment
 import json
 from pathlib import Path
 

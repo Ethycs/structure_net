@@ -421,7 +421,7 @@ def migrate_config_files(old_config_path: Path, output_path: Path):
         unified = ConfigMigrationHelper.from_lab_config(old_config)
     elif 'queue_dir' in old_data:
         # LoggingConfig format
-        from src.structure_net.logging.standardized_logging import LoggingConfig
+        from src.logging.standardized_logging import LoggingConfig
         old_config = LoggingConfig(**old_data)
         unified = ConfigMigrationHelper.from_logging_config(old_config)
     else:

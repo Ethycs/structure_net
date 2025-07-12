@@ -6,7 +6,9 @@ optimization strategies, and training orchestration.
 """
 
 from .lsuv_trainer import LSUVTrainer
+from .gauge_theory_trainer import GaugeTheoryTrainer
 
 __all__ = [
-    'LSUVTrainer'
+    'LSUVTrainer',
+    'GaugeTheoryTrainer'
 ]

@@ -156,7 +156,7 @@ class TestLoggingConfigCompatibility:
     
     def test_standardized_logger_with_unified_config(self):
         """Test that StandardizedLogger accepts UnifiedConfig."""
-        from src.structure_net.logging import StandardizedLogger, LoggingConfig
+        from src.logging import StandardizedLogger, LoggingConfig
         from config import UnifiedConfig
         
         # Test with old LoggingConfig

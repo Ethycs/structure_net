@@ -175,7 +175,7 @@ class GrowthEvent(BaseModel):
 ### Basic Setup
 
 ```python
-from src.structure_net.logging.standardized_logging import (
+from src.logging.standardized_logging import (
     initialize_logging,
     LoggingConfig,
     log_experiment,
@@ -198,7 +198,7 @@ logger = initialize_logging(config)
 #### Complete Experiment Result
 
 ```python
-from src.structure_net.logging.standardized_logging import (
+from src.logging.standardized_logging import (
     ExperimentResult,
     ExperimentConfig,
     MetricsData
@@ -253,7 +253,7 @@ result_hash = log_metrics("exp_002", metrics_data)
 #### Growth Event Logging
 
 ```python
-from src.structure_net.logging.standardized_logging import GrowthEvent
+from src.logging.standardized_logging import GrowthEvent
 
 # Log a growth event
 growth_event = GrowthEvent(
@@ -275,7 +275,7 @@ event_hash = log_growth_event("exp_003", growth_event)
 
 ```python
 from src.structure_net.evolution.metrics import create_homological_analyzer
-from src.structure_net.logging.standardized_logging import HomologicalMetrics
+from src.logging.standardized_logging import HomologicalMetrics
 
 # Analyze weight matrix
 analyzer = create_homological_analyzer()
@@ -304,7 +304,7 @@ experiment = ExperimentResult(
 
 ```python
 from src.structure_net.evolution.metrics import create_topological_analyzer
-from src.structure_net.logging.standardized_logging import TopologicalMetrics
+from src.logging.standardized_logging import TopologicalMetrics
 
 # Analyze topology
 analyzer = create_topological_analyzer()
@@ -324,7 +324,7 @@ topological_metrics = TopologicalMetrics(
 
 ```python
 from src.structure_net.evolution.metrics import create_compactification_analyzer
-from src.structure_net.logging.standardized_logging import CompactificationMetrics
+from src.logging.standardized_logging import CompactificationMetrics
 
 # Analyze compactification
 analyzer = create_compactification_analyzer()

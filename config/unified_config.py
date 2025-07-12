@@ -402,7 +402,7 @@ class UnifiedConfig:
     
     def get_logging_config(self) -> 'LoggingConfig':
         """Get backward-compatible LoggingConfig for StandardizedLogger."""
-        from src.structure_net.logging.standardized_logging import LoggingConfig as OldLoggingConfig
+        from src.logging.standardized_logging import LoggingConfig as OldLoggingConfig
         
         return OldLoggingConfig(
             project_name=self.experiment.project_name,

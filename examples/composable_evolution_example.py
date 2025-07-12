@@ -47,7 +47,7 @@ from src.structure_net.evolution.components import (
 )
 
 # Import latest profiling system
-from src.structure_net.profiling import (
+from src.profiling import (
     create_production_profiler, create_research_profiler,
     profile_component, profile_if_enabled, profile_memory_intensive,
     profile_operation, profile_batch_operation,
@@ -55,7 +55,7 @@ from src.structure_net.profiling import (
 )
 
 # Import standardized logging
-from src.structure_net.logging import create_profiling_logger, StandardizedLogger
+from src.logging import create_profiling_logger, StandardizedLogger
 
 
 # Import existing infrastructure

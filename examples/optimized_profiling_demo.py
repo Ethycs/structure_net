@@ -21,7 +21,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.structure_net.profiling import (
+from src.profiling import (
     create_lightweight_profiler, create_standard_profiler, create_production_profiler,
     profile_function, profile_component, profile_if_enabled, profile_if_slow,
     profile_operation, profile_batch_operation, profile_memory_intensive,
@@ -173,7 +173,7 @@ def demonstrate_batch_profiling():
     total_time = time.perf_counter() - start_time
     
     # Force flush of batch profiler
-    from src.structure_net.profiling.core.context_manager import get_global_batch_profiler
+    from src.profiling.core.context_manager import get_global_batch_profiler
     batch_profiler = get_global_batch_profiler()
     batch_profiler.flush()
     

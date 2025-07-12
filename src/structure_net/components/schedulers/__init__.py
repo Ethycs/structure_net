@@ -9,9 +9,11 @@ network health indicators.
 from .multi_scale_learning_scheduler import MultiScaleLearningScheduler
 from .layer_age_aware_scheduler import LayerAgeAwareScheduler
 from .extrema_phase_scheduler import ExtremaPhaseScheduler
+from .layerwise_rate_strategy import LayerwiseRateStrategy
 
 __all__ = [
     'MultiScaleLearningScheduler',
     'LayerAgeAwareScheduler',
-    'ExtremaPhaseScheduler'
+    'ExtremaPhaseScheduler',
+    'LayerwiseRateStrategy'
 ]

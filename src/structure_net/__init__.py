@@ -40,12 +40,11 @@ from .core import (
 )
 
 # Import evolution system (built on canonical standard)
-from .evolution.network_evolver import OptimalGrowthEvolver
-from .evolution.extrema_analyzer import analyze_layer_extrema, detect_network_extrema
+from .components.evolvers.optimal_growth_evolver import OptimalGrowthEvolver
 # Removed deprecated IntegratedGrowthSystem - use evolution.components instead
-from .evolution.advanced_layers import ThresholdConfig, MetricsConfig
+from .core.config_schemas import ThresholdConfig, MetricsConfig
 # Import adaptive learning rate strategies
-from .evolution.adaptive_learning_rates import (
+from .components.strategies.adaptive_learning_rates import (
     ExponentialBackoffScheduler,
     LayerwiseAdaptiveRates,
     SoftClampingScheduler,

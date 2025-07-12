@@ -13,6 +13,8 @@ from .activity_analyzer import ActivityAnalyzer
 from .graph_analyzer import GraphAnalyzer
 from .catastrophe_analyzer import CatastropheAnalyzer
 from .compactification_analyzer import CompactificationAnalyzer
+from .extrema_analyzer import ExtremaAnalyzer
+from .performance_correlation_analyzer import PerformanceCorrelationAnalyzer
 
 __all__ = [
     'InformationFlowAnalyzer',
@@ -22,5 +24,7 @@ __all__ = [
     'ActivityAnalyzer',
     'GraphAnalyzer',
     'CatastropheAnalyzer',
-    'CompactificationAnalyzer'
+    'CompactificationAnalyzer',
+    'ExtremaAnalyzer',
+    'PerformanceCorrelationAnalyzer'
 ]

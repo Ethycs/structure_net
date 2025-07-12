@@ -261,9 +261,9 @@ class CompactificationEvolver(BaseEvolver):
             if hasattr(module, 'weight') and module.weight.grad is not None:
                 grad = module.weight.grad
                     
-                    # Find high-gradient regions outside current patches
-                    grad_magnitude = grad.abs()
-                    high_grad_mask = grad_magnitude > gradient_threshold
+                # Find high-gradient regions outside current patches
+                grad_magnitude = grad.abs()
+                high_grad_mask = grad_magnitude > gradient_threshold
                     
                 # Update sparse skeleton based on gradients
                 if compact_data.sparse_skeleton is not None:
