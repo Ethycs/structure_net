@@ -11,10 +11,18 @@ from typing import Dict, Any, List, Optional
 import numpy as np
 
 from src.structure_net.core import (
-    ILayer, IModel, EvolutionContext, AnalysisReport,
+    IComponent, ILayer, IModel, EvolutionContext, AnalysisReport,
     ComponentContract, ComponentVersion, Maturity,
-    ComponentStatus, ResourceRequirements, ResourceLevel
+    ResourceRequirements, ResourceLevel
 )
+
+# Simple status enum for testing
+from enum import Enum
+
+class ComponentStatus(Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    ERROR = "error"
 
 
 class DummyLayer(ILayer):
@@ -22,6 +30,10 @@ class DummyLayer(ILayer):
     
     def __init__(self, name: str, in_features: int, out_features: int,
                  add_bias: bool = True, sparsity: float = 0.0):
+        # Initialize both parent classes
+        IComponent.__init__(self)  # Initialize IComponent
+        nn.Module.__init__(self)   # Initialize nn.Module
+        
         self._name = name
         self.linear = nn.Linear(in_features, out_features, bias=add_bias)
         self._status = ComponentStatus.ACTIVE
@@ -67,6 +79,22 @@ class DummyLayer(ILayer):
         if self.mask is not None:
             return self.linear.weight * self.mask
         return self.linear.weight
+    
+    def get_analysis_properties(self) -> Dict[str, torch.Tensor]:
+        """Properties available for metric analysis."""
+        return {
+            'weight': self.get_weight(),
+            'bias': self.linear.bias if self.linear.bias is not None else torch.tensor([])
+        }
+    
+    def supports_modification(self) -> bool:
+        """Can this layer be modified by evolvers?"""
+        return True
+    
+    def add_connections(self, num_connections: int, **kwargs) -> bool:
+        """Add connections to this layer."""
+        # Simple implementation for testing
+        return True
 
 
 class DummyModel(IModel):
@@ -74,6 +102,10 @@ class DummyModel(IModel):
     
     def __init__(self, name: str, layers: Optional[List[int]] = None,
                  add_nonlinearity: bool = True):
+        # Initialize both parent classes
+        IComponent.__init__(self)  # Initialize IComponent
+        nn.Module.__init__(self)   # Initialize nn.Module
+        
         self._name = name
         self._status = ComponentStatus.ACTIVE
         
@@ -126,6 +158,23 @@ class DummyModel(IModel):
     def get_layers(self) -> List[nn.Module]:
         """Get list of layers."""
         return list(self.layers)
+    
+    def get_architecture_summary(self) -> Dict[str, Any]:
+        """Get high-level architecture information."""
+        layer_sizes = [self.layers[0].in_features]
+        for layer in self.layers:
+            if hasattr(layer, 'out_features'):
+                layer_sizes.append(layer.out_features)
+        
+        return {
+            'num_layers': len(self.layers),
+            'layer_sizes': layer_sizes,
+            'total_params': sum(p.numel() for p in self.parameters())
+        }
+    
+    def supports_dynamic_growth(self) -> bool:
+        """Can this model grow during training?"""
+        return False
 
 
 def create_test_layer(in_features: int = 10, out_features: int = 5,
@@ -282,10 +331,14 @@ class TestMetricsMixin:
         for key in expected_keys:
             assert key in output, f"Missing expected key: {key}"
             
-        # Check all values are numeric
+        # Check all values are numeric (except for specific fields)
+        non_numeric_fields = {'method_used', 'computation_method', 'layer_flows', 
+                             'boundary_ranks', 'layer_pairs', 'layer_redundancy',
+                             'layer_flow', 'redundant_pairs'}
         for key, value in output.items():
-            assert isinstance(value, (int, float, np.integer, np.floating)), \
-                f"Value for {key} must be numeric, got {type(value)}"
+            if key not in non_numeric_fields:
+                assert isinstance(value, (int, float, np.integer, np.floating)), \
+                    f"Value for {key} must be numeric, got {type(value)}"
     
     def assert_metric_range(self, value: float, min_val: float = 0.0,
                           max_val: float = 1.0, name: str = "metric"):

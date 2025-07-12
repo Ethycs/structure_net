@@ -5,7 +5,7 @@ This component measures mutual information between neural network layers,
 which quantifies how much information one layer shares with another.
 """
 
-from typing import Dict, Any, Union, Optional, Tuple
+from typing import Dict, Any, Union, Optional, Tuple, List
 import torch
 import torch.nn as nn
 import numpy as np
@@ -28,7 +28,8 @@ class LayerMIMetric(BaseMetric):
     """
     
     def __init__(self, method: str = 'histogram', bins: int = 50,
-                 k_neighbors: int = 3, name: str = None):
+                 k_neighbors: int = 3, mi_method: str = None, n_bins: int = None,
+                 name: str = None):
         """
         Initialize layer MI metric.
         
@@ -36,9 +37,17 @@ class LayerMIMetric(BaseMetric):
             method: MI estimation method ('histogram', 'knn')
             bins: Number of bins for histogram method
             k_neighbors: Number of neighbors for KNN method
+            mi_method: Alias for method (for compatibility)
+            n_bins: Alias for bins (for compatibility) 
             name: Optional custom name
         """
         super().__init__(name or "LayerMIMetric")
+        # Handle aliases
+        if mi_method is not None:
+            method = mi_method
+        if n_bins is not None:
+            bins = n_bins
+        
         self.method = method
         self.bins = bins
         self.k_neighbors = k_neighbors
@@ -93,8 +102,36 @@ class LayerMIMetric(BaseMetric):
         elif isinstance(target, ILayer):
             # For single layer, compute MI with input/output
             return self._compute_layer_mi(target, layer_activations)
+        elif target is None:
+            # Direct computation with input/output activations
+            if 'input' in layer_activations and 'output' in layer_activations:
+                return self._compute_direct_mi(layer_activations['input'], 
+                                             layer_activations['output'])
+            else:
+                raise ValueError("When target is None, layer_activations must contain 'input' and 'output' keys")
         else:
-            raise ValueError(f"Target must be ILayer or IModel, got {type(target)}")
+            raise ValueError(f"Target must be ILayer, IModel, or None, got {type(target)}")
+    
+    def _compute_direct_mi(self, input_acts: torch.Tensor, 
+                          output_acts: torch.Tensor) -> Dict[str, Any]:
+        """Compute MI directly between input and output activations."""
+        # Compute MI
+        mi_value = self._compute_mi(input_acts, output_acts)
+        
+        # Compute normalized MI
+        h_input = self._entropy_metric._estimate_entropy(input_acts)
+        h_output = self._entropy_metric._estimate_entropy(output_acts)
+        min_entropy = min(h_input, h_output)
+        
+        normalized_mi = mi_value / min_entropy if min_entropy > 0 else 0.0
+        information_ratio = mi_value / h_input if h_input > 0 else 0.0
+        
+        return {
+            "mutual_information": mi_value,
+            "normalized_mi": normalized_mi,
+            "information_ratio": information_ratio,
+            "computation_method": self.method
+        }
     
     def _compute_layer_mi(self, layer: ILayer, 
                          layer_activations: Dict[str, torch.Tensor]) -> Dict[str, Any]:
@@ -205,7 +242,7 @@ class LayerMIMetric(BaseMetric):
         Returns:
             Mutual information value
         """
-        if self.method == 'histogram':
+        if self.method == 'histogram' or self.method == 'binning':
             return self._compute_mi_histogram(x, y)
         elif self.method == 'knn':
             return self._compute_mi_knn(x, y)

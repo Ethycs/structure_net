@@ -9,7 +9,7 @@ performance, and health metrics.
 import torch
 import torch.nn as nn
 from typing import Dict, Any, List
-from .layers import StandardSparseLayer
+from ..components.layers import StandardSparseLayer
 
 
 def get_network_stats(model: nn.Sequential) -> Dict[str, Any]:

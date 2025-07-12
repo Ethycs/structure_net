@@ -3,6 +3,27 @@ Snapshot Manager for Multi-Scale Snapshots Experiment
 
 This module manages the saving and loading of network snapshots at different
 growth phases, implementing delta-based storage for efficiency.
+
+DEPRECATED: This module is deprecated. Please use the new component-based architecture:
+    from structure_net.components.orchestrators import SnapshotOrchestrator
+    from structure_net.components.strategies import SnapshotStrategy
+    from structure_net.components.metrics import SnapshotMetric
+    
+The new components provide enhanced functionality:
+- Full component architecture integration
+- Intelligent snapshot strategies based on network analysis
+- Better compression and delta storage
+- Integration with the evolution system
+- Performance metrics and analysis
+
+Migration example:
+    # Old way (deprecated):
+    from structure_net.snapshots import SnapshotManager
+    manager = SnapshotManager("snapshots", performance_threshold=0.02)
+    
+    # New way:
+    from structure_net.components.orchestrators import SnapshotOrchestrator
+    orchestrator = SnapshotOrchestrator("snapshots", performance_threshold=0.02)
 """
 
 import torch
@@ -13,12 +34,23 @@ import pickle
 from typing import Dict, List, Optional, Any, Tuple
 from pathlib import Path
 import logging
+import warnings
 from datetime import datetime
+
+# Issue deprecation warning on import
+warnings.warn(
+    "SnapshotManager is deprecated. Please use structure_net.components.orchestrators.SnapshotOrchestrator "
+    "and related components instead. See module docstring for migration guide.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 class SnapshotManager:
     """
     Manages multi-scale network snapshots with delta-based storage.
+    
+    DEPRECATED: Use SnapshotOrchestrator from structure_net.components.orchestrators instead.
     
     Implements the snapshot saving rules:
     - Save at each growth event (not arbitrary epochs)
@@ -38,12 +70,19 @@ class SnapshotManager:
         """
         Initialize snapshot manager.
         
+        DEPRECATED: Use SnapshotOrchestrator instead.
+        
         Args:
             save_dir: Directory to save snapshots
             performance_threshold: Minimum performance improvement to save
             save_deltas: Whether to use delta-based storage
             compression: Whether to compress snapshots
         """
+        warnings.warn(
+            "SnapshotManager is deprecated. Use SnapshotOrchestrator from structure_net.components.orchestrators instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
         

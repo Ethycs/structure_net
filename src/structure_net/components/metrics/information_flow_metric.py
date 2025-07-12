@@ -73,22 +73,78 @@ class InformationFlowMetric(BaseMetric):
         
         Args:
             target: Layer or model to analyze
-            context: Must contain 'layer_activations' data
+            context: Must contain 'layer_activations' and 'layer_sequence' data
             
         Returns:
             Dictionary containing information flow measurements
         """
-        # Get activations from context
-        layer_activations = context.get('layer_activations')
-        if layer_activations is None:
+        # Get layer sequence
+        layer_sequence = context.get('layer_sequence')
+        if layer_sequence is None:
+            raise ValueError("InformationFlowMetric requires 'layer_sequence' in context")
+        
+        layer_activations = context.get('layer_activations', {})
+        if not layer_activations:
             raise ValueError("InformationFlowMetric requires 'layer_activations' in context")
         
-        if isinstance(target, IModel):
-            return self._compute_model_flow(target, layer_activations)
-        elif isinstance(target, ILayer):
-            return self._compute_layer_flow(target, layer_activations)
-        else:
-            raise ValueError(f"Target must be ILayer or IModel, got {type(target)}")
+        # Compute flow metrics through sequence
+        layer_flows = []
+        total_flow = 0.0
+        
+        for i in range(len(layer_sequence) - 1):
+            layer1_name = layer_sequence[i]
+            layer2_name = layer_sequence[i + 1]
+            
+            # Get activations
+            if layer1_name in layer_activations:
+                acts1 = layer_activations[layer1_name]
+                if isinstance(acts1, dict) and 'output' in acts1:
+                    acts1 = acts1['output']
+            else:
+                continue
+                
+            if layer2_name in layer_activations:
+                acts2 = layer_activations[layer2_name]
+                if isinstance(acts2, dict) and 'input' in acts2:
+                    acts2 = acts2['input']
+            else:
+                continue
+            
+            # Compute MI flow
+            mi_value = self._mi_metric._compute_mi(acts1, acts2)
+            layer_flows.append(mi_value)
+            total_flow += mi_value
+        
+        if not layer_flows:
+            return {
+                "total_flow": 0.0,
+                "mean_flow": 0.0,
+                "flow_variance": 0.0,
+                "bottleneck_severity": 0.0,
+                "flow_efficiency": 0.0,
+                "layer_flows": []
+            }
+        
+        # Compute statistics
+        mean_flow = total_flow / len(layer_flows)
+        flow_variance = sum((f - mean_flow) ** 2 for f in layer_flows) / len(layer_flows)
+        
+        # Bottleneck detection
+        min_flow = min(layer_flows)
+        bottleneck_severity = (mean_flow - min_flow) / mean_flow if mean_flow > 0 else 0.0
+        
+        # Flow efficiency (ratio of min to max flow)
+        max_flow = max(layer_flows)
+        flow_efficiency = min_flow / max_flow if max_flow > 0 else 0.0
+        
+        return {
+            "total_flow": total_flow,
+            "mean_flow": mean_flow,
+            "flow_variance": flow_variance,
+            "bottleneck_severity": bottleneck_severity,
+            "flow_efficiency": flow_efficiency,
+            "layer_flows": layer_flows
+        }
     
     def _compute_layer_flow(self, layer: ILayer, 
                            layer_activations: Dict[str, torch.Tensor]) -> Dict[str, Any]:

@@ -3,7 +3,21 @@ Layer-wise adaptive learning rate schedulers.
 
 This module contains schedulers that adapt learning rates based on layer properties
 such as depth, age, and architectural position within the network.
+
+DEPRECATED: This module is deprecated. Please use the new component-based
+schedulers in structure_net.components.schedulers instead:
+- LayerAgeAwareLR -> LayerAgeAwareScheduler
+- Other schedulers will be migrated in future updates
 """
+
+import warnings
+
+warnings.warn(
+    "The adaptive_learning_rates.layer_schedulers module is deprecated. "
+    "Please use structure_net.components.schedulers instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

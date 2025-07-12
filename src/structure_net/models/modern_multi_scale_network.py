@@ -4,20 +4,55 @@ Modern Multi-Scale Network Implementation
 This module defines a modern, composable version of a multi-scale network.
 The network itself is a standard nn.Module. The multi-scale growth and
 evolution logic is handled externally by the ComposableEvolutionSystem.
+
+DEPRECATED: This module is deprecated. Please use the new component-based architecture:
+    from structure_net.components.models import MultiScaleModel
+    
+The new MultiScaleModel provides enhanced functionality:
+- Full component architecture integration with contracts
+- Dynamic multi-scale block management
+- Scale importance tracking and adaptation
+- Growth potential analysis
+- Integrated scale-specific pruning and growth
+
+Migration example:
+    # Old way (deprecated):
+    from structure_net.models import ModernMultiScaleNetwork
+    model = ModernMultiScaleNetwork([784, 256, 10], initial_sparsity=0.9)
+    
+    # New way:
+    from structure_net.components.models import MultiScaleModel
+    model = MultiScaleModel([784, 256, 10], scales=[1, 2, 4], initial_sparsity=0.9)
 """
 
 import torch
 import torch.nn as nn
 from typing import List, Dict
+import warnings
 
 from ..core.layers import StandardSparseLayer
+
+# Issue deprecation warning on import
+warnings.warn(
+    "ModernMultiScaleNetwork is deprecated. Please use structure_net.components.models.MultiScaleModel instead. "
+    "See module docstring for migration guide.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 class ModernMultiScaleNetwork(nn.Module):
     """
     A network architecture that can be grown in a multi-scale fashion
     by an external evolution system.
+    
+    DEPRECATED: Use MultiScaleModel from structure_net.components.models instead.
     """
     def __init__(self, initial_architecture: List[int], initial_sparsity: float):
+        warnings.warn(
+            "ModernMultiScaleNetwork is deprecated. Use MultiScaleModel from structure_net.components.models instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__()
         
         self.architecture = initial_architecture

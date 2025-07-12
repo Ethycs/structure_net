@@ -1,9 +1,19 @@
 """
-Unified adaptive learning rate manager.
+DEPRECATED: Unified adaptive learning rate manager.
 
-This module provides a comprehensive system that combines multiple learning rate
-strategies into a cohesive, easy-to-use interface.
+This module is deprecated. Please use the new component-based
+orchestrator in src.structure_net.components.orchestrators.AdaptiveLearningRateOrchestrator
+instead.
 """
+
+import warnings
+
+warnings.warn(
+    "The adaptive_learning_rates.unified_manager module is deprecated. "
+    "Please use src.structure_net.components.orchestrators.AdaptiveLearningRateOrchestrator instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

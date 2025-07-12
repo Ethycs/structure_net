@@ -4,18 +4,47 @@ MinimalNetwork - Backward Compatibility Layer
 This module provides a `MinimalNetwork` class that is a wrapper around the
 new `create_standard_network` factory function. This ensures that older
 experiments that rely on `MinimalNetwork` can still run without modification.
+
+DEPRECATED: This module is deprecated and provided only for backward compatibility.
+Please use the new component-based architecture:
+    from structure_net.components.models import MinimalModel
+    
+The new MinimalModel provides the same functionality with additional features:
+- Self-aware component design with contracts
+- Better integration with metrics and analyzers
+- Dynamic connection management
+- Performance tracking
+
+Migration example:
+    # Old way (deprecated):
+    model = MinimalNetwork([784, 256, 10], sparsity=0.9)
+    
+    # New way:
+    from structure_net.components.models import MinimalModel
+    model = MinimalModel([784, 256, 10], sparsity=0.9)
 """
 
 import torch
 import torch.nn as nn
 from typing import List, Optional
+import warnings
 
 from ..core.network_factory import create_standard_network
 from ..core.network_analysis import get_network_stats
 
+# Issue deprecation warning on import
+warnings.warn(
+    "MinimalNetwork is deprecated. Please use structure_net.components.models.MinimalModel instead. "
+    "See module docstring for migration guide.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 class MinimalNetwork(nn.Module):
     """
     A backward-compatibility wrapper for the old MinimalNetwork class.
+    
+    DEPRECATED: Use structure_net.components.models.MinimalModel instead.
     
     This class uses the new canonical `create_standard_network` factory
     to construct the network, but exposes an interface that is compatible
@@ -26,6 +55,11 @@ class MinimalNetwork(nn.Module):
                  sparsity: float, 
                  activation: str = 'relu', 
                  device: Optional[str] = 'cpu'):
+        warnings.warn(
+            "MinimalNetwork is deprecated. Use MinimalModel from structure_net.components.models instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__()
         
         self.layer_sizes = layer_sizes

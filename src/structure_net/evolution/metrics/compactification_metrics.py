@@ -2,16 +2,26 @@
 """
 Compactification Metrics for Neural Networks
 
-Provides metrics for analyzing network compactification effectiveness.
-Extracted from the compactification module for reusability and modularity.
+MIGRATION NOTICE: This module has been migrated to the component architecture.
+Please use the new component-based metrics from:
+    src.structure_net.components.metrics.compactification_metrics
 
-Key Features:
-- Compression ratio analysis
-- Patch effectiveness metrics
-- Memory efficiency analysis
-- Reconstruction error computation
-- Storage optimization metrics
+New components:
+- CompressionRatioMetric
+- PatchEffectivenessMetric  
+- MemoryEfficiencyMetric
+- ReconstructionQualityMetric
+
+This legacy module will be deprecated in a future version.
 """
+
+import warnings
+warnings.warn(
+    "This compactification metrics module is deprecated. "
+    "Use src.structure_net.components.metrics.compactification_metrics instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

@@ -83,11 +83,20 @@ class ChainComplexMetric(BaseMetric):
         # Get weight matrix from context
         weight_matrix = context.get('weight_matrix')
         if weight_matrix is None:
-            # Try to extract from layer
+            # Try to extract from target
             if isinstance(target, ILayer):
                 weight_matrix = self._extract_weight_matrix(target)
+            elif isinstance(target, IModel):
+                # For models, analyze the chain complex of all layers
+                return self._analyze_model_chain_complex(target)
+            elif isinstance(target, torch.nn.Module):
+                # Handle regular nn.Module
+                return self._analyze_nn_module_chain_complex(target)
+            elif hasattr(target, '__class__'):
+                # Try to handle any object with modules
+                return self._analyze_nn_module_chain_complex(target)
             else:
-                raise ValueError("ChainComplexMetric requires 'weight_matrix' in context or a layer target")
+                raise ValueError("ChainComplexMetric requires 'weight_matrix' in context or a layer/model target")
         
         if weight_matrix.dim() != 2:
             raise ValueError("Weight matrix must be 2D")
@@ -110,6 +119,115 @@ class ChainComplexMetric(BaseMetric):
                 return param
         
         raise ValueError(f"Could not extract weight matrix from layer {layer.name}")
+    
+    def _analyze_model_chain_complex(self, model: IModel) -> Dict[str, Any]:
+        """Analyze chain complex structure of entire model."""
+        # Get all linear layers from the model
+        weight_matrices = []
+        
+        # If model has get_layers method, use it
+        if hasattr(model, 'get_layers'):
+            layers = model.get_layers()
+            for layer in layers:
+                # Handle both ILayer and nn.Module
+                if hasattr(layer, 'weight') and layer.weight.dim() == 2:
+                    weight_matrices.append(layer.weight)
+                elif isinstance(layer, torch.nn.Linear):
+                    weight_matrices.append(layer.weight)
+                elif hasattr(layer, 'linear') and hasattr(layer.linear, 'weight'):
+                    weight_matrices.append(layer.linear.weight)
+        else:
+            # Fallback: search for all Linear layers in the model
+            for module in model.modules():
+                if isinstance(module, torch.nn.Linear):
+                    weight_matrices.append(module.weight)
+        
+        if not weight_matrices:
+            return {
+                "chain_length": 0,
+                "boundary_ranks": [],
+                "chain_connectivity": 0.0,
+                "complex_dimension": 0
+            }
+        
+        # Compute boundary maps and ranks
+        boundary_ranks = []
+        chain_connectivity = 1.0
+        
+        for i in range(len(weight_matrices) - 1):
+            W1 = weight_matrices[i]
+            W2 = weight_matrices[i + 1]
+            
+            # Check dimensions match for composition
+            if W2.shape[1] == W1.shape[0]:
+                # Compute rank of boundary map (composition)
+                boundary = torch.mm(W2, W1)
+                rank = torch.linalg.matrix_rank(boundary).item()
+                boundary_ranks.append(rank)
+                
+                # Update connectivity based on rank preservation
+                expected_rank = min(W1.shape[0], W2.shape[0])
+                if expected_rank > 0:
+                    chain_connectivity *= rank / expected_rank
+        
+        return {
+            "chain_length": len(weight_matrices),  # Number of layers in the chain
+            "boundary_ranks": boundary_ranks,
+            "chain_connectivity": chain_connectivity,
+            "complex_dimension": len(weight_matrices)
+        }
+    
+    def _analyze_nn_module_chain_complex(self, module: torch.nn.Module) -> Dict[str, Any]:
+        """Analyze chain complex for regular nn.Module."""
+        # Search for all Linear layers
+        weight_matrices = []
+        
+        # Handle both nn.Module and other objects
+        if hasattr(module, 'modules'):
+            for m in module.modules():
+                if isinstance(m, torch.nn.Linear):
+                    weight_matrices.append(m.weight)
+        else:
+            # For non-Module objects, check attributes
+            for attr_name in dir(module):
+                try:
+                    attr = getattr(module, attr_name)
+                    if isinstance(attr, torch.nn.Linear):
+                        weight_matrices.append(attr.weight)
+                except:
+                    continue
+        
+        if not weight_matrices:
+            return {
+                "chain_length": 0,
+                "boundary_ranks": [],
+                "chain_connectivity": 0.0,
+                "complex_dimension": 0
+            }
+        
+        # Same analysis as for IModel
+        boundary_ranks = []
+        chain_connectivity = 1.0
+        
+        for i in range(len(weight_matrices) - 1):
+            W1 = weight_matrices[i]
+            W2 = weight_matrices[i + 1]
+            
+            if W2.shape[1] == W1.shape[0]:
+                boundary = torch.mm(W2, W1)
+                rank = torch.linalg.matrix_rank(boundary).item()
+                boundary_ranks.append(rank)
+                
+                expected_rank = min(W1.shape[0], W2.shape[0])
+                if expected_rank > 0:
+                    chain_connectivity *= rank / expected_rank
+        
+        return {
+            "chain_length": len(weight_matrices),
+            "boundary_ranks": boundary_ranks,
+            "chain_connectivity": chain_connectivity,
+            "complex_dimension": len(weight_matrices)
+        }
     
     def _analyze_chain_complex(self, weight_matrix: torch.Tensor) -> Dict[str, Any]:
         """

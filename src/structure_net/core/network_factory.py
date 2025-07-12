@@ -9,7 +9,7 @@ All network creation must go through these functions to ensure compatibility.
 import torch
 import torch.nn as nn
 from typing import List, Dict, Optional
-from .layers import StandardSparseLayer, ExtremaAwareSparseLayer
+from ..components.layers import StandardSparseLayer, ExtremaAwareSparseLayer
 
 
 def create_standard_network(architecture: List[int], 

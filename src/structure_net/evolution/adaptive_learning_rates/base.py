@@ -3,7 +3,19 @@ Base classes and interfaces for adaptive learning rate strategies.
 
 This module defines the core abstractions that all learning rate schedulers
 should implement, providing a consistent interface and common functionality.
+
+DEPRECATED: This module is deprecated. Please use the new component-based
+schedulers in structure_net.components.schedulers instead.
 """
+
+import warnings
+
+warnings.warn(
+    "The adaptive_learning_rates.base module is deprecated. "
+    "Please use structure_net.components.schedulers instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

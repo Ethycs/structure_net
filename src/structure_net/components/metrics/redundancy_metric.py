@@ -5,7 +5,7 @@ This component measures redundancy between neural network layers,
 which indicates how much information is repeated or shared.
 """
 
-from typing import Dict, Any, Union, Optional
+from typing import Dict, Any, Union, Optional, List, Tuple
 import torch
 import logging
 
@@ -25,14 +25,16 @@ class RedundancyMetric(BaseMetric):
     between layers, which can indicate inefficient information encoding.
     """
     
-    def __init__(self, name: str = None):
+    def __init__(self, threshold: float = 0.8, name: str = None):
         """
         Initialize redundancy metric.
         
         Args:
+            threshold: Correlation threshold for considering features redundant
             name: Optional custom name
         """
         super().__init__(name or "RedundancyMetric")
+        self.threshold = threshold
         self._entropy_metric = EntropyMetric()
         self._measurement_schema = {
             "redundancy": float,
@@ -75,14 +77,59 @@ class RedundancyMetric(BaseMetric):
         # Get activations from context
         layer_activations = context.get('layer_activations')
         if layer_activations is None:
-            raise ValueError("RedundancyMetric requires 'layer_activations' in context")
+            # Try simple activations for single tensor analysis
+            activations = context.get('activations')
+            if activations is not None:
+                # Convert single activations to expected format
+                layer_activations = {'default': activations}
+            else:
+                raise ValueError("RedundancyMetric requires 'layer_activations' or 'activations' in context")
         
         if isinstance(target, IModel):
             return self._compute_model_redundancy(target, layer_activations)
         elif isinstance(target, ILayer):
             return self._compute_layer_redundancy(target, layer_activations)
+        elif target is None and len(layer_activations) == 1:
+            # Simple activation analysis
+            activations = list(layer_activations.values())[0]
+            return self._compute_activation_redundancy(activations)
         else:
             raise ValueError(f"Target must be ILayer or IModel, got {type(target)}")
+    
+    def _compute_activation_redundancy(self, activations: torch.Tensor) -> Dict[str, Any]:
+        """Compute redundancy in a single activation tensor."""
+        if activations.dim() > 2:
+            # Flatten to (batch, features)
+            activations = activations.view(activations.size(0), -1)
+        
+        # Compute pairwise correlations between features
+        correlations = self._compute_correlations(activations)
+        
+        # Find redundant pairs
+        redundant_pairs = self._find_redundant_pairs(correlations)
+        
+        # Compute metrics
+        total_features = activations.shape[1]
+        total_pairs = total_features * (total_features - 1) // 2
+        redundancy_ratio = len(redundant_pairs) / total_pairs if total_pairs > 0 else 0
+        
+        # Mean and max redundancy
+        if correlations.shape[0] > 1:
+            # Remove diagonal
+            mask = ~torch.eye(correlations.shape[0], dtype=bool)
+            off_diagonal = correlations[mask]
+            mean_redundancy = off_diagonal.abs().mean().item()
+            max_redundancy = off_diagonal.abs().max().item()
+        else:
+            mean_redundancy = 0.0
+            max_redundancy = 0.0
+        
+        return {
+            "total_redundancy": len(redundant_pairs),
+            "mean_redundancy": mean_redundancy,
+            "max_redundancy": max_redundancy,
+            "redundancy_ratio": redundancy_ratio
+        }
     
     def _compute_layer_redundancy(self, layer: ILayer, 
                                  layer_activations: Dict[str, torch.Tensor]) -> Dict[str, Any]:
@@ -198,3 +245,28 @@ class RedundancyMetric(BaseMetric):
             "independence_ratio": avg_independence_ratio,
             "layer_redundancy": layer_redundancy
         }
+    
+    def _compute_correlations(self, activations: torch.Tensor) -> torch.Tensor:
+        """Compute pairwise correlations between features."""
+        # Standardize features
+        mean = activations.mean(dim=0, keepdim=True)
+        std = activations.std(dim=0, keepdim=True) + 1e-8
+        normalized = (activations - mean) / std
+        
+        # Compute correlation matrix
+        batch_size = activations.shape[0]
+        correlations = torch.mm(normalized.T, normalized) / (batch_size - 1)
+        
+        return correlations
+    
+    def _find_redundant_pairs(self, correlations: torch.Tensor) -> List[Tuple[int, int]]:
+        """Find pairs of features with high correlation."""
+        redundant_pairs = []
+        n_features = correlations.shape[0]
+        
+        for i in range(n_features):
+            for j in range(i + 1, n_features):
+                if abs(correlations[i, j]) > self.threshold:
+                    redundant_pairs.append((i, j))
+        
+        return redundant_pairs

@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """
-Composable Network Evolution System
+DEPRECATED: Composable Network Evolution System
 
-This module provides a complete composable evolution system that coordinates
-analyzers, strategies, and trainers to evolve networks over time.
+This module is deprecated. Please use the new orchestrator components in
+src.structure_net.components.orchestrators instead.
 """
+
+import warnings
+
+warnings.warn(
+    "The evolution_system module is deprecated. "
+    "Please use src.structure_net.components.orchestrators instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

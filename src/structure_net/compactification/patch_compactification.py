@@ -7,7 +7,22 @@ Implements the core compactification system with:
 - Efficient sparse skeleton representation
 - Layer-wise compactification for constant memory
 - Hardware-optimized memory layouts
+
+DEPRECATED: This module is deprecated. Please use the new component-based
+implementations in structure_net.components instead:
+- PatchCompactifier -> components.evolvers.compactification_evolver
+- ExtremaDetector -> components.analyzers.compactification_analyzer
+- CompactLayer -> components.layers
 """
+
+import warnings
+
+warnings.warn(
+    "The compactification.patch_compactification module is deprecated. "
+    "Please use structure_net.components.evolvers and analyzers instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

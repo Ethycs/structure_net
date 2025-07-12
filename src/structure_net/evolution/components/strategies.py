@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """
-Concrete Growth Strategy Implementations
+DEPRECATED: Concrete Growth Strategy Implementations
 
-This module provides concrete implementations of growth strategies
-that wrap existing growth functionality into the composable interface.
+This module is deprecated. Please use the new strategy components in
+src.structure_net.components.strategies instead.
 """
+
+import warnings
+
+warnings.warn(
+    "The strategies module is deprecated. "
+    "Please use src.structure_net.components.strategies instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

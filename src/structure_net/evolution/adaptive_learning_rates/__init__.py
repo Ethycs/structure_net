@@ -11,8 +11,34 @@ The package is organized into several modules:
 - layer_schedulers: Layer-wise adaptive strategies
 - connection_schedulers: Connection-level adaptive strategies
 - unified_manager: Comprehensive management system
+
+DEPRECATED: This entire package is deprecated. Please use the new component-based
+implementations in:
+- structure_net.components.schedulers - For individual scheduler components
+- structure_net.components.orchestrators - For unified adaptive learning rate management
 """
 
+import warnings
+
+warnings.warn(
+    "The adaptive_learning_rates package is deprecated. "
+    "Please use structure_net.components.schedulers and "
+    "structure_net.components.orchestrators instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+# Import new components for compatibility
+from ...components.schedulers import (
+    MultiScaleLearningScheduler as _MultiScaleLearningScheduler,
+    LayerAgeAwareScheduler as _LayerAgeAwareScheduler,
+    ExtremaPhaseScheduler as _ExtremaPhaseScheduler
+)
+from ...components.orchestrators import (
+    AdaptiveLearningRateOrchestrator as _AdaptiveLearningRateOrchestrator
+)
+
+# Import old implementations
 from .base import BaseLearningRateScheduler, LearningRateStrategy
 from .phase_schedulers import (
     ExtremaPhaseScheduler,
@@ -58,6 +84,39 @@ from .factory import (
     create_continual_learning_manager,
     create_scheduler_presets
 )
+
+# Provide migration guidance
+def _migration_guide():
+    """Print migration guide for users."""
+    print("""
+    === Adaptive Learning Rate Migration Guide ===
+    
+    The adaptive_learning_rates package has been refactored into components.
+    
+    Migration examples:
+    
+    1. MultiScaleLearning -> MultiScaleLearningScheduler
+       OLD: from structure_net.evolution.adaptive_learning_rates import MultiScaleLearning
+       NEW: from structure_net.components.schedulers import MultiScaleLearningScheduler
+    
+    2. LayerAgeAwareLR -> LayerAgeAwareScheduler
+       OLD: from structure_net.evolution.adaptive_learning_rates import LayerAgeAwareLR
+       NEW: from structure_net.components.schedulers import LayerAgeAwareScheduler
+    
+    3. ExtremaPhaseScheduler -> ExtremaPhaseScheduler (component version)
+       OLD: from structure_net.evolution.adaptive_learning_rates import ExtremaPhaseScheduler
+       NEW: from structure_net.components.schedulers import ExtremaPhaseScheduler
+    
+    4. UnifiedAdaptiveLearning -> AdaptiveLearningRateOrchestrator
+       OLD: from structure_net.evolution.adaptive_learning_rates import UnifiedAdaptiveLearning
+       NEW: from structure_net.components.orchestrators import AdaptiveLearningRateOrchestrator
+    
+    The new components offer:
+    - Better modularity and testability
+    - Formal contracts defining inputs/outputs
+    - Resource requirement declarations
+    - Improved state management
+    """)
 
 __all__ = [
     # Base classes
@@ -109,5 +168,8 @@ __all__ = [
     'create_structure_net_manager',
     'create_transfer_learning_manager',
     'create_continual_learning_manager',
-    'create_scheduler_presets'
+    'create_scheduler_presets',
+    
+    # Migration helper
+    '_migration_guide'
 ]

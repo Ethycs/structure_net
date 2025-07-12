@@ -6,6 +6,26 @@ Implements neural networks with explicit fiber bundle geometry for:
 - Catastrophe-aware growth
 - Multi-class neuron tracking
 - Geometric regularization
+
+DEPRECATED: This module is deprecated. Please use the new component-based architecture:
+    from structure_net.components.models import FiberBundleModel, FiberBundleConfig
+    
+The new FiberBundleModel provides enhanced functionality:
+- Full component architecture integration
+- Self-aware design with contracts and versioning
+- Better geometric property tracking
+- Improved gauge constraint enforcement
+
+Migration example:
+    # Old way (deprecated):
+    from structure_net.models import FiberBundle, FiberBundleConfig
+    config = FiberBundleConfig(base_dim=4, fiber_dim=128)
+    model = FiberBundle(config)
+    
+    # New way:
+    from structure_net.components.models import FiberBundleModel, FiberBundleConfig
+    config = FiberBundleConfig(base_dim=4, fiber_dim=128)
+    model = FiberBundleModel(config)
 """
 
 import torch
@@ -15,6 +35,15 @@ import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
 import logging
+import warnings
+
+# Issue deprecation warning on import
+warnings.warn(
+    "fiber_bundle_network module is deprecated. Please use structure_net.components.models.FiberBundleModel instead. "
+    "See module docstring for migration guide.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 # Assuming these are the correct relative imports for your project structure.
 # If these are incorrect, they may need to be adjusted.
@@ -30,7 +59,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class FiberBundleConfig:
-    """Configuration for fiber bundle network"""
+    """Configuration for fiber bundle network
+    
+    DEPRECATED: Use FiberBundleConfig from structure_net.components.models instead.
+    """
     base_dim: int  # Number of layers (base space dimension)
     fiber_dim: int  # Width of each layer (fiber dimension)
     initial_sparsity: float = 0.02
@@ -58,9 +90,17 @@ class StructuredConnection(nn.Module):
     Connection between fibers with structure preservation
     
     Maintains gauge invariance and allows controlled growth
+    
+    DEPRECATED: This is part of the deprecated fiber bundle implementation.
+    Use the new component-based models instead.
     """
     
     def __init__(self, in_features: int, out_features: int, sparsity: float = 0.98):
+        warnings.warn(
+            "StructuredConnection is deprecated. Use components from structure_net.components.models instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -145,9 +185,17 @@ class FiberBundle(nn.Module):
     - Fiber: Activation space at each layer (R^n)
     - Connection: Weight matrices with gauge symmetry
     - Parallel transport: Information flow through layers
+    
+    DEPRECATED: Use FiberBundleModel from structure_net.components.models instead.
+    The new implementation provides better integration with the component architecture.
     """
     
     def __init__(self, config: FiberBundleConfig):
+        warnings.warn(
+            "FiberBundle is deprecated. Use FiberBundleModel from structure_net.components.models instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__()
         self.config = config
         

@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """
-Concrete Analyzer Implementations
+DEPRECATED: Concrete Analyzer Implementations
 
-This module provides concrete implementations of network analyzers
-that wrap existing analysis functionality into the composable interface.
+This module is deprecated. Please use the new analyzer components in
+src.structure_net.components.analyzers instead.
 """
+
+import warnings
+
+warnings.warn(
+    "The analyzers module is deprecated. "
+    "Please use src.structure_net.components.analyzers instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

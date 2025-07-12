@@ -3,7 +3,21 @@ Connection-level adaptive learning rate schedulers.
 
 This module contains schedulers that adapt learning rates at the individual
 connection level, considering factors like connection age, sparsity, and scale.
+
+DEPRECATED: This module is deprecated. Please use the new component-based
+schedulers in structure_net.components.schedulers instead:
+- MultiScaleLearning -> MultiScaleLearningScheduler
+- Other schedulers will be migrated in future updates
 """
+
+import warnings
+
+warnings.warn(
+    "The adaptive_learning_rates.connection_schedulers module is deprecated. "
+    "Please use structure_net.components.schedulers instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

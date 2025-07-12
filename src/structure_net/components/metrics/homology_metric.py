@@ -5,7 +5,7 @@ This component computes homology groups as quotient spaces H = ker(∂) / im(∂
 identifying the "true" information content that's not inherited from previous layers.
 """
 
-from typing import Dict, Any, Union, Optional, Tuple
+from typing import Dict, Any, Union, Optional, Tuple, List
 import torch
 import torch.nn as nn
 import logging

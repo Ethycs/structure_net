@@ -3,7 +3,20 @@ Factory functions for creating adaptive learning rate systems.
 
 This module provides convenient factory functions for creating adaptive learning
 rate managers and training loops with sensible defaults.
+
+DEPRECATED: This module is deprecated. Please use the new component-based
+strategy selector in structure_net.components.strategies.SchedulerStrategySelector
+instead.
 """
+
+import warnings
+
+warnings.warn(
+    "The adaptive_learning_rates.factory module is deprecated. "
+    "Please use structure_net.components.strategies.SchedulerStrategySelector instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

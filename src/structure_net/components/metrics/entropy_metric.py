@@ -28,7 +28,7 @@ class EntropyMetric(BaseMetric):
     """
     
     def __init__(self, base: float = 2.0, bins: int = 50, 
-                 epsilon: float = 1e-10, name: str = None):
+                 epsilon: float = 1e-10, n_bins: int = None, name: str = None):
         """
         Initialize entropy metric.
         
@@ -36,10 +36,14 @@ class EntropyMetric(BaseMetric):
             base: Logarithm base for entropy calculation (2 for bits)
             bins: Number of bins for histogram estimation
             epsilon: Small value for numerical stability
+            n_bins: Alias for bins (for compatibility)
             name: Optional custom name
         """
         super().__init__(name or "EntropyMetric")
         self.base = base
+        # Handle alias
+        if n_bins is not None:
+            bins = n_bins
         self.bins = bins
         self.epsilon = epsilon
         self._measurement_schema = {
@@ -84,15 +88,59 @@ class EntropyMetric(BaseMetric):
         """
         # Get activations from context
         activations = context.get('activations')
-        if activations is None:
-            raise ValueError("EntropyMetric requires 'activations' in context")
+        if activations is None and target is None:
+            raise ValueError("EntropyMetric requires 'activations' in context when target is None")
+        
+        # If no activations but we have a target layer, analyze its weights
+        if activations is None and isinstance(target, ILayer):
+            # Analyze layer weights
+            weight = target.get_weight() if hasattr(target, 'get_weight') else None
+            if weight is None:
+                # Try to get weight directly
+                if hasattr(target, 'weight'):
+                    weight = target.weight
+                elif hasattr(target, 'linear') and hasattr(target.linear, 'weight'):
+                    weight = target.linear.weight
+                else:
+                    raise ValueError("Cannot extract weight from layer")
+            activations = weight
         
         if isinstance(target, IModel):
             return self._compute_model_entropy(target, activations)
         elif isinstance(target, ILayer):
             return self._compute_layer_entropy(target, activations)
+        elif target is None and activations is not None:
+            # When no target is provided but activations are given,
+            # compute entropy directly on the activations
+            return self._compute_activation_entropy(activations)
         else:
             raise ValueError(f"Target must be ILayer or IModel, got {type(target)}")
+    
+    def _compute_activation_entropy(self, activations: torch.Tensor) -> Dict[str, Any]:
+        """Compute entropy directly on activations."""
+        # Flatten activations if needed
+        if activations.dim() > 2:
+            activations = activations.view(activations.size(0), -1)
+        
+        # Compute entropy across the batch dimension
+        entropy = self._estimate_entropy(activations)
+        
+        # Compute maximum possible entropy
+        max_entropy = np.log(self.bins) / np.log(self.base)
+        normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0.0
+        
+        # Effective bits of information
+        effective_bits = entropy / np.log(2) if self.base != 2 else entropy
+        
+        # Entropy ratio (how close to maximum entropy)
+        entropy_ratio = normalized_entropy
+        
+        return {
+            'entropy': entropy,
+            'normalized_entropy': normalized_entropy,
+            'effective_bits': effective_bits,
+            'entropy_ratio': entropy_ratio
+        }
     
     def _compute_layer_entropy(self, layer: ILayer, 
                               activations: torch.Tensor) -> Dict[str, Any]:
@@ -178,7 +226,7 @@ class EntropyMetric(BaseMetric):
             Estimated entropy value
         """
         # Flatten to 1D for histogram
-        flat_acts = activations.flatten().cpu().numpy()
+        flat_acts = activations.flatten().detach().cpu().numpy()
         
         # Create histogram
         counts, _ = np.histogram(flat_acts, bins=self.bins)
@@ -222,10 +270,24 @@ class EntropyMetric(BaseMetric):
         if activations2.dim() > 2:
             activations2 = activations2.view(activations2.size(0), -1)
         
+        # Create joint samples by pairing each sample's features
+        # This ensures we respect the batch dimension
+        joint_samples = []
+        for i in range(activations1.shape[0]):
+            # Get features for this sample
+            feat1 = activations1[i].detach().cpu().numpy()
+            feat2 = activations2[i].detach().cpu().numpy()
+            
+            # Take mean of features to get single value per sample
+            # (Alternative would be to concatenate, but that changes dimensionality)
+            joint_samples.append([feat1.mean(), feat2.mean()])
+        
+        joint_samples = np.array(joint_samples)
+        
         # Create 2D histogram
         hist, _, _ = np.histogram2d(
-            activations1.flatten().cpu().numpy(),
-            activations2.flatten().cpu().numpy(),
+            joint_samples[:, 0],
+            joint_samples[:, 1],
             bins=self.bins
         )
         

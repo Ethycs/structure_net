@@ -7,7 +7,22 @@ Implements the revolutionary sparse network with:
 - Chain complex analysis for layer construction
 - Homologically-guided patch placement
 - 2-5% sparsity with 20% dense patches
+
+DEPRECATED: This module is deprecated. Please use the new component-based
+implementations in structure_net.components instead:
+- HomologicalCompactNetwork -> components.models
+- InputHighwaySystem -> components.models
+- ChainMapAnalyzer -> components.analyzers
 """
+
+import warnings
+
+warnings.warn(
+    "The compactification.homological_network module is deprecated. "
+    "Please use structure_net.components.models and analyzers instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import torch
 import torch.nn as nn

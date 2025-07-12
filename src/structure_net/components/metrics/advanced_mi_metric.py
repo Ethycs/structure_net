@@ -38,7 +38,9 @@ class AdvancedMIMetric(BaseMetric):
     """
     
     def __init__(self, method: str = 'auto', threshold: float = 0.01,
-                 k_neighbors: int = 3, n_bins: int = None, name: str = None):
+                 k_neighbors: int = 3, n_bins: int = None, 
+                 compute_gradients: bool = False, n_neighbors: int = None,
+                 name: str = None):
         """
         Initialize advanced MI metric.
         
@@ -47,13 +49,19 @@ class AdvancedMIMetric(BaseMetric):
             threshold: Activation threshold for determining active neurons
             k_neighbors: Number of neighbors for KNN method
             n_bins: Number of bins for discretization (None for auto)
+            compute_gradients: Whether to compute MI gradient
+            n_neighbors: Alias for k_neighbors (for compatibility)
             name: Optional custom name
         """
         super().__init__(name or "AdvancedMIMetric")
         self.method = method
         self.threshold = threshold
+        # Handle alias
+        if n_neighbors is not None:
+            k_neighbors = n_neighbors
         self.k_neighbors = k_neighbors
         self.n_bins = n_bins
+        self.compute_gradients = compute_gradients
         self._measurement_schema = {
             "mi": float,
             "entropy_X": float,
@@ -161,6 +169,34 @@ class AdvancedMIMetric(BaseMetric):
             result = self._advanced_mi_estimator(X_active, Y_active)
         else:
             raise ValueError(f"Unknown MI method: {method}")
+        
+        # Check if we need gradient computation
+        compute_gradients = context.get('compute_gradients', False)
+        if compute_gradients and 'mi_gradient' not in result:
+            # Compute MI gradient by looking at MI across feature subsets
+            n_features_y = Y_active.shape[1]
+            if n_features_y > 1:
+                mi_values = []
+                # Compute MI for progressively more features
+                for i in range(1, min(n_features_y + 1, 6)):
+                    Y_subset = Y_active[:, :i]
+                    if method == 'exact_discrete':
+                        subset_result = self._exact_discrete_mi(X_active, Y_subset)
+                    elif method == 'knn':
+                        subset_result = self._knn_mi(X_active, Y_subset)
+                    else:
+                        subset_result = self._advanced_mi_estimator(X_active, Y_subset)
+                    mi_values.append(subset_result['mi'])
+                
+                # Compute gradient as average rate of change
+                if len(mi_values) > 1:
+                    diffs = [mi_values[i] - mi_values[i-1] for i in range(1, len(mi_values))]
+                    mi_gradient = sum(diffs) / len(diffs)
+                else:
+                    mi_gradient = 0.0
+            else:
+                mi_gradient = 0.0
+            result['mi_gradient'] = mi_gradient
         
         # Add metadata
         result.update({

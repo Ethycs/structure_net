@@ -37,10 +37,11 @@ from .path_analysis_metric import PathAnalysisMetric
 from .activation_stability_metric import ActivationStabilityMetric
 from .lyapunov_metric import LyapunovMetric
 from .transition_entropy_metric import TransitionEntropyMetric
-from .compression_ratio_metric import CompressionRatioMetric
-from .patch_effectiveness_metric import PatchEffectivenessMetric
-from .memory_efficiency_metric import MemoryEfficiencyMetric
-from .reconstruction_quality_metric import ReconstructionQualityMetric
+from .compactification_metrics import (
+    CompressionRatioMetric, PatchEffectivenessMetric,
+    MemoryEfficiencyMetric, ReconstructionQualityMetric
+)
+from .snapshot_metric import SnapshotMetric
 
 __all__ = [
     'SparsityMetric',
@@ -77,5 +78,6 @@ __all__ = [
     'CompressionRatioMetric',
     'PatchEffectivenessMetric',
     'MemoryEfficiencyMetric',
-    'ReconstructionQualityMetric'
+    'ReconstructionQualityMetric',
+    'SnapshotMetric'
 ]
