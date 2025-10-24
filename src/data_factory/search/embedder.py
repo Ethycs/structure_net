@@ -4,17 +4,18 @@ into vector representations for ChromaDB.
 """
 
 import numpy as np
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional, Union, TYPE_CHECKING
 import hashlib
 import json
 
-from structure_net.logging.schemas import (
-    ExperimentSchema,
-    NetworkArchitecture,
-    PerformanceMetrics,
-    GrowthExperiment,
-    TrainingExperiment
-)
+if TYPE_CHECKING:
+    from structure_net.logging.schemas import (
+        ExperimentSchema,
+        NetworkArchitecture,
+        PerformanceMetrics,
+        GrowthExperiment,
+        TrainingExperiment
+    )
 
 
 class ExperimentEmbedder:
@@ -23,7 +24,7 @@ class ExperimentEmbedder:
     def __init__(self, embedding_dim: int = 384):
         self.embedding_dim = embedding_dim
     
-    def embed(self, experiment: Union[Dict[str, Any], ExperimentSchema]) -> np.ndarray:
+    def embed(self, experiment: Union[Dict[str, Any], 'ExperimentSchema']) -> np.ndarray:
         """
         Create an embedding for an experiment.
         
@@ -177,7 +178,7 @@ class ArchitectureEmbedder:
     def __init__(self, embedding_dim: int = 128):
         self.embedding_dim = embedding_dim
     
-    def embed(self, architecture: Union[List[int], NetworkArchitecture, Dict[str, Any]]) -> np.ndarray:
+    def embed(self, architecture: Union[List[int], 'NetworkArchitecture', Dict[str, Any]]) -> np.ndarray:
         """
         Create an embedding for a network architecture.
         
@@ -270,13 +271,13 @@ class ArchitectureEmbedder:
         return embedding
 
 
-def embed_experiment(experiment: Union[Dict[str, Any], ExperimentSchema]) -> np.ndarray:
+def embed_experiment(experiment: Union[Dict[str, Any], 'ExperimentSchema']) -> np.ndarray:
     """Convenience function to embed an experiment."""
     embedder = ExperimentEmbedder()
     return embedder.embed(experiment)
 
 
-def embed_architecture(architecture: Union[List[int], NetworkArchitecture, Dict[str, Any]]) -> np.ndarray:
+def embed_architecture(architecture: Union[List[int], 'NetworkArchitecture', Dict[str, Any]]) -> np.ndarray:
     """Convenience function to embed an architecture."""
     embedder = ArchitectureEmbedder()
     return embedder.embed(architecture)

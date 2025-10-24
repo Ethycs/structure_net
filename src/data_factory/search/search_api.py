@@ -5,14 +5,16 @@ Provides convenient functions for searching experiments by various criteria.
 """
 
 import numpy as np
-from typing import List, Dict, Any, Optional, Union, Tuple
+from typing import List, Dict, Any, Optional, Union, Tuple, TYPE_CHECKING
 import logging
 from pathlib import Path
 import json
 
 from .embedder import ExperimentEmbedder, ArchitectureEmbedder, embed_experiment, embed_architecture
 from .chroma_client import ChromaSearchClient, get_chroma_client, ChromaConfig
-from structure_net.logging.schemas import ExperimentSchema
+
+if TYPE_CHECKING:
+    from structure_net.logging.schemas import ExperimentSchema
 
 
 logger = logging.getLogger(__name__)
@@ -38,7 +40,7 @@ class ExperimentSearcher:
     def index_experiment(
         self,
         experiment_id: str,
-        experiment_data: Union[Dict[str, Any], ExperimentSchema],
+        experiment_data: Union[Dict[str, Any], 'ExperimentSchema'],
         additional_metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """
@@ -76,7 +78,7 @@ class ExperimentSearcher:
     
     def index_experiments_batch(
         self,
-        experiments: List[Tuple[str, Union[Dict[str, Any], ExperimentSchema]]]
+        experiments: List[Tuple[str, Union[Dict[str, Any], 'ExperimentSchema']]]
     ) -> None:
         """
         Index multiple experiments in batch.
@@ -106,7 +108,7 @@ class ExperimentSearcher:
     
     def search_similar_experiments(
         self,
-        query_experiment: Union[Dict[str, Any], ExperimentSchema],
+        query_experiment: Union[Dict[str, Any], 'ExperimentSchema'],
         n_results: int = 10,
         filters: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
@@ -381,7 +383,7 @@ class ExperimentSearcher:
 
 # Convenience functions
 def search_similar_experiments(
-    query_experiment: Union[Dict[str, Any], ExperimentSchema],
+    query_experiment: Union[Dict[str, Any], 'ExperimentSchema'],
     n_results: int = 10,
     filters: Optional[Dict[str, Any]] = None
 ) -> List[Dict[str, Any]]:

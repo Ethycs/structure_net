@@ -10,16 +10,18 @@ from src.structure_net.core.interfaces import (
 )
 from src.structure_net.components.strategies.tournament_strategy import TournamentStrategy
 from src.structure_net.components.evolvers.tournament_evolver import TournamentEvolver
-from src.neural_architecture_lab import NeuralArchitectureLab, LabConfig, Hypothesis, HypothesisCategory
 from src.data_factory import get_dataset_config
-from typing import List, Dict, Any
+from typing import List, Dict, Any, TYPE_CHECKING
 import logging
 import numpy as np
+
+if TYPE_CHECKING:
+    from src.neural_architecture_lab import NeuralArchitectureLab, LabConfig, Hypothesis, HypothesisCategory
 
 class TournamentOrchestrator(BaseOrchestrator):
     """Orchestrates a tournament-style evolution experiment."""
 
-    def __init__(self, lab_config: LabConfig, stress_test_config, name: str = None):
+    def __init__(self, lab_config: 'LabConfig', stress_test_config, name: str = None):
         super().__init__(name or "TournamentOrchestrator")
         self.lab_config = lab_config
         self.stress_test_config = stress_test_config
@@ -55,6 +57,7 @@ class TournamentOrchestrator(BaseOrchestrator):
             hypothesis = self._create_hypothesis_from_plan(plan, generation)
 
             # 3. Run experiments using NAL
+            from src.neural_architecture_lab import NeuralArchitectureLab
             lab = NeuralArchitectureLab(self.lab_config)
             lab.register_hypothesis(hypothesis)
             results = await lab.test_hypothesis(hypothesis.id)
@@ -86,8 +89,9 @@ class TournamentOrchestrator(BaseOrchestrator):
                 'seed_path': None
             })
 
-    def _create_hypothesis_from_plan(self, plan: EvolutionPlan, generation: int) -> Hypothesis:
+    def _create_hypothesis_from_plan(self, plan: EvolutionPlan, generation: int):
         """Creates a NAL Hypothesis from an EvolutionPlan."""
+        from src.neural_architecture_lab import Hypothesis, HypothesisCategory
         from src.neural_architecture_lab.workers.tournament_worker import evaluate_competitor_task
 
         return Hypothesis(

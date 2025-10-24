@@ -290,6 +290,33 @@ class BaseEvolver(BaseComponent, IEvolver):
         
         return self._measure_performance(self._execute_plan)(plan, model, trainer, optimizer)
 
+class BaseScheduler(BaseComponent):
+    """Base implementation for learning rate schedulers"""
+    
+    def __init__(self, name: str = None):
+        super().__init__(name)
+        self._step_count = 0
+    
+    @property
+    def contract(self) -> ComponentContract:
+        return ComponentContract(
+            component_name=self.name,
+            version=ComponentVersion(1, 0, 0),
+            maturity=Maturity.STABLE,
+            required_inputs=set(),
+            provided_outputs={"learning_rate"},
+            resources=ResourceRequirements(memory_level=ResourceLevel.LOW)
+        )
+    
+    @abstractmethod
+    def get_lr(self) -> float:
+        """Get current learning rate"""
+        pass
+    
+    def step(self, metrics: Optional[Dict[str, Any]] = None):
+        """Update the scheduler state"""
+        self._step_count += 1
+
 class BaseTrainer(BaseComponent, ITrainer):
     """Base implementation for trainers"""
 

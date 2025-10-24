@@ -9,9 +9,8 @@ from .network_evolver import OptimalGrowthEvolver
 from .extrema_analyzer import analyze_layer_extrema, detect_network_extrema
 from .information_theory import estimate_mi_proxy, analyze_information_flow
 # Removed deprecated IntegratedGrowthSystem - use components/ instead
+from ..core.config_schemas import ThresholdConfig, MetricsConfig
 from .advanced_layers import (
-    ThresholdConfig,
-    MetricsConfig,
     ExtremaAwareSparseLayer, 
     TemporaryPatchModule, 
     lsuv_init_layer, 

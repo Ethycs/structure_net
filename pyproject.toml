@@ -1,9 +1,9 @@
 [project]
 authors = [{name = "Ethycs", email = "Ethycs@users.noreply.github.com"}]
-dependencies = []
 name = "structure_net"
 requires-python = ">= 3.11"
 version = "0.1.0"
+dependencies = ["jax[cuda12]>=0.6.0,<0.7"]
 
 [build-system]
 build-backend = "hatchling.build"
@@ -22,7 +22,7 @@ tqdm = "*"
 pip = "*"
 ipykernel = ">=6.29.5,<7"
 scipy = ">=1.16.0,<2"
-scikit-learn = ">=1.7.0,<2"
+scikit-learn = ">=1.7.2,<2"
 pandas = ">=2.3.0,<3"
 wandb = ">=0.21.0,<0.22"
 seaborn = ">=0.13.2,<0.14"
@@ -31,6 +31,8 @@ jsonschema = ">=4.0.0,<5"
 pytest-asyncio = ">=1.0.0,<2"
 chromadb = ">=0.4.0,<0.5"
 h5py = ">=3.14.0,<4"
+jaxlib = ">=0.6.0,<0.7"
+notebook = ">=7.4.4,<8"
 
 [tool.pixi.pypi-dependencies]
 structure_net = { path = ".", editable = true }
@@ -38,3 +40,12 @@ structure_net = { path = ".", editable = true }
 [tool.pixi.tasks]
 install-torch = "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128"
 test-cuda = "python -c \"import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')\""
+cuda-selfcheck = """
+python -c "import importlib.metadata as imd, subprocess, os; \
+p=imd.distribution('nvidia-cusparse-cu12').locate_file('nvidia/cusparse/lib/libcusparse.so.12'); \
+out=subprocess.check_output(['ldd', str(p)], text=True); \
+line=next((l for l in out.splitlines() if 'libnvJitLink.so.12' in l), ''); \
+print('libcusparse:', p); \
+print('nvJitLink resolve:', line); \
+print('LD_LIBRARY_PATH:', os.environ.get('LD_LIBRARY_PATH',''))"
+"""

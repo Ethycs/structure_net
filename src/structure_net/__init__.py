@@ -44,7 +44,7 @@ from .components.evolvers.optimal_growth_evolver import OptimalGrowthEvolver
 # Removed deprecated IntegratedGrowthSystem - use evolution.components instead
 from .core.config_schemas import ThresholdConfig, MetricsConfig
 # Import adaptive learning rate strategies
-from .components.strategies.adaptive_learning_rates import (
+from .evolution.adaptive_learning_rates import (
     ExponentialBackoffScheduler,
     LayerwiseAdaptiveRates,
     SoftClampingScheduler,
