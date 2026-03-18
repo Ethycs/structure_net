@@ -327,25 +327,156 @@ class NeuralArchitectureLab:
         )
     
     def _generate_follow_up_hypotheses(
-        self, 
-        parent: Hypothesis, 
+        self,
+        parent: Hypothesis,
         result: HypothesisResult
     ) -> List[Hypothesis]:
-        """Generate follow-up hypotheses based on results."""
-        # TODO: Implement follow-up hypothesis generation
-        return []
-    
+        """Generate follow-up hypotheses based on results.
+
+        Creates child hypotheses that refine the parameter space around
+        the best-performing configuration from the parent hypothesis.
+        """
+        depth = self._get_hypothesis_depth(parent.id)
+        if depth >= self.config.max_hypothesis_depth:
+            return []
+
+        if not result.best_metrics:
+            return []
+
+        follow_ups = []
+
+        # Refine parameter space around best results
+        refined_space = self._refine_parameter_space(
+            parent.parameter_space, result
+        )
+
+        if refined_space:
+            follow_up = Hypothesis(
+                id=f"{parent.id}_refined_{depth + 1}",
+                name=f"{parent.name} (Refined depth {depth + 1})",
+                description=(
+                    f"Refined exploration of {parent.name}. "
+                    f"Parent confidence: {result.confidence:.3f}, "
+                    f"effect size: {result.effect_size:.3f}."
+                ),
+                category=parent.category,
+                question=f"Can we improve on {parent.name} by narrowing the parameter space?",
+                prediction=f"Refined parameters should yield better results than parent best metrics.",
+                test_function=parent.test_function,
+                parameter_space=refined_space,
+                control_parameters=parent.control_parameters,
+                success_metrics=parent.success_metrics,
+                statistical_significance=parent.statistical_significance,
+                tags=parent.tags + ["auto_generated", "refinement"],
+                references=[parent.id],
+            )
+            follow_ups.append(follow_up)
+
+        # Generate hypotheses from suggested_hypotheses in result
+        for i, suggestion in enumerate(result.suggested_hypotheses[:2]):
+            suggested = Hypothesis(
+                id=f"{parent.id}_suggested_{i}",
+                name=f"{parent.name} - Suggested {i + 1}",
+                description=suggestion,
+                category=parent.category,
+                question=suggestion,
+                prediction=f"Follow-up from insight: {suggestion}",
+                test_function=parent.test_function,
+                parameter_space=parent.parameter_space,
+                control_parameters=parent.control_parameters,
+                success_metrics=parent.success_metrics,
+                statistical_significance=parent.statistical_significance,
+                tags=parent.tags + ["auto_generated", "suggested"],
+                references=[parent.id],
+            )
+            follow_ups.append(suggested)
+
+        return follow_ups
+
     def _refine_parameter_space(
         self,
         original_space: Dict[str, Any],
         result: HypothesisResult
     ) -> Dict[str, Any]:
-        # ... (implementation remains the same)
-        pass
-    
+        """Refine parameter space by narrowing ranges around best values.
+
+        For numeric ranges, shrinks the search window by 50% centered on the
+        best-performing parameter value. For discrete lists, keeps the top half.
+        """
+        if not result.best_metrics:
+            return original_space
+
+        # best_parameters may be an experiment ID string or a dict
+        best_params = result.best_parameters
+        if isinstance(best_params, str):
+            # Find the actual parameters from experiment results
+            for exp_result in result.experiment_results:
+                if exp_result.experiment_id == best_params:
+                    best_params = exp_result.metrics
+                    break
+            else:
+                return original_space
+
+        refined = {}
+        for param_name, param_spec in original_space.items():
+            if isinstance(param_spec, dict) and 'min' in param_spec and 'max' in param_spec:
+                # Numeric range: narrow around best value
+                old_min = param_spec['min']
+                old_max = param_spec['max']
+                old_range = old_max - old_min
+                new_range = old_range * 0.5
+
+                # Center on best value if available, otherwise on midpoint
+                center = best_params.get(param_name, (old_min + old_max) / 2)
+                if isinstance(center, (int, float)):
+                    new_min = max(old_min, center - new_range / 2)
+                    new_max = min(old_max, center + new_range / 2)
+                else:
+                    new_min = old_min + old_range * 0.25
+                    new_max = old_max - old_range * 0.25
+
+                refined[param_name] = {
+                    **param_spec,
+                    'min': new_min,
+                    'max': new_max,
+                }
+            elif isinstance(param_spec, list) and len(param_spec) > 2:
+                # Discrete list: keep top half closest to best value
+                best_val = best_params.get(param_name)
+                if best_val is not None and all(isinstance(v, (int, float)) for v in param_spec):
+                    sorted_by_dist = sorted(param_spec, key=lambda v: abs(v - best_val))
+                    keep_count = max(2, len(sorted_by_dist) // 2)
+                    refined[param_name] = sorted(sorted_by_dist[:keep_count])
+                else:
+                    refined[param_name] = param_spec
+            else:
+                refined[param_name] = param_spec
+
+        return refined
+
     def _get_hypothesis_depth(self, hypothesis_id: str) -> int:
-        # ... (implementation remains the same)
-        pass
+        """Get the depth of a hypothesis in the hypothesis tree.
+
+        Walks parent references to compute the depth. Root hypotheses have depth 0.
+        """
+        depth = 0
+        current_id = hypothesis_id
+        visited = set()
+
+        while current_id in self.hypotheses and current_id not in visited:
+            visited.add(current_id)
+            hypothesis = self.hypotheses[current_id]
+            # Check if this hypothesis has a parent via references
+            parent_ids = [
+                ref for ref in hypothesis.references
+                if ref in self.hypotheses
+            ]
+            if not parent_ids:
+                break
+            current_id = parent_ids[0]
+            depth += 1
+
+        return depth
     
     def _save_hypothesis_results(self, hypothesis: Hypothesis, result: HypothesisResult):
         """Save hypothesis results to disk."""

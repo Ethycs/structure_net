@@ -254,21 +254,41 @@ class SnapshotManager:
         }
     
     def _create_delta_snapshot(self, network, snapshot_data: Dict) -> Dict:
-        """Create a delta snapshot relative to base snapshot."""
+        """Create a delta snapshot relative to base snapshot.
+
+        Computes weight and connectivity deltas against the base snapshot.
+        Falls back to a full snapshot if the delta would be larger than 80%
+        of the full snapshot size.
+        """
         if self.base_snapshot is None:
             return self._create_full_snapshot(network, snapshot_data)
-        
-        # For now, just create full snapshots to avoid compatibility issues
-        # TODO: Implement proper delta snapshots with size checking
-        return self._create_full_snapshot(network, snapshot_data)
-        
+
+        try:
+            base_data = self._load_snapshot_data(self.base_snapshot)
+        except (FileNotFoundError, Exception) as e:
+            self.logger.warning(f"Could not load base snapshot for delta: {e}")
+            return self._create_full_snapshot(network, snapshot_data)
+
+        # Compute weight deltas
+        current_state = network.state_dict_sparse()
+        base_state = base_data.get('state_dict', {})
+        weight_deltas = {}
+        for key in current_state:
+            if key in base_state:
+                delta = current_state[key] - base_state[key]
+                if delta.abs().sum() > 0:
+                    weight_deltas[key] = delta
+            else:
+                weight_deltas[key] = current_state[key]
+
         # Compute connectivity deltas
+        base_masks = base_data.get('connectivity', {}).get('connection_masks', [])
         connectivity_deltas = self._compute_connectivity_deltas(
-            base_data['connectivity']['connection_masks'],
+            base_masks,
             network.connection_masks
-        )
-        
-        return {
+        ) if base_masks else {}
+
+        delta_snapshot = {
             'weight_deltas': weight_deltas,
             'connectivity_deltas': connectivity_deltas,
             'new_growth_events': network.growth_history[len(base_data.get('growth_history', [])):],
@@ -278,6 +298,21 @@ class SnapshotManager:
                 'activation_name': network.activation_name
             }
         }
+
+        # Size check: if delta is >= 80% of full snapshot, use full instead
+        full_snapshot = self._create_full_snapshot(network, snapshot_data)
+        try:
+            import sys
+            delta_size = sys.getsizeof(pickle.dumps(delta_snapshot))
+            full_size = sys.getsizeof(pickle.dumps(full_snapshot))
+            if delta_size >= full_size * 0.8:
+                self.logger.info("Delta snapshot too large, using full snapshot instead")
+                return full_snapshot
+        except Exception:
+            # If size comparison fails, prefer the delta
+            pass
+
+        return delta_snapshot
     
     def _compute_connectivity_deltas(self, base_masks: List, current_masks: List) -> Dict:
         """Compute connectivity changes between snapshots."""

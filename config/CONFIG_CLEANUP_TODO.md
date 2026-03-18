@@ -5,18 +5,25 @@ This document tracks all the remaining configuration classes that need to be mig
 ## High Priority - Core Configs
 
 ### 1. Neural Architecture Lab
-- [ ] `src/neural_architecture_lab/core.py` - Contains `LabConfig` class
-- [ ] `src/neural_architecture_lab/config_factory.py` - Contains `LabConfigFactory`
-- [ ] Update all NAL files to use `config.get_config().get_lab_config()`
+- [x] `src/neural_architecture_lab/core.py` - Contains `LabConfig` class
+- [x] `src/neural_architecture_lab/config_factory.py` - Contains `LabConfigFactory`
+- [x] Config adapter created: `src/neural_architecture_lab/config_adapter.py`
+- [x] Unified config provides `get_lab_config()` compatibility method
+- [x] NAL init accepts UnifiedConfig, dict, or None via adapter monkey-patch
+- [ ] Update example scripts to use `config.get_config().get_lab_config()`
 
 ### 2. Data Factory
-- [ ] `src/data_factory/config.py` - Contains `DatasetConfig` class
-- [ ] Migrate to use `config.storage` for paths
+- [x] `src/data_factory/config.py` - Contains `DatasetConfig` class (kept as component-level config)
+- [x] Config adapter created: `src/data_factory/config_adapter.py`
+- [x] ChromaDB and TimeSeries configs adapted to unified system
+- [ ] Migrate storage paths in DatasetConfig to use `config.storage` defaults
 
 ### 3. Logging System
-- [ ] `src/structure_net/logging/standardized_logging.py` - Contains `LoggingConfig`
-- [ ] `src/structure_net/logging/artifact_manager.py` - Contains `ArtifactConfig`
-- [ ] Migrate to use unified `config.logging` and `config.wandb`
+- [x] `src/structure_net/logging/standardized_logging.py` - Contains `LoggingConfig`
+- [x] Config adapter created: `src/logging/config_adapter.py`
+- [x] Unified config provides `get_logging_config()` compatibility method
+- [x] StandardizedLogger init accepts UnifiedConfig via adapter
+- [ ] `src/structure_net/logging/artifact_manager.py` - ArtifactConfig still standalone
 
 ## Medium Priority - Component Configs
 
@@ -46,10 +53,10 @@ This document tracks all the remaining configuration classes that need to be mig
 
 ## Migration Strategy
 
-### Phase 1: Update Core Systems (This Week)
-1. Update NAL to use unified config via compatibility layer
-2. Update Data Factory to use unified storage paths
-3. Update logging systems to use unified config
+### Phase 1: Update Core Systems (DONE)
+1. ~~Update NAL to use unified config via compatibility layer~~ (config_adapter.py created)
+2. ~~Update Data Factory to use unified config~~ (config_adapter.py created)
+3. ~~Update logging systems to use unified config~~ (config_adapter.py created)
 
 ### Phase 2: Component Migration (Next Week)
 1. Migrate evolution configs

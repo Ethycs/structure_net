@@ -10,7 +10,7 @@ Provides high-level factory functions for dataset creation with:
 
 import torch
 from torch.utils.data import DataLoader, Dataset
-from typing import Tuple, Optional, Dict, Any
+from typing import List, Tuple, Optional, Dict, Any
 import pickle
 from pathlib import Path
 import hashlib
@@ -22,6 +22,30 @@ from .datasets import load_dataset, create_data_loaders
 from .metadata import DatasetMetadata, track_dataset_usage, save_dataset_metadata
 
 logger = logging.getLogger(__name__)
+
+
+def _describe_transform(transform: Optional[Any]) -> List[str]:
+    """Extract human-readable descriptions from a torchvision transform."""
+    if transform is None:
+        return []
+    # Handle Compose-style transforms
+    if hasattr(transform, 'transforms'):
+        return [type(t).__name__ for t in transform.transforms]
+    return [type(transform).__name__]
+
+
+def _estimate_dataset_size(dataset, config: 'DatasetConfig') -> int:
+    """Estimate the in-memory size of a dataset in bytes."""
+    try:
+        num_samples = len(dataset)
+        # Estimate from input shape and dtype (assume float32 = 4 bytes per element)
+        import math
+        elements_per_sample = math.prod(config.input_shape)
+        bytes_per_sample = elements_per_sample * 4  # float32
+        return num_samples * bytes_per_sample
+    except Exception:
+        return 0
+
 
 # Global cache for loaded datasets
 _DATASET_CACHE: Dict[str, Dataset] = {}
@@ -107,7 +131,7 @@ def get_dataset(
             dataset_version=config.version,
             subset_used="train" if train else "test",
             samples_used=len(dataset),
-            transformations_applied=[]  # TODO: Extract from transform
+            transformations_applied=_describe_transform(transform),
         )
     
     return dataset
@@ -170,8 +194,8 @@ def create_dataset(
         dataset_name=dataset_name,
         dataset_version=config.version,
         download_timestamp=datetime.now().isoformat(),
-        size_bytes=0,  # TODO: Calculate actual size
-        num_samples=config.num_train_samples + config.num_test_samples,
+        size_bytes=_estimate_dataset_size(train_loader.dataset, config),
+        num_samples=len(train_loader.dataset) + len(test_loader.dataset),
         shape=list(config.input_shape),
         checksum=dataset_hash,
         config=config.__dict__
@@ -189,9 +213,9 @@ def create_dataset(
             dataset_version=config.version,
             subset_used="train",
             samples_used=len(train_loader.dataset),
-            transformations_applied=[]
+            transformations_applied=_describe_transform(train_transform),
         )
-        
+
         # Track test set usage
         track_dataset_usage(
             experiment_id=experiment_id,
@@ -199,7 +223,7 @@ def create_dataset(
             dataset_version=config.version,
             subset_used="test",
             samples_used=len(test_loader.dataset),
-            transformations_applied=[]
+            transformations_applied=_describe_transform(test_transform),
         )
     
     return {
