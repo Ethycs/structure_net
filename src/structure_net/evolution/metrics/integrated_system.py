@@ -356,12 +356,54 @@ class CompleteMetricsSystem:
         if self.performance_analyzer is not None:
             return self.performance_analyzer.analyze_metric_correlations(min_history_length)
         return {}
-    
+
     def get_growth_recommendations(self, current_metrics):
-        """Get growth recommendations based on learned patterns."""
+        """Get growth recommendations based on learned patterns.
+
+        When the autocorrelation analyzer is unavailable, falls back to
+        simple rule-based recommendations derived from ``current_metrics``.
+        """
         if self.performance_analyzer is not None:
             return self.performance_analyzer.get_growth_recommendations(current_metrics)
-        return []
+
+        # Fallback: rule-based recommendations from summary metrics
+        recommendations = []
+
+        summary = current_metrics.get('summary', current_metrics)
+
+        dead_layers = summary.get('dead_layers', 0)
+        if dead_layers > 0:
+            recommendations.append({
+                'action': 'add_neurons',
+                'confidence': 0.6,
+                'reason': f'{dead_layers} dead layer(s) detected',
+            })
+
+        avg_active = summary.get('avg_active_ratio', 1.0)
+        if avg_active < 0.1:
+            recommendations.append({
+                'action': 'add_extrema_aware_patches',
+                'confidence': 0.7,
+                'reason': f'Low average active ratio ({avg_active:.2f})',
+            })
+
+        bottlenecks = summary.get('critical_bottlenecks', 0)
+        if bottlenecks > 0:
+            recommendations.append({
+                'action': 'add_skip_connections',
+                'confidence': 0.5,
+                'reason': f'{bottlenecks} critical bottleneck(s) detected',
+            })
+
+        avg_mi = summary.get('avg_mi_efficiency', 1.0)
+        if avg_mi < 0.3:
+            recommendations.append({
+                'action': 'add_layer_for_information_flow',
+                'confidence': 0.6,
+                'reason': f'Low MI efficiency ({avg_mi:.2f})',
+            })
+
+        return recommendations[:3]
     
     def record_strategy_outcome(self, strategy_name, metrics_before, metrics_after, performance_improvement):
         """Record strategy outcome for learning."""

@@ -16,6 +16,11 @@ try:
 except ImportError:
     EvolutionProfiler = None
 
+try:
+    from .components.metrics_profiler import MetricsProfiler
+except ImportError:
+    MetricsProfiler = None
+
 
 def create_standard_profiler(level: ProfilerLevel = ProfilerLevel.BASIC,
                            output_dir: str = "data/profiling_results",
@@ -119,16 +124,17 @@ def create_comprehensive_profiler(output_dir: str = "data/profiling_results",
         evolution_profiler = EvolutionProfiler(config)
         manager.register_profiler(evolution_profiler)
     
-    # TODO: Add other profilers when implemented
-    # metrics_profiler = MetricsProfiler(config)
-    # manager.register_profiler(metrics_profiler)
-    # 
+    if MetricsProfiler is not None:
+        metrics_profiler = MetricsProfiler(config)
+        manager.register_profiler(metrics_profiler)
+
+    # TODO: Add network and training profilers when implemented
     # network_profiler = NetworkProfiler(config)
     # manager.register_profiler(network_profiler)
-    # 
+    #
     # training_profiler = TrainingProfiler(config)
     # manager.register_profiler(training_profiler)
-    
+
     print("🔬 Created comprehensive profiler (all features enabled)")
     return manager
 
@@ -151,10 +157,10 @@ def create_custom_profiler(profiler_configs: Dict[str, ProfilerConfig],
         if profiler_name == "evolution":
             profiler = EvolutionProfiler(config)
             manager.register_profiler(profiler)
-        # TODO: Add other profiler types
-        # elif profiler_name == "metrics":
-        #     profiler = MetricsProfiler(config)
-        #     manager.register_profiler(profiler)
+        elif profiler_name == "metrics" and MetricsProfiler is not None:
+            profiler = MetricsProfiler(config)
+            manager.register_profiler(profiler)
+        # TODO: Add network and training profiler types when implemented
         # elif profiler_name == "network":
         #     profiler = NetworkProfiler(config)
         #     manager.register_profiler(profiler)

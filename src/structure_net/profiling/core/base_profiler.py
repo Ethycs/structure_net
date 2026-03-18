@@ -374,9 +374,24 @@ class BaseProfiler(ABC):
         if self.config.output_format == 'json':
             with open(filepath, 'w') as f:
                 json.dump(data, f, indent=2)
-        
-        # TODO: Add CSV and other format support
-        
+        elif self.config.output_format == 'csv':
+            import csv
+            operations = self.get_metrics()
+            if operations:
+                fieldnames = list(operations[0].keys())
+                with open(filepath, 'w', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
+                    writer.writeheader()
+                    for op in operations:
+                        # Flatten nested dicts for CSV
+                        flat_op = {}
+                        for k, v in op.items():
+                            if isinstance(v, (dict, list)):
+                                flat_op[k] = json.dumps(v)
+                            else:
+                                flat_op[k] = v
+                        writer.writerow(flat_op)
+
         print(f"📊 Profiling results saved to {filepath}")
     
     def clear_results(self):

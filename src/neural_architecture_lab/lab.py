@@ -539,13 +539,107 @@ class NeuralArchitectureLab:
         return results
     
     def _generate_lab_report(self, results: Dict[str, HypothesisResult]):
-        # ... (implementation remains the same)
-        pass
-    
+        """Generate and save a summary report after all hypotheses are tested."""
+        elapsed = time.time() - self.start_time if self.start_time else 0
+
+        confirmed = [hid for hid, r in results.items() if r.confirmed]
+        rejected = [hid for hid, r in results.items() if not r.confirmed]
+        total_experiments = sum(r.num_experiments for r in results.values())
+
+        recommendations = self._generate_recommendations(results)
+
+        report = {
+            'lab_id': self.lab_id,
+            'elapsed_seconds': elapsed,
+            'total_hypotheses': len(results),
+            'confirmed': len(confirmed),
+            'rejected': len(rejected),
+            'total_experiments_run': total_experiments,
+            'hypotheses': {},
+            'recommendations': recommendations,
+        }
+
+        for hid, result in results.items():
+            hypothesis = self.hypotheses.get(hid)
+            report['hypotheses'][hid] = {
+                'name': hypothesis.name if hypothesis else hid,
+                'confirmed': result.confirmed,
+                'confidence': result.confidence,
+                'effect_size': result.effect_size,
+                'num_experiments': result.num_experiments,
+                'successful_experiments': result.successful_experiments,
+                'key_insights': result.key_insights[:3],
+            }
+
+        # Save report
+        report_file = self.results_dir / "lab_report.json"
+        with open(report_file, 'w') as f:
+            json.dump(report, f, indent=2, cls=NumpyJSONEncoder)
+
+        if self.config.verbose:
+            print(f"\n{'='*60}")
+            print(f"  Lab Report — Session {self.lab_id}")
+            print(f"{'='*60}")
+            print(f"  Duration: {elapsed:.1f}s")
+            print(f"  Hypotheses tested: {len(results)}")
+            print(f"  Confirmed: {len(confirmed)}  |  Rejected: {len(rejected)}")
+            print(f"  Total experiments: {total_experiments}")
+            for hid, info in report['hypotheses'].items():
+                status = "CONFIRMED" if info['confirmed'] else "REJECTED"
+                print(f"  [{status}] {info['name']} (confidence={info['confidence']:.3f}, effect={info['effect_size']:.3f})")
+            if recommendations:
+                print(f"\n  Recommendations:")
+                for rec in recommendations:
+                    print(f"    - {rec}")
+            print(f"{'='*60}\n")
+
     def _generate_recommendations(self, results: Dict[str, HypothesisResult]) -> List[str]:
-        # ... (implementation remains the same)
-        pass
-    
+        """Produce actionable recommendations from hypothesis results."""
+        recommendations = []
+
+        for hid, result in results.items():
+            hypothesis = self.hypotheses.get(hid)
+            name = hypothesis.name if hypothesis else hid
+
+            if result.confirmed and result.effect_size > 0.5:
+                recommendations.append(
+                    f"Scale up '{name}': strong effect (size={result.effect_size:.3f}). "
+                    f"Consider larger parameter sweeps."
+                )
+            elif result.confirmed and result.effect_size <= 0.5:
+                recommendations.append(
+                    f"Deepen exploration of '{name}': confirmed but modest effect "
+                    f"(size={result.effect_size:.3f}). Refine parameter space."
+                )
+            elif not result.confirmed and result.num_experiments > 0:
+                if result.confidence > 0.3:
+                    recommendations.append(
+                        f"Revisit '{name}' with adjusted parameters: not confirmed "
+                        f"but moderate confidence ({result.confidence:.3f})."
+                    )
+                else:
+                    recommendations.append(
+                        f"Deprioritize '{name}': low confidence ({result.confidence:.3f}). "
+                        f"Consider alternative hypotheses in {hypothesis.category.value if hypothesis else 'same'} category."
+                    )
+
+        return recommendations
+
     def get_hypothesis_status(self) -> Dict[str, Dict[str, Any]]:
-        # ... (implementation remains the same)
-        pass
+        """Return status for all registered hypotheses."""
+        status = {}
+        for hid, hypothesis in self.hypotheses.items():
+            entry: Dict[str, Any] = {
+                'name': hypothesis.name,
+                'category': hypothesis.category.value,
+                'tested': hypothesis.tested,
+                'pending': hid in self.pending_hypotheses,
+            }
+            if hypothesis.tested and hypothesis.results:
+                latest = hypothesis.results[-1]
+                entry['confirmed'] = latest.confirmed
+                entry['confidence'] = latest.confidence
+                entry['effect_size'] = latest.effect_size
+                entry['num_experiments'] = latest.num_experiments
+            status[hid] = entry
+        return status
