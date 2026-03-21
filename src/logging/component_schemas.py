@@ -387,11 +387,208 @@ STANDARD_TEMPLATES = {
             ),
             "evolver.config.mutation_rate": ParameterSpec(
                 name="Mutation Rate",
-                type="float", 
+                type="float",
                 default=0.1,
                 description="Probability of mutation",
                 constraints={"min": 0.0, "max": 0.5}
             )
         }
-    )
+    ),
+
+    "smart_growth": ExperimentTemplate(
+        template_id="tpl_smart_growth_001",
+        name="Smart Growth",
+        description="Extrema-driven network growth with topological analysis",
+        category="growth",
+        composition=ExperimentComposition(
+            composition_id="comp_smart_growth_001",
+            name="Smart Growth Experiment",
+            metric=MetricSchema(
+                component_id="metric_extrema_001",
+                metric_name="extrema_analysis",
+                outputs=["extrema_ratio", "dead_neuron_ratio", "growth_score"],
+                requires_gradients=True,
+                config={"threshold": 0.01, "window_size": 100}
+            ),
+            evolver=EvolverSchema(
+                component_id="evolver_growth_001",
+                evolver_name="smart_growth",
+                inputs=["growth_score", "dead_neuron_ratio"],
+                outputs=["add_connections", "add_neurons"],
+                preserves_function=True,
+                config={"growth_rate": 0.05, "min_improvement": 0.01}
+            ),
+            model=ModelSchema(
+                component_id="model_growable_001",
+                model_name="sparse_mlp",
+                architecture=[784, 128, 10],
+                total_parameters=100000,
+                sparsity=0.9,
+                supports_growth=True,
+                config={"activation": "relu", "sparse_init": True}
+            ),
+            trainer=TrainerSchema(
+                component_id="trainer_growth_001",
+                trainer_name="standard",
+                optimizer="adam",
+                learning_rate=0.001,
+                batch_size=128,
+                config={"epochs": 50, "patience": 10}
+            ),
+            nal=NALSchema(
+                component_id="nal_growth_001",
+                hypothesis="Smart growth achieves better accuracy than fixed architecture",
+                statistical_tests=["t_test", "effect_size", "wilcoxon"],
+                success_criteria={"accuracy_improvement": 0.05, "efficiency": 0.8}
+            )
+        ),
+        parameters={
+            "evolver.config.growth_rate": ParameterSpec(
+                name="Growth Rate",
+                type="float",
+                default=0.05,
+                description="Fraction of connections to add per growth step",
+                constraints={"min": 0.01, "max": 0.2}
+            ),
+            "metric.config.threshold": ParameterSpec(
+                name="Extrema Threshold",
+                type="float",
+                default=0.01,
+                description="Threshold for extrema detection",
+                constraints={"min": 0.001, "max": 0.1}
+            )
+        },
+        tags=["growth", "sparse", "extrema"]
+    ),
+
+    "geometric_analysis": ExperimentTemplate(
+        template_id="tpl_geometric_001",
+        name="Geometric Analysis",
+        description="Fiber bundle / curvature-based network analysis and optimization",
+        category="geometric",
+        composition=ExperimentComposition(
+            composition_id="comp_geometric_001",
+            name="Geometric Deep Learning Experiment",
+            metric=MetricSchema(
+                component_id="metric_curvature_001",
+                metric_name="geometric_curvature",
+                outputs=["curvature", "geodesic_distance", "manifold_dimension"],
+                requires_gradients=True,
+                config={"n_samples": 1000, "epsilon": 0.01}
+            ),
+            evolver=EvolverSchema(
+                component_id="evolver_geometric_001",
+                evolver_name="curvature_minimizer",
+                inputs=["curvature", "geodesic_distance"],
+                outputs=["smooth_connections", "reduce_curvature"],
+                preserves_function=True,
+                config={"smoothing_rate": 0.1, "target_curvature": 0.5}
+            ),
+            model=ModelSchema(
+                component_id="model_fiber_001",
+                model_name="fiber_bundle_network",
+                architecture=[784, 512, 256, 10],
+                total_parameters=650000,
+                sparsity=0.0,
+                supports_growth=False,
+                config={"bundle_dim": 4, "base_manifold": "euclidean"}
+            ),
+            trainer=TrainerSchema(
+                component_id="trainer_riemannian_001",
+                trainer_name="riemannian_sgd",
+                optimizer="custom",
+                learning_rate=0.01,
+                batch_size=64,
+                config={"metric_tensor": "fisher_information", "natural_gradient": True}
+            ),
+            nal=NALSchema(
+                component_id="nal_geometric_001",
+                hypothesis="Geometric constraints improve generalization over unconstrained training",
+                statistical_tests=["manifold_t_test", "curvature_correlation"],
+                success_criteria={"generalization_gap": 0.05, "curvature_reduction": 0.3}
+            )
+        ),
+        parameters={
+            "evolver.config.smoothing_rate": ParameterSpec(
+                name="Smoothing Rate",
+                type="float",
+                default=0.1,
+                description="Rate at which curvature is smoothed",
+                constraints={"min": 0.01, "max": 0.5}
+            ),
+            "model.config.bundle_dim": ParameterSpec(
+                name="Bundle Dimension",
+                type="int",
+                default=4,
+                description="Dimension of the fiber bundle",
+                constraints={"min": 2, "max": 16}
+            )
+        },
+        tags=["geometric", "fiber_bundle", "curvature"]
+    ),
+
+    "pruning_optimization": ExperimentTemplate(
+        template_id="tpl_pruning_001",
+        name="Pruning Optimization",
+        description="Iterative magnitude pruning with accuracy recovery",
+        category="pruning",
+        composition=ExperimentComposition(
+            composition_id="comp_pruning_001",
+            name="Iterative Pruning Experiment",
+            metric=MetricSchema(
+                component_id="metric_sparsity_001",
+                metric_name="sparsity_analysis",
+                outputs=["weight_magnitude", "layer_sensitivity", "pruning_score"],
+                config={"granularity": "weight", "sensitivity_samples": 100}
+            ),
+            evolver=EvolverSchema(
+                component_id="evolver_pruning_001",
+                evolver_name="magnitude_pruning",
+                inputs=["pruning_score", "layer_sensitivity"],
+                outputs=["prune_connections", "rewire"],
+                preserves_function=False,
+                config={"prune_ratio": 0.2, "rewire_fraction": 0.1}
+            ),
+            model=ModelSchema(
+                component_id="model_dense_001",
+                model_name="sparse_mlp",
+                architecture=[784, 1024, 512, 256, 10],
+                total_parameters=1200000,
+                sparsity=0.0,
+                supports_growth=True,
+                config={"activation": "relu"}
+            ),
+            trainer=TrainerSchema(
+                component_id="trainer_recovery_001",
+                trainer_name="standard",
+                optimizer="adamw",
+                learning_rate=0.0005,
+                batch_size=64,
+                config={"epochs": 20, "weight_decay": 0.01}
+            ),
+            nal=NALSchema(
+                component_id="nal_pruning_001",
+                hypothesis="Iterative pruning achieves 90%+ sparsity with less than 2% accuracy loss",
+                statistical_tests=["t_test", "bootstrap_ci"],
+                success_criteria={"final_sparsity": 0.9, "accuracy_retained": 0.98}
+            )
+        ),
+        parameters={
+            "evolver.config.prune_ratio": ParameterSpec(
+                name="Prune Ratio",
+                type="float",
+                default=0.2,
+                description="Fraction of weights to prune per iteration",
+                constraints={"min": 0.05, "max": 0.5}
+            ),
+            "evolver.config.rewire_fraction": ParameterSpec(
+                name="Rewire Fraction",
+                type="float",
+                default=0.1,
+                description="Fraction of pruned connections to rewire",
+                constraints={"min": 0.0, "max": 0.5}
+            )
+        },
+        tags=["pruning", "sparsity", "compression"]
+    ),
 }

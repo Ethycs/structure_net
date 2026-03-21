@@ -32,7 +32,9 @@ from . import config_adapter
 from .component_logger import (
     ComponentLogger,
     create_evolution_experiment,
-    create_custom_experiment
+    create_custom_experiment,
+    compare_compositions,
+    list_templates
 )
 
 from .component_schemas import (
@@ -121,7 +123,9 @@ __all__ = [
     'ComponentLogger',
     'create_evolution_experiment',
     'create_custom_experiment',
-    
+    'compare_compositions',
+    'list_templates',
+
     # Component schemas
     'MetricSchema',
     'EvolverSchema', 

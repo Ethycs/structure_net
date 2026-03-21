@@ -10,8 +10,12 @@ from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 from pathlib import Path
 import json
+import hashlib
+import logging
 
 from .standardized_logging import StandardizedLogger, LoggingConfig
+
+logger = logging.getLogger(__name__)
 from .component_schemas import (
     ExperimentComposition,
     ExperimentExecution,
@@ -190,23 +194,28 @@ class ComponentLogger:
         execution.final_metrics = final_metrics
         execution.finalize(status=status, error=error)
         
-        # Convert to artifact-ready format
+        # Convert to artifact-ready format (v2.0 composition schema)
         artifact_data = self._execution_to_artifact_format(execution)
-        
-        # Log as experiment result for WandB artifact creation
-        result_hash = self.standard_logger.log_experiment_result(artifact_data)
-        
+
+        # Save directly to queue — v2.0 composition format doesn't conform to
+        # ExperimentResult (v1.0) schema, so we bypass log_experiment_result validation
+        json_payload = json.dumps(artifact_data, separators=(",", ":"), default=str)
+        content_hash = hashlib.sha256(json_payload.encode()).hexdigest()[:16]
+        queue_file = self.standard_logger.queue_dir / f"{content_hash}.json"
+        queue_file.write_text(json_payload)
+        logger.info(f"Queued composition artifact {content_hash} ({len(json_payload)} bytes)")
+
         # Update ChromaDB with final status
         self.standard_logger.update_experiment_status(
             execution_id,
             status,
             **final_metrics
         )
-        
+
         # Clean up
         del self.active_executions[execution_id]
-        
-        return result_hash
+
+        return content_hash
     
     def _log_composition(self, execution: ExperimentExecution):
         """Log composition details to ChromaDB."""
@@ -282,25 +291,51 @@ class ComponentLogger:
         
         return artifact_data
     
-    def search_experiments_by_component(self, 
+    def search_experiments_by_component(self,
                                       component_type: str,
                                       component_name: str,
                                       limit: int = 10) -> List[Dict[str, Any]]:
         """
         Search for experiments using specific components.
-        
+
         Args:
             component_type: Type of component (metric/evolver/model/trainer/nal)
             component_name: Name of the specific component
             limit: Maximum results to return
-            
+
         Returns:
             List of matching experiments
         """
-        # This would integrate with ChromaDB search
-        # For now, delegating to standard logger's search
-        query = f"{component_type}:{component_name}"
-        return self.standard_logger.searcher.search_by_description(query, limit=limit)
+        collection = self.standard_logger.experiments_collection
+        if collection is None:
+            return []
+
+        try:
+            # Search ChromaDB using the component type metadata registered by _log_composition
+            type_key = f"{component_type}_type"
+            query_text = f"{component_type} {component_name}"
+
+            results = collection.query(
+                query_texts=[query_text],
+                n_results=limit,
+                where={type_key: component_name} if component_type in ('metric', 'evolver', 'model', 'trainer') else None
+            )
+
+            if not results['ids'] or not results['ids'][0]:
+                return []
+
+            experiments = []
+            for i, exp_id in enumerate(results['ids'][0]):
+                entry = {'experiment_id': exp_id}
+                if results['metadatas'] and results['metadatas'][0]:
+                    entry.update(results['metadatas'][0][i])
+                if results['documents'] and results['documents'][0]:
+                    entry['description'] = results['documents'][0][i]
+                experiments.append(entry)
+
+            return experiments
+        except Exception:
+            return []
 
 
 # Convenience functions for common use cases
@@ -408,5 +443,85 @@ def create_custom_experiment(metric_name: str,
         trainer=trainer,
         nal=nal
     )
-    
+
     return logger, execution
+
+
+def compare_compositions(comp_a: ExperimentComposition,
+                        comp_b: ExperimentComposition) -> Dict[str, Any]:
+    """
+    Compare two experiment compositions side-by-side.
+
+    Returns a diff showing which components differ and how, useful for
+    understanding what changed between experiment runs.
+
+    Args:
+        comp_a: First composition
+        comp_b: Second composition
+
+    Returns:
+        Dict with per-component diffs and a summary
+    """
+    diff = {
+        'same_hash': comp_a.generate_hash() == comp_b.generate_hash(),
+        'components': {},
+        'summary': [],
+    }
+
+    component_pairs = [
+        ('metric', comp_a.metric, comp_b.metric, 'metric_name'),
+        ('evolver', comp_a.evolver, comp_b.evolver, 'evolver_name'),
+        ('model', comp_a.model, comp_b.model, 'model_name'),
+        ('trainer', comp_a.trainer, comp_b.trainer, 'trainer_name'),
+        ('nal', comp_a.nal, comp_b.nal, 'hypothesis'),
+    ]
+
+    for comp_type, a, b, name_field in component_pairs:
+        a_dict = a.model_dump(exclude={'component_id', 'created_at', 'component_version'})
+        b_dict = b.model_dump(exclude={'component_id', 'created_at', 'component_version'})
+
+        changed_fields = {}
+        for key in set(a_dict.keys()) | set(b_dict.keys()):
+            val_a = a_dict.get(key)
+            val_b = b_dict.get(key)
+            if val_a != val_b:
+                changed_fields[key] = {'a': val_a, 'b': val_b}
+
+        component_diff = {
+            'identical': len(changed_fields) == 0,
+            'name_a': getattr(a, name_field),
+            'name_b': getattr(b, name_field),
+            'changed_fields': changed_fields,
+        }
+        diff['components'][comp_type] = component_diff
+
+        if changed_fields:
+            diff['summary'].append(
+                f"{comp_type}: {len(changed_fields)} field(s) differ "
+                f"({', '.join(changed_fields.keys())})"
+            )
+
+    changed_count = sum(1 for c in diff['components'].values() if not c['identical'])
+    diff['changed_component_count'] = changed_count
+    diff['total_components'] = 5
+
+    return diff
+
+
+def list_templates() -> Dict[str, Dict[str, str]]:
+    """
+    List all available experiment templates with their descriptions.
+
+    Returns:
+        Dict mapping template name to {name, description, category, tags}
+    """
+    result = {}
+    for key, template in STANDARD_TEMPLATES.items():
+        result[key] = {
+            'name': template.name,
+            'description': template.description,
+            'category': template.category,
+            'tags': template.tags,
+            'parameters': list(template.parameters.keys()),
+        }
+    return result
