@@ -73,6 +73,10 @@ class ModelSpec(BaseModel):
     sparsity: float = Field(default=0.0, ge=0.0, le=1.0, description="Network sparsity")
     config: Dict[str, Any] = Field(default_factory=dict, description="Extra factory kwargs")
 
+    # Residual network support
+    use_residual: bool = Field(default=False, description="Use residual blocks instead of standard layers")
+    skip_frequency: int = Field(default=2, ge=1, description="Residual skip connection frequency")
+
     @field_validator("architecture")
     @classmethod
     def _validate_arch(cls, v: List[int]) -> List[int]:
@@ -99,6 +103,22 @@ class TrainingSpec(BaseModel):
     dataset: str = Field(default="cifar10")
     optimizer: str = Field(default="adam")
     config: Dict[str, Any] = Field(default_factory=dict, description="Extra training kwargs")
+
+    # Parameters actually used by run_structure_net_experiment()
+    lr_strategy: Optional[str] = Field(
+        default=None, description="Adaptive LR strategy (basic/advanced/comprehensive/ultimate)"
+    )
+    base_lr: Optional[float] = Field(
+        default=None, gt=0.0, description="Base learning rate (overrides learning_rate for LR manager)"
+    )
+    enable_growth: bool = Field(default=False, description="Enable dynamic network growth")
+    growth_interval: int = Field(default=10, ge=1, description="Epochs between growth checks")
+    enable_metrics: bool = Field(default=False, description="Enable metrics system during training")
+    primary_metric_type: str = Field(
+        default="accuracy", description="Primary metric for evaluation (accuracy/efficiency/convergence_speed)"
+    )
+    quick_test: bool = Field(default=False, description="Use data subset for quick testing")
+    save_model: bool = Field(default=False, description="Save best model checkpoint")
 
     @field_validator("optimizer")
     @classmethod

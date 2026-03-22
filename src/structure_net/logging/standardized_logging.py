@@ -795,8 +795,154 @@ class StandardizedLogger:
         # For now, just add schema version if missing
         if "schema_version" not in old_data:
             old_data["schema_version"] = target_version
-        
+
         return old_data
+
+    # ------------------------------------------------------------------
+    # Retrieval API — the return path for meta-learning
+    # ------------------------------------------------------------------
+
+    def load_all_results(self) -> List[Dict[str, Any]]:
+        """
+        Load all experiment results from queue_dir and sent_dir.
+
+        Returns a list of parsed JSON dicts — one per experiment.
+        This is the primary entry point for loading historical data
+        for ML consumption.
+        """
+        results: List[Dict[str, Any]] = []
+        for directory in [self.queue_dir, self.sent_dir]:
+            if not directory.exists():
+                continue
+            for json_file in sorted(directory.glob("*.json")):
+                try:
+                    data = json.loads(json_file.read_text())
+                    results.append(data)
+                except (json.JSONDecodeError, OSError) as exc:
+                    logger.warning("Skipping %s: %s", json_file.name, exc)
+        logger.info("Loaded %d experiment result(s) from disk", len(results))
+        return results
+
+    def query_experiments(
+        self,
+        min_accuracy: Optional[float] = None,
+        max_accuracy: Optional[float] = None,
+        dataset: Optional[str] = None,
+        hypothesis_id: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """
+        Query ChromaDB for experiments matching criteria.
+
+        Args:
+            min_accuracy: Minimum accuracy filter.
+            max_accuracy: Maximum accuracy filter.
+            dataset: Dataset name filter.
+            hypothesis_id: Hypothesis ID filter.
+            status: Experiment status filter.
+            limit: Maximum results.
+
+        Returns:
+            List of experiment metadata dicts from ChromaDB.
+        """
+        if not self.chromadb_client or not self.experiments_collection:
+            logger.warning("ChromaDB not available — falling back to disk load + filter")
+            return self._query_from_disk(
+                min_accuracy=min_accuracy,
+                max_accuracy=max_accuracy,
+                dataset=dataset,
+                hypothesis_id=hypothesis_id,
+                limit=limit,
+            )
+
+        try:
+            # Build ChromaDB where clause
+            where_conditions = []
+            if min_accuracy is not None:
+                where_conditions.append({"accuracy": {"$gte": min_accuracy}})
+            if max_accuracy is not None:
+                where_conditions.append({"accuracy": {"$lte": max_accuracy}})
+            if hypothesis_id is not None:
+                where_conditions.append({"hypothesis_id": hypothesis_id})
+            if status is not None:
+                where_conditions.append({"status": status})
+
+            where_clause = None
+            if len(where_conditions) == 1:
+                where_clause = where_conditions[0]
+            elif len(where_conditions) > 1:
+                where_clause = {"$and": where_conditions}
+
+            results = self.experiments_collection.get(
+                limit=limit,
+                where=where_clause,
+                include=["metadatas", "documents"],
+            )
+
+            experiments = []
+            for i, exp_id in enumerate(results["ids"]):
+                entry: Dict[str, Any] = {"experiment_id": exp_id}
+                if results["metadatas"] and i < len(results["metadatas"]):
+                    entry.update(results["metadatas"][i])
+                experiments.append(entry)
+
+            return experiments
+
+        except Exception as exc:
+            logger.warning("ChromaDB query failed: %s — falling back to disk", exc)
+            return self._query_from_disk(
+                min_accuracy=min_accuracy,
+                max_accuracy=max_accuracy,
+                dataset=dataset,
+                hypothesis_id=hypothesis_id,
+                limit=limit,
+            )
+
+    def _query_from_disk(
+        self,
+        min_accuracy: Optional[float] = None,
+        max_accuracy: Optional[float] = None,
+        dataset: Optional[str] = None,
+        hypothesis_id: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Fallback: filter disk-loaded results in Python."""
+        all_results = self.load_all_results()
+        filtered = []
+        for exp in all_results:
+            metrics = exp.get("metrics", {})
+            acc = metrics.get("accuracy", 0.0) if isinstance(metrics, dict) else 0.0
+            if min_accuracy is not None and acc < min_accuracy:
+                continue
+            if max_accuracy is not None and acc > max_accuracy:
+                continue
+            config = exp.get("experiment_config", exp.get("config", {}))
+            if dataset is not None and isinstance(config, dict):
+                if config.get("dataset") != dataset:
+                    continue
+            if hypothesis_id is not None:
+                if exp.get("hypothesis_id") != hypothesis_id:
+                    continue
+            filtered.append(exp)
+            if len(filtered) >= limit:
+                break
+        return filtered
+
+    def count_experiments(self) -> Dict[str, int]:
+        """Count experiments in each storage directory."""
+        counts = {}
+        for name, directory in [
+            ("queued", self.queue_dir),
+            ("sent", self.sent_dir),
+            ("rejected", self.rejected_dir),
+        ]:
+            if directory.exists():
+                counts[name] = len(list(directory.glob("*.json")))
+            else:
+                counts[name] = 0
+        counts["total"] = sum(counts.values())
+        return counts
 
 
 # ============================================================================

@@ -89,30 +89,40 @@ class Experiment:
 @dataclass
 class ExperimentResult:
     """Result of running a single experiment."""
-    
+
     experiment_id: str
     hypothesis_id: str
-    
+
     # Core metrics
     metrics: Dict[str, float]  # All measured metrics
     primary_metric: float  # Main metric for this hypothesis
-    
+
     # Model details
     model_architecture: List[int]
     model_parameters: int
     training_time: float
-    
+
     # Additional data
     training_history: List[Dict[str, float]] = field(default_factory=list)
     model_checkpoint: Optional[str] = None  # Path to saved model
-    
+
     # Insights
     observations: List[str] = field(default_factory=list)
     anomalies: List[str] = field(default_factory=list)
-    
+
     # Metadata
     timestamp: float = field(default_factory=time.time)
     error: Optional[str] = None
+
+    # Full configuration capture (for reproducibility + ML features)
+    experiment_config: Dict[str, Any] = field(default_factory=dict)
+
+    # Composition info (if run via composition system)
+    composition_hash: Optional[str] = None
+    resolved_components: Dict[str, str] = field(default_factory=dict)
+
+    # Environment snapshot (torch version, python version, git hash, etc.)
+    environment: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

@@ -38,6 +38,34 @@ from structure_net.logging.standardized_logging import StandardizedLogger, Loggi
 from data_factory import create_dataset
 
 
+def _capture_environment(device: str = 'cpu') -> Dict[str, str]:
+    """Capture environment info for reproducibility."""
+    import sys
+    env: Dict[str, str] = {
+        'torch_version': torch.__version__,
+        'python_version': sys.version.split()[0],
+        'device': device,
+    }
+    try:
+        import subprocess
+        env['git_hash'] = subprocess.check_output(
+            ['git', 'rev-parse', 'HEAD'], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception:
+        pass
+    if torch.cuda.is_available():
+        env['cuda_version'] = torch.version.cuda or ''
+        try:
+            env['gpu_name'] = torch.cuda.get_device_name(0)
+        except Exception:
+            pass
+    try:
+        env['numpy_version'] = np.__version__
+    except Exception:
+        pass
+    return env
+
+
 def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> ExperimentResult:
     """
     Run a single structure_net experiment with full system integration.
@@ -279,9 +307,11 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
             model_parameters=final_stats['total_parameters'],
             training_time=time.time() - start_time,
             training_history=training_history,
-            model_checkpoint=model_checkpoint
+            model_checkpoint=model_checkpoint,
+            experiment_config=params,
+            environment=_capture_environment(device),
         )
-        
+
     except Exception as e:
         # Return error result
         return ExperimentResult(
@@ -292,7 +322,9 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
             model_architecture=params.get('architecture', []),
             model_parameters=0,
             training_time=time.time() - start_time,
-            error=f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+            error=f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}",
+            experiment_config=params,
+            environment=_capture_environment(),
         )
 
 
@@ -347,12 +379,14 @@ def run_composed_experiment(
         params = experiment.parameters
         epochs = tc.epochs if tc else params.get('epochs', 50)
         batch_size = tc.batch_size if tc else params.get('batch_size', 128)
-        lr = tc.learning_rate if tc else params.get('base_lr', 0.001)
+        lr = (tc.base_lr or tc.learning_rate) if tc else params.get('base_lr', 0.001)
         dataset_name = tc.dataset if tc else params.get('dataset', 'cifar10')
         optimizer_name = tc.optimizer if tc else params.get('optimizer', 'adam')
+        quick_test = (tc.quick_test if tc else params.get('quick_test', False))
+        save_model = (tc.save_model if tc else params.get('save_model', False))
 
         # Data loaders
-        subset_fraction = 0.1 if params.get('quick_test', False) else None
+        subset_fraction = 0.1 if quick_test else None
         dataset_dict = create_dataset(
             dataset_name=dataset_name,
             batch_size=batch_size,
@@ -457,6 +491,10 @@ def run_composed_experiment(
             model_parameters=final_stats['total_parameters'],
             training_time=time.time() - start_time,
             training_history=training_history,
+            experiment_config=params,
+            composition_hash=composition.generate_hash(),
+            resolved_components=resolved.resolved_classes,
+            environment=_capture_environment(device),
         )
 
     except Exception as e:
@@ -469,6 +507,8 @@ def run_composed_experiment(
             model_parameters=0,
             training_time=time.time() - start_time,
             error=f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}",
+            experiment_config=experiment.parameters,
+            environment=_capture_environment(),
         )
 
 
