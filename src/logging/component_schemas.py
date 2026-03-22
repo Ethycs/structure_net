@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-Component-Based Schemas for Structure Net Logging
+Component-Based Schemas for Structure Net Logging — v2
 
-Following the Photoshop-like layer system with 5 core components:
-1. Metric (Analysis layer)
-2. Evolver (Modification layer)  
-3. Model (Architecture layer)
-4. Trainer (Learning layer)
-5. NAL (Orchestration layer)
+Redesigned composition system grounded in the real component hierarchy
+(core/interfaces.py: IAnalyzer, IStrategy, IEvolver, ITrainer, IMetric,
+IScheduler, IOrchestrator).
 
-Each component has its own schema, and experiments are compositions of these components.
+Key changes from v1:
+- Flexible: only ModelSpec is required; everything else is zero-or-more.
+- Categories match the actual interface types.
+- ComponentSpec resolves to real classes via the CompositionRegistry.
+- No ``interactions`` field (unimplemented concept removed).
+
+Backward-compatible deprecated aliases are provided at the bottom.
 """
 
 from datetime import datetime
@@ -17,164 +20,204 @@ from typing import Dict, List, Any, Optional, Literal, Union
 from pydantic import BaseModel, Field, field_validator, model_validator
 import json
 import hashlib
+import warnings
 
 
 # ============================================================================
-# BASE COMPONENT SCHEMAS (Layer Types)
+# COMPONENT SPEC (universal slot for any registry-backed component)
 # ============================================================================
 
-class ComponentSchema(BaseModel):
-    """Base schema for all components."""
-    
-    component_id: str = Field(..., description="Unique component identifier")
-    component_version: str = Field(default="1.0", description="Component version")
-    created_at: datetime = Field(default_factory=datetime.now)
-    
+class ComponentSpec(BaseModel):
+    """Specification for a single component in a composition.
+
+    ``component_type`` must be one of the categories known to the
+    CompositionRegistry: analyzer, strategy, evolver, trainer, metric,
+    scheduler, orchestrator.
+
+    ``component_name`` is the registry key (e.g. "extrema", "hybrid_growth").
+    """
+
+    component_type: str = Field(
+        ..., description="Registry category (analyzer, strategy, evolver, ...)"
+    )
+    component_name: str = Field(
+        ..., description="Registry key within the category"
+    )
+    config: Dict[str, Any] = Field(
+        default_factory=dict, description="Kwargs passed to the component constructor"
+    )
+
+    @field_validator("component_type")
+    @classmethod
+    def _validate_type(cls, v: str) -> str:
+        valid = {"analyzer", "strategy", "evolver", "trainer", "metric", "scheduler", "orchestrator"}
+        if v not in valid:
+            raise ValueError(f"component_type must be one of {sorted(valid)}, got '{v}'")
+        return v
+
     class Config:
-        extra = "forbid"  # Strict validation - no extra fields
-        populate_by_name = True
+        extra = "forbid"
 
 
-class MetricSchema(ComponentSchema):
-    """Schema for any metric component (analysis layer)."""
-    
-    component_type: Literal["metric"] = "metric"
-    metric_name: str = Field(..., description="Type of metric (extrema_analysis, curvature, etc.)")
-    config: Dict[str, Any] = Field(default_factory=dict, description="Metric configuration")
-    outputs: List[str] = Field(..., description="What metrics this produces")
-    requires_gradients: bool = Field(default=False, description="Whether this needs gradients")
-    
-    @field_validator('outputs')
+# ============================================================================
+# MODEL SPEC
+# ============================================================================
+
+class ModelSpec(BaseModel):
+    """Specification for the neural network model (always required)."""
+
+    factory_name: str = Field(
+        ..., description="Model factory name in the registry (standard, extrema_aware, evolvable)"
+    )
+    architecture: List[int] = Field(..., description="Layer sizes [input, hidden..., output]")
+    sparsity: float = Field(default=0.0, ge=0.0, le=1.0, description="Network sparsity")
+    config: Dict[str, Any] = Field(default_factory=dict, description="Extra factory kwargs")
+
+    @field_validator("architecture")
     @classmethod
-    def validate_outputs(cls, v):
-        if not v:
-            raise ValueError("Metric must produce at least one output")
-        return v
-
-
-class EvolverSchema(ComponentSchema):
-    """Schema for any evolver component (modification layer)."""
-    
-    component_type: Literal["evolver"] = "evolver"
-    evolver_name: str = Field(..., description="Type of evolver (genetic, smart_growth, etc.)")
-    config: Dict[str, Any] = Field(default_factory=dict, description="Evolver configuration")
-    inputs: List[str] = Field(..., description="What metrics it needs")
-    outputs: List[str] = Field(..., description="What changes it makes")
-    preserves_function: bool = Field(default=True, description="Whether it preserves network function")
-    
-    @field_validator('inputs')
-    @classmethod
-    def validate_inputs(cls, v):
-        if not v:
-            raise ValueError("Evolver must consume at least one input")
-        return v
-
-
-class ModelSchema(ComponentSchema):
-    """Schema for any model component (architecture layer)."""
-    
-    component_type: Literal["model"] = "model"
-    model_name: str = Field(..., description="Type of model (sparse_mlp, fiber_bundle, etc.)")
-    architecture: List[int] = Field(..., description="Layer sizes")
-    total_parameters: int = Field(..., ge=0, description="Total parameters")
-    sparsity: float = Field(..., ge=0.0, le=1.0, description="Network sparsity")
-    config: Dict[str, Any] = Field(default_factory=dict, description="Model configuration")
-    supports_growth: bool = Field(default=True, description="Whether model can grow")
-    
-    @field_validator('architecture')
-    @classmethod
-    def validate_architecture(cls, v):
+    def _validate_arch(cls, v: List[int]) -> List[int]:
         if len(v) < 2:
             raise ValueError("Architecture must have at least input and output layers")
-        if any(size <= 0 for size in v):
+        if any(s <= 0 for s in v):
             raise ValueError("All layer sizes must be positive")
         return v
 
+    class Config:
+        extra = "forbid"
 
-class TrainerSchema(ComponentSchema):
-    """Schema for any trainer component (learning layer)."""
-    
-    component_type: Literal["trainer"] = "trainer"
-    trainer_name: str = Field(..., description="Type of trainer (standard, geometric_constrained, etc.)")
-    optimizer: str = Field(..., description="Optimizer type")
-    learning_rate: float = Field(..., gt=0.0, description="Base learning rate")
-    batch_size: int = Field(..., gt=0, description="Batch size")
-    config: Dict[str, Any] = Field(default_factory=dict, description="Trainer configuration")
-    
-    @field_validator('optimizer')
+
+# ============================================================================
+# TRAINING SPEC
+# ============================================================================
+
+class TrainingSpec(BaseModel):
+    """Training loop parameters."""
+
+    epochs: int = Field(default=50, gt=0)
+    batch_size: int = Field(default=128, gt=0)
+    learning_rate: float = Field(default=0.001, gt=0.0)
+    dataset: str = Field(default="cifar10")
+    optimizer: str = Field(default="adam")
+    config: Dict[str, Any] = Field(default_factory=dict, description="Extra training kwargs")
+
+    @field_validator("optimizer")
     @classmethod
-    def validate_optimizer(cls, v):
-        valid_optimizers = ['adam', 'sgd', 'adamw', 'rmsprop', 'custom']
-        if v.lower() not in valid_optimizers:
-            raise ValueError(f"Optimizer must be one of {valid_optimizers}")
+    def _validate_optimizer(cls, v: str) -> str:
+        valid = {"adam", "sgd", "adamw", "rmsprop", "custom"}
+        if v.lower() not in valid:
+            raise ValueError(f"Optimizer must be one of {sorted(valid)}, got '{v}'")
         return v.lower()
 
+    class Config:
+        extra = "forbid"
 
-class NALSchema(ComponentSchema):
-    """Schema for NAL orchestration (experiment layer)."""
-    
-    component_type: Literal["nal"] = "nal"
+
+# ============================================================================
+# HYPOTHESIS SPEC (optional NAL-level metadata)
+# ============================================================================
+
+class HypothesisSpec(BaseModel):
+    """NAL-level metadata for hypothesis-driven experiments."""
+
     hypothesis: str = Field(..., description="Hypothesis being tested")
-    statistical_tests: List[str] = Field(default_factory=list, description="Statistical tests to run")
-    success_criteria: Dict[str, float] = Field(..., description="Success metrics and thresholds")
-    config: Dict[str, Any] = Field(default_factory=dict, description="NAL configuration")
-    
-    @field_validator('hypothesis')
+    success_criteria: Dict[str, float] = Field(..., description="Metric thresholds for success")
+    statistical_tests: List[str] = Field(default_factory=list)
+    config: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("hypothesis")
     @classmethod
-    def validate_hypothesis(cls, v):
+    def _validate_hypothesis(cls, v: str) -> str:
         if len(v) < 10:
             raise ValueError("Hypothesis must be substantive (>10 chars)")
         return v
 
+    class Config:
+        extra = "forbid"
+
 
 # ============================================================================
-# COMPOSITION SCHEMA (Layer Stack)
+# EXPERIMENT COMPOSITION (the main schema)
 # ============================================================================
 
 class ExperimentComposition(BaseModel):
-    """Defines how components are stacked together (like Photoshop layers)."""
-    
+    """
+    Flexible experiment composition.
+
+    Only ``model`` is required.  All component lists default to empty,
+    allowing analysis-only, training-only, or full evolution setups.
+    """
+
     composition_id: str = Field(..., description="Unique composition identifier")
     name: str = Field(..., description="Human-readable name")
-    
-    # The 5-component stack
-    metric: MetricSchema
-    evolver: EvolverSchema
-    model: ModelSchema
-    trainer: TrainerSchema
-    nal: NALSchema
-    
-    # Component interactions (like blend modes)
-    interactions: Dict[str, Any] = Field(default_factory=dict, description="How components interact")
-    
-    # Template info (like Smart Objects)
+
+    # Required
+    model: ModelSpec
+
+    # Optional component lists (zero or more of each)
+    analyzers: List[ComponentSpec] = Field(default_factory=list)
+    strategies: List[ComponentSpec] = Field(default_factory=list)
+    evolvers: List[ComponentSpec] = Field(default_factory=list)
+    trainers: List[ComponentSpec] = Field(default_factory=list)
+    metrics: List[ComponentSpec] = Field(default_factory=list)
+    schedulers: List[ComponentSpec] = Field(default_factory=list)
+
+    # Training loop parameters (optional)
+    training: Optional[TrainingSpec] = None
+
+    # NAL-level metadata (optional)
+    hypothesis: Optional[HypothesisSpec] = None
+
+    # Template provenance
     template_name: Optional[str] = None
     template_version: Optional[str] = None
-    
-    @model_validator(mode='after')
-    def validate_component_compatibility(self):
-        """Ensure components can work together."""
-        # Check that evolver inputs are satisfied by metric outputs
-        missing_inputs = set(self.evolver.inputs) - set(self.metric.outputs)
-        if missing_inputs:
-            raise ValueError(f"Evolver needs inputs that metric doesn't provide: {missing_inputs}")
-        
-        # Check model supports required evolver operations
-        if 'add_layers' in self.evolver.outputs and not self.model.supports_growth:
-            raise ValueError("Evolver wants to add layers but model doesn't support growth")
-        
+
+    @model_validator(mode="after")
+    def _validate_component_types(self):
+        """Ensure each ComponentSpec has the right type for its list."""
+        _expected = {
+            "analyzers": "analyzer",
+            "strategies": "strategy",
+            "evolvers": "evolver",
+            "trainers": "trainer",
+            "metrics": "metric",
+            "schedulers": "scheduler",
+        }
+        for field_name, expected_type in _expected.items():
+            for spec in getattr(self, field_name):
+                if spec.component_type != expected_type:
+                    raise ValueError(
+                        f"ComponentSpec in '{field_name}' has type '{spec.component_type}', "
+                        f"expected '{expected_type}'"
+                    )
         return self
-    
+
     def generate_hash(self) -> str:
         """Generate unique hash for this composition."""
-        content = json.dumps({
-            'metric': self.metric.metric_name,
-            'evolver': self.evolver.evolver_name,
-            'model': self.model.model_name,
-            'trainer': self.trainer.trainer_name,
-            'nal': self.nal.hypothesis
-        }, sort_keys=True)
+        content = json.dumps(
+            {
+                "model": self.model.factory_name,
+                "architecture": self.model.architecture,
+                "analyzers": [s.component_name for s in self.analyzers],
+                "strategies": [s.component_name for s in self.strategies],
+                "evolvers": [s.component_name for s in self.evolvers],
+                "trainers": [s.component_name for s in self.trainers],
+                "metrics": [s.component_name for s in self.metrics],
+                "schedulers": [s.component_name for s in self.schedulers],
+            },
+            sort_keys=True,
+        )
         return hashlib.sha256(content.encode()).hexdigest()[:16]
+
+    def get_all_component_specs(self) -> List[ComponentSpec]:
+        """Return a flat list of all ComponentSpecs in this composition."""
+        return (
+            list(self.analyzers)
+            + list(self.strategies)
+            + list(self.evolvers)
+            + list(self.trainers)
+            + list(self.metrics)
+            + list(self.schedulers)
+        )
 
 
 # ============================================================================
@@ -182,51 +225,50 @@ class ExperimentComposition(BaseModel):
 # ============================================================================
 
 class IterationData(BaseModel):
-    """Data from one iteration (like one frame in animation)."""
-    
+    """Data from one training iteration."""
+
     iteration: int = Field(..., ge=0, description="Iteration number")
     timestamp: datetime = Field(default_factory=datetime.now)
-    
-    # What each component did this iteration
-    metric_outputs: Dict[str, Any] = Field(..., description="Metrics computed")
+
+    # Per-component outputs (all optional for flexibility)
+    metric_outputs: Dict[str, Any] = Field(default_factory=dict, description="Metrics computed")
     evolver_actions: List[str] = Field(default_factory=list, description="Actions taken")
     model_changes: Dict[str, Any] = Field(default_factory=dict, description="Architecture changes")
-    trainer_metrics: Dict[str, Any] = Field(..., description="Training metrics")
-    nal_decisions: Dict[str, Any] = Field(default_factory=dict, description="NAL decisions")
-    
+    trainer_metrics: Dict[str, Any] = Field(default_factory=dict, description="Training metrics")
+
     # Performance snapshot
-    accuracy: float = Field(..., ge=0.0, le=1.0, description="Current accuracy")
-    loss: float = Field(..., ge=0.0, description="Current loss")
+    accuracy: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    loss: Optional[float] = Field(default=None, ge=0.0)
 
 
 class ExperimentExecution(BaseModel):
-    """Records what happened when the composition was executed."""
-    
+    """Records what happened when a composition was executed."""
+
     execution_id: str = Field(..., description="Unique execution identifier")
     composition: ExperimentComposition = Field(..., description="What was executed")
-    
+
     # Execution metadata
     started_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
     status: Literal["running", "completed", "failed", "cancelled"] = "running"
-    
-    # Layer-by-layer execution log
+
+    # Iteration log
     iteration_log: List[IterationData] = Field(default_factory=list)
-    
+
     # Final results
     final_metrics: Dict[str, Any] = Field(default_factory=dict)
     execution_time: Optional[float] = None
     error: Optional[str] = None
-    
+
     # Resource usage
     peak_memory_gb: Optional[float] = None
     total_gpu_hours: Optional[float] = None
-    
+
     def add_iteration(self, iteration_data: IterationData):
         """Add iteration data maintaining order."""
         self.iteration_log.append(iteration_data)
         self.iteration_log.sort(key=lambda x: x.iteration)
-    
+
     def finalize(self, status: str = "completed", error: str = None):
         """Mark execution as complete."""
         self.completed_at = datetime.now()
@@ -237,60 +279,50 @@ class ExperimentExecution(BaseModel):
 
 
 # ============================================================================
-# TEMPLATE SYSTEM (Smart Objects)
+# TEMPLATE SYSTEM
 # ============================================================================
 
 class ParameterSpec(BaseModel):
     """Specification for a customizable parameter."""
-    
+
     name: str
     type: str  # "float", "int", "str", "bool", "list"
     default: Any
     description: str
-    constraints: Optional[Dict[str, Any]] = None  # min, max, choices, etc.
+    constraints: Optional[Dict[str, Any]] = None
 
 
 class ExperimentTemplate(BaseModel):
-    """Pre-built component compositions (like Photoshop templates)."""
-    
+    """Pre-built composition with customizable parameters."""
+
     template_id: str = Field(..., description="Unique template identifier")
     name: str = Field(..., description="Template name")
     description: str = Field(..., description="What this template does")
     category: str = Field(..., description="Template category")
-    
+
     # The pre-configured composition
     composition: ExperimentComposition
-    
-    # Customizable parameters (like template variables)
+
+    # Customizable parameters
     parameters: Dict[str, ParameterSpec] = Field(default_factory=dict)
-    
-    # Usage examples
+
+    # Metadata
     examples: List[str] = Field(default_factory=list)
-    
-    # Template metadata
     author: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     tags: List[str] = Field(default_factory=list)
-    
+
     def instantiate(self, **kwargs) -> ExperimentComposition:
         """Create a composition instance with custom parameters."""
         composition = self.composition.model_copy(deep=True)
-        
-        # Apply parameter customizations
         for param_name, param_value in kwargs.items():
             if param_name not in self.parameters:
                 raise ValueError(f"Unknown parameter: {param_name}")
-            
-            # Apply parameter based on its path (e.g., "metric.config.threshold")
             self._apply_parameter(composition, param_name, param_value)
-        
         return composition
-    
-    def _apply_parameter(self, composition: ExperimentComposition, 
-                        param_path: str, value: Any):
-        """Apply a parameter value to the composition."""
-        # Simple implementation - could be enhanced
-        parts = param_path.split('.')
+
+    def _apply_parameter(self, composition: ExperimentComposition, param_path: str, value: Any):
+        parts = param_path.split(".")
         obj = composition
         for part in parts[:-1]:
             obj = getattr(obj, part)
@@ -303,33 +335,32 @@ class ExperimentTemplate(BaseModel):
 
 def validate_experiment_data(data: Dict[str, Any]) -> Union[ExperimentExecution, ExperimentTemplate]:
     """Validate experiment data and return appropriate schema object."""
-    
-    if 'execution_id' in data:
+    if "execution_id" in data:
         return ExperimentExecution(**data)
-    elif 'template_id' in data:
+    elif "template_id" in data:
         return ExperimentTemplate(**data)
     else:
         raise ValueError("Data must be either an execution or template")
 
 
 def validate_component_compatibility(composition: ExperimentComposition) -> List[str]:
-    """Check component compatibility and return any warnings."""
-    warnings = []
-    
-    # Check metric -> evolver flow
-    unused_metrics = set(composition.metric.outputs) - set(composition.evolver.inputs)
-    if unused_metrics:
-        warnings.append(f"Metric produces unused outputs: {unused_metrics}")
-    
-    # Check evolver -> model compatibility
-    if 'prune_connections' in composition.evolver.outputs and composition.model.sparsity >= 0.99:
-        warnings.append("Model is already highly sparse, pruning may fail")
-    
-    return warnings
+    """Check composition for potential issues. Returns warnings."""
+    warn_list: List[str] = []
+
+    if not composition.trainers and composition.training:
+        warn_list.append("TrainingSpec provided but no trainer components specified")
+
+    if composition.strategies and not composition.analyzers:
+        warn_list.append("Strategies present without analyzers — strategies may lack input data")
+
+    if composition.evolvers and not composition.strategies:
+        warn_list.append("Evolvers present without strategies — evolvers need plans to execute")
+
+    return warn_list
 
 
 # ============================================================================
-# PRE-BUILT TEMPLATES
+# PRE-BUILT TEMPLATES (v2 format)
 # ============================================================================
 
 STANDARD_TEMPLATES = {
@@ -341,60 +372,40 @@ STANDARD_TEMPLATES = {
         composition=ExperimentComposition(
             composition_id="comp_arch_evo_001",
             name="Standard Architecture Evolution",
-            metric=MetricSchema(
-                component_id="metric_fitness_001",
-                metric_name="fitness",
-                outputs=["accuracy", "efficiency", "fitness_score"],
-                config={"efficiency_weight": 0.3}
-            ),
-            evolver=EvolverSchema(
-                component_id="evolver_genetic_001",
-                evolver_name="genetic",
-                inputs=["fitness_score"],
-                outputs=["mutate_architecture", "crossover"],
-                config={"mutation_rate": 0.1, "population_size": 20}
-            ),
-            model=ModelSchema(
-                component_id="model_sparse_001",
-                model_name="sparse_mlp",
+            model=ModelSpec(
+                factory_name="evolvable",
                 architecture=[784, 512, 256, 10],
-                total_parameters=550000,
                 sparsity=0.95,
-                config={"activation": "relu"}
+                config={"activation": "relu"},
             ),
-            trainer=TrainerSchema(
-                component_id="trainer_standard_001",
-                trainer_name="standard",
-                optimizer="adam",
-                learning_rate=0.001,
+            analyzers=[
+                ComponentSpec(component_type="analyzer", component_name="extrema"),
+            ],
+            strategies=[
+                ComponentSpec(component_type="strategy", component_name="extrema_growth"),
+            ],
+            training=TrainingSpec(
+                epochs=10,
                 batch_size=128,
-                config={"epochs": 10}
+                learning_rate=0.001,
+                optimizer="adam",
             ),
-            nal=NALSchema(
-                component_id="nal_evo_001",
+            hypothesis=HypothesisSpec(
                 hypothesis="Genetic evolution improves network efficiency",
                 statistical_tests=["t_test", "effect_size"],
-                success_criteria={"efficiency_gain": 0.2, "accuracy_maintained": 0.95}
-            )
+                success_criteria={"efficiency_gain": 0.2, "accuracy_maintained": 0.95},
+            ),
         ),
         parameters={
-            "metric.config.efficiency_weight": ParameterSpec(
-                name="Efficiency Weight",
+            "training.learning_rate": ParameterSpec(
+                name="Learning Rate",
                 type="float",
-                default=0.3,
-                description="Weight given to efficiency vs accuracy",
-                constraints={"min": 0.0, "max": 1.0}
+                default=0.001,
+                description="Base learning rate",
+                constraints={"min": 1e-5, "max": 0.1},
             ),
-            "evolver.config.mutation_rate": ParameterSpec(
-                name="Mutation Rate",
-                type="float",
-                default=0.1,
-                description="Probability of mutation",
-                constraints={"min": 0.0, "max": 0.5}
-            )
-        }
+        },
     ),
-
     "smart_growth": ExperimentTemplate(
         template_id="tpl_smart_growth_001",
         name="Smart Growth",
@@ -403,130 +414,75 @@ STANDARD_TEMPLATES = {
         composition=ExperimentComposition(
             composition_id="comp_smart_growth_001",
             name="Smart Growth Experiment",
-            metric=MetricSchema(
-                component_id="metric_extrema_001",
-                metric_name="extrema_analysis",
-                outputs=["extrema_ratio", "dead_neuron_ratio", "growth_score"],
-                requires_gradients=True,
-                config={"threshold": 0.01, "window_size": 100}
-            ),
-            evolver=EvolverSchema(
-                component_id="evolver_growth_001",
-                evolver_name="smart_growth",
-                inputs=["growth_score", "dead_neuron_ratio"],
-                outputs=["add_connections", "add_neurons"],
-                preserves_function=True,
-                config={"growth_rate": 0.05, "min_improvement": 0.01}
-            ),
-            model=ModelSchema(
-                component_id="model_growable_001",
-                model_name="sparse_mlp",
+            model=ModelSpec(
+                factory_name="standard",
                 architecture=[784, 128, 10],
-                total_parameters=100000,
                 sparsity=0.9,
-                supports_growth=True,
-                config={"activation": "relu", "sparse_init": True}
+                config={"activation": "relu", "sparse_init": True},
             ),
-            trainer=TrainerSchema(
-                component_id="trainer_growth_001",
-                trainer_name="standard",
-                optimizer="adam",
-                learning_rate=0.001,
-                batch_size=128,
-                config={"epochs": 50, "patience": 10}
+            analyzers=[
+                ComponentSpec(
+                    component_type="analyzer",
+                    component_name="extrema",
+                    config={"dead_threshold": 0.01},
+                ),
+                ComponentSpec(component_type="analyzer", component_name="information_flow"),
+            ],
+            strategies=[
+                ComponentSpec(
+                    component_type="strategy",
+                    component_name="extrema_growth",
+                    config={"extrema_threshold": 0.3},
+                ),
+            ],
+            training=TrainingSpec(
+                epochs=50, batch_size=128, learning_rate=0.001, optimizer="adam"
             ),
-            nal=NALSchema(
-                component_id="nal_growth_001",
+            hypothesis=HypothesisSpec(
                 hypothesis="Smart growth achieves better accuracy than fixed architecture",
                 statistical_tests=["t_test", "effect_size", "wilcoxon"],
-                success_criteria={"accuracy_improvement": 0.05, "efficiency": 0.8}
-            )
+                success_criteria={"accuracy_improvement": 0.05, "efficiency": 0.8},
+            ),
         ),
         parameters={
-            "evolver.config.growth_rate": ParameterSpec(
-                name="Growth Rate",
-                type="float",
-                default=0.05,
-                description="Fraction of connections to add per growth step",
-                constraints={"min": 0.01, "max": 0.2}
+            "training.epochs": ParameterSpec(
+                name="Epochs",
+                type="int",
+                default=50,
+                description="Number of training epochs",
+                constraints={"min": 1, "max": 500},
             ),
-            "metric.config.threshold": ParameterSpec(
-                name="Extrema Threshold",
-                type="float",
-                default=0.01,
-                description="Threshold for extrema detection",
-                constraints={"min": 0.001, "max": 0.1}
-            )
         },
-        tags=["growth", "sparse", "extrema"]
+        tags=["growth", "sparse", "extrema"],
     ),
-
     "geometric_analysis": ExperimentTemplate(
         template_id="tpl_geometric_001",
         name="Geometric Analysis",
-        description="Fiber bundle / curvature-based network analysis and optimization",
+        description="Curvature-based network analysis and optimization",
         category="geometric",
         composition=ExperimentComposition(
             composition_id="comp_geometric_001",
             name="Geometric Deep Learning Experiment",
-            metric=MetricSchema(
-                component_id="metric_curvature_001",
-                metric_name="geometric_curvature",
-                outputs=["curvature", "geodesic_distance", "manifold_dimension"],
-                requires_gradients=True,
-                config={"n_samples": 1000, "epsilon": 0.01}
-            ),
-            evolver=EvolverSchema(
-                component_id="evolver_geometric_001",
-                evolver_name="curvature_minimizer",
-                inputs=["curvature", "geodesic_distance"],
-                outputs=["smooth_connections", "reduce_curvature"],
-                preserves_function=True,
-                config={"smoothing_rate": 0.1, "target_curvature": 0.5}
-            ),
-            model=ModelSchema(
-                component_id="model_fiber_001",
-                model_name="fiber_bundle_network",
+            model=ModelSpec(
+                factory_name="standard",
                 architecture=[784, 512, 256, 10],
-                total_parameters=650000,
                 sparsity=0.0,
-                supports_growth=False,
-                config={"bundle_dim": 4, "base_manifold": "euclidean"}
             ),
-            trainer=TrainerSchema(
-                component_id="trainer_riemannian_001",
-                trainer_name="riemannian_sgd",
-                optimizer="custom",
-                learning_rate=0.01,
-                batch_size=64,
-                config={"metric_tensor": "fisher_information", "natural_gradient": True}
+            analyzers=[
+                ComponentSpec(component_type="analyzer", component_name="topological"),
+                ComponentSpec(component_type="analyzer", component_name="homological"),
+            ],
+            training=TrainingSpec(
+                epochs=30, batch_size=64, learning_rate=0.01, optimizer="custom"
             ),
-            nal=NALSchema(
-                component_id="nal_geometric_001",
+            hypothesis=HypothesisSpec(
                 hypothesis="Geometric constraints improve generalization over unconstrained training",
-                statistical_tests=["manifold_t_test", "curvature_correlation"],
-                success_criteria={"generalization_gap": 0.05, "curvature_reduction": 0.3}
-            )
-        ),
-        parameters={
-            "evolver.config.smoothing_rate": ParameterSpec(
-                name="Smoothing Rate",
-                type="float",
-                default=0.1,
-                description="Rate at which curvature is smoothed",
-                constraints={"min": 0.01, "max": 0.5}
+                statistical_tests=["t_test"],
+                success_criteria={"generalization_gap": 0.05},
             ),
-            "model.config.bundle_dim": ParameterSpec(
-                name="Bundle Dimension",
-                type="int",
-                default=4,
-                description="Dimension of the fiber bundle",
-                constraints={"min": 2, "max": 16}
-            )
-        },
-        tags=["geometric", "fiber_bundle", "curvature"]
+        ),
+        tags=["geometric", "curvature"],
     ),
-
     "pruning_optimization": ExperimentTemplate(
         template_id="tpl_pruning_001",
         name="Pruning Optimization",
@@ -535,60 +491,96 @@ STANDARD_TEMPLATES = {
         composition=ExperimentComposition(
             composition_id="comp_pruning_001",
             name="Iterative Pruning Experiment",
-            metric=MetricSchema(
-                component_id="metric_sparsity_001",
-                metric_name="sparsity_analysis",
-                outputs=["weight_magnitude", "layer_sensitivity", "pruning_score"],
-                config={"granularity": "weight", "sensitivity_samples": 100}
-            ),
-            evolver=EvolverSchema(
-                component_id="evolver_pruning_001",
-                evolver_name="magnitude_pruning",
-                inputs=["pruning_score", "layer_sensitivity"],
-                outputs=["prune_connections", "rewire"],
-                preserves_function=False,
-                config={"prune_ratio": 0.2, "rewire_fraction": 0.1}
-            ),
-            model=ModelSchema(
-                component_id="model_dense_001",
-                model_name="sparse_mlp",
+            model=ModelSpec(
+                factory_name="standard",
                 architecture=[784, 1024, 512, 256, 10],
-                total_parameters=1200000,
                 sparsity=0.0,
-                supports_growth=True,
-                config={"activation": "relu"}
             ),
-            trainer=TrainerSchema(
-                component_id="trainer_recovery_001",
-                trainer_name="standard",
-                optimizer="adamw",
-                learning_rate=0.0005,
-                batch_size=64,
-                config={"epochs": 20, "weight_decay": 0.01}
+            analyzers=[
+                ComponentSpec(component_type="analyzer", component_name="sensitivity"),
+            ],
+            training=TrainingSpec(
+                epochs=20, batch_size=64, learning_rate=0.0005, optimizer="adamw"
             ),
-            nal=NALSchema(
-                component_id="nal_pruning_001",
+            hypothesis=HypothesisSpec(
                 hypothesis="Iterative pruning achieves 90%+ sparsity with less than 2% accuracy loss",
                 statistical_tests=["t_test", "bootstrap_ci"],
-                success_criteria={"final_sparsity": 0.9, "accuracy_retained": 0.98}
-            )
-        ),
-        parameters={
-            "evolver.config.prune_ratio": ParameterSpec(
-                name="Prune Ratio",
-                type="float",
-                default=0.2,
-                description="Fraction of weights to prune per iteration",
-                constraints={"min": 0.05, "max": 0.5}
+                success_criteria={"final_sparsity": 0.9, "accuracy_retained": 0.98},
             ),
-            "evolver.config.rewire_fraction": ParameterSpec(
-                name="Rewire Fraction",
-                type="float",
-                default=0.1,
-                description="Fraction of pruned connections to rewire",
-                constraints={"min": 0.0, "max": 0.5}
-            )
-        },
-        tags=["pruning", "sparsity", "compression"]
+        ),
+        tags=["pruning", "sparsity", "compression"],
     ),
 }
+
+
+# ============================================================================
+# DEPRECATED v1 ALIASES — will be removed in a future release
+# ============================================================================
+
+class ComponentSchema(BaseModel):
+    """DEPRECATED: use ComponentSpec instead."""
+
+    component_id: str = Field(..., description="Unique component identifier")
+    component_version: str = Field(default="1.0")
+    created_at: datetime = Field(default_factory=datetime.now)
+
+    class Config:
+        extra = "forbid"
+        populate_by_name = True
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        warnings.warn(
+            f"{cls.__name__} is deprecated. Use ComponentSpec / ModelSpec instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+
+class MetricSchema(ComponentSchema):
+    """DEPRECATED: use ComponentSpec(component_type='metric', ...) instead."""
+    component_type: Literal["metric"] = "metric"
+    metric_name: str = ""
+    config: Dict[str, Any] = Field(default_factory=dict)
+    outputs: List[str] = Field(default_factory=list)
+    requires_gradients: bool = False
+
+
+class EvolverSchema(ComponentSchema):
+    """DEPRECATED: use ComponentSpec(component_type='evolver', ...) instead."""
+    component_type: Literal["evolver"] = "evolver"
+    evolver_name: str = ""
+    config: Dict[str, Any] = Field(default_factory=dict)
+    inputs: List[str] = Field(default_factory=list)
+    outputs: List[str] = Field(default_factory=list)
+    preserves_function: bool = True
+
+
+class ModelSchema(ComponentSchema):
+    """DEPRECATED: use ModelSpec instead."""
+    component_type: Literal["model"] = "model"
+    model_name: str = ""
+    architecture: List[int] = Field(default_factory=lambda: [1, 1])
+    total_parameters: int = 0
+    sparsity: float = 0.0
+    config: Dict[str, Any] = Field(default_factory=dict)
+    supports_growth: bool = True
+
+
+class TrainerSchema(ComponentSchema):
+    """DEPRECATED: use TrainingSpec instead."""
+    component_type: Literal["trainer"] = "trainer"
+    trainer_name: str = ""
+    optimizer: str = "adam"
+    learning_rate: float = 0.001
+    batch_size: int = 128
+    config: Dict[str, Any] = Field(default_factory=dict)
+
+
+class NALSchema(ComponentSchema):
+    """DEPRECATED: use HypothesisSpec instead."""
+    component_type: Literal["nal"] = "nal"
+    hypothesis: str = "placeholder hypothesis"
+    statistical_tests: List[str] = Field(default_factory=list)
+    success_criteria: Dict[str, float] = Field(default_factory=dict)
+    config: Dict[str, Any] = Field(default_factory=dict)

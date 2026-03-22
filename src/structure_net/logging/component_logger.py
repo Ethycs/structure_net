@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """
-Component-Based Logger for Structure Net
+Component-Based Logger for Structure Net — v2
 
-Bridges the component schemas with the existing standardized logging system,
+Bridges the v2 composition schemas with the existing StandardizedLogger,
 providing strict validation while maintaining backwards compatibility.
+
+Changes from v1:
+- Works with the new flexible ExperimentComposition (no 5-slot requirement).
+- Logs resolved class names when available.
+- Provides a ``log_composed_iteration`` convenience method for the runner hook.
 """
 
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 from pathlib import Path
 import json
@@ -21,507 +26,340 @@ from .component_schemas import (
     ExperimentExecution,
     ExperimentTemplate,
     IterationData,
+    ComponentSpec,
+    ModelSpec,
+    TrainingSpec,
+    HypothesisSpec,
+    validate_component_compatibility,
+    STANDARD_TEMPLATES,
+    # Deprecated aliases kept for import compat
     MetricSchema,
     EvolverSchema,
     ModelSchema,
     TrainerSchema,
     NALSchema,
-    validate_component_compatibility,
-    STANDARD_TEMPLATES
 )
 
 
 class ComponentLogger:
     """
     Logger that enforces component-based schema validation.
-    
+
     Wraps StandardizedLogger to provide:
     1. Component-based experiment composition
-    2. Strict schema validation for each layer
+    2. Strict schema validation for each slot
     3. Template-based experiment setup
     4. Automatic logging of component interactions
     """
-    
+
     def __init__(self, config: LoggingConfig = None):
-        """Initialize component logger with standard logger backend."""
         self.standard_logger = StandardizedLogger(config or LoggingConfig())
         self.active_executions: Dict[str, ExperimentExecution] = {}
-        
-    def create_experiment_from_template(self, 
-                                      template_name: str,
-                                      execution_id: str,
-                                      **customizations) -> ExperimentExecution:
-        """
-        Create an experiment execution from a template.
-        
-        Args:
-            template_name: Name of template in STANDARD_TEMPLATES
-            execution_id: Unique ID for this execution
-            **customizations: Parameter overrides
-            
-        Returns:
-            ExperimentExecution ready to run
-        """
+
+    # ------------------------------------------------------------------
+    # Experiment creation
+    # ------------------------------------------------------------------
+
+    def create_experiment_from_template(
+        self,
+        template_name: str,
+        execution_id: str,
+        **customizations,
+    ) -> ExperimentExecution:
+        """Create an experiment execution from a registered template."""
         if template_name not in STANDARD_TEMPLATES:
             raise ValueError(f"Unknown template: {template_name}")
-            
+
         template = STANDARD_TEMPLATES[template_name]
         composition = template.instantiate(**customizations)
-        
+
         execution = ExperimentExecution(
             execution_id=execution_id,
-            composition=composition
+            composition=composition,
         )
-        
+
         self.active_executions[execution_id] = execution
-        
-        # Log composition to ChromaDB for searchability
         self._log_composition(execution)
-        
         return execution
-    
-    def create_experiment_from_components(self,
-                                        execution_id: str,
-                                        metric: MetricSchema,
-                                        evolver: EvolverSchema,
-                                        model: ModelSchema,
-                                        trainer: TrainerSchema,
-                                        nal: NALSchema,
-                                        name: str = None) -> ExperimentExecution:
+
+    def create_experiment_from_composition(
+        self,
+        execution_id: str,
+        composition: ExperimentComposition,
+    ) -> ExperimentExecution:
         """
-        Create an experiment execution from individual components.
-        
-        Args:
-            execution_id: Unique ID for this execution
-            metric: Metric component
-            evolver: Evolver component
-            model: Model component
-            trainer: Trainer component
-            nal: NAL component
-            name: Optional name for the composition
-            
-        Returns:
-            ExperimentExecution ready to run
+        Create an experiment execution from a composition spec.
+
+        This is the primary v2 entry point — accepts the flexible
+        ExperimentComposition directly.
         """
-        composition = ExperimentComposition(
-            composition_id=f"comp_{execution_id}",
-            name=name or f"Custom composition for {execution_id}",
-            metric=metric,
-            evolver=evolver,
-            model=model,
-            trainer=trainer,
-            nal=nal
-        )
-        
-        # Validate compatibility
         warnings = validate_component_compatibility(composition)
-        if warnings:
-            for warning in warnings:
-                print(f"⚠️  Component compatibility warning: {warning}")
-        
+        for w in warnings:
+            logger.warning("Component compatibility warning: %s", w)
+
         execution = ExperimentExecution(
             execution_id=execution_id,
-            composition=composition
+            composition=composition,
         )
-        
         self.active_executions[execution_id] = execution
         self._log_composition(execution)
-        
         return execution
-    
-    def log_iteration(self, 
-                     execution_id: str,
-                     iteration: int,
-                     metric_outputs: Dict[str, Any],
-                     trainer_metrics: Dict[str, Any],
-                     accuracy: float,
-                     loss: float,
-                     evolver_actions: List[str] = None,
-                     model_changes: Dict[str, Any] = None,
-                     nal_decisions: Dict[str, Any] = None):
-        """
-        Log one iteration of experiment execution.
-        
-        This is the main logging method called during training.
-        """
+
+    # ------------------------------------------------------------------
+    # Iteration logging
+    # ------------------------------------------------------------------
+
+    def log_iteration(
+        self,
+        execution_id: str,
+        iteration: int,
+        accuracy: Optional[float] = None,
+        loss: Optional[float] = None,
+        metric_outputs: Dict[str, Any] = None,
+        trainer_metrics: Dict[str, Any] = None,
+        evolver_actions: List[str] = None,
+        model_changes: Dict[str, Any] = None,
+    ):
+        """Log one iteration of experiment execution."""
         if execution_id not in self.active_executions:
             raise ValueError(f"No active execution with ID: {execution_id}")
-            
+
         execution = self.active_executions[execution_id]
-        
+
         iteration_data = IterationData(
             iteration=iteration,
-            metric_outputs=metric_outputs,
+            metric_outputs=metric_outputs or {},
             evolver_actions=evolver_actions or [],
             model_changes=model_changes or {},
-            trainer_metrics=trainer_metrics,
-            nal_decisions=nal_decisions or {},
+            trainer_metrics=trainer_metrics or {},
             accuracy=accuracy,
-            loss=loss
+            loss=loss,
         )
-        
         execution.add_iteration(iteration_data)
-        
-        # Also log to standard logger for real-time monitoring
+
+        # Delegate real-time metrics to the standard logger
+        rt_metrics: Dict[str, Any] = {"epoch": iteration}
+        if accuracy is not None:
+            rt_metrics["accuracy"] = accuracy
+        if loss is not None:
+            rt_metrics["loss"] = loss
+        if trainer_metrics:
+            rt_metrics.update(trainer_metrics)
+
         self.standard_logger.log_metrics(
             experiment_id=execution_id,
-            metrics={
-                'accuracy': accuracy,
-                'loss': loss,
-                'epoch': iteration,
-                **trainer_metrics
-            }
+            metrics=rt_metrics,
         )
-    
-    def finalize_experiment(self,
-                          execution_id: str,
-                          final_metrics: Dict[str, Any],
-                          status: str = "completed",
-                          error: str = None):
-        """
-        Finalize an experiment execution and create WandB artifact.
-        
-        Args:
-            execution_id: Execution to finalize
-            final_metrics: Final performance metrics
-            status: Final status (completed/failed/cancelled)
-            error: Error message if failed
-        """
+
+    # ------------------------------------------------------------------
+    # Finalisation
+    # ------------------------------------------------------------------
+
+    def finalize_experiment(
+        self,
+        execution_id: str,
+        final_metrics: Dict[str, Any],
+        status: str = "completed",
+        error: str = None,
+    ) -> str:
+        """Finalize an experiment execution and queue the artifact."""
         if execution_id not in self.active_executions:
             raise ValueError(f"No active execution with ID: {execution_id}")
-            
+
         execution = self.active_executions[execution_id]
         execution.final_metrics = final_metrics
         execution.finalize(status=status, error=error)
-        
-        # Convert to artifact-ready format (v2.0 composition schema)
+
         artifact_data = self._execution_to_artifact_format(execution)
 
-        # Save directly to queue — v2.0 composition format doesn't conform to
-        # ExperimentResult (v1.0) schema, so we bypass log_experiment_result validation
         json_payload = json.dumps(artifact_data, separators=(",", ":"), default=str)
         content_hash = hashlib.sha256(json_payload.encode()).hexdigest()[:16]
         queue_file = self.standard_logger.queue_dir / f"{content_hash}.json"
         queue_file.write_text(json_payload)
-        logger.info(f"Queued composition artifact {content_hash} ({len(json_payload)} bytes)")
+        logger.info("Queued composition artifact %s (%d bytes)", content_hash, len(json_payload))
 
-        # Update ChromaDB with final status
         self.standard_logger.update_experiment_status(
-            execution_id,
-            status,
-            **final_metrics
+            execution_id, status, **final_metrics,
         )
 
-        # Clean up
         del self.active_executions[execution_id]
-
         return content_hash
-    
-    def _log_composition(self, execution: ExperimentExecution):
-        """Log composition details to ChromaDB."""
-        comp = execution.composition
-        
-        # Register in ChromaDB with component details
-        self.standard_logger.register_experiment_start(
-            experiment_id=execution.execution_id,
-            hypothesis_id=comp.nal.hypothesis,
-            architecture=str(comp.model.architecture),
-            metric_type=comp.metric.metric_name,
-            evolver_type=comp.evolver.evolver_name,
-            model_type=comp.model.model_name,
-            trainer_type=comp.trainer.trainer_name,
-            composition_hash=comp.generate_hash()
-        )
-    
-    def _execution_to_artifact_format(self, execution: ExperimentExecution) -> Dict[str, Any]:
-        """Convert execution to format expected by StandardizedLogger."""
-        comp = execution.composition
-        
-        # Build artifact data following the component structure
-        artifact_data = {
-            'experiment_id': execution.execution_id,
-            'timestamp': execution.started_at.isoformat(),
-            'schema_version': '2.0',  # Component-based schema version
-            
-            # Composition details
-            'composition': {
-                'id': comp.composition_id,
-                'name': comp.name,
-                'template': comp.template_name,
-                'hash': comp.generate_hash()
-            },
-            
-            # Component configurations
-            'components': {
-                'metric': comp.metric.model_dump(),
-                'evolver': comp.evolver.model_dump(),
-                'model': comp.model.model_dump(),
-                'trainer': comp.trainer.model_dump(),
-                'nal': comp.nal.model_dump()
-            },
-            
-            # Execution data
-            'execution': {
-                'status': execution.status,
-                'started_at': execution.started_at.isoformat(),
-                'completed_at': execution.completed_at.isoformat() if execution.completed_at else None,
-                'execution_time': execution.execution_time,
-                'error': execution.error
-            },
-            
-            # Results
-            'results': {
-                'final_metrics': execution.final_metrics,
-                'iteration_count': len(execution.iteration_log),
-                'peak_accuracy': max(i.accuracy for i in execution.iteration_log) if execution.iteration_log else 0
-            },
-            
-            # Full iteration history (can be large)
-            'iteration_log': [iter_data.model_dump() for iter_data in execution.iteration_log]
-        }
-        
-        # Add NAL hypothesis result
-        if execution.status == "completed":
-            success_criteria = comp.nal.success_criteria
-            hypothesis_result = all(
-                execution.final_metrics.get(metric, 0) >= threshold
-                for metric, threshold in success_criteria.items()
-            )
-            artifact_data['results']['hypothesis_confirmed'] = hypothesis_result
-        
-        return artifact_data
-    
-    def search_experiments_by_component(self,
-                                      component_type: str,
-                                      component_name: str,
-                                      limit: int = 10) -> List[Dict[str, Any]]:
-        """
-        Search for experiments using specific components.
 
-        Args:
-            component_type: Type of component (metric/evolver/model/trainer/nal)
-            component_name: Name of the specific component
-            limit: Maximum results to return
+    # ------------------------------------------------------------------
+    # Search
+    # ------------------------------------------------------------------
 
-        Returns:
-            List of matching experiments
-        """
+    def search_experiments_by_component(
+        self,
+        component_type: str,
+        component_name: str,
+        limit: int = 10,
+    ) -> List[Dict[str, Any]]:
+        """Search for experiments using specific components."""
         collection = self.standard_logger.experiments_collection
         if collection is None:
             return []
 
         try:
-            # Search ChromaDB using the component type metadata registered by _log_composition
             type_key = f"{component_type}_type"
             query_text = f"{component_type} {component_name}"
 
             results = collection.query(
                 query_texts=[query_text],
                 n_results=limit,
-                where={type_key: component_name} if component_type in ('metric', 'evolver', 'model', 'trainer') else None
+                where={type_key: component_name}
+                if component_type in ("analyzer", "strategy", "evolver", "trainer", "metric")
+                else None,
             )
 
-            if not results['ids'] or not results['ids'][0]:
+            if not results["ids"] or not results["ids"][0]:
                 return []
 
             experiments = []
-            for i, exp_id in enumerate(results['ids'][0]):
-                entry = {'experiment_id': exp_id}
-                if results['metadatas'] and results['metadatas'][0]:
-                    entry.update(results['metadatas'][0][i])
-                if results['documents'] and results['documents'][0]:
-                    entry['description'] = results['documents'][0][i]
+            for i, exp_id in enumerate(results["ids"][0]):
+                entry = {"experiment_id": exp_id}
+                if results["metadatas"] and results["metadatas"][0]:
+                    entry.update(results["metadatas"][0][i])
+                if results["documents"] and results["documents"][0]:
+                    entry["description"] = results["documents"][0][i]
                 experiments.append(entry)
-
             return experiments
         except Exception:
             return []
 
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
 
-# Convenience functions for common use cases
+    def _log_composition(self, execution: ExperimentExecution):
+        """Log composition details to ChromaDB."""
+        comp = execution.composition
 
-def create_evolution_experiment(hypothesis: str,
-                              architecture: List[int],
-                              execution_id: str = None,
-                              **kwargs) -> ComponentLogger:
-    """
-    Quick setup for evolution experiments using the standard template.
-    
-    Args:
-        hypothesis: What you're testing
-        architecture: Initial network architecture
-        execution_id: Unique ID (auto-generated if None)
-        **kwargs: Additional customizations
-        
-    Returns:
-        Configured ComponentLogger with active experiment
-    """
-    logger = ComponentLogger()
-    
-    if execution_id is None:
-        execution_id = f"evo_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    
-    # Customize the template
-    customizations = {
-        'model.architecture': architecture,
-        'nal.hypothesis': hypothesis,
-        **kwargs
-    }
-    
-    execution = logger.create_experiment_from_template(
-        'architecture_evolution',
-        execution_id,
-        **customizations
-    )
-    
-    return logger, execution
-
-
-def create_custom_experiment(metric_name: str,
-                           evolver_name: str,
-                           model_name: str,
-                           trainer_name: str,
-                           hypothesis: str,
-                           architecture: List[int],
-                           execution_id: str = None) -> ComponentLogger:
-    """
-    Create a fully custom experiment from component names.
-    
-    This is a simplified interface that creates components with default configs.
-    """
-    logger = ComponentLogger()
-    
-    if execution_id is None:
-        execution_id = f"custom_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    
-    # Create components with sensible defaults
-    metric = MetricSchema(
-        component_id=f"metric_{execution_id}",
-        metric_name=metric_name,
-        outputs=["score"],  # Generic output
-        config={}
-    )
-    
-    evolver = EvolverSchema(
-        component_id=f"evolver_{execution_id}",
-        evolver_name=evolver_name,
-        inputs=["score"],
-        outputs=["modify"],
-        config={}
-    )
-    
-    model = ModelSchema(
-        component_id=f"model_{execution_id}",
-        model_name=model_name,
-        architecture=architecture,
-        total_parameters=sum(architecture[i] * architecture[i+1] for i in range(len(architecture)-1)),
-        sparsity=0.0,
-        config={}
-    )
-    
-    trainer = TrainerSchema(
-        component_id=f"trainer_{execution_id}",
-        trainer_name=trainer_name,
-        optimizer="adam",
-        learning_rate=0.001,
-        batch_size=128,
-        config={}
-    )
-    
-    nal = NALSchema(
-        component_id=f"nal_{execution_id}",
-        hypothesis=hypothesis,
-        success_criteria={"accuracy": 0.9},
-        config={}
-    )
-    
-    execution = logger.create_experiment_from_components(
-        execution_id=execution_id,
-        metric=metric,
-        evolver=evolver,
-        model=model,
-        trainer=trainer,
-        nal=nal
-    )
-
-    return logger, execution
-
-
-def compare_compositions(comp_a: ExperimentComposition,
-                        comp_b: ExperimentComposition) -> Dict[str, Any]:
-    """
-    Compare two experiment compositions side-by-side.
-
-    Returns a diff showing which components differ and how, useful for
-    understanding what changed between experiment runs.
-
-    Args:
-        comp_a: First composition
-        comp_b: Second composition
-
-    Returns:
-        Dict with per-component diffs and a summary
-    """
-    diff = {
-        'same_hash': comp_a.generate_hash() == comp_b.generate_hash(),
-        'components': {},
-        'summary': [],
-    }
-
-    component_pairs = [
-        ('metric', comp_a.metric, comp_b.metric, 'metric_name'),
-        ('evolver', comp_a.evolver, comp_b.evolver, 'evolver_name'),
-        ('model', comp_a.model, comp_b.model, 'model_name'),
-        ('trainer', comp_a.trainer, comp_b.trainer, 'trainer_name'),
-        ('nal', comp_a.nal, comp_b.nal, 'hypothesis'),
-    ]
-
-    for comp_type, a, b, name_field in component_pairs:
-        a_dict = a.model_dump(exclude={'component_id', 'created_at', 'component_version'})
-        b_dict = b.model_dump(exclude={'component_id', 'created_at', 'component_version'})
-
-        changed_fields = {}
-        for key in set(a_dict.keys()) | set(b_dict.keys()):
-            val_a = a_dict.get(key)
-            val_b = b_dict.get(key)
-            if val_a != val_b:
-                changed_fields[key] = {'a': val_a, 'b': val_b}
-
-        component_diff = {
-            'identical': len(changed_fields) == 0,
-            'name_a': getattr(a, name_field),
-            'name_b': getattr(b, name_field),
-            'changed_fields': changed_fields,
+        metadata: Dict[str, Any] = {
+            "composition_hash": comp.generate_hash(),
+            "model_factory": comp.model.factory_name,
+            "architecture": str(comp.model.architecture),
         }
-        diff['components'][comp_type] = component_diff
 
-        if changed_fields:
-            diff['summary'].append(
-                f"{comp_type}: {len(changed_fields)} field(s) differ "
-                f"({', '.join(changed_fields.keys())})"
+        # Record first component name of each type for easy filtering
+        for field_name, meta_key in [
+            ("analyzers", "analyzer_type"),
+            ("strategies", "strategy_type"),
+            ("evolvers", "evolver_type"),
+            ("trainers", "trainer_type"),
+            ("metrics", "metric_type"),
+        ]:
+            specs = getattr(comp, field_name)
+            if specs:
+                metadata[meta_key] = specs[0].component_name
+
+        if comp.hypothesis:
+            metadata["hypothesis"] = comp.hypothesis.hypothesis
+
+        self.standard_logger.register_experiment_start(
+            experiment_id=execution.execution_id,
+            hypothesis_id=comp.hypothesis.hypothesis if comp.hypothesis else "",
+            **metadata,
+        )
+
+    def _execution_to_artifact_format(self, execution: ExperimentExecution) -> Dict[str, Any]:
+        """Convert execution to StandardizedLogger-compatible artifact."""
+        comp = execution.composition
+
+        # Component summary
+        components: Dict[str, Any] = {
+            "model": comp.model.model_dump(),
+        }
+        for field_name in ("analyzers", "strategies", "evolvers", "trainers", "metrics", "schedulers"):
+            specs = getattr(comp, field_name)
+            if specs:
+                components[field_name] = [s.model_dump() for s in specs]
+
+        artifact_data = {
+            "experiment_id": execution.execution_id,
+            "timestamp": execution.started_at.isoformat(),
+            "schema_version": "2.0",
+            "composition": {
+                "id": comp.composition_id,
+                "name": comp.name,
+                "template": comp.template_name,
+                "hash": comp.generate_hash(),
+            },
+            "components": components,
+            "execution": {
+                "status": execution.status,
+                "started_at": execution.started_at.isoformat(),
+                "completed_at": execution.completed_at.isoformat() if execution.completed_at else None,
+                "execution_time": execution.execution_time,
+                "error": execution.error,
+            },
+            "results": {
+                "final_metrics": execution.final_metrics,
+                "iteration_count": len(execution.iteration_log),
+                "peak_accuracy": max(
+                    (i.accuracy for i in execution.iteration_log if i.accuracy is not None),
+                    default=0,
+                ),
+            },
+            "iteration_log": [d.model_dump() for d in execution.iteration_log],
+        }
+
+        # Hypothesis result
+        if execution.status == "completed" and comp.hypothesis:
+            criteria = comp.hypothesis.success_criteria
+            confirmed = all(
+                execution.final_metrics.get(metric, 0) >= threshold
+                for metric, threshold in criteria.items()
             )
+            artifact_data["results"]["hypothesis_confirmed"] = confirmed
 
-    changed_count = sum(1 for c in diff['components'].values() if not c['identical'])
-    diff['changed_component_count'] = changed_count
-    diff['total_components'] = 5
+        return artifact_data
+
+
+# ============================================================================
+# Convenience functions
+# ============================================================================
+
+def compare_compositions(
+    comp_a: ExperimentComposition,
+    comp_b: ExperimentComposition,
+) -> Dict[str, Any]:
+    """Compare two experiment compositions side-by-side."""
+    diff: Dict[str, Any] = {
+        "same_hash": comp_a.generate_hash() == comp_b.generate_hash(),
+        "model_diff": {},
+        "component_diffs": {},
+        "summary": [],
+    }
+
+    # Model diff
+    a_model = comp_a.model.model_dump()
+    b_model = comp_b.model.model_dump()
+    model_changes = {k: {"a": a_model.get(k), "b": b_model.get(k)} for k in set(a_model) | set(b_model) if a_model.get(k) != b_model.get(k)}
+    diff["model_diff"] = model_changes
+    if model_changes:
+        diff["summary"].append(f"model: {len(model_changes)} field(s) differ")
+
+    # Per-category diffs
+    for field_name in ("analyzers", "strategies", "evolvers", "trainers", "metrics", "schedulers"):
+        a_names = sorted(s.component_name for s in getattr(comp_a, field_name))
+        b_names = sorted(s.component_name for s in getattr(comp_b, field_name))
+        if a_names != b_names:
+            diff["component_diffs"][field_name] = {"a": a_names, "b": b_names}
+            diff["summary"].append(f"{field_name}: {a_names} vs {b_names}")
 
     return diff
 
 
 def list_templates() -> Dict[str, Dict[str, str]]:
-    """
-    List all available experiment templates with their descriptions.
-
-    Returns:
-        Dict mapping template name to {name, description, category, tags}
-    """
+    """List all available experiment templates."""
     result = {}
     for key, template in STANDARD_TEMPLATES.items():
         result[key] = {
-            'name': template.name,
-            'description': template.description,
-            'category': template.category,
-            'tags': template.tags,
-            'parameters': list(template.parameters.keys()),
+            "name": template.name,
+            "description": template.description,
+            "category": template.category,
+            "tags": template.tags,
+            "parameters": list(template.parameters.keys()),
         }
     return result

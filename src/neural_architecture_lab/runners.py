@@ -296,6 +296,182 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
         )
 
 
+# ---------------------------------------------------------------------------
+# Composition-based experiment runner
+# ---------------------------------------------------------------------------
+
+def run_composed_experiment(
+    experiment: Experiment,
+    composition: 'ExperimentComposition',
+    device_id: int = 0,
+) -> ExperimentResult:
+    """
+    Run an experiment defined by a composition spec.
+
+    The composition is resolved via the global CompositionRegistry to produce
+    real model/component instances.  The training loop mirrors
+    ``run_structure_net_experiment`` but sources everything from the resolved
+    composition rather than a raw params dict.
+
+    This function can be pickled and run in separate processes.
+    """
+    from structure_net.core.component_registry import get_global_registry
+    from structure_net.core.composition_resolver import CompositionResolver
+    from structure_net.logging.component_schemas import ExperimentComposition  # noqa: F811
+
+    # Device setup
+    if torch.cuda.is_available() and device_id >= 0:
+        torch.cuda.set_device(device_id)
+        device = f'cuda:{device_id}'
+    else:
+        device = 'cpu'
+
+    # Seed
+    if experiment.seed is not None:
+        torch.manual_seed(experiment.seed)
+        np.random.seed(experiment.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(experiment.seed)
+
+    start_time = time.time()
+
+    try:
+        # Resolve composition -> live objects
+        resolver = CompositionResolver(get_global_registry())
+        resolved = resolver.resolve(composition, device=device)
+
+        model = resolved.model
+        tc = resolved.training_config
+
+        # Fallback training params from experiment.parameters
+        params = experiment.parameters
+        epochs = tc.epochs if tc else params.get('epochs', 50)
+        batch_size = tc.batch_size if tc else params.get('batch_size', 128)
+        lr = tc.learning_rate if tc else params.get('base_lr', 0.001)
+        dataset_name = tc.dataset if tc else params.get('dataset', 'cifar10')
+        optimizer_name = tc.optimizer if tc else params.get('optimizer', 'adam')
+
+        # Data loaders
+        subset_fraction = 0.1 if params.get('quick_test', False) else None
+        dataset_dict = create_dataset(
+            dataset_name=dataset_name,
+            batch_size=batch_size,
+            subset_fraction=subset_fraction,
+            num_workers=2,
+            pin_memory=True,
+            experiment_id=experiment.id,
+        )
+        train_loader = dataset_dict['train_loader']
+        test_loader = dataset_dict['test_loader']
+        dataset_config = dataset_dict['config']
+
+        # Optimizer
+        if optimizer_name == 'adamw':
+            optimizer = optim.AdamW(model.parameters(), lr=lr)
+        elif optimizer_name == 'sgd':
+            optimizer = optim.SGD(model.parameters(), lr=lr)
+        else:
+            optimizer = optim.Adam(model.parameters(), lr=lr)
+
+        criterion = nn.CrossEntropyLoss()
+        arch = composition.model.architecture
+
+        # Training loop
+        training_history = []
+        best_accuracy = 0.0
+
+        for epoch in range(epochs):
+            model.train()
+            train_loss = 0.0
+            correct = 0
+            total = 0
+
+            for inputs, targets in train_loader:
+                inputs, targets = inputs.to(device), targets.to(device)
+                if arch and arch[0] == dataset_config.input_size:
+                    inputs = inputs.view(inputs.size(0), -1)
+                optimizer.zero_grad()
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+                loss.backward()
+                optimizer.step()
+
+                train_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+
+            train_accuracy = correct / total
+
+            # Validation
+            model.eval()
+            test_loss = 0.0
+            correct = 0
+            total = 0
+            with torch.no_grad():
+                for inputs, targets in test_loader:
+                    inputs, targets = inputs.to(device), targets.to(device)
+                    if arch and arch[0] == dataset_config.input_size:
+                        inputs = inputs.view(inputs.size(0), -1)
+                    outputs = model(inputs)
+                    loss = criterion(outputs, targets)
+                    test_loss += loss.item()
+                    _, predicted = outputs.max(1)
+                    total += targets.size(0)
+                    correct += predicted.eq(targets).sum().item()
+
+            test_accuracy = correct / total
+            best_accuracy = max(best_accuracy, test_accuracy)
+
+            training_history.append({
+                'epoch': epoch,
+                'train_loss': train_loss / len(train_loader),
+                'train_accuracy': train_accuracy,
+                'test_loss': test_loss / len(test_loader),
+                'test_accuracy': test_accuracy,
+                'lr': optimizer.param_groups[0]['lr'],
+            })
+
+        # Final stats
+        model.eval()
+        final_stats = get_network_stats(model)
+
+        metrics = {
+            'accuracy': best_accuracy,
+            'final_train_accuracy': training_history[-1]['train_accuracy'] if training_history else 0.0,
+            'convergence_epochs': len(training_history),
+            'final_parameters': final_stats['total_parameters'],
+            'final_layers': final_stats['num_layers'],
+            'sparsity': final_stats.get('sparsity', 0.0),
+            'training_time': time.time() - start_time,
+            'composition_hash': composition.generate_hash(),
+            'resolved_classes': resolved.resolved_classes,
+        }
+
+        return ExperimentResult(
+            experiment_id=experiment.id,
+            hypothesis_id=experiment.hypothesis_id,
+            metrics=metrics,
+            primary_metric=best_accuracy,
+            model_architecture=arch,
+            model_parameters=final_stats['total_parameters'],
+            training_time=time.time() - start_time,
+            training_history=training_history,
+        )
+
+    except Exception as e:
+        return ExperimentResult(
+            experiment_id=experiment.id,
+            hypothesis_id=experiment.hypothesis_id,
+            metrics={},
+            primary_metric=0.0,
+            model_architecture=composition.model.architecture,
+            model_parameters=0,
+            training_time=time.time() - start_time,
+            error=f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}",
+        )
+
+
 class AsyncExperimentRunner(ExperimentRunnerBase):
     """Asynchronous experiment runner using multiprocessing with auto-balancing."""
     

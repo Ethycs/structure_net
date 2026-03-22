@@ -158,7 +158,44 @@ class NeuralArchitectureLab:
         """Register multiple hypotheses at once."""
         for hypothesis in hypotheses:
             self.register_hypothesis(hypothesis)
-    
+
+    def register_composed_hypothesis(
+        self,
+        hypothesis: Hypothesis,
+        composition: 'ExperimentComposition',
+    ) -> str:
+        """
+        Register a hypothesis backed by a composition.
+
+        The composition defines which components make up the experiment.
+        When experiments are later generated via ``generate_experiments``,
+        the ``parameter_space`` on the hypothesis still drives variation,
+        but the composition is stored so ``run_composed_experiment`` can
+        consume it.
+
+        Args:
+            hypothesis: The hypothesis to register.
+            composition: The experiment composition spec.
+
+        Returns:
+            Hypothesis ID.
+        """
+        hyp_id = self.register_hypothesis(hypothesis)
+
+        # Stash composition on the hypothesis for later retrieval
+        if not hasattr(self, '_compositions'):
+            self._compositions: Dict[str, Any] = {}
+        self._compositions[hyp_id] = composition
+
+        if self.config.verbose:
+            print(f"   Composition: {composition.name} ({composition.generate_hash()[:8]})")
+
+        return hyp_id
+
+    def get_composition(self, hypothesis_id: str):
+        """Retrieve the composition associated with a hypothesis, if any."""
+        return getattr(self, '_compositions', {}).get(hypothesis_id)
+
     def generate_experiments(self, hypothesis: Hypothesis) -> List[Experiment]:
         """
         Generate experiments to test a hypothesis.
