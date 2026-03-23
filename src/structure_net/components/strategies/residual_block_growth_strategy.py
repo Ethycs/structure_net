@@ -49,6 +49,7 @@ class ResidualBlockGrowthStrategy(BaseStrategy):
         if network_depth >= 4:
             position = network_depth // 2
             plan = EvolutionPlan({
+                "type": "insert_layer",
                 "action_type": ActionType.ADD_RESIDUAL_BLOCK,
                 "position": position,
                 "layer_count": self.num_layers,

@@ -49,14 +49,16 @@ class MetricsOrchestrator(BaseOrchestrator):
         report = AnalysisReport()
         self.log(logging.INFO, f"Starting metrics collection cycle with {len(self.metrics)} components.")
 
+        model = context.network  # EvolutionContext.network -> context['model']
         for metric in self.metrics:
             try:
                 if all(req in context for req in metric.contract.required_inputs):
-                    metric_data = metric.analyze(context.network, context)
+                    metric_data = metric.analyze(model, context)
                     report.add_metric_data(metric.name, metric_data)
                     self.log(logging.DEBUG, f"Successfully ran metric: {metric.name}")
                 else:
-                    self.log(logging.WARNING, f"Skipping metric {metric.name} due to missing inputs.")
+                    missing = set(metric.contract.required_inputs) - set(context.keys())
+                    self.log(logging.WARNING, f"Skipping metric {metric.name}, missing: {missing}")
             except Exception as e:
                 self.log(logging.ERROR, f"Metric {metric.name} failed: {e}")
 

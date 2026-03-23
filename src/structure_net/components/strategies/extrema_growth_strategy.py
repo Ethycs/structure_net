@@ -67,9 +67,11 @@ class ExtremaGrowthStrategy(BaseStrategy):
         size = max(32, min(256, architecture[position])) if architecture else 64
         
         plan = EvolutionPlan({
+            "type": "insert_layer",
             "action_type": ActionType.ADD_LAYER,
             "position": position,
             "size": size,
+            "width": size,
             "reason": f"High extrema ratio: {extrema_ratio:.2f}",
         })
         plan.priority = 0.8
@@ -80,6 +82,7 @@ class ExtremaGrowthStrategy(BaseStrategy):
     def _create_add_patches_plan(self, total_dead: int, total_saturated: int) -> EvolutionPlan:
         """Creates a plan to add patches to the network."""
         plan = EvolutionPlan({
+            "type": "optimal_growth",
             "action_type": ActionType.ADD_PATCHES,
             "size": self.patch_size,
             "reason": f"Dead neurons: {total_dead}, Saturated: {total_saturated}",

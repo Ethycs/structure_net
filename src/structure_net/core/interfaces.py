@@ -16,6 +16,10 @@ class ActionType(Enum):
     PRUNE = "prune"
     ADAPT_LR = "adapt_lr"
     NO_ACTION = "no_action"
+    ADD_LAYER = "add_layer"
+    ADD_PATCHES = "add_patches"
+    ADD_RESIDUAL_BLOCK = "add_residual_block"
+    ADD_SKIP_CONNECTION = "add_skip_connection"
 
 import torch
 import torch.nn as nn
@@ -134,6 +138,19 @@ class EvolutionContext(dict):
     def step(self, value: int):
         self._metadata['step'] = value
     
+    @property
+    def network(self):
+        """Alias for context['model'] — used by orchestrators and analyzers."""
+        return self.get('model')
+
+    @property
+    def device(self) -> str:
+        return self._metadata.get('device', self.get('device', 'cpu'))
+
+    @device.setter
+    def device(self, value: str):
+        self._metadata['device'] = value
+
     def get_metadata(self) -> Dict[str, Any]:
         return self._metadata.copy()
 

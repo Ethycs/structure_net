@@ -65,9 +65,11 @@ class InformationFlowGrowthStrategy(BaseStrategy):
         size = int(base_size * size_multiplier)
 
         plan = EvolutionPlan({
+            "type": "insert_layer",
             "action_type": ActionType.ADD_LAYER,
             "position": position,
             "size": size,
+            "width": size,
             "reason": f"Information bottleneck at position {position} with severity {bottleneck.get('severity', 0):.3f}",
         })
         plan.priority = 0.9
@@ -78,6 +80,7 @@ class InformationFlowGrowthStrategy(BaseStrategy):
     def _create_add_skip_connection_plan(self, efficiency: float) -> EvolutionPlan:
         """Creates a plan to add skip connections."""
         plan = EvolutionPlan({
+            "type": "optimal_growth",
             "action_type": ActionType.ADD_SKIP_CONNECTION,
             "reason": f"Low information efficiency: {efficiency:.3f}",
         })

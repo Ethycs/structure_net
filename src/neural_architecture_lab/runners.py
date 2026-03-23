@@ -342,13 +342,16 @@ def run_composed_experiment(
 
     The composition is resolved via the global CompositionRegistry to produce
     real model/component instances.  The training loop mirrors
-    ``run_structure_net_experiment`` but sources everything from the resolved
-    composition rather than a raw params dict.
+    ``run_structure_net_experiment`` but wires the resolved analyzers,
+    strategies, and evolvers into the epoch loop so components actually execute.
 
     This function can be pickled and run in separate processes.
     """
     from structure_net.core.component_registry import get_global_registry
     from structure_net.core.composition_resolver import CompositionResolver
+    from structure_net.core.interfaces import EvolutionContext, AnalysisReport
+    from structure_net.components.orchestrators.evolution_orchestrator import EvolutionOrchestrator
+    from structure_net.components.orchestrators.metrics_orchestrator import MetricsOrchestrator
     from structure_net.logging.component_schemas import ExperimentComposition  # noqa: F811
 
     # Device setup
@@ -384,6 +387,7 @@ def run_composed_experiment(
         optimizer_name = tc.optimizer if tc else params.get('optimizer', 'adam')
         quick_test = (tc.quick_test if tc else params.get('quick_test', False))
         save_model = (tc.save_model if tc else params.get('save_model', False))
+        evolution_interval = params.get('evolution_interval', 10)
 
         # Data loaders
         subset_fraction = 0.1 if quick_test else None
@@ -410,9 +414,32 @@ def run_composed_experiment(
         criterion = nn.CrossEntropyLoss()
         arch = composition.model.architecture
 
+        # -----------------------------------------------------------------
+        # Wire resolved components into orchestrators
+        # -----------------------------------------------------------------
+        evolution_orchestrator = None
+        metrics_orchestrator = None
+        has_components = (resolved.analyzers or resolved.strategies or resolved.evolvers)
+
+        if has_components:
+            if resolved.analyzers or resolved.strategies or resolved.evolvers:
+                evolution_orchestrator = EvolutionOrchestrator(
+                    analyzers=resolved.analyzers,
+                    strategies=resolved.strategies,
+                    evolvers=resolved.evolvers,
+                )
+            if resolved.metrics:
+                metrics_orchestrator = MetricsOrchestrator(metrics=resolved.metrics)
+
+            # Feed seed architecture to evolvers that track it
+            for evolver in resolved.evolvers:
+                if hasattr(evolver, 'current_architecture') and arch:
+                    evolver.current_architecture = list(arch)
+
         # Training loop
         training_history = []
         best_accuracy = 0.0
+        growth_events = 0
 
         for epoch in range(epochs):
             model.train()
@@ -457,6 +484,63 @@ def run_composed_experiment(
             test_accuracy = correct / total
             best_accuracy = max(best_accuracy, test_accuracy)
 
+            # -----------------------------------------------------------
+            # Component evolution cycle
+            # -----------------------------------------------------------
+            if evolution_orchestrator and epoch > 0 and epoch % evolution_interval == 0:
+                try:
+                    # Build EvolutionContext with all available training state
+                    evo_context = EvolutionContext({
+                        'model': model,
+                        'data_loader': test_loader,
+                        'device': device,
+                        'optimizer': optimizer,
+                        'loss': test_loss / max(len(test_loader), 1),
+                        'accuracy': test_accuracy,
+                        'train_accuracy': train_accuracy,
+                        'training_history': training_history,
+                        'best_accuracy': best_accuracy,
+                        'num_batches': 10,
+                    })
+                    evo_context.epoch = epoch
+                    evo_context.device = device
+
+                    # Collect metrics first (populates AnalysisReport)
+                    report = AnalysisReport()
+                    if metrics_orchestrator:
+                        report = metrics_orchestrator.run_cycle(evo_context)
+
+                    # Feed performance history to evolvers
+                    for evolver in resolved.evolvers:
+                        if hasattr(evolver, 'add_performance_result'):
+                            evolver.add_performance_result(test_accuracy)
+
+                    # Run the full analyzer → strategy → evolver pipeline
+                    evo_context = evolution_orchestrator.run_cycle(evo_context, report)
+
+                    # Check if model was modified
+                    if evo_context.get('model_modified'):
+                        result_info = evo_context.get('evolution_result', {})
+                        old_params = sum(p.numel() for p in model.parameters())
+
+                        # Model may have been modified in-place by evolver
+                        model = evo_context.get('model', model)
+                        model = model.to(device)
+                        new_params = sum(p.numel() for p in model.parameters())
+
+                        if new_params != old_params:
+                            growth_events += 1
+                            # Recreate optimizer for new parameters
+                            current_lr = optimizer.param_groups[0]['lr']
+                            OptimizerClass = type(optimizer)
+                            optimizer = OptimizerClass(model.parameters(), lr=current_lr)
+                            print(f"Evolution event {growth_events}: "
+                                  f"{old_params} -> {new_params} params "
+                                  f"(epoch {epoch})")
+
+                except Exception as e:
+                    print(f"Evolution cycle failed at epoch {epoch}: {e}")
+
             training_history.append({
                 'epoch': epoch,
                 'train_loss': train_loss / len(train_loader),
@@ -474,6 +558,7 @@ def run_composed_experiment(
             'accuracy': best_accuracy,
             'final_train_accuracy': training_history[-1]['train_accuracy'] if training_history else 0.0,
             'convergence_epochs': len(training_history),
+            'growth_events': growth_events,
             'final_parameters': final_stats['total_parameters'],
             'final_layers': final_stats['num_layers'],
             'sparsity': final_stats.get('sparsity', 0.0),
