@@ -46,8 +46,8 @@ def simple_table(data, headers):
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data_factory.search import ExperimentSearcher
-from src.data_factory.search.chroma_client import ChromaConfig
+from src.structure_net.data_factory.search import ExperimentSearcher
+from src.structure_net.data_factory.search.chroma_client import ChromaConfig
 
 
 class NALStatusMonitor:

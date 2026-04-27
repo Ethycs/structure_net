@@ -44,7 +44,7 @@ from structure_net.evolution.metrics import CompleteMetricsSystem
 from structure_net.evolution.residual_blocks import create_residual_network
 from structure_net.profiling.factory import create_comprehensive_profiler
 from structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
-from data_factory import create_dataset, get_dataset_config
+from src.structure_net.data_factory import create_dataset, get_dataset_config
 
 
 class GPUMemoryManager:

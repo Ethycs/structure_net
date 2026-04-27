@@ -35,7 +35,7 @@ from structure_net.profiling.factory import create_comprehensive_profiler
 from structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
 
 # Import data factory components
-from data_factory import create_dataset
+from src.structure_net.data_factory import create_dataset
 
 
 def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> ExperimentResult:

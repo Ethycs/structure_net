@@ -6,7 +6,7 @@ from typing import Dict, Any, Tuple
 
 from src.neural_architecture_lab.core import Experiment, ExperimentResult
 from src.structure_net.core.network_factory import create_standard_network
-from src.data_factory import create_dataset
+from src.structure_net.data_factory import create_dataset
 from src.structure_net.core.io_operations import load_model_seed
 
 def evaluate_seed_task(experiment: Experiment, device_id: int) -> ExperimentResult:

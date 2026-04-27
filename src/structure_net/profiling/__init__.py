@@ -23,10 +23,20 @@ from .core.decorators import (
     profile_metrics, profile_training, profile_network
 )
 from .core.context_manager import (
-    ProfilerContext, BatchProfilerContext, 
+    ProfilerContext, BatchProfilerContext,
     profile_operation, profile_batch_operation,
     profile_function_call, profile_if_slow, profile_memory_intensive
 )
+
+# Kernel profiling system
+from .kernel_profiler import KernelProfiler, ProfileResult
+from .component_profiler import ComponentProfiler, ComponentMetrics
+
+# Monitoring system
+from .monitors.performance_monitor import PerformanceMonitor
+from .monitors.health_monitor import HealthMonitor
+from .monitors.resource_monitor import ResourceMonitor
+from .monitors.alert_system import AlertSystem
 
 # Component-specific profilers (import safely)
 try:
@@ -57,7 +67,19 @@ __all__ = [
     'ProfilerLevel',
     'ProfilerContext',
     'BatchProfilerContext',
-    
+
+    # Kernel profiling system
+    'KernelProfiler',
+    'ProfileResult',
+    'ComponentProfiler',
+    'ComponentMetrics',
+
+    # Monitoring system
+    'PerformanceMonitor',
+    'HealthMonitor',
+    'ResourceMonitor',
+    'AlertSystem',
+
     # Decorators
     'profile_function',
     'profile_method', 

@@ -10,7 +10,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from data_factory import (
+from src.structure_net.data_factory import (
     ExperimentSearcher,
     search_similar_experiments,
     search_by_architecture,

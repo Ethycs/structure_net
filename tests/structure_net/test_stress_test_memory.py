@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch, MagicMock
 import psutil
 import asyncio
 
-from experiments.ultimate_stress_test_v2 import (
+from experiments.neural_architecture_lab.ultimate_stress_test_v2 import (
     StressTestConfig,
     TournamentExecutor,
     evaluate_competitor_task,

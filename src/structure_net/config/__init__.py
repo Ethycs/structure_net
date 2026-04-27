@@ -1,20 +1,14 @@
 """
 Configuration module for Structure Net.
 
-This module now redirects to the top-level config directory.
-Import this before torch to ensure proper environment setup.
+Holds environment setup, the unified configuration system, and migration
+helpers. `setup_cuda_devices` must be importable before torch is imported
+elsewhere, so keep it at the top of this module.
 """
 
-# Import environment setup first (keep this local for torch setup)
 from .environment import setup_cuda_devices
 
-# Import everything from top-level config
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
-from config import (
-    # Unified configuration
+from .unified_config import (
     UnifiedConfig,
     StorageConfig,
     WandBConfig,
@@ -26,21 +20,20 @@ from config import (
     reset_config,
     create_lab_config,
     create_logging_config,
-    # Migration helpers
+)
+
+from .migration import (
     ConfigMigrationHelper,
     LabConfigShim,
     LoggingConfigShim,
     auto_migrate_config,
-    migrate_config_files
+    migrate_config_files,
 )
 
 __all__ = [
-    # Environment setup
     'setup_cuda_devices',
-    
-    # Unified configuration
     'UnifiedConfig',
-    'StorageConfig', 
+    'StorageConfig',
     'WandBConfig',
     'LoggingConfig',
     'ComputeConfig',
@@ -48,15 +41,11 @@ __all__ = [
     'get_config',
     'set_config',
     'reset_config',
-    
-    # Backward compatibility
     'create_lab_config',
     'create_logging_config',
-    
-    # Migration helpers
     'ConfigMigrationHelper',
     'LabConfigShim',
     'LoggingConfigShim',
     'auto_migrate_config',
-    'migrate_config_files'
+    'migrate_config_files',
 ]

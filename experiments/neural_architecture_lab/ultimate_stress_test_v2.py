@@ -33,7 +33,7 @@ from src.neural_architecture_lab import NeuralArchitectureLab, LabConfig, Hypoth
 from src.neural_architecture_lab.core import LabConfigFactory
 
 # Component-based Architecture Imports
-from src.structure_net.components.orchestrators.tournament_orchestrator import TournamentOrchestrator
+from src.neural_architecture_lab.orchestrators.tournament_orchestrator import TournamentOrchestrator
 from src.structure_net.core.interfaces import ComponentVersion, Maturity
 
 

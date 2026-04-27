@@ -9,6 +9,9 @@ dependencies = ["jax[cuda12]>=0.6.0,<0.7"]
 build-backend = "hatchling.build"
 requires = ["hatchling"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/structure_net", "src/neural_architecture_lab"]
+
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["linux-64"]

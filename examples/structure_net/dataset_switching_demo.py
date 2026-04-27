@@ -7,15 +7,15 @@ in Structure Net experiments.
 """
 
 import torch
-from data_factory import (
+from src.structure_net.data_factory import (
     create_dataset, 
     get_dataset_config, 
     list_available_datasets,
     get_dataset_metadata
 )
-from neural_architecture_lab.hypothesis_library import SeedSearchHypotheses
+from src.neural_architecture_lab.hypothesis_library import SeedSearchHypotheses
 from structure_net.core.network_factory import create_standard_network
-from seed_search.architecture_generator import ArchitectureGenerator
+from src.neural_architecture_lab.seed_search.architecture_generator import ArchitectureGenerator
 
 
 def demonstrate_dataset_configs():

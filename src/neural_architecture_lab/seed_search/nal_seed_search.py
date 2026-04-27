@@ -16,7 +16,7 @@ warnings.warn(
     stacklevel=2
 )
 
-from experiments.seed_search_experiment import main
+from experiments.neural_architecture_lab.seed_search_experiment import main
 
 if __name__ == "__main__":
     print("--- DEPRECATED SCRIPT ---")

@@ -9,7 +9,7 @@ from typing import Union
 from pathlib import Path
 
 from .standardized_logging import LoggingConfig, StandardizedLogger
-from config import UnifiedConfig, get_config, auto_migrate_config
+from src.structure_net.config import UnifiedConfig, get_config, auto_migrate_config
 
 
 def ensure_logging_config(config: Union[LoggingConfig, UnifiedConfig, dict, None] = None) -> LoggingConfig:

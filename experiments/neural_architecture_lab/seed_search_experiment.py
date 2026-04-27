@@ -17,7 +17,7 @@ from src.neural_architecture_lab import (
     Hypothesis,
     HypothesisCategory,
 )
-from src.seed_search.architecture_generator import ArchitectureGenerator
+from src.neural_architecture_lab.seed_search.architecture_generator import ArchitectureGenerator
 from src.neural_architecture_lab.workers.seed_search_worker import evaluate_seed_task
 
 def get_default_lab_config() -> LabConfig:

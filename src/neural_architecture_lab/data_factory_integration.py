@@ -13,17 +13,17 @@ from pathlib import Path
 import numpy as np
 from datetime import datetime
 
-from data_factory.search import (
+from src.structure_net.data_factory.search import (
     ExperimentSearcher,
     get_chroma_client,
     ChromaConfig
 )
-from data_factory.time_series_storage import (
+from src.structure_net.data_factory.time_series_storage import (
     TimeSeriesStorage,
     TimeSeriesConfig,
     HybridExperimentStorage
 )
-from neural_architecture_lab.core import (
+from src.neural_architecture_lab.core import (
     ExperimentResult,
     Hypothesis,
     HypothesisResult
@@ -387,7 +387,7 @@ def create_memory_efficient_nal(nal_config: 'LabConfig'):
 # Example usage for stress test
 if __name__ == "__main__":
     # Example of how to use in stress test
-    from neural_architecture_lab.core import LabConfig
+    from src.neural_architecture_lab.core import LabConfig
     
     # Configure NAL with minimal memory usage
     nal_config = LabConfig(

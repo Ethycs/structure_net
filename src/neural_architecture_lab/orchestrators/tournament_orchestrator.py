@@ -10,7 +10,7 @@ from src.structure_net.core.interfaces import (
 )
 from src.structure_net.components.strategies.tournament_strategy import TournamentStrategy
 from src.structure_net.components.evolvers.tournament_evolver import TournamentEvolver
-from src.data_factory import get_dataset_config
+from src.structure_net.data_factory import get_dataset_config
 from typing import List, Dict, Any, TYPE_CHECKING
 import logging
 import numpy as np

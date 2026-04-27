@@ -156,7 +156,7 @@ class TestLoggingConfigCompatibility:
     
     def test_standardized_logger_with_unified_config(self):
         """Test that StandardizedLogger accepts UnifiedConfig."""
-        from src.logging import StandardizedLogger, LoggingConfig
+        from src.structure_net.logging import StandardizedLogger, LoggingConfig
         from config import UnifiedConfig
         
         # Test with old LoggingConfig
@@ -201,7 +201,7 @@ class TestDataFactoryCompatibility:
     
     def test_chroma_client_with_unified_config(self):
         """Test that ChromaSearchClient accepts UnifiedConfig."""
-        from src.data_factory.search.chroma_client import ChromaSearchClient, ChromaConfig
+        from src.structure_net.data_factory.search.chroma_client import ChromaSearchClient, ChromaConfig
         from config import UnifiedConfig
         
         # Test with old ChromaConfig
@@ -220,7 +220,7 @@ class TestDataFactoryCompatibility:
     
     def test_timeseries_storage_with_unified_config(self):
         """Test that TimeSeriesStorage accepts UnifiedConfig."""
-        from src.data_factory.time_series_storage import TimeSeriesStorage, TimeSeriesConfig
+        from src.structure_net.data_factory.time_series_storage import TimeSeriesStorage, TimeSeriesConfig
         from config import UnifiedConfig
         
         # Test with old TimeSeriesConfig

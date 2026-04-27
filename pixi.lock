@@ -4988,7 +4988,7 @@ packages:
 - pypi: ./
   name: structure-net
   version: 0.1.0
-  sha256: 53820edc1a695a173c5998c7f8a199e0cc3028c1458c5444af9c632c06249208
+  sha256: 7f6517e977f4b39cc871f71e43e5f29522bae0febaa5b629b8ed1c3c859a8bc7
   requires_dist:
   - jax[cuda12]>=0.6.0,<0.7
   requires_python: '>=3.11'

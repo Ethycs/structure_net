@@ -402,7 +402,7 @@ class UnifiedConfig:
     
     def get_logging_config(self) -> 'LoggingConfig':
         """Get backward-compatible LoggingConfig for StandardizedLogger."""
-        from src.logging.standardized_logging import LoggingConfig as OldLoggingConfig
+        from src.structure_net.logging.standardized_logging import LoggingConfig as OldLoggingConfig
         
         return OldLoggingConfig(
             project_name=self.experiment.project_name,
@@ -416,7 +416,7 @@ class UnifiedConfig:
     
     def get_chroma_config(self) -> 'ChromaConfig':
         """Get backward-compatible ChromaConfig for ChromaDB client."""
-        from src.data_factory.search.chroma_client import ChromaConfig
+        from src.structure_net.data_factory.search.chroma_client import ChromaConfig
         
         return ChromaConfig(
             persist_directory=str(self.storage.chromadb_path),
@@ -425,7 +425,7 @@ class UnifiedConfig:
     
     def get_timeseries_config(self) -> 'TimeSeriesConfig':
         """Get backward-compatible TimeSeriesConfig."""
-        from src.data_factory.time_series_storage import TimeSeriesConfig
+        from src.structure_net.data_factory.time_series_storage import TimeSeriesConfig
         
         return TimeSeriesConfig(
             storage_dir=str(self.storage.timeseries_path),

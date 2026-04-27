@@ -13,7 +13,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import (
+from src.structure_net.config import (
     UnifiedConfig,
     get_config,
     set_config,

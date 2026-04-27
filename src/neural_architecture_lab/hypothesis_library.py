@@ -11,8 +11,8 @@ from .core import Hypothesis, HypothesisCategory
 from structure_net.core.network_factory import create_standard_network
 from structure_net.evolution.components import create_standard_evolution_system
 from structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
-from seed_search.architecture_generator import ArchitectureGenerator
-from data_factory import get_dataset_config, create_dataset
+from src.neural_architecture_lab.seed_search.architecture_generator import ArchitectureGenerator
+from src.structure_net.data_factory import get_dataset_config, create_dataset
 
 def seed_search_experiment(config: Dict[str, Any]) -> tuple[Any, Dict[str, float]]:
     """
