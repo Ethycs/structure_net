@@ -1,6 +1,7 @@
-from src.structure_net.core.base_components import BaseOrchestrator
-from src.structure_net.core.interfaces import (
+from structure_net.core.base_components import BaseOrchestrator
+from structure_net.core.interfaces import (
     EvolutionContext,
+    AnalysisReport,
     ComponentContract,
     ComponentVersion,
     Maturity,
@@ -8,15 +9,15 @@ from src.structure_net.core.interfaces import (
     ResourceLevel,
     EvolutionPlan,
 )
-from src.structure_net.components.strategies.tournament_strategy import TournamentStrategy
-from src.structure_net.components.evolvers.tournament_evolver import TournamentEvolver
-from src.structure_net.data_factory import get_dataset_config
+from structure_net.components.strategies.tournament_strategy import TournamentStrategy
+from structure_net.components.evolvers.tournament_evolver import TournamentEvolver
+from structure_net.data_factory import get_dataset_config
 from typing import List, Dict, Any, TYPE_CHECKING
 import logging
 import numpy as np
 
 if TYPE_CHECKING:
-    from src.neural_architecture_lab import NeuralArchitectureLab, LabConfig, Hypothesis, HypothesisCategory
+    from neural_architecture_lab import NeuralArchitectureLab, LabConfig, Hypothesis, HypothesisCategory
 
 class TournamentOrchestrator(BaseOrchestrator):
     """Orchestrates a tournament-style evolution experiment."""
@@ -42,7 +43,7 @@ class TournamentOrchestrator(BaseOrchestrator):
         )
 
     async def run_tournament(self):
-        """Runs the full evolutionary tournament."""
+        """Run the full evolutionary tournament."""
         self._generate_initial_population()
         
         for generation in range(self.stress_test_config.generations):
@@ -51,26 +52,40 @@ class TournamentOrchestrator(BaseOrchestrator):
             # 1. Create Strategy and Propose Plan
             strategy = TournamentStrategy(self.population)
             context = EvolutionContext(generation=generation)
-            plan = strategy.propose_plan(None, context)
+            plan = strategy.propose_plan(AnalysisReport(), context)
 
             # 2. Create Hypothesis from Plan
             hypothesis = self._create_hypothesis_from_plan(plan, generation)
 
             # 3. Run experiments using NAL
-            from src.neural_architecture_lab import NeuralArchitectureLab
+            from neural_architecture_lab import NeuralArchitectureLab
             lab = NeuralArchitectureLab(self.lab_config)
             lab.register_hypothesis(hypothesis)
             results = await lab.test_hypothesis(hypothesis.id)
 
             # 4. Evolve population
             evolver = TournamentEvolver(self.stress_test_config.tournament_size, self.stress_test_config.mutation_rate)
-            evolution_plan = EvolutionPlan(results=results.experiment_results, population=self.population, generation=generation)
+            evolution_plan = EvolutionPlan(
+                action_type="evaluate_population",
+                results=results.experiment_results,
+                population=self.population,
+                generation=generation,
+            )
             evolution_result = evolver.apply_plan(evolution_plan, None, None, None)
             self.population = evolution_result["new_population"]
             
             self.generation_results.append(self.population)
 
         return self.generation_results
+
+    async def run_cycle(self, context: EvolutionContext | None = None):
+        """Run the tournament as an orchestrator cycle.
+
+        Tournament execution is asynchronous because the NAL runner is
+        asynchronous.  The optional context is accepted for the common
+        orchestrator protocol; tournament state is owned by this instance.
+        """
+        return await self.run_tournament()
 
     def _generate_initial_population(self):
         """Generates the initial population."""
@@ -91,8 +106,8 @@ class TournamentOrchestrator(BaseOrchestrator):
 
     def _create_hypothesis_from_plan(self, plan: EvolutionPlan, generation: int):
         """Creates a NAL Hypothesis from an EvolutionPlan."""
-        from src.neural_architecture_lab import Hypothesis, HypothesisCategory
-        from src.neural_architecture_lab.workers.tournament_worker import evaluate_competitor_task
+        from neural_architecture_lab import Hypothesis, HypothesisCategory
+        from neural_architecture_lab.workers.tournament_worker import evaluate_competitor_task
 
         return Hypothesis(
             id=f"tournament_gen_{generation}",
@@ -104,6 +119,7 @@ class TournamentOrchestrator(BaseOrchestrator):
             parameter_space={'params': plan.get("competitors", [])},
             control_parameters={
                 'dataset': self.stress_test_config.dataset_name,
+                'subset_fraction': self.stress_test_config.subset_fraction,
                 'epochs': self.stress_test_config.epochs_per_generation,
                 'batch_size': self.stress_test_config.batch_size_base,
             },

@@ -11,8 +11,8 @@ from .core import Hypothesis, HypothesisCategory
 from structure_net.core.network_factory import create_standard_network
 from structure_net.evolution.components import create_standard_evolution_system
 from structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
-from src.neural_architecture_lab.seed_search.architecture_generator import ArchitectureGenerator
-from src.structure_net.data_factory import get_dataset_config, create_dataset
+from neural_architecture_lab.seed_search.architecture_generator import ArchitectureGenerator
+from structure_net.data_factory import get_dataset_config, create_dataset
 
 def seed_search_experiment(config: Dict[str, Any]) -> tuple[Any, Dict[str, float]]:
     """
@@ -103,7 +103,7 @@ class ArchitectureHypotheses:
         def test_function(config: Dict[str, Any]):
             # Test implementation would go here
             # This is a placeholder
-            from src.structure_net.core.network_factory import create_standard_network
+            from structure_net.core.network_factory import create_standard_network
             
             if config['architecture_type'] == 'deep':
                 # Deep and narrow
@@ -156,7 +156,7 @@ class ArchitectureHypotheses:
         """Do pyramid-shaped architectures perform better?"""
         
         def test_function(config: Dict[str, Any]):
-            from src.structure_net.core.network_factory import create_standard_network
+            from structure_net.core.network_factory import create_standard_network
             
             input_size = 784
             output_size = 10
@@ -245,7 +245,7 @@ class ArchitectureHypotheses:
         
         def test_function(config: Dict[str, Any]):
             # This would use the residual block functionality
-            from src.structure_net.evolution.residual_blocks import create_residual_network
+            from structure_net.evolution.residual_blocks import create_residual_network
             
             if config['use_skip']:
                 model = create_residual_network(
@@ -253,7 +253,7 @@ class ArchitectureHypotheses:
                     skip_frequency=config['skip_frequency']
                 )
             else:
-                from src.structure_net.core.network_factory import create_standard_network
+                from structure_net.core.network_factory import create_standard_network
                 model = create_standard_network(
                     architecture=config['architecture'],
                     sparsity=0.02
@@ -311,7 +311,7 @@ class GrowthHypotheses:
         dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
-            from src.structure_net.evolution.components import create_standard_evolution_system
+            from structure_net.evolution.components import create_standard_evolution_system
             
             # Use new composable evolution system
             evolution_system = create_standard_evolution_system()
@@ -556,7 +556,7 @@ class TrainingHypotheses:
         dataset_config = get_dataset_config(dataset_name)
         
         def test_function(config: Dict[str, Any]):
-            from src.structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
+            from structure_net.evolution.adaptive_learning_rates.unified_manager import AdaptiveLearningRateManager
             
             lr_manager = AdaptiveLearningRateManager(
                 strategy=config['lr_strategy']

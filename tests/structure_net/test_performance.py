@@ -2,8 +2,8 @@ import torch
 import time
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
-from src.structure_net.core.network_factory import create_standard_network
-from src.structure_net.core.network_analysis import get_network_stats
+from structure_net.core.network_factory import create_standard_network
+from structure_net.core.network_analysis import get_network_stats
 
 def test_performance_benchmark(device):
     net = create_standard_network([784, 256, 128, 10], sparsity=0.01).to(device)

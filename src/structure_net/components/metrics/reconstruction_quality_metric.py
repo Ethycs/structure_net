@@ -11,7 +11,7 @@ import torch.nn as nn
 import logging
 import numpy as np
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -36,7 +36,7 @@ class ReconstructionQualityMetric(BaseMetric):
         """
         super().__init__(name or "ReconstructionQualityMetric")
         self.threshold = threshold
-        self._measurement_schema = {
+        self._schema = {
             "reconstruction_error": float,
             "information_loss": float,
             "fidelity_score": float,

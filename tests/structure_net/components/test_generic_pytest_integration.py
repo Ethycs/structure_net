@@ -10,7 +10,7 @@ import torch
 from typing import Dict, Any, List, Type, Optional
 from dataclasses import dataclass
 
-from src.structure_net.core import (
+from structure_net.core import (
     IComponent, IMetric, IAnalyzer, ILayer, IModel,
     EvolutionContext, AnalysisReport
 )
@@ -20,7 +20,7 @@ from tests.fixtures import (
 )
 
 # Import all metrics for testing
-from src.structure_net.components.metrics import (
+from structure_net.components.metrics import (
     LayerMIMetric, EntropyMetric, InformationFlowMetric,
     RedundancyMetric, AdvancedMIMetric, ChainComplexMetric,
     SparsityMetric, DeadNeuronMetric, GradientMetric
@@ -76,23 +76,32 @@ def generate_test_cases(component_class: Type[IComponent]) -> List[ComponentTest
     
     test_cases = []
     
+    target_factories = {
+        LayerMIMetric: create_test_layer,
+        EntropyMetric: create_test_model,
+        InformationFlowMetric: create_test_model,
+        RedundancyMetric: create_test_model,
+        SparsityMetric: create_test_model,
+        DeadNeuronMetric: create_test_model,
+        GradientMetric: create_test_model,
+    }
+
     # Basic valid case
     basic_case = ComponentTestCase(
         name=f"{component.name}_basic",
         component_class=component_class,
-        target=None,
+        target=target_factories.get(component_class, lambda: None)(),
         context_data={}
     )
     
     # Add required inputs
     for input_name in contract.required_inputs:
         if input_name == 'target':
-            if 'layer' in component.name.lower():
-                basic_case.target = create_test_layer()
-            else:
-                basic_case.target = create_test_model()
+            continue
         else:
-            basic_case.context_data[input_name] = generate_input(input_name)
+            basic_case.context_data[input_name] = generate_input(
+                input_name, basic_case.target
+            )
     
     test_cases.append(basic_case)
     
@@ -111,21 +120,36 @@ def generate_test_cases(component_class: Type[IComponent]) -> List[ComponentTest
     return test_cases
 
 
-def generate_input(input_name: str) -> Any:
+def generate_input(input_name: str, target: Optional[Any] = None) -> Any:
     """Generate appropriate input data for a given input name."""
     generators = {
-        'activations': lambda: create_test_activations(),
+        'activations': lambda: (
+            {
+                'input': create_test_activations(100, 10),
+                'output': create_test_activations(100, 5),
+            }
+            if isinstance(target, IModel) else create_test_activations()
+        ),
         'layer_activations': lambda: {
             'input': create_test_activations(100, 10),
-            'output': create_test_activations(100, 5)
+            'test_layer': create_test_activations(100, 5),
+            'output': create_test_activations(100, 5),
         },
-        'layer_sequence': lambda: ['layer_0', 'layer_1', 'layer_2'],
+        'layer_sequence': lambda: ['input', 'test_layer', 'output'],
         'weight_matrix': lambda: torch.randn(10, 5),
         'X': lambda: torch.randn(100, 10),
         'Y': lambda: torch.randn(100, 5),
         'model': lambda: create_test_model(),
         'report': lambda: AnalysisReport()
     }
+
+    if input_name == 'gradients':
+        if isinstance(target, IModel):
+            return {
+                'input': create_test_gradients((10, 10)),
+                'output': create_test_gradients((5, 10)),
+            }
+        return create_test_gradients((10, 10))
     
     if input_name in generators:
         return generators[input_name]()

@@ -3,14 +3,14 @@
 DEPRECATED: Composable Network Evolution System
 
 This module is deprecated. Please use the new orchestrator components in
-src.structure_net.components.orchestrators instead.
+structure_net.components.orchestrators instead.
 """
 
 import warnings
 
 warnings.warn(
     "The evolution_system module is deprecated. "
-    "Please use src.structure_net.components.orchestrators instead.",
+    "Please use structure_net.components.orchestrators instead.",
     DeprecationWarning,
     stacklevel=2
 )

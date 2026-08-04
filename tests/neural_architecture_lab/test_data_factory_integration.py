@@ -10,18 +10,19 @@ from pathlib import Path
 import json
 import h5py
 
-from src.structure_net.data_factory.search import (
+from structure_net.data_factory.search import (
     ChromaConfig, 
     ChromaDBClient,
     ExperimentEmbedder,
     ExperimentSearcher
 )
-from src.structure_net.data_factory.time_series_storage import (
+from structure_net.data_factory.time_series_storage import (
     TimeSeriesConfig,
     TimeSeriesStorage,
     HybridExperimentStorage
 )
-from src.neural_architecture_lab.data_factory_integration import NALChromaIntegration
+from neural_architecture_lab.data_factory_integration import NALChromaIntegration
+from neural_architecture_lab.core import ExperimentResult
 
 
 @pytest.fixture
@@ -84,7 +85,7 @@ def sample_training_history():
 
 class TestChromaDBClient:
     """Test ChromaDB client functionality."""
-    
+
     def test_client_initialization(self, chroma_config):
         """Test ChromaDB client can be initialized."""
         client = ChromaDBClient(chroma_config)
@@ -94,7 +95,7 @@ class TestChromaDBClient:
     def test_add_and_search_documents(self, chroma_config):
         """Test adding and searching documents in ChromaDB."""
         client = ChromaDBClient(chroma_config)
-        
+
         # Add a document
         client.add_documents(
             ids=["doc1"],
@@ -161,6 +162,11 @@ class TestTimeSeriesStorage:
         storage = TimeSeriesStorage(timeseries_config)
         assert storage.storage_dir.exists()
         assert storage.use_hdf5 is True
+
+    def test_default_path_uses_project_data_root(self):
+        config = TimeSeriesConfig()
+        assert config.storage_dir != "/data/timeseries"
+        assert Path(config.storage_dir).name == "timeseries_db"
     
     def test_store_and_load_training_history(self, timeseries_config, sample_training_history):
         """Test storing and loading training history."""
@@ -199,7 +205,7 @@ class TestTimeSeriesStorage:
         file_path = storage.store_training_history(exp_id, large_history)
         
         # Check compression
-        with h5py.File(file_path, 'r') as f:
+        with h5py.File(file_path.path, 'r') as f:
             # Verify compression is applied
             assert f['history'].compression == 'gzip'
     
@@ -300,7 +306,7 @@ class TestHybridExperimentStorage:
         assert len(search_results) > 0
         
         # 2. Training history in HDF5
-        history_file = storage.timeseries_storage.storage_dir / "hybrid_test_history.h5"
+        history_file = storage.timeseries_storage.storage_dir / "training_hybrid_test.h5"
         assert history_file.exists()
     
     def test_load_complete_experiment(self, chroma_config, timeseries_config):
@@ -338,29 +344,20 @@ class TestNALChromaIntegration:
         """Test converting NAL result format."""
         integration = NALChromaIntegration(chroma_config, timeseries_config)
         
-        # Mock NAL result
-        class MockExperiment:
-            id = "test_exp"
-            type = "test"
-            parameters = {
-                'architecture': [784, 256, 10],
-                'learning_rate': 0.001
-            }
-        
-        class MockResult:
-            experiment = MockExperiment()
-            status = "completed"
-            start_time = None
-            end_time = None
-            duration = 123.45
-            error = None
-            metrics = {'accuracy': 0.95, 'loss': 0.15}
-            model_parameters = 234567
-            training_history = [{'epoch': i} for i in range(5)]
+        result = ExperimentResult(
+            experiment_id="test_exp",
+            hypothesis_id="test_hypothesis",
+            metrics={'accuracy': 0.95, 'loss': 0.15},
+            primary_metric=0.95,
+            model_architecture=[784, 256, 10],
+            model_parameters=234567,
+            training_time=123.45,
+            training_history=[{'epoch': i} for i in range(5)],
+        )
         
         # Convert
         exp_data, history = integration._convert_nal_result(
-            MockResult(), 
+            result,
             "test_hypothesis"
         )
         
@@ -368,22 +365,42 @@ class TestNALChromaIntegration:
         assert exp_data['architecture'] == [784, 256, 10]
         assert exp_data['final_performance']['accuracy'] == 0.95
         assert history is None  # Small history, included directly
+
+    def test_index_current_result_round_trip(self, chroma_config, timeseries_config):
+        integration = NALChromaIntegration(chroma_config, timeseries_config)
+        result = ExperimentResult(
+            experiment_id="round_trip_exp",
+            hypothesis_id="round_trip_hypothesis",
+            metrics={'accuracy': 0.91, 'loss': 0.2},
+            primary_metric=0.91,
+            model_architecture=[16, 8, 2],
+            model_parameters=170,
+            training_time=0.25,
+            training_history=[{'epoch': 0, 'accuracy': 0.7}],
+        )
+
+        experiment_id = integration.index_experiment_result(result)
+        loaded = integration.hybrid_storage.load_experiment(experiment_id)
+
+        assert loaded['experiment_id'] == result.experiment_id
+        assert loaded['hypothesis_id'] == result.hypothesis_id
+        assert loaded['metrics'] == result.metrics
+        assert loaded['architecture'] == result.model_architecture
+        assert loaded['training_history'] == result.training_history
     
     def test_memory_efficient_nal(self, chroma_config, timeseries_config):
         """Test memory-efficient NAL wrapper."""
-        from src.neural_architecture_lab.data_factory_integration import MemoryEfficientNAL
-        
-        # Create wrapper
-        nal_config = type('LabConfig', (), {
-            'max_parallel_experiments': 4,
-            'results_dir': './test_results'
-        })()
-        
-        wrapper = MemoryEfficientNAL(
-            nal_config,
-            chroma_config,
-            timeseries_config
-        )
+        from neural_architecture_lab.data_factory_integration import MemoryEfficientNAL
+
+        class FakeNAL:
+            config = None
+            hypotheses = {}
+
+            async def test_hypothesis(self, hypothesis_id):
+                return None
+
+        integration = NALChromaIntegration(chroma_config, timeseries_config)
+        wrapper = MemoryEfficientNAL(FakeNAL(), integration)
         
         assert wrapper.nal is not None
         assert wrapper.integration is not None
@@ -483,7 +500,8 @@ def test_storage_formats(temp_dir, use_hdf5, compression):
     config = TimeSeriesConfig(
         storage_dir=str(Path(temp_dir) / "format_test"),
         use_hdf5=use_hdf5,
-        compression=compression
+        compression=compression,
+        hdf5_threshold=20,
     )
     
     storage = TimeSeriesStorage(config)
@@ -494,7 +512,7 @@ def test_storage_formats(temp_dir, use_hdf5, compression):
     if use_hdf5:
         assert file_path.suffix == '.h5'
         if compression:
-            with h5py.File(file_path, 'r') as f:
+            with h5py.File(file_path.path, 'r') as f:
                 assert f['history'].compression == compression
     else:
         assert file_path.suffix in ['.json', '.json.gz']

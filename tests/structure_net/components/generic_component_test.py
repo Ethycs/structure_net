@@ -13,7 +13,7 @@ from typing import Dict, Any, List, Type, Optional, Union, Set
 from abc import ABC, abstractmethod
 import inspect
 
-from src.structure_net.core import (
+from structure_net.core import (
     IComponent, IMetric, IAnalyzer, ILayer, IModel,
     EvolutionContext, AnalysisReport, ComponentContract
 )
@@ -322,7 +322,7 @@ def create_component_test_class(component_class: Type[IComponent]):
 
 # Example usage: Auto-generate tests for all metrics
 if __name__ == "__main__":
-    from src.structure_net.components.metrics import (
+    from structure_net.components.metrics import (
         SparsityMetric, DeadNeuronMetric, EntropyMetric,
         LayerMIMetric, GradientMetric
     )

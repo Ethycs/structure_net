@@ -157,7 +157,7 @@ Migration date: {date}
 """
 
 # Step 1: Import compatibility patcher
-from src.neural_architecture_lab.ray_compatibility import CompatibilityPatcher
+from neural_architecture_lab.ray_compatibility import CompatibilityPatcher
 
 # Step 2: Patch imports (do this before other NAL imports)
 CompatibilityPatcher.patch_imports()
@@ -224,13 +224,13 @@ def example_minimal_changes():
     # results = runner.run_experiments(experiments)
     
     # With compatibility layer (Option 1 - explicit):
-    from src.neural_architecture_lab.ray_compatibility import RayExperimentRunner
+    from neural_architecture_lab.ray_compatibility import RayExperimentRunner
     runner = RayExperimentRunner(lab_config)
     results = runner.run_experiments(experiments)
     
     # With compatibility layer (Option 2 - patched):
     CompatibilityPatcher.patch_imports()
-    from src.neural_architecture_lab.runners import ExperimentRunner
+    from neural_architecture_lab.runners import ExperimentRunner
     runner = ExperimentRunner(lab_config)  # Actually creates RayExperimentRunner
     results = runner.run_experiments(experiments)
 
@@ -243,7 +243,7 @@ def example_advanced_migration():
     # results = pool.run_experiments(experiments)
     
     # With Ray compatibility:
-    from src.neural_architecture_lab.ray_compatibility import RayWorkerPool
+    from neural_architecture_lab.ray_compatibility import RayWorkerPool
     pool = RayWorkerPool(num_workers=4, worker_fn=run_structure_net_experiment, devices=[0,1,2,3])
     results = pool.submit_experiments(experiments)
 

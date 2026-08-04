@@ -9,7 +9,7 @@ from typing import Dict, Any, Union, Optional, List, Tuple
 import torch
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel

@@ -7,11 +7,11 @@ import torch
 import torch.nn as nn
 from typing import Dict, Any
 
-from src.structure_net.core import EvolutionContext
-from src.structure_net.components.models import (
+from structure_net.core import EvolutionContext
+from structure_net.components.models import (
     MinimalModel, FiberBundleModel, FiberBundleConfig, MultiScaleModel
 )
-from src.structure_net.components.layers import SparseLayer
+from structure_net.components.layers import SparseLayer
 
 
 class TestMinimalModel:
@@ -302,7 +302,7 @@ class TestMultiScaleModel:
     
     def test_multi_scale_block(self):
         """Test MultiScaleBlock functionality."""
-        from src.structure_net.components.models.multi_scale_model import MultiScaleBlock
+        from structure_net.components.models.multi_scale_model import MultiScaleBlock
         
         block = MultiScaleBlock(
             in_features=256,

@@ -41,6 +41,7 @@ from .core import (
 
 # Import evolution system (built on canonical standard)
 from .components.evolvers.optimal_growth_evolver import OptimalGrowthEvolver
+from .evolution.extrema_analyzer import analyze_layer_extrema, detect_network_extrema
 # Removed deprecated IntegratedGrowthSystem - use evolution.components instead
 from .core.config_schemas import ThresholdConfig, MetricsConfig
 # Import adaptive learning rate strategies
@@ -114,6 +115,4 @@ __all__ = [
     "MultiScaleLearning",
     "UnifiedAdaptiveLearning",
     
-    # Seed Search
-    "ArchitectureGenerator"
 ]

@@ -1,5 +1,7 @@
 # Integration Plan: `src/structure_net/evolution/` Refactoring
 
+> **Status: SUPERSEDED.** This is the original source plan, retained for provenance. Use [`docs/06 - Roadmaps/component-refactor.md`](docs/06%20-%20Roadmaps/component-refactor.md) for the completed migration state and remaining retirement work.
+
 This document outlines the plan to refactor the `src/structure_net/evolution/` directory into a modular, component-based architecture as described in `docs/New Componentwise refactoring.md`.
 
 ## Phase 1: Foundational Components & De-Monolithing (The "Big Split")

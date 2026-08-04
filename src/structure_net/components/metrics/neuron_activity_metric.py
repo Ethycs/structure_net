@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel

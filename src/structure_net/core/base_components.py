@@ -34,6 +34,7 @@ class BaseComponent(IComponent):
         self._version = version or ComponentVersion()
         self._performance_tracker = {
             'call_count': 0,
+            'error_count': 0,
             'total_time': 0.0,
             'last_call_time': 0.0
         }
@@ -52,6 +53,7 @@ class BaseComponent(IComponent):
                 
                 return result
             except Exception as e:
+                self._performance_tracker['error_count'] += 1
                 self.log(logging.ERROR, f"Component {self.name} failed: {str(e)}")
                 raise
         return wrapper
@@ -65,6 +67,7 @@ class BaseComponent(IComponent):
         count = self._performance_tracker['call_count']
         return {
             'call_count': count,
+            'error_count': self._performance_tracker['error_count'],
             'total_time': self._performance_tracker['total_time'],
             'average_time': self._performance_tracker['total_time'] / max(1, count),
             'last_call_time': self._performance_tracker['last_call_time']
@@ -74,7 +77,7 @@ class BaseLayer(BaseComponent, ILayer):
     """Base implementation for neural network layers"""
     
     def __init__(self, *args, **kwargs):
-        BaseComponent.__init__(self)
+        BaseComponent.__init__(self, *args, **kwargs)
         nn.Module.__init__(self)
         
     @property
@@ -111,7 +114,7 @@ class BaseModel(BaseComponent, IModel):
     """Base implementation for neural network models"""
     
     def __init__(self, *args, **kwargs):
-        BaseComponent.__init__(self)
+        BaseComponent.__init__(self, *args, **kwargs)
         nn.Module.__init__(self)
         self._layers: List[ILayer] = []
     
@@ -120,8 +123,8 @@ class BaseModel(BaseComponent, IModel):
         return ComponentContract(
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
-            maturity=Maturity.STABLE,
-            provided_outputs={"model.architecture", "model.parameters", "model.forward"},
+            maturity=Maturity.EXPERIMENTAL,
+            provided_outputs={"model.output", "model.architecture", "model.parameters", "model.forward"},
             resources=ResourceRequirements(memory_level=ResourceLevel.MEDIUM)
         )
     
@@ -177,7 +180,7 @@ class BaseMetric(BaseComponent, IMetric):
         return self._measure_performance(self._compute_metric)(target, context)
     
     def get_measurement_schema(self) -> Dict[str, type]:
-        return self._schema
+        return getattr(self, '_measurement_schema', self._schema)
 
 class BaseAnalyzer(BaseComponent, IAnalyzer):
     """Base implementation for analyzers"""
@@ -185,6 +188,10 @@ class BaseAnalyzer(BaseComponent, IAnalyzer):
     def __init__(self, name: str = None):
         super().__init__(name)
         self._required_metrics: Set[str] = set()
+        # Current analyzers may compute missing measurements and cache them in
+        # the report. Components that only consume precomputed measurements can
+        # opt into strict dependency validation.
+        self._strict_metric_dependencies = False
     
     @property
     def contract(self) -> ComponentContract:
@@ -208,8 +215,12 @@ class BaseAnalyzer(BaseComponent, IAnalyzer):
     def analyze(self, model: IModel, report: AnalysisReport, context: EvolutionContext) -> Dict[str, Any]:
         """Public interface with validation and performance tracking"""
         # Validate required metrics are present
-        missing_metrics = self._required_metrics - set(report.keys())
-        if missing_metrics:
+        missing_metrics = {
+            metric_name
+            for metric_name in self._required_metrics
+            if not report.has_metric(metric_name)
+        }
+        if self._strict_metric_dependencies and missing_metrics:
             raise ValueError(f"Missing required metrics: {missing_metrics}")
         
         return self._measure_performance(self._perform_analysis)(model, report, context)

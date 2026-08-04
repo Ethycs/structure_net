@@ -6,10 +6,12 @@ component testing clean and maintainable.
 """
 
 import pytest
-from src.structure_net.components.metrics import (
+from structure_net.core import EvolutionContext
+from structure_net.components.metrics import (
     LayerMIMetric, EntropyMetric, InformationFlowMetric,
     RedundancyMetric, AdvancedMIMetric
 )
+from tests.fixtures import create_test_activations, create_test_model
 
 
 @pytest.mark.component
@@ -29,7 +31,8 @@ class TestMetricsWithPytest:
         metric = metric_class()
         
         try:
-            result = metric.analyze(None, component_test_context)
+            target = create_test_model() if isinstance(metric, RedundancyMetric) else None
+            result = metric.analyze(target, component_test_context)
             assert isinstance(result, dict)
             assert len(result) > 0
         except ValueError as e:

@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import logging
 from dataclasses import dataclass
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -192,17 +192,22 @@ class ExtremaMetric(BaseMetric):
         )
         
         # Pad weight matrix
-        padded = F.pad(weight_matrix, (1, 1, 1, 1), mode='reflect')
+        # Non-constant 2D padding expects explicit batch and channel axes.
+        padded = F.pad(
+            weight_matrix.unsqueeze(0).unsqueeze(0),
+            (1, 1, 1, 1),
+            mode='reflect',
+        )
         
         # Compute gradients
         grad_x = F.conv2d(
-            padded.unsqueeze(0).unsqueeze(0),
+            padded,
             sobel_x.unsqueeze(0).unsqueeze(0),
             padding=0
         ).squeeze()
         
         grad_y = F.conv2d(
-            padded.unsqueeze(0).unsqueeze(0),
+            padded,
             sobel_y.unsqueeze(0).unsqueeze(0),
             padding=0
         ).squeeze()

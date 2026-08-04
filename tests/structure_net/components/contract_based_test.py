@@ -12,7 +12,7 @@ import numpy as np
 from typing import Dict, Any, Set, Type, List, Tuple
 from dataclasses import dataclass
 
-from src.structure_net.core import (
+from structure_net.core import (
     IComponent, IMetric, IAnalyzer, ILayer, IModel,
     EvolutionContext, AnalysisReport, ComponentContract
 )
@@ -331,7 +331,7 @@ def test_component_with_contract(component_class: Type[IComponent]):
 
 # Example test
 if __name__ == "__main__":
-    from src.structure_net.components.metrics import (
+    from structure_net.components.metrics import (
         LayerMIMetric, EntropyMetric, InformationFlowMetric
     )
     

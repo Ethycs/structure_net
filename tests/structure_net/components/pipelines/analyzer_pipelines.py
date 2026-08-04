@@ -13,10 +13,10 @@ import torch
 import numpy as np
 import networkx as nx
 
-from src.structure_net.core import (
+from structure_net.core import (
     IModel, EvolutionContext, AnalysisReport
 )
-from src.structure_net.components.analyzers import (
+from structure_net.components.analyzers import (
     InformationFlowAnalyzer, HomologicalAnalyzer,
     SensitivityAnalyzer, TopologicalAnalyzer,
     ActivityAnalyzer, GraphAnalyzer,

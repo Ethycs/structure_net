@@ -11,7 +11,7 @@ import torch.nn as nn
 import numpy as np
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -106,6 +106,8 @@ class EntropyMetric(BaseMetric):
             activations = weight
         
         if isinstance(target, IModel):
+            if not isinstance(activations, dict):
+                raise ValueError("EntropyMetric requires per-layer activation mappings for model targets")
             return self._compute_model_entropy(target, activations)
         elif isinstance(target, ILayer):
             return self._compute_layer_entropy(target, activations)
@@ -139,7 +141,8 @@ class EntropyMetric(BaseMetric):
             'entropy': entropy,
             'normalized_entropy': normalized_entropy,
             'effective_bits': effective_bits,
-            'entropy_ratio': entropy_ratio
+            'entropy_ratio': entropy_ratio,
+            'layer_entropies': {'activations': entropy},
         }
     
     def _compute_layer_entropy(self, layer: ILayer, 

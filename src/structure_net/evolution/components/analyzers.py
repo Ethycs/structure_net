@@ -3,14 +3,14 @@
 DEPRECATED: Concrete Analyzer Implementations
 
 This module is deprecated. Please use the new analyzer components in
-src.structure_net.components.analyzers instead.
+structure_net.components.analyzers instead.
 """
 
 import warnings
 
 warnings.warn(
     "The analyzers module is deprecated. "
-    "Please use src.structure_net.components.analyzers instead.",
+    "Please use structure_net.components.analyzers instead.",
     DeprecationWarning,
     stacklevel=2
 )

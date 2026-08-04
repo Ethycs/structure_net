@@ -29,12 +29,11 @@ import logging
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # NAL Framework Imports
-from src.neural_architecture_lab import NeuralArchitectureLab, LabConfig, Hypothesis, HypothesisCategory
-from src.neural_architecture_lab.core import LabConfigFactory
+from neural_architecture_lab import LabConfig, Hypothesis, HypothesisCategory
+from neural_architecture_lab.core import LabConfigFactory
 
 # Component-based Architecture Imports
-from src.neural_architecture_lab.orchestrators.tournament_orchestrator import TournamentOrchestrator
-from src.structure_net.core.interfaces import ComponentVersion, Maturity
+from neural_architecture_lab.orchestrators.tournament_orchestrator import TournamentOrchestrator
 
 
 @dataclass
@@ -65,6 +64,7 @@ class StressTestConfig:
     
     # Dataset and Environment
     dataset_name: str = "cifar10"
+    subset_fraction: Optional[float] = None
     learning_rate_strategies: List[str] = field(default_factory=lambda: ["constant", "cosine", "step"])
     
     # Experiment Control
@@ -91,31 +91,15 @@ def get_default_lab_config() -> LabConfig:
     This configuration is optimized for intensive, parallel evolution experiments.
     """
     return LabConfig(
-        # Execution Configuration
         max_parallel_experiments=8,
-        max_retries=2,
-        timeout_seconds=3600,
-        
-        # Resource Management
-        gpu_memory_fraction=0.9,
-        enable_memory_growth=True,
-        
-        # Output and Storage
+        experiment_timeout=3600,
+        max_memory_per_experiment=0.9,
         results_dir="stress_test_results",
-        save_models=True,
-        save_detailed_logs=True,
-        
-        # Analysis Configuration
-        enable_statistical_analysis=True,
-        confidence_level=0.95,
-        
-        # Performance Optimization
-        prefetch_datasets=True,
-        cache_results=True,
-        
-        # Logging
-        log_level=logging.INFO,
-        verbose=False
+        save_best_models=True,
+        require_statistical_significance=True,
+        significance_level=0.05,
+        log_level="INFO",
+        verbose=False,
     )
 
 
@@ -138,7 +122,7 @@ def create_tournament_hypothesis(
     Returns:
         A Hypothesis object ready for NAL execution
     """
-    from src.neural_architecture_lab.workers.tournament_worker import evaluate_competitor_task
+    from neural_architecture_lab.workers.tournament_worker import evaluate_competitor_task
     
     # Create parameter space from population
     parameter_space = {
@@ -157,6 +141,7 @@ def create_tournament_hypothesis(
     # Package control parameters
     control_parameters = {
         'dataset': stress_config.dataset_name,
+        'subset_fraction': stress_config.subset_fraction,
         'epochs': stress_config.epochs_per_generation,
         'batch_size': stress_config.batch_size_base,
         'learning_rate': stress_config.learning_rate_base,
@@ -190,18 +175,6 @@ def create_tournament_hypothesis(
         # Metadata
         category=HypothesisCategory.ARCHITECTURE,
         tags=['evolution', 'tournament', 'stress_test', 'architecture_search'],
-        
-        # Resource Requirements
-        expected_runtime_minutes=60,
-        memory_requirements_gb=stress_config.memory_limit_gb,
-        
-        # Analysis Configuration
-        analysis_config={
-            'track_population_diversity': True,
-            'compute_fitness_statistics': True,
-            'save_generation_snapshots': True,
-            'enable_convergence_analysis': True
-        }
     )
 
 
@@ -302,6 +275,8 @@ def main():
                              help='Training epochs per generation')
     stress_group.add_argument('--dataset', type=str, default=stress_config.dataset_name,
                              help='Dataset to use for training/testing')
+    stress_group.add_argument('--subset-fraction', type=float, default=stress_config.subset_fraction,
+                             help='Optional dataset fraction for bounded shakedown runs')
     stress_group.add_argument('--seed-model-dir', type=str, default=stress_config.seed_model_dir,
                              help='Directory containing seed models to initialize population')
     
@@ -330,6 +305,7 @@ def main():
     stress_config.mutation_rate = args.mutation_rate
     stress_config.epochs_per_generation = args.epochs
     stress_config.dataset_name = args.dataset
+    stress_config.subset_fraction = args.subset_fraction
     stress_config.seed_model_dir = args.seed_model_dir
     stress_config.enable_growth = not args.disable_growth
     stress_config.enable_pruning = not args.disable_pruning

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .search.chroma_client import ChromaConfig, ChromaSearchClient
 from .time_series_storage import TimeSeriesConfig, TimeSeriesStorage
-from src.structure_net.config import UnifiedConfig, get_config, auto_migrate_config
+from structure_net.config import UnifiedConfig, get_config, auto_migrate_config
 
 
 def ensure_chroma_config(config: Union[ChromaConfig, UnifiedConfig, dict, None] = None) -> ChromaConfig:

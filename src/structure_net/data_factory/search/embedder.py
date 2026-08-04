@@ -171,6 +171,18 @@ class ExperimentEmbedder:
         
         return embedding
 
+    # Compatibility names retained for the pre-component data-factory API.
+    def embed_experiment(
+        self, experiment: Union[Dict[str, Any], 'ExperimentSchema']
+    ) -> np.ndarray:
+        return self.embed(experiment)
+
+    def embed_architecture(
+        self, architecture: Union[List[int], 'NetworkArchitecture', Dict[str, Any]]
+    ) -> np.ndarray:
+        embedding = ArchitectureEmbedder(self.embedding_dim).embed(architecture)
+        return embedding
+
 
 class ArchitectureEmbedder:
     """Converts network architectures into vector embeddings."""

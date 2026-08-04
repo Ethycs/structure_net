@@ -4,8 +4,8 @@ Metrics package for comprehensive network analysis.
 ⚠️  MIGRATION NOTICE: This package has been migrated to component architecture.
 
 New location for metrics and analyzers:
-- Low-level metrics: src.structure_net.components.metrics
-- High-level analyzers: src.structure_net.components.analyzers
+- Low-level metrics: structure_net.components.metrics
+- High-level analyzers: structure_net.components.analyzers
 
 Migration status:
 ✅ MutualInformationAnalyzer → Migrated to components

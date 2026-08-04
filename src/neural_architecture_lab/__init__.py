@@ -26,7 +26,10 @@ from .core import (
     ExperimentResult,
     LabConfig,
     HypothesisCategory,
-    ExperimentStatus
+    ExperimentStatus,
+    ExperimentRunnerBase,
+    ExperimentWorker,
+    HypothesisTestFunction,
 )
 
 from .lab import NeuralArchitectureLab
@@ -69,6 +72,9 @@ __all__ = [
     "LabConfig",
     "HypothesisCategory",
     "ExperimentStatus",
+    "ExperimentRunnerBase",
+    "ExperimentWorker",
+    "HypothesisTestFunction",
     
     # Main lab
     "NeuralArchitectureLab",

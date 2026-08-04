@@ -16,7 +16,7 @@ try:
 except ImportError:
     NETWORKX_AVAILABLE = False
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel

@@ -139,6 +139,38 @@ class ChromaSearchClient:
         )
         
         logger.info(f"Added {len(experiment_ids)} experiments to ChromaDB")
+
+    def add_documents(
+        self,
+        ids: List[str],
+        embeddings: List[List[float]],
+        metadatas: List[Dict[str, Any]],
+        documents: Optional[List[str]] = None,
+    ) -> None:
+        """Compatibility wrapper around ChromaDB's collection-level API."""
+        self.collection.add(
+            ids=ids,
+            embeddings=embeddings,
+            metadatas=[self._clean_metadata(metadata) for metadata in metadatas],
+            documents=documents,
+        )
+
+    def search(
+        self,
+        query_embeddings: List[List[float]],
+        n_results: Optional[int] = None,
+        where: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Compatibility wrapper returning ChromaDB's nested query result."""
+        return self.collection.query(
+            query_embeddings=query_embeddings,
+            n_results=n_results or self.config.default_n_results,
+            where=where,
+        )
+
+    def delete_collection(self) -> None:
+        """Delete this client's collection without requiring reset support."""
+        self.client.delete_collection(self.config.collection_name)
     
     def search_similar(
         self,
@@ -268,19 +300,26 @@ class ChromaSearchClient:
 
 # Global client instance
 _chroma_client: Optional[ChromaSearchClient] = None
+_chroma_config: Optional[ChromaConfig] = None
 
 
 def get_chroma_client(config: ChromaConfig = None) -> ChromaSearchClient:
     """Get or create the global ChromaDB client."""
-    global _chroma_client
+    global _chroma_client, _chroma_config
     
-    if _chroma_client is None:
+    if _chroma_client is None or (config is not None and config != _chroma_config):
         _chroma_client = ChromaSearchClient(config)
+        _chroma_config = _chroma_client.config
     
     return _chroma_client
 
 
 def reset_chroma_client() -> None:
     """Reset the global ChromaDB client."""
-    global _chroma_client
+    global _chroma_client, _chroma_config
     _chroma_client = None
+    _chroma_config = None
+
+
+# Historical public name. ChromaSearchClient is the canonical name.
+ChromaDBClient = ChromaSearchClient

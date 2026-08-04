@@ -4,10 +4,10 @@ import time
 import traceback
 from typing import Dict, Any, Tuple
 
-from src.neural_architecture_lab.core import Experiment, ExperimentResult
-from src.structure_net.core.network_factory import create_standard_network
-from src.structure_net.data_factory import create_dataset
-from src.structure_net.core.io_operations import load_model_seed
+from neural_architecture_lab.core import Experiment, ExperimentResult
+from structure_net.core.network_factory import create_standard_network
+from structure_net.data_factory import create_dataset
+from structure_net.core.io_operations import load_model_seed
 
 def evaluate_competitor_task(experiment: Experiment, device_id: int) -> ExperimentResult:
     """
@@ -30,7 +30,9 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
             dataset_name, 
             batch_size=config.get('batch_size', 128),
             num_workers=config.get('num_workers', 2),
-            pin_memory=True
+            pin_memory=device != 'cpu',
+            subset_fraction=config.get('subset_fraction'),
+            seed=experiment.seed,
         )
         train_loader = dataset['train_loader']
         test_loader = dataset['test_loader']
@@ -41,6 +43,7 @@ def evaluate_competitor_task(experiment: Experiment, device_id: int) -> Experime
             model = create_standard_network(
                 architecture=config['architecture'],
                 sparsity=config.get('sparsity', 0.02),
+                seed=experiment.seed,
                 device=device
             )
         

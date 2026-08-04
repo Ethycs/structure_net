@@ -15,6 +15,7 @@ from . import config_adapter
 from .config import (
     DatasetConfig,
     MNIST_CONFIG,
+    FASHION_MNIST_CONFIG,
     CIFAR10_CONFIG,
     CIFAR100_CONFIG,
     IMAGENET_CONFIG,
@@ -51,6 +52,7 @@ __all__ = [
     # Config
     'DatasetConfig',
     'MNIST_CONFIG',
+    'FASHION_MNIST_CONFIG',
     'CIFAR10_CONFIG',
     'CIFAR100_CONFIG',
     'IMAGENET_CONFIG',

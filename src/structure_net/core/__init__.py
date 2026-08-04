@@ -66,7 +66,7 @@ from .lsuv import (
 # Import New Component Architecture (optional imports to avoid breaking existing code)
 try:
     from .interfaces import (
-        Maturity, ComponentVersion, ResourceLevel, ResourceRequirements,
+        Maturity, ComponentStatus, ComponentVersion, ResourceLevel, ResourceRequirements,
         ComponentContract, EvolutionContext, AnalysisReport, EvolutionPlan,
         IComponent, ILayer, IModel, ITrainer, IMetric, IAnalyzer,
         IStrategy, IEvolver, IScheduler, IOrchestrator
@@ -126,7 +126,7 @@ __all__ = [
 if _COMPONENT_ARCHITECTURE_AVAILABLE:
     __all__.extend([
         # New Component Architecture
-        "Maturity", "ComponentVersion", "ResourceLevel", "ResourceRequirements",
+        "Maturity", "ComponentStatus", "ComponentVersion", "ResourceLevel", "ResourceRequirements",
         "ComponentContract", "EvolutionContext", "AnalysisReport", "EvolutionPlan",
         "IComponent", "ILayer", "IModel", "ITrainer", "IMetric", "IAnalyzer",
         "IStrategy", "IEvolver", "IScheduler", "IOrchestrator",

@@ -86,17 +86,17 @@ class SnapshotStrategy(BaseStrategy):
         """Return strategy type."""
         return 'snapshot'
     
-    def propose_plan(self, report: AnalysisReport, 
-                    context: EvolutionContext) -> EvolutionPlan:
+    def _create_plan(self, report: AnalysisReport,
+                     context: EvolutionContext) -> EvolutionPlan:
         """
-        Propose snapshot plan based on analysis.
+        Create a snapshot plan based on analysis.
         
         Args:
             report: Analysis report with metrics
             context: Evolution context
             
         Returns:
-            Evolution plan for snapshots
+            Evolution plan for snapshots.
         """
         # Check if enough time has passed
         if not self._check_interval(context):
@@ -157,7 +157,7 @@ class SnapshotStrategy(BaseStrategy):
         
         # Check milestone epochs
         epoch = context.epoch
-        milestones = [10, 25, 50, 100, 200, 500, 1000, 2000, 5000]
+        milestones = [25, 50, 100, 200, 500, 1000, 2000, 5000]
         if epoch in milestones:
             criteria['milestone_epoch'] = True
         

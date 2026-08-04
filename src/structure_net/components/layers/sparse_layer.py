@@ -67,6 +67,7 @@ class SparseLayer(BaseLayer):
         
         # Track importance scores for dynamic updates
         self.register_buffer('importance_scores', torch.zeros_like(self.weight))
+        self.weight.register_hook(self._update_importance_scores)
         
         # Initialize
         self.reset_parameters()
@@ -84,6 +85,12 @@ class SparseLayer(BaseLayer):
                 parallel_safe=True
             )
         )
+
+    def _update_importance_scores(self, gradient: torch.Tensor) -> torch.Tensor:
+        """Update connection importance when backward produces a gradient."""
+        with torch.no_grad():
+            self.importance_scores.mul_(0.9).add_(gradient.abs(), alpha=0.1)
+        return gradient
     
     @property
     def contract(self) -> ComponentContract:
@@ -130,10 +137,6 @@ class SparseLayer(BaseLayer):
         """Forward pass with sparse connections."""
         # Apply mask to weights
         masked_weight = self.weight * self.mask
-        
-        # Update importance scores based on gradients if available
-        if self.training and self.weight.grad is not None:
-            self.importance_scores = 0.9 * self.importance_scores + 0.1 * self.weight.grad.abs()
         
         return F.linear(x, masked_weight, self.bias)
     

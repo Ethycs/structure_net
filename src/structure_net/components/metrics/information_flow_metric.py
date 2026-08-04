@@ -9,7 +9,7 @@ from typing import Dict, Any, Union, Optional
 import torch
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -51,7 +51,7 @@ class InformationFlowMetric(BaseMetric):
             component_name=self.name,
             version=ComponentVersion(1, 0, 0),
             maturity=Maturity.STABLE,
-            required_inputs={"target", "layer_activations"},
+            required_inputs={"target", "layer_activations", "layer_sequence"},
             provided_outputs={
                 "metrics.mi_efficiency",
                 "metrics.information_gap",

@@ -36,6 +36,7 @@ class ExperimentSearcher:
         self.client = get_chroma_client(chroma_config)
         self.experiment_embedder = ExperimentEmbedder()
         self.architecture_embedder = ArchitectureEmbedder()
+        self.embedder = self.experiment_embedder
     
     def index_experiment(
         self,
@@ -141,12 +142,23 @@ class ExperimentSearcher:
         # Format results
         formatted_results = []
         for i in range(len(results['ids'])):
-            formatted_results.append({
+            metadata = results['metadatas'][i]
+            formatted = {
                 'id': results['ids'][i],
+                'experiment_id': results['ids'][i],
                 'similarity_score': 1.0 - results['distances'][i],  # Convert distance to similarity
-                'metadata': results['metadatas'][i],
+                'metadata': metadata,
                 'description': results['documents'][i] if results['documents'] else None
-            })
+            }
+            envelope = metadata.get('experiment_json')
+            if envelope:
+                try:
+                    formatted.update(json.loads(envelope))
+                except (TypeError, json.JSONDecodeError):
+                    logger.warning("Ignoring invalid experiment_json for %s", results['ids'][i])
+            formatted.update({key: value for key, value in metadata.items() if key != 'experiment_json'})
+            formatted['experiment_id'] = results['ids'][i]
+            formatted_results.append(formatted)
         
         return formatted_results
     
@@ -249,13 +261,22 @@ class ExperimentSearcher:
         # Format and sort by accuracy
         formatted_results = []
         for i in range(len(results['ids'])):
+            metadata = results['metadatas'][i]
             result = {
                 'id': results['ids'][i],
-                'accuracy': float(results['metadatas'][i].get('accuracy', 0)),
-                'parameters': int(results['metadatas'][i].get('parameters', 0)),
-                'dataset': results['metadatas'][i].get('dataset', 'unknown'),
-                'metadata': results['metadatas'][i]
+                'experiment_id': results['ids'][i],
+                'accuracy': float(metadata.get('accuracy', 0)),
+                'parameters': int(metadata.get('parameters', 0)),
+                'dataset': metadata.get('dataset', 'unknown'),
+                'metadata': metadata
             }
+            envelope = metadata.get('experiment_json')
+            if envelope:
+                try:
+                    result.update(json.loads(envelope))
+                except (TypeError, json.JSONDecodeError):
+                    logger.warning("Ignoring invalid experiment_json for %s", results['ids'][i])
+            result['experiment_id'] = results['ids'][i]
             formatted_results.append(result)
         
         # Sort by accuracy (descending)
@@ -345,6 +366,12 @@ class ExperimentSearcher:
         
         # Hypothesis info
         metadata['hypothesis_id'] = experiment.get('hypothesis_id', 'none')
+        for key, value in experiment.items():
+            if key not in metadata and isinstance(value, (str, int, float, bool)):
+                metadata[key] = value
+        # Chroma metadata is intentionally flat. Preserve the canonical experiment
+        # envelope as JSON so hybrid retrieval can reconstruct nested fields.
+        metadata['experiment_json'] = json.dumps(experiment, default=_json_default)
         
         return metadata
     
@@ -379,6 +406,19 @@ class ExperimentSearcher:
             parts.append(f"Dataset: {dataset}")
         
         return " | ".join(parts)
+
+
+def _json_default(value: Any) -> Any:
+    """Convert common scientific Python values into JSON-compatible values."""
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    if hasattr(value, 'isoformat'):
+        return value.isoformat()
+    if hasattr(value, 'value'):
+        return value.value
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 # Convenience functions

@@ -10,17 +10,17 @@ import torch.nn as nn
 import numpy as np
 from typing import Dict, Any, List, Optional, Tuple
 
-from src.structure_net.evolution.metrics.integrated_system import CompleteMetricsSystem
-from src.structure_net.evolution.metrics.base import ThresholdConfig, MetricsConfig
-from src.structure_net.evolution.metrics.activity_analysis import ActivityAnalyzer
-from src.structure_net.evolution.metrics.sensitivity_analysis import SensitivityAnalyzer
-from src.structure_net.evolution.metrics.graph_analysis import GraphAnalyzer
-from src.structure_net.evolution.metrics.mutual_information import MutualInformationAnalyzer
-from src.structure_net.evolution.metrics.topological_analysis import TopologicalAnalyzer
-from src.structure_net.evolution.metrics.homological_analysis import HomologicalAnalyzer
-from src.structure_net.evolution.metrics.compactification_metrics import CompactificationMetrics
-from src.structure_net.evolution.autocorrelation.performance_analyzer import PerformanceAnalyzer
-from src.structure_net.evolution.extrema_analyzer import detect_network_extrema
+from structure_net.evolution.metrics.integrated_system import CompleteMetricsSystem
+from structure_net.evolution.metrics.base import ThresholdConfig, MetricsConfig
+from structure_net.evolution.metrics.activity_analysis import ActivityAnalyzer
+from structure_net.evolution.metrics.sensitivity_analysis import SensitivityAnalyzer
+from structure_net.evolution.metrics.graph_analysis import GraphAnalyzer
+from structure_net.evolution.metrics.mutual_information import MutualInformationAnalyzer
+from structure_net.evolution.metrics.topological_analysis import TopologicalAnalyzer
+from structure_net.evolution.metrics.homological_analysis import HomologicalAnalyzer
+from structure_net.evolution.metrics.compactification_metrics import CompactificationMetrics
+from structure_net.evolution.autocorrelation.performance_analyzer import PerformanceAnalyzer
+from structure_net.evolution.extrema_analyzer import detect_network_extrema
 
 from .core import ExperimentResult, Hypothesis
 

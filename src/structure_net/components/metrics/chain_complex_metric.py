@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -92,8 +92,8 @@ class ChainComplexMetric(BaseMetric):
             elif isinstance(target, torch.nn.Module):
                 # Handle regular nn.Module
                 return self._analyze_nn_module_chain_complex(target)
-            elif hasattr(target, '__class__'):
-                # Try to handle any object with modules
+            elif target is not None and hasattr(target, 'modules'):
+                # Support module-like wrappers without accepting arbitrary objects.
                 return self._analyze_nn_module_chain_complex(target)
             else:
                 raise ValueError("ChainComplexMetric requires 'weight_matrix' in context or a layer/model target")

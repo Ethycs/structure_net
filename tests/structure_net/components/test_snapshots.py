@@ -10,11 +10,11 @@ import tempfile
 import shutil
 from typing import Dict, Any
 
-from src.structure_net.core import EvolutionContext, AnalysisReport, EvolutionPlan
-from src.structure_net.components.orchestrators import SnapshotOrchestrator
-from src.structure_net.components.strategies import SnapshotStrategy
-from src.structure_net.components.metrics import SnapshotMetric
-from src.structure_net.components.models import MinimalModel
+from structure_net.core import EvolutionContext, AnalysisReport, EvolutionPlan
+from structure_net.components.orchestrators import SnapshotOrchestrator
+from structure_net.components.strategies import SnapshotStrategy
+from structure_net.components.metrics import SnapshotMetric
+from structure_net.components.models import MinimalModel
 
 
 class TestSnapshotOrchestrator:

@@ -1,5 +1,5 @@
-from src.structure_net.core.base_components import BaseStrategyOrchestrator
-from src.structure_net.core.interfaces import (
+from structure_net.core.base_components import BaseStrategyOrchestrator
+from structure_net.core.interfaces import (
     EvolutionPlan,
     AnalysisReport,
     EvolutionContext,

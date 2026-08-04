@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Type, Optional, Callable
 from dataclasses import dataclass
 import inspect
 
-from src.structure_net.core import (
+from structure_net.core import (
     IComponent, IMetric, IAnalyzer, ILayer, IModel,
     EvolutionContext, AnalysisReport, ComponentContract
 )
@@ -108,9 +108,10 @@ def input_generators():
         'activations': lambda **kwargs: create_test_activations(**kwargs),
         'layer_activations': lambda: {
             'input': create_test_activations(100, 10),
+            'test_layer': create_test_activations(100, 5),
             'output': create_test_activations(100, 5)
         },
-        'layer_sequence': lambda: ['layer_0', 'layer_1', 'layer_2'],
+        'layer_sequence': lambda: ['input', 'test_layer', 'output'],
         'weight_matrix': lambda: torch.randn(10, 5),
         'gradients': lambda: create_test_gradients((10, 10)),
         'X': lambda: torch.randn(100, 10),
@@ -228,6 +229,19 @@ def generate_test_scenarios(analyze_component, input_generators):
                 target = create_test_layer()
             else:
                 target = create_test_model()
+
+        # Model metrics consume named per-layer tensors rather than one tensor.
+        if isinstance(target, IModel):
+            if 'activations' in minimal_data:
+                minimal_data['activations'] = {
+                    'input': create_test_activations(100, 10),
+                    'output': create_test_activations(100, 5),
+                }
+            if 'gradients' in minimal_data:
+                minimal_data['gradients'] = {
+                    'input': create_test_gradients((10, 10)),
+                    'output': create_test_gradients((5, 10)),
+                }
         
         scenarios.append(TestScenario(
             name="minimal_valid",

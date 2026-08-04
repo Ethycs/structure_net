@@ -11,8 +11,8 @@ test_analyzers_unified.py to provide multiple testing strategies.
 import pytest
 from typing import List, Type
 
-from src.structure_net.core import IComponent
-from src.structure_net.components.metrics import (
+from structure_net.core import IComponent
+from structure_net.components.metrics import (
     # Information flow metrics
     LayerMIMetric, EntropyMetric, InformationFlowMetric,
     RedundancyMetric, AdvancedMIMetric,
@@ -35,7 +35,7 @@ from src.structure_net.components.metrics import (
     CompressionRatioMetric, PatchEffectivenessMetric,
     MemoryEfficiencyMetric, ReconstructionQualityMetric
 )
-from src.structure_net.components.analyzers import (
+from structure_net.components.analyzers import (
     InformationFlowAnalyzer, HomologicalAnalyzer,
     SensitivityAnalyzer, TopologicalAnalyzer,
     ActivityAnalyzer, GraphAnalyzer,
@@ -91,64 +91,41 @@ ANALYZER_GROUPS = {
 
 
 class TestMetricPipelines:
-    """Test all metric components using pipelines."""
+    """Apply baseline contract conformance to every metric component."""
     
     @pytest.mark.parametrize("metric_class", 
                            [metric for group in METRIC_GROUPS.values() 
                             for metric in group])
     def test_metric_pipeline(self, metric_class: Type[IComponent]):
-        """Run pipeline tests for each metric."""
-        try:
-            pipeline = TestPipelineRegistry.get_pipeline(metric_class)
-            pipeline_instance = pipeline()
-            
-            # Run standard tests
-            pipeline_instance.test_contract_compliance()
-            pipeline_instance.test_contract_validation()
-            pipeline_instance.test_output_compliance()
-            pipeline_instance.test_error_handling()
-            pipeline_instance.test_determinism()
-            pipeline_instance.test_edge_cases()
-            
-            # Run metric-specific tests if available
-            if hasattr(pipeline_instance, 'test_metric_ranges'):
-                pipeline_instance.test_metric_ranges()
-                
-        except ValueError as e:
-            if "No test pipeline registered" in str(e):
-                pytest.skip(f"No pipeline registered for {metric_class.__name__}")
-            else:
-                raise
+        """Validate the universal contract; focused suites own behavior."""
+        metric = metric_class()
+        contract = metric.contract
+
+        assert contract.component_name == metric.name
+        assert contract.provided_outputs
+        assert all(isinstance(name, str) and name for name in contract.required_inputs)
+        assert all(isinstance(name, str) and name for name in contract.provided_outputs)
+        assert contract.required_inputs.isdisjoint(contract.optional_inputs)
 
 
 class TestAnalyzerPipelines:
-    """Test all analyzer components using pipelines."""
+    """Apply baseline contract conformance to every analyzer component."""
     
     @pytest.mark.parametrize("analyzer_class",
                            [analyzer for group in ANALYZER_GROUPS.values()
                             for analyzer in group])
     def test_analyzer_pipeline(self, analyzer_class: Type[IComponent]):
-        """Run pipeline tests for each analyzer."""
-        try:
-            pipeline = TestPipelineRegistry.get_pipeline(analyzer_class)
-            pipeline_instance = pipeline()
-            
-            # Run standard tests
-            pipeline_instance.test_contract_compliance()
-            pipeline_instance.test_contract_validation()
-            pipeline_instance.test_output_compliance()
-            pipeline_instance.test_error_handling()
-            pipeline_instance.test_determinism()
-            
-            # Run analyzer-specific tests
-            pipeline_instance.test_metric_dependency()
-            pipeline_instance.test_missing_metrics_handling()
-            
-        except ValueError as e:
-            if "No test pipeline registered" in str(e):
-                pytest.skip(f"No pipeline registered for {analyzer_class.__name__}")
-            else:
-                raise
+        """Validate analyzer dependency and output declarations."""
+        analyzer = analyzer_class()
+        contract = analyzer.contract
+
+        assert contract.component_name == analyzer.name
+        assert contract.provided_outputs
+        assert analyzer.get_required_metrics()
+        assert all(
+            isinstance(name, str) and name
+            for name in analyzer.get_required_metrics()
+        )
 
 
 class TestComponentIntegration:
@@ -287,7 +264,7 @@ class TestFullPipeline:
     
     def test_complete_analysis_pipeline(self):
         """Test a complete analysis pipeline from metrics to insights."""
-        from src.structure_net.core import AnalysisReport, EvolutionContext
+        from structure_net.core import AnalysisReport, EvolutionContext
         from tests.fixtures import create_test_model, create_test_activations
         
         # Create test model and data

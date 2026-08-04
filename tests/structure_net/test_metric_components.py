@@ -7,11 +7,11 @@ import torch
 import torch.nn as nn
 from typing import Dict, Any
 
-from src.structure_net.core import (
-    ILayer, IModel, EvolutionContext,
-    ComponentContract, ComponentStatus
+from structure_net.core import (
+    IComponent, ILayer, IModel, EvolutionContext,
+    ComponentContract, ComponentStatus, ComponentVersion, Maturity
 )
-from src.structure_net.components.metrics import (
+from structure_net.components.metrics import (
     SparsityMetric, DeadNeuronMetric, EntropyMetric,
     LayerMIMetric, GradientMetric, ActivationMetric
 )
@@ -22,12 +22,14 @@ class DummyLayer(ILayer):
     """Dummy layer for testing."""
     
     def __init__(self, name: str, in_features: int, out_features: int):
+        IComponent.__init__(self)
+        nn.Module.__init__(self)
         self._name = name
         self.linear = nn.Linear(in_features, out_features)
         self._contract = ComponentContract(
             component_name=name,
-            version=(1, 0, 0),
-            maturity="stable",
+            version=ComponentVersion(1, 0, 0),
+            maturity=Maturity.STABLE,
             required_inputs={"x"},
             provided_outputs={"y"}
         )
@@ -54,23 +56,36 @@ class DummyLayer(ILayer):
     
     def set_params(self, params: Dict[str, Any]) -> None:
         pass
+
+    def get_analysis_properties(self) -> Dict[str, torch.Tensor]:
+        return {
+            "weight": self.linear.weight,
+            "bias": self.linear.bias,
+        }
+
+    def supports_modification(self) -> bool:
+        return False
+
+    def add_connections(self, num_connections: int, **kwargs) -> bool:
+        return False
     
     def named_parameters(self):
         return self.linear.named_parameters()
 
 
-class DummyModel(nn.Module, IModel):
+class DummyModel(IModel):
     """Dummy model for testing."""
     
     def __init__(self, name: str = "test_model"):
-        super().__init__()
+        IComponent.__init__(self)
+        nn.Module.__init__(self)
         self._name = name
         self.layer1 = nn.Linear(10, 20)
         self.layer2 = nn.Linear(20, 10)
         self._contract = ComponentContract(
             component_name=name,
-            version=(1, 0, 0),
-            maturity="stable",
+            version=ComponentVersion(1, 0, 0),
+            maturity=Maturity.STABLE,
             required_inputs={"x"},
             provided_outputs={"y"}
         )
@@ -97,6 +112,19 @@ class DummyModel(nn.Module, IModel):
     
     def set_params(self, params: Dict[str, Any]) -> None:
         pass
+
+    def get_layers(self):
+        return [self.layer1, self.layer2]
+
+    def get_architecture_summary(self) -> Dict[str, Any]:
+        return {
+            "num_layers": 2,
+            "layer_sizes": [10, 20, 10],
+            "total_parameters": sum(p.numel() for p in self.parameters()),
+        }
+
+    def supports_dynamic_growth(self) -> bool:
+        return False
 
 
 class TestSparsityMetric:

@@ -29,6 +29,18 @@ class Maturity(Enum):
     STABLE = "stable"             # Reliable, backward-compatible
     DEPRECATED = "deprecated"     # Being phased out
 
+
+class ComponentStatus(Enum):
+    """Runtime availability state for a component.
+
+    Maturity describes the stability of a component's API, while status
+    describes whether a particular component instance can currently run.
+    """
+
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    ERROR = "error"
+
 @dataclass
 class ComponentVersion:
     major: int = 1
@@ -113,26 +125,33 @@ class EvolutionContext(dict):
         super().__init__(*args, **kwargs)
         self._metadata = {
             'created_at': datetime.now(),
-            'epoch': 0,
-            'step': 0,
-            'device': 'cpu'
+            'epoch': self.get('epoch', 0),
+            'step': self.get('step', 0),
+            'device': self.get('device', 'cpu')
         }
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        super().__setitem__(key, value)
+        if key in {'epoch', 'step', 'device'} and hasattr(self, '_metadata'):
+            self._metadata[key] = value
     
     @property 
     def epoch(self) -> int:
-        return self._metadata['epoch']
+        return self.get('epoch', self._metadata['epoch'])
     
     @epoch.setter
     def epoch(self, value: int):
         self._metadata['epoch'] = value
+        super().__setitem__('epoch', value)
     
     @property
     def step(self) -> int:
-        return self._metadata['step']
+        return self.get('step', self._metadata['step'])
     
     @step.setter  
     def step(self, value: int):
         self._metadata['step'] = value
+        super().__setitem__('step', value)
     
     def get_metadata(self) -> Dict[str, Any]:
         return self._metadata.copy()
@@ -147,13 +166,49 @@ class AnalysisReport(dict):
     
     def add_metric_data(self, component_name: str, data: Dict[str, Any]):
         """Add data from a metric component"""
-        self[f"metrics.{component_name}"] = data
+        self[self.metric_key(component_name)] = data
         self.sources.add(component_name)
     
     def add_analyzer_data(self, component_name: str, data: Dict[str, Any]):
         """Add data from an analyzer component"""
-        self[f"analyzers.{component_name}"] = data
+        self[self.analyzer_key(component_name)] = data
         self.sources.add(component_name)
+
+    @staticmethod
+    def metric_key(component_name: str) -> str:
+        """Return the canonical namespaced key for a metric component."""
+        return component_name if component_name.startswith('metrics.') else f'metrics.{component_name}'
+
+    @staticmethod
+    def analyzer_key(component_name: str) -> str:
+        """Return the canonical namespaced key for an analyzer component."""
+        return component_name if component_name.startswith('analyzers.') else f'analyzers.{component_name}'
+
+    @property
+    def metrics(self) -> Dict[str, Any]:
+        """Expose metric entries without their storage namespace."""
+        prefix = 'metrics.'
+        return {key[len(prefix):]: value for key, value in self.items() if key.startswith(prefix)}
+
+    @property
+    def analyzers(self) -> Dict[str, Any]:
+        """Expose analyzer entries without their storage namespace."""
+        prefix = 'analyzers.'
+        return {key[len(prefix):]: value for key, value in self.items() if key.startswith(prefix)}
+
+    def has_metric(self, component_name: str) -> bool:
+        """Check a metric using either its component name or namespaced key."""
+        return self.metric_key(component_name) in self
+
+    def get_metric(self, component_name: str, default: Any = None) -> Any:
+        """Retrieve metric data using either key form."""
+        return self.get(self.metric_key(component_name), default)
+
+    def has_analyzer(self, component_name: str) -> bool:
+        return self.analyzer_key(component_name) in self
+
+    def get_analyzer(self, component_name: str, default: Any = None) -> Any:
+        return self.get(self.analyzer_key(component_name), default)
 
 class EvolutionPlan(dict):
     """Actionable plan produced by Strategy components"""
@@ -191,6 +246,11 @@ class IComponent(ABC):
     def maturity(self) -> Maturity:
         """Component maturity level"""
         return self.contract.maturity
+
+    @property
+    def status(self) -> ComponentStatus:
+        """Runtime status, active by default for initialized components."""
+        return ComponentStatus.ACTIVE
     
     def log(self, level: int, message: str, **kwargs):
         """Structured logging with component context"""

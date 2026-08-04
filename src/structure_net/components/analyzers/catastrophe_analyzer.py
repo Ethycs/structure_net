@@ -11,12 +11,12 @@ import torch.nn as nn
 import logging
 import numpy as np
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseAnalyzer, IModel, ILayer, EvolutionContext, AnalysisReport,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
 )
-from src.structure_net.components.metrics import (
+from structure_net.components.metrics import (
     ActivationStabilityMetric, LyapunovMetric, TransitionEntropyMetric
 )
 

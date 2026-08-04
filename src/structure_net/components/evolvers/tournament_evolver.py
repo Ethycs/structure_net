@@ -1,5 +1,5 @@
-from src.structure_net.core.base_components import BaseEvolver
-from src.structure_net.core.interfaces import (
+from structure_net.core.base_components import BaseEvolver
+from structure_net.core.interfaces import (
     ComponentContract,
     ComponentVersion,
     Maturity,
@@ -37,24 +37,48 @@ class TournamentEvolver(BaseEvolver):
             ),
         )
 
+    def can_execute_plan(self, plan: EvolutionPlan) -> bool:
+        """Accept the tournament action discriminator used by the strategy."""
+        return plan.get("action_type") in self._supported_plan_types
+
     def _execute_plan(self, plan: EvolutionPlan, model: IModel, trainer: ITrainer, optimizer: Any) -> Dict[str, Any]:
         """Evolves the population based on the results of the last generation."""
         
         results = plan.get("results", [])
         current_population = plan.get("population", [])
 
-        results_map = {res.metrics['competitor_id']: res for res in results if 'competitor_id' in res.metrics}
+        if len(current_population) < 2:
+            raise ValueError("Tournament evolution requires at least two competitors")
+
+        results_map = {}
+        for result in results:
+            competitor_id = result.metrics.get('competitor_id')
+            if competitor_id is not None and not result.error:
+                results_map.setdefault(competitor_id, []).append(result)
         
         for competitor in current_population:
-            res = results_map.get(competitor['id'])
-            if res and not res.error:
-                competitor['fitness'] = res.metrics.get('fitness', 0.0)
+            competitor_results = results_map.get(competitor['id'], [])
+            if competitor_results:
+                competitor['fitness'] = float(np.mean([
+                    result.metrics.get('fitness', 0.0)
+                    for result in competitor_results
+                ]))
+                competitor['accuracy'] = float(np.mean([
+                    result.metrics.get('accuracy', 0.0)
+                    for result in competitor_results
+                ]))
+                competitor['parameters'] = int(np.mean([
+                    result.metrics.get('parameters', result.model_parameters)
+                    for result in competitor_results
+                ]))
             else:
                 competitor['fitness'] = 0.0
+                competitor['accuracy'] = 0.0
 
         current_population.sort(key=lambda x: x['fitness'], reverse=True)
         
-        next_gen = current_population[:int(self.tournament_size * 0.2)] # Elitism
+        elite_count = max(1, int(self.tournament_size * 0.2))
+        next_gen = current_population[:elite_count]
         
         while len(next_gen) < self.tournament_size:
             p1, p2 = np.random.choice(current_population, 2, replace=False)

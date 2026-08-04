@@ -9,7 +9,7 @@ from typing import Union
 from pathlib import Path
 
 from .core import LabConfig
-from src.structure_net.config import UnifiedConfig, get_config, auto_migrate_config
+from structure_net.config import UnifiedConfig, get_config, auto_migrate_config
 
 
 def ensure_lab_config(config: Union[LabConfig, UnifiedConfig, dict, None] = None) -> LabConfig:

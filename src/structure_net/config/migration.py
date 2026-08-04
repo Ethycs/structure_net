@@ -416,12 +416,12 @@ def migrate_config_files(old_config_path: Path, output_path: Path):
     # Detect type and migrate
     if 'results_dir' in old_data and 'device_ids' in old_data:
         # LabConfig format
-        from src.neural_architecture_lab import LabConfig
+        from neural_architecture_lab import LabConfig
         old_config = LabConfig(**old_data)
         unified = ConfigMigrationHelper.from_lab_config(old_config)
     elif 'queue_dir' in old_data:
         # LoggingConfig format
-        from src.structure_net.logging.standardized_logging import LoggingConfig
+        from structure_net.logging.standardized_logging import LoggingConfig
         old_config = LoggingConfig(**old_data)
         unified = ConfigMigrationHelper.from_logging_config(old_config)
     else:

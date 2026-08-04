@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -86,6 +86,8 @@ class DeadNeuronMetric(BaseMetric):
             raise ValueError("DeadNeuronMetric requires 'activations' in context")
         
         if isinstance(target, IModel):
+            if not isinstance(activations, dict):
+                raise ValueError("DeadNeuronMetric requires per-layer activation mappings for model targets")
             return self._compute_model_dead_neurons(target, activations)
         elif isinstance(target, ILayer):
             return self._compute_layer_dead_neurons(target, activations)

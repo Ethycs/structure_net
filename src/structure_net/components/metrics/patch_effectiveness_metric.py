@@ -11,7 +11,7 @@ import torch.nn as nn
 import logging
 import numpy as np
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -36,7 +36,7 @@ class PatchEffectivenessMetric(BaseMetric):
         """
         super().__init__(name or "PatchEffectivenessMetric")
         self.density_threshold = density_threshold
-        self._measurement_schema = {
+        self._schema = {
             "patch_count": int,
             "avg_patch_density": float,
             "patch_coverage": float,

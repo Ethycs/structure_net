@@ -60,8 +60,8 @@ class SnapshotMetric(BaseMetric):
         """Return component contract."""
         return self._contract
     
-    def analyze(self, target: Optional[Union[ILayer, IModel]], 
-                context: EvolutionContext) -> Dict[str, Any]:
+    def _compute_metric(self, target: Optional[Union[ILayer, IModel]],
+                        context: EvolutionContext) -> Dict[str, Any]:
         """
         Analyze snapshot metrics.
         

@@ -3,14 +3,14 @@
 DEPRECATED: Concrete Growth Strategy Implementations
 
 This module is deprecated. Please use the new strategy components in
-src.structure_net.components.strategies instead.
+structure_net.components.strategies instead.
 """
 
 import warnings
 
 warnings.warn(
     "The strategies module is deprecated. "
-    "Please use src.structure_net.components.strategies instead.",
+    "Please use structure_net.components.strategies instead.",
     DeprecationWarning,
     stacklevel=2
 )

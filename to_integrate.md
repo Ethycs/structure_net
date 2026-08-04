@@ -1,5 +1,7 @@
 # Integration Plan: Refactoring `ultimate_stress_test_v2.py`
 
+> **Status: SUPERSEDED.** Tournament migration is complete. See [`docs/07 - Status Reports/2026-08-03_component-migration-complete.md`](docs/07%20-%20Status%20Reports/2026-08-03_component-migration-complete.md) and the canonical roadmap.
+
 **Goal:** Refactor `experiments/ultimate_stress_test_v2.py` to align with the new component-based architecture defined in `docs/New Componentwise refactoring.md` and the NAL architecture.
 
 **Problem:** The current script uses a monolithic `TournamentExecutor` class which handles population management, evolution, and hypothesis creation. This is not modular and does not follow the new component-based design.

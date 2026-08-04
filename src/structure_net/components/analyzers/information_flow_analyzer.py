@@ -9,12 +9,12 @@ from typing import Dict, Any, List, Tuple, Optional
 import torch
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseAnalyzer, IModel, EvolutionContext, AnalysisReport,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
 )
-from src.structure_net.components.metrics import (
+from structure_net.components.metrics import (
     LayerMIMetric, EntropyMetric, InformationFlowMetric,
     RedundancyMetric, AdvancedMIMetric
 )

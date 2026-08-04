@@ -112,6 +112,34 @@ MNIST_CONFIG = DatasetConfig(
     }
 )
 
+FASHION_MNIST_CONFIG = DatasetConfig(
+    name="fashion_mnist",
+    full_name="Fashion-MNIST",
+    description="28x28 grayscale images of clothing in 10 classes",
+    input_shape=(28, 28),
+    num_classes=10,
+    num_train_samples=60000,
+    num_test_samples=10000,
+    default_train_transforms=["normalize"],
+    default_test_transforms=["normalize"],
+    metadata={
+        "citation": "Xiao, Rasul, and Vollgraf, 2017",
+        "website": "https://github.com/zalandoresearch/fashion-mnist",
+        "classes": [
+            "t-shirt/top",
+            "trouser",
+            "pullover",
+            "dress",
+            "coat",
+            "sandal",
+            "shirt",
+            "sneaker",
+            "bag",
+            "ankle boot",
+        ],
+    },
+)
+
 CIFAR10_CONFIG = DatasetConfig(
     name="cifar10",
     full_name="CIFAR-10",
@@ -183,7 +211,13 @@ CUSTOM_DATASET_TEMPLATE = DatasetConfig(
 # Register standard datasets on module import
 def _register_standard_datasets():
     """Register all standard dataset configurations."""
-    for config in [MNIST_CONFIG, CIFAR10_CONFIG, CIFAR100_CONFIG, IMAGENET_CONFIG]:
+    for config in [
+        MNIST_CONFIG,
+        FASHION_MNIST_CONFIG,
+        CIFAR10_CONFIG,
+        CIFAR100_CONFIG,
+        IMAGENET_CONFIG,
+    ]:
         register_dataset(config)
 
 

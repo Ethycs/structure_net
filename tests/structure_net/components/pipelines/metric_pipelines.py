@@ -9,8 +9,8 @@ from typing import Dict, Any, List, Optional, Union, Tuple
 import torch
 import numpy as np
 
-from src.structure_net.core import ILayer, IModel, EvolutionContext
-from src.structure_net.components.metrics import (
+from structure_net.core import ILayer, IModel, EvolutionContext
+from structure_net.components.metrics import (
     # Information flow metrics
     LayerMIMetric, EntropyMetric, InformationFlowMetric,
     RedundancyMetric, AdvancedMIMetric,
@@ -890,16 +890,13 @@ class GradientSensitivityPipeline(MetricTestPipeline):
         return GradientSensitivityMetric
     
     def create_valid_inputs(self) -> Dict[str, Any]:
+        activations_i = create_test_activations(50, 20)
+        activations_j = create_test_activations(50, 15)
         return {
-            'layer_pair': ('layer_0', 'layer_1'),
-            'activations': {
-                'layer_0': create_test_activations(50, 20),
-                'layer_1': create_test_activations(50, 15)
-            },
-            'gradients': {
-                'layer_0': create_test_gradients((50, 20)),
-                'layer_1': create_test_gradients((50, 15))
-            }
+            'activations_i': activations_i,
+            'activations_j': activations_j,
+            'gradients_i': create_test_gradients(activations_i.shape),
+            'gradients_j': create_test_gradients(activations_j.shape),
         }
     
     def create_invalid_inputs(self) -> List[Dict[str, Any]]:
@@ -916,17 +913,16 @@ class GradientSensitivityPipeline(MetricTestPipeline):
         return None
     
     def get_expected_metrics(self) -> List[str]:
-        return ['sensitivity_score', 'gradient_correlation',
-                'activation_gradient_alignment', 'gradient_norm_ratio',
-                'effective_sensitivity']
+        return ['gradient_sensitivity', 'virtual_parameter_sensitivity',
+                'sensitivity_variance', 'gradient_flow_health', 'active_ratio']
     
     def get_metric_ranges(self) -> Dict[str, Tuple[float, float]]:
         return {
-            'sensitivity_score': (0.0, 1.0),
-            'gradient_correlation': (-1.0, 1.0),
-            'activation_gradient_alignment': (-1.0, 1.0),
-            'gradient_norm_ratio': (0.0, np.inf),
-            'effective_sensitivity': (0.0, 1.0)
+            'gradient_sensitivity': (0.0, np.inf),
+            'virtual_parameter_sensitivity': (0.0, np.inf),
+            'sensitivity_variance': (0.0, np.inf),
+            'gradient_flow_health': (0.0, 1.0),
+            'active_ratio': (0.0, 1.0),
         }
 
 

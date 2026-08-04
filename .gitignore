@@ -7,6 +7,9 @@
 /extended_experiment_results
 /aggressive_experiment_results
 /fixed
+/nal_results/
+/test_chroma/
+/src/structure_net/data/
 data/*
 Breakthroughs.md
 .env

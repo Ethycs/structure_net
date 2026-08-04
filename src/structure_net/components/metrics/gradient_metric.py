@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -93,6 +93,8 @@ class GradientMetric(BaseMetric):
             raise ValueError("GradientMetric requires 'gradients' in context")
         
         if isinstance(target, IModel):
+            if not isinstance(gradients, dict):
+                raise ValueError("GradientMetric requires per-layer gradient mappings for model targets")
             return self._compute_model_gradients(target, gradients)
         elif isinstance(target, ILayer):
             return self._compute_layer_gradients(target, gradients)

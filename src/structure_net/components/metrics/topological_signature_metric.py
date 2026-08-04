@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import logging
 import numpy as np
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel

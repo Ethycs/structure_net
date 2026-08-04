@@ -11,7 +11,7 @@ import torch.nn as nn
 import numpy as np
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -130,6 +130,7 @@ class LayerMIMetric(BaseMetric):
             "mutual_information": mi_value,
             "normalized_mi": normalized_mi,
             "information_ratio": information_ratio,
+            "layer_pairs": {"input->output": mi_value},
             "computation_method": self.method
         }
     

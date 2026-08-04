@@ -28,8 +28,8 @@ class CompleteMetricsSystem:
     DEPRECATED: The metrics system has been migrated to a component-based architecture.
     
     The old monolithic analyzers have been split into:
-    1. Low-level metrics (focused measurements) in src.structure_net.components.metrics
-    2. High-level analyzers (combining metrics) in src.structure_net.components.analyzers
+    1. Low-level metrics (focused measurements) in structure_net.components.metrics
+    2. High-level analyzers (combining metrics) in structure_net.components.analyzers
     
     For a complete replacement, use the new MetricsOrchestrator pattern:
     
@@ -39,10 +39,10 @@ class CompleteMetricsSystem:
         results = metrics_system.compute_all_metrics(data_loader)
         
         # New way:
-        from src.structure_net.components.analyzers import (
+        from structure_net.components.analyzers import (
             InformationFlowAnalyzer, HomologicalAnalyzer
         )
-        from src.structure_net.core import EvolutionContext, AnalysisReport
+        from structure_net.core import EvolutionContext, AnalysisReport
         
         # Create analyzers
         info_analyzer = InformationFlowAnalyzer()
@@ -70,7 +70,7 @@ class CompleteMetricsSystem:
             "Quick migration path:\n"
             "1. For MI/entropy analysis: use InformationFlowAnalyzer\n"
             "2. For homological analysis: use HomologicalAnalyzer\n" 
-            "3. For specific metrics: import from src.structure_net.components.metrics\n"
+            "3. For specific metrics: import from structure_net.components.metrics\n"
             "\n"
             "See src/structure_net/evolution/metrics/MIGRATION_STATUS.md for details.\n"
             + "="*80

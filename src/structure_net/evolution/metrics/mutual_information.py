@@ -34,14 +34,14 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
     
     Please use the following components instead:
     - Metrics (low-level measurements):
-      * src.structure_net.components.metrics.LayerMIMetric
-      * src.structure_net.components.metrics.EntropyMetric
-      * src.structure_net.components.metrics.AdvancedMIMetric
-      * src.structure_net.components.metrics.InformationFlowMetric
-      * src.structure_net.components.metrics.RedundancyMetric
+      * structure_net.components.metrics.LayerMIMetric
+      * structure_net.components.metrics.EntropyMetric
+      * structure_net.components.metrics.AdvancedMIMetric
+      * structure_net.components.metrics.InformationFlowMetric
+      * structure_net.components.metrics.RedundancyMetric
     
     - Analyzer (high-level analysis):
-      * src.structure_net.components.analyzers.InformationFlowAnalyzer
+      * structure_net.components.analyzers.InformationFlowAnalyzer
     
     Example migration:
         # Old way:
@@ -49,7 +49,7 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
         results = mi_analyzer.compute_metrics(X, Y)
         
         # New way:
-        from src.structure_net.components.metrics import AdvancedMIMetric
+        from structure_net.components.metrics import AdvancedMIMetric
         mi_metric = AdvancedMIMetric(threshold=threshold_config.activation_threshold)
         context = EvolutionContext({'X': X, 'Y': Y})
         results = mi_metric.analyze(None, context)
@@ -58,8 +58,8 @@ class MutualInformationAnalyzer(BaseMetricAnalyzer, StatisticalUtilsMixin):
     def __init__(self, threshold_config):
         raise DeprecationWarning(
             "MutualInformationAnalyzer has been migrated to component architecture.\n"
-            "Use src.structure_net.components.metrics.AdvancedMIMetric for MI computation\n"
-            "or src.structure_net.components.analyzers.InformationFlowAnalyzer for full analysis.\n"
+            "Use structure_net.components.metrics.AdvancedMIMetric for MI computation\n"
+            "or structure_net.components.analyzers.InformationFlowAnalyzer for full analysis.\n"
             "See class docstring for migration guide."
         )
         super().__init__(threshold_config)

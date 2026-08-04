@@ -113,8 +113,8 @@ class CompactificationEvolver(BaseEvolver):
         plan_type = plan.get('type', '')
         return plan_type in self._supported_plan_types
     
-    def apply_plan(self, plan: EvolutionPlan, model: IModel, 
-                   trainer: ITrainer, optimizer: Any) -> Dict[str, Any]:
+    def _execute_plan(self, plan: EvolutionPlan, model: IModel,
+                      trainer: ITrainer, optimizer: Any) -> Dict[str, Any]:
         """
         Execute the compactification plan.
         

@@ -10,15 +10,15 @@ import asyncio
 from datetime import datetime
 import argparse
 
-from src.neural_architecture_lab import (
+from neural_architecture_lab import (
     NeuralArchitectureLab,
     LabConfig,
     LabConfigFactory,
     Hypothesis,
     HypothesisCategory,
 )
-from src.neural_architecture_lab.seed_search.architecture_generator import ArchitectureGenerator
-from src.neural_architecture_lab.workers.seed_search_worker import evaluate_seed_task
+from neural_architecture_lab.seed_search.architecture_generator import ArchitectureGenerator
+from neural_architecture_lab.workers.seed_search_worker import evaluate_seed_task
 
 def get_default_lab_config() -> LabConfig:
     """Returns a default configuration for the NAL lab for this experiment."""

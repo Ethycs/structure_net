@@ -11,12 +11,12 @@ import torch.nn as nn
 import logging
 from collections import defaultdict
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseAnalyzer, IModel, ILayer, EvolutionContext, AnalysisReport,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
 )
-from src.structure_net.components.metrics import (
+from structure_net.components.metrics import (
     NeuronActivityMetric, ActivationDistributionMetric,
     ActivityPatternMetric, LayerHealthMetric
 )

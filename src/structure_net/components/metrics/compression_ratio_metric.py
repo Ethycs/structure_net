@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -34,7 +34,7 @@ class CompressionRatioMetric(BaseMetric):
             name: Optional custom name
         """
         super().__init__(name or "CompressionRatioMetric")
-        self._measurement_schema = {
+        self._schema = {
             "original_size": int,
             "compressed_size": int,
             "compression_ratio": float,
@@ -79,6 +79,8 @@ class CompressionRatioMetric(BaseMetric):
         """
         # Get compact data
         compact_data = context.get('compact_data')
+        if compact_data is None and 'original_size' in context:
+            compact_data = context
         if compact_data is None:
             raise ValueError("CompressionRatioMetric requires 'compact_data' in context")
         
@@ -91,12 +93,18 @@ class CompressionRatioMetric(BaseMetric):
         original_size = self._calculate_original_size(compact_data, original_network)
         
         # Compute metrics
+        patch_info = context.get('patch_info', compact_data.get('patch_info', {}))
+        patch_overhead = patch_info.get('metadata_size', 0)
+        effective_compressed_size = compressed_size + patch_overhead
+
         if original_size > 0:
             compression_ratio = compressed_size / original_size
+            effective_compression_ratio = effective_compressed_size / original_size
             space_saved = original_size - compressed_size
-            efficiency_score = 1.0 - compression_ratio
+            efficiency_score = max(0.0, 1.0 - effective_compression_ratio)
         else:
             compression_ratio = 1.0
+            effective_compression_ratio = 1.0
             space_saved = 0
             efficiency_score = 0.0
         
@@ -108,12 +116,17 @@ class CompressionRatioMetric(BaseMetric):
             "original_size": original_size,
             "compressed_size": compressed_size,
             "compression_ratio": compression_ratio,
+            "effective_compression_ratio": effective_compression_ratio,
             "space_saved": space_saved,
-            "efficiency_score": efficiency_score
+            "efficiency_score": efficiency_score,
+            "patch_overhead": patch_overhead
         }
     
     def _calculate_compressed_size(self, compact_data: Dict[str, Any]) -> int:
         """Calculate total compressed size."""
+        if 'compressed_size' in compact_data:
+            return compact_data['compressed_size']
+
         compressed_size = 0
         
         # Count patch data

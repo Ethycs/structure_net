@@ -330,7 +330,10 @@ class StandardizedLogger:
                 doc_text += f"achieved accuracy {metadata['accuracy']:.4f}"
                 
                 # Add to ChromaDB
-                self.experiments_collection.add(
+                # The content hash is deterministic, so repeated ingestion of the
+                # same result should refresh the record rather than fail on a
+                # duplicate ID.
+                self.experiments_collection.upsert(
                     ids=[content_hash],
                     documents=[doc_text],
                     metadatas=[metadata]
@@ -372,6 +375,19 @@ class StandardizedLogger:
                 'question': hypothesis.get('question', '')[:500],
                 'prediction': hypothesis.get('prediction', '')[:500]
             }
+
+            # Preserve aggregate research status when a meta-hypothesis is
+            # replayed into the same collection as ordinary hypotheses.
+            for key in (
+                'confirmed',
+                'confirmation_status',
+                'tested_scope',
+                'evidence_count',
+                'direct_experiment_count',
+            ):
+                value = hypothesis.get(key)
+                if isinstance(value, (str, int, float, bool)):
+                    metadata[key] = value
             
             # Create document for semantic search
             doc_text = f"Hypothesis {metadata['name']}: {metadata['description']} "
@@ -379,7 +395,9 @@ class StandardizedLogger:
             doc_text += f"Category: {metadata['category']}"
             
             # Add to ChromaDB
-            self.hypotheses_collection.add(
+            # Hypothesis IDs are stable research identifiers.  Upsert keeps
+            # result-replay and metadata migration idempotent.
+            self.hypotheses_collection.upsert(
                 ids=[hyp_id],
                 documents=[doc_text],
                 metadatas=[metadata]
@@ -425,7 +443,7 @@ class StandardizedLogger:
                 'started_at': datetime.now().isoformat(),
                 'timestamp': datetime.now().isoformat(),
                 'estimated_duration': estimated_duration or 0.0,
-                'estimated_completion': (datetime.now() + timedelta(seconds=estimated_duration)).isoformat() if estimated_duration else None,
+                'estimated_completion': (datetime.now() + timedelta(seconds=estimated_duration)).isoformat() if estimated_duration else '',
                 'accuracy': 0.0,
                 'model_parameters': 0,
                 'training_time': 0.0,
@@ -434,7 +452,7 @@ class StandardizedLogger:
             
             # Add any additional metadata
             for key, value in kwargs.items():
-                if key not in metadata:
+                if key not in metadata and value is not None:
                     metadata[key] = value
             
             # Create document

@@ -10,7 +10,7 @@ import torch.nn as nn
 from typing import Dict, Any, List, Optional
 import numpy as np
 
-from src.structure_net.core import (
+from structure_net.core import (
     IComponent, ILayer, IModel, EvolutionContext, AnalysisReport,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel

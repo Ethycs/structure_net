@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -35,7 +35,7 @@ class MemoryEfficiencyMetric(BaseMetric):
         """
         super().__init__(name or "MemoryEfficiencyMetric")
         self.bytes_per_element = bytes_per_element
-        self._measurement_schema = {
+        self._schema = {
             "total_memory": int,
             "patch_memory": int,
             "skeleton_memory": int,

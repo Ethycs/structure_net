@@ -1,5 +1,5 @@
-from src.structure_net.core.base_components import BaseStrategy
-from src.structure_net.core.interfaces import (
+from structure_net.core.base_components import BaseStrategy
+from structure_net.core.interfaces import (
     ComponentContract,
     ComponentVersion,
     Maturity,

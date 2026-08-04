@@ -27,8 +27,8 @@ from typing import Dict
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.structure_net.core.minimal_network import MinimalNetwork
-from src.structure_net.snapshots.snapshot_manager import SnapshotManager
+from structure_net.core.minimal_network import MinimalNetwork
+from structure_net.snapshots.snapshot_manager import SnapshotManager
 
 
 def setup_logging(log_file: str = "true_multiscale_experiment.log"):

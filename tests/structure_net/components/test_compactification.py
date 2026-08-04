@@ -7,17 +7,17 @@ import torch
 import torch.nn as nn
 from typing import Dict, Any
 
-from src.structure_net.core import (
+from structure_net.core import (
     EvolutionContext, AnalysisReport, EvolutionPlan
 )
-from src.structure_net.components.evolvers import (
+from structure_net.components.evolvers import (
     CompactificationEvolver, InputHighwayEvolver
 )
-from src.structure_net.components.strategies import CompactificationStrategy
-from src.structure_net.components.metrics import (
+from structure_net.components.strategies import CompactificationStrategy
+from structure_net.components.metrics import (
     CompressionRatioMetric, PatchEffectivenessMetric
 )
-from src.structure_net.components.analyzers import CompactificationAnalyzer
+from structure_net.components.analyzers import CompactificationAnalyzer
 
 
 class SimpleModel(nn.Module):
@@ -167,7 +167,7 @@ class TestInputHighwayEvolver:
     
     def test_highway_module(self):
         """Test InputHighwayModule functionality."""
-        from src.structure_net.components.evolvers.input_highway_evolver import InputHighwayModule
+        from structure_net.components.evolvers.input_highway_evolver import InputHighwayModule
         
         highway = InputHighwayModule(784, preserve_topology=True)
         

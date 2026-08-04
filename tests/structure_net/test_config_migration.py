@@ -15,7 +15,7 @@ class TestUnifiedConfig:
     
     def test_unified_config_import(self):
         """Test that unified config can be imported."""
-        from config import UnifiedConfig, get_config, LabConfigShim, LoggingConfigShim
+        from structure_net.config import UnifiedConfig, get_config, LabConfigShim, LoggingConfigShim
         assert UnifiedConfig is not None
         assert get_config is not None
         assert LabConfigShim is not None
@@ -23,7 +23,7 @@ class TestUnifiedConfig:
     
     def test_unified_config_creation(self):
         """Test creating a unified config instance."""
-        from config import UnifiedConfig
+        from structure_net.config import UnifiedConfig
         
         config = UnifiedConfig()
         assert config is not None
@@ -33,7 +33,7 @@ class TestUnifiedConfig:
     
     def test_config_subsections(self):
         """Test that all config subsections are properly initialized."""
-        from config import UnifiedConfig
+        from structure_net.config import UnifiedConfig
         
         config = UnifiedConfig()
         
@@ -64,7 +64,7 @@ class TestLabConfigCompatibility:
     
     def test_lab_config_from_unified(self):
         """Test creating LabConfig from UnifiedConfig."""
-        from config import UnifiedConfig
+        from structure_net.config import UnifiedConfig
         
         config = UnifiedConfig()
         lab_config = config.get_lab_config()
@@ -76,7 +76,7 @@ class TestLabConfigCompatibility:
     
     def test_lab_config_shim(self):
         """Test LabConfig shim for backward compatibility."""
-        from config import LabConfigShim
+        from structure_net.config import LabConfigShim
         
         shim = LabConfigShim(
             project_name="test_project",
@@ -96,8 +96,8 @@ class TestLabConfigCompatibility:
     
     def test_nal_with_unified_config(self):
         """Test that NAL accepts UnifiedConfig."""
-        from src.neural_architecture_lab import NeuralArchitectureLab, LabConfig
-        from config import UnifiedConfig
+        from neural_architecture_lab import NeuralArchitectureLab, LabConfig
+        from structure_net.config import UnifiedConfig
         
         # Test with old LabConfig
         old_config = LabConfig(project_name="test_old_style")
@@ -124,7 +124,7 @@ class TestLoggingConfigCompatibility:
     
     def test_logging_config_from_unified(self):
         """Test creating LoggingConfig from UnifiedConfig."""
-        from config import UnifiedConfig
+        from structure_net.config import UnifiedConfig
         
         config = UnifiedConfig()
         logging_config = config.get_logging_config()
@@ -136,7 +136,7 @@ class TestLoggingConfigCompatibility:
     
     def test_logging_config_shim(self):
         """Test LoggingConfig shim for backward compatibility."""
-        from config import LoggingConfigShim
+        from structure_net.config import LoggingConfigShim
         
         shim = LoggingConfigShim(
             project_name="test_logging",
@@ -156,8 +156,8 @@ class TestLoggingConfigCompatibility:
     
     def test_standardized_logger_with_unified_config(self):
         """Test that StandardizedLogger accepts UnifiedConfig."""
-        from src.structure_net.logging import StandardizedLogger, LoggingConfig
-        from config import UnifiedConfig
+        from structure_net.logging import StandardizedLogger, LoggingConfig
+        from structure_net.config import UnifiedConfig
         
         # Test with old LoggingConfig
         old_config = LoggingConfig(project_name="test_old_logging")
@@ -180,7 +180,7 @@ class TestDataFactoryCompatibility:
     
     def test_chroma_config_from_unified(self):
         """Test creating ChromaConfig from UnifiedConfig."""
-        from config import UnifiedConfig
+        from structure_net.config import UnifiedConfig
         
         config = UnifiedConfig()
         chroma_config = config.get_chroma_config()
@@ -190,7 +190,7 @@ class TestDataFactoryCompatibility:
     
     def test_timeseries_config_from_unified(self):
         """Test creating TimeSeriesConfig from UnifiedConfig."""
-        from config import UnifiedConfig
+        from structure_net.config import UnifiedConfig
         
         config = UnifiedConfig()
         ts_config = config.get_timeseries_config()
@@ -201,8 +201,8 @@ class TestDataFactoryCompatibility:
     
     def test_chroma_client_with_unified_config(self):
         """Test that ChromaSearchClient accepts UnifiedConfig."""
-        from src.structure_net.data_factory.search.chroma_client import ChromaSearchClient, ChromaConfig
-        from config import UnifiedConfig
+        from structure_net.data_factory.search.chroma_client import ChromaSearchClient, ChromaConfig
+        from structure_net.config import UnifiedConfig
         
         # Test with old ChromaConfig
         old_config = ChromaConfig(persist_directory="test_chroma")
@@ -220,8 +220,8 @@ class TestDataFactoryCompatibility:
     
     def test_timeseries_storage_with_unified_config(self):
         """Test that TimeSeriesStorage accepts UnifiedConfig."""
-        from src.structure_net.data_factory.time_series_storage import TimeSeriesStorage, TimeSeriesConfig
-        from config import UnifiedConfig
+        from structure_net.data_factory.time_series_storage import TimeSeriesStorage, TimeSeriesConfig
+        from structure_net.config import UnifiedConfig
         
         # Test with old TimeSeriesConfig
         old_config = TimeSeriesConfig(storage_dir="test_ts")
@@ -243,8 +243,8 @@ class TestConfigMigration:
     
     def test_auto_migrate_config(self):
         """Test automatic config migration."""
-        from config import auto_migrate_config, UnifiedConfig
-        from src.neural_architecture_lab.core import LabConfig
+        from structure_net.config import auto_migrate_config, UnifiedConfig
+        from neural_architecture_lab.core import LabConfig
         
         # Test with LabConfig
         lab_config = LabConfig(project_name="test_migrate")
@@ -258,7 +258,7 @@ class TestConfigMigration:
     
     def test_config_file_operations(self):
         """Test saving and loading config files."""
-        from config import UnifiedConfig
+        from structure_net.config import UnifiedConfig
         import tempfile
         import yaml
         
@@ -281,7 +281,7 @@ class TestConfigMigration:
     def test_environment_variable_loading(self):
         """Test that config loads from environment variables."""
         import os
-        from config import UnifiedConfig, reset_config
+        from structure_net.config import UnifiedConfig, reset_config
         
         # Set some env vars
         os.environ['WANDB_PROJECT'] = 'test_env_project'

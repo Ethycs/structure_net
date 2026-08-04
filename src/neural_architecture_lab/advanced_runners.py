@@ -31,7 +31,7 @@ from dataclasses import dataclass
 
 from .core import (
     Experiment, ExperimentResult, ExperimentStatus,
-    LabConfig, ExperimentRunnerBase
+    LabConfig, ExperimentRunnerBase, utc_now
 )
 
 # Import structure_net components
@@ -44,7 +44,7 @@ from structure_net.evolution.metrics import CompleteMetricsSystem
 from structure_net.evolution.residual_blocks import create_residual_network
 from structure_net.profiling.factory import create_comprehensive_profiler
 from structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
-from src.structure_net.data_factory import create_dataset, get_dataset_config
+from structure_net.data_factory import create_dataset, get_dataset_config
 
 
 class GPUMemoryManager:
@@ -571,7 +571,7 @@ class AdvancedExperimentRunner(ExperimentRunnerBase):
     """Advanced experiment runner with full feature support."""
     
     def __init__(self, config: LabConfig, logger: StandardizedLogger):
-        self.config = config
+        super().__init__(config)
         self.logger = logger
         self.device_ids = config.device_ids
         self.max_parallel = config.max_parallel_experiments
@@ -584,7 +584,7 @@ class AdvancedExperimentRunner(ExperimentRunnerBase):
     async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
         """Run a single experiment with advanced features."""
         experiment.status = ExperimentStatus.RUNNING
-        experiment.started_at = time.time()
+        experiment.started_at = utc_now()
         
         # Assign device
         device_id = experiment.device_id
@@ -603,8 +603,8 @@ class AdvancedExperimentRunner(ExperimentRunnerBase):
         )
         
         # Update experiment status
-        experiment.status = ExperimentStatus.COMPLETED if result.error is None else ExperimentStatus.FAILED
-        experiment.completed_at = time.time()
+        experiment.status = result.status
+        experiment.completed_at = utc_now()
         experiment.result = result
         
         # Log result using proper schema

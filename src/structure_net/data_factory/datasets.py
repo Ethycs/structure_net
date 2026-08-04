@@ -94,6 +94,56 @@ class MNISTLoader(DatasetLoader):
         return dataset
 
 
+class FashionMNISTLoader(DatasetLoader):
+    """Fashion-MNIST dataset loader."""
+
+    def get_default_transform(self, train: bool = True) -> Any:
+        """Get the standard Fashion-MNIST tensor normalization."""
+        transform_list = [transforms.ToTensor()]
+        configured = (
+            self.config.default_train_transforms
+            if train
+            else self.config.default_test_transforms
+        )
+        if "normalize" in configured:
+            transform_list.append(transforms.Normalize((0.2860,), (0.3530,)))
+        return transforms.Compose(transform_list)
+
+    def load(
+        self,
+        train: bool = True,
+        transform: Optional[Any] = None,
+        download: bool = True,
+        subset_fraction: Optional[float] = None,
+        seed: Optional[int] = None,
+    ) -> Dataset:
+        """Load Fashion-MNIST, optionally using a reproducible subset."""
+        if transform is None:
+            transform = self.get_default_transform(train)
+
+        dataset = torchvision.datasets.FashionMNIST(
+            root=str(self.cache_path),
+            train=train,
+            transform=transform,
+            download=download,
+        )
+
+        if subset_fraction is not None and 0 < subset_fraction < 1:
+            n_samples = len(dataset)
+            n_subset = int(n_samples * subset_fraction)
+            rng = np.random.default_rng(seed)
+            indices = rng.permutation(n_samples)[:n_subset]
+            dataset = Subset(dataset, indices)
+            logger.info(
+                "Using %s/%s samples from Fashion-MNIST %s set",
+                n_subset,
+                n_samples,
+                "train" if train else "test",
+            )
+
+        return dataset
+
+
 class CIFAR10Loader(DatasetLoader):
     """CIFAR-10 dataset loader."""
     
@@ -267,6 +317,7 @@ class CustomDatasetLoader(DatasetLoader):
 # Loader registry
 _LOADER_REGISTRY: Dict[str, type] = {
     "mnist": MNISTLoader,
+    "fashion_mnist": FashionMNISTLoader,
     "cifar10": CIFAR10Loader,
     "cifar100": CIFAR100Loader,
 }

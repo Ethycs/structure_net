@@ -47,7 +47,7 @@ class FiberBundleConfig:
     use_compactification: bool = False
 
 
-class StructuredLayer(nn.Module, ILayer):
+class StructuredLayer(ILayer):
     """
     Layer with gauge-preserving structured connections.
     
@@ -187,7 +187,7 @@ class StructuredLayer(nn.Module, ILayer):
         
         # Pad to original size
         gauge_grad_x = F.pad(gauge_grad_x, (0, 1))
-        gauge_grad_y = F.pad(gauge_grad_y, (1, 0))
+        gauge_grad_y = F.pad(gauge_grad_y, (0, 0, 0, 1))
         
         # Curvature magnitude
         curvature = torch.sqrt(gauge_grad_x**2 + gauge_grad_y**2)
@@ -411,12 +411,12 @@ class FiberBundleModel(BaseModel):
             gauge_field = layer.gauge_field
             
             # Apply Gaussian smoothing
-            kernel = torch.tensor([[0.25, 0.5, 0.25]]).view(1, 1, 1, 3)
+            kernel = gauge_field.new_tensor([0.25, 0.5, 0.25]).view(1, 1, 3)
             smoothed = F.conv1d(
-                gauge_field.unsqueeze(0).unsqueeze(0),
+                gauge_field.unsqueeze(1),
                 kernel,
                 padding=1
-            ).squeeze()
+            ).squeeze(1)
             
             # Limit change to preserve stability
             change = smoothed - gauge_field

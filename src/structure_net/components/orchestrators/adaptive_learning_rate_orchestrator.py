@@ -1,5 +1,5 @@
-from src.structure_net.core.base_components import BaseOrchestrator
-from src.structure_net.core.interfaces import (
+from structure_net.core.base_components import BaseOrchestrator
+from structure_net.core.interfaces import (
     IScheduler,
     EvolutionContext,
     ComponentContract,

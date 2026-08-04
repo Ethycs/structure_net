@@ -6,28 +6,26 @@ Provides integration between Neural Architecture Lab and ChromaDB for
 offloading experiment tracking and enabling semantic search.
 """
 
-import json
-import time
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple, TYPE_CHECKING
 from pathlib import Path
 import numpy as np
-from datetime import datetime
 
-from src.structure_net.data_factory.search import (
+from structure_net.data_factory.search import (
     ExperimentSearcher,
-    get_chroma_client,
     ChromaConfig
 )
-from src.structure_net.data_factory.time_series_storage import (
-    TimeSeriesStorage,
+from structure_net.data_factory.time_series_storage import (
     TimeSeriesConfig,
     HybridExperimentStorage
 )
-from src.neural_architecture_lab.core import (
+from neural_architecture_lab.core import (
     ExperimentResult,
     Hypothesis,
     HypothesisResult
 )
+
+if TYPE_CHECKING:
+    from neural_architecture_lab.core import LabConfig
 
 
 class NALChromaIntegration:
@@ -41,7 +39,7 @@ class NALChromaIntegration:
     
     def __init__(
         self,
-        nal_config: 'LabConfig',
+        nal_config: Optional['LabConfig'] = None,
         chroma_config: Optional[ChromaConfig] = None,
         timeseries_config: Optional[TimeSeriesConfig] = None,
         auto_index: bool = True,
@@ -58,7 +56,18 @@ class NALChromaIntegration:
             batch_size: Batch size for bulk indexing
             timeseries_threshold: Minimum epochs to use time series storage
         """
-        self.hybrid_storage = HybridExperimentStorage(chroma_config, timeseries_config)
+        if isinstance(nal_config, ChromaConfig):
+            if isinstance(chroma_config, TimeSeriesConfig) and timeseries_config is None:
+                timeseries_config = chroma_config
+            chroma_config = nal_config
+            nal_config = None
+
+        self.nal_config = nal_config
+        self.hybrid_storage = HybridExperimentStorage(
+            chroma_config,
+            timeseries_config,
+            timeseries_threshold=timeseries_threshold,
+        )
         self.searcher = self.hybrid_storage.searcher
         self.timeseries = self.hybrid_storage.timeseries
         self.auto_index = auto_index
@@ -69,7 +78,7 @@ class NALChromaIntegration:
     def index_experiment_result(
         self,
         result: ExperimentResult,
-        hypothesis_id: str,
+        hypothesis_id: Optional[str] = None,
         additional_metadata: Optional[Dict[str, Any]] = None
     ) -> str:
         """
@@ -83,8 +92,10 @@ class NALChromaIntegration:
         Returns:
             Experiment ID used in storage
         """
-        # Generate unique experiment ID
-        exp_id = f"{hypothesis_id}_{result.experiment.id}_{int(time.time())}"
+        hypothesis_id = hypothesis_id or result.hypothesis_id
+        exp_id = getattr(result, 'experiment_id', None)
+        if exp_id is None:
+            exp_id = result.experiment.id
         
         # Convert NAL result to storage format
         experiment_data, training_history = self._convert_nal_result(result, hypothesis_id)
@@ -121,22 +132,8 @@ class NALChromaIntegration:
         """
         exp_ids = []
         
-        # Batch index for efficiency
-        batch = []
         for result in results:
-            exp_id = f"{hypothesis.id}_{result.experiment.id}_{int(time.time())}"
-            exp_data = self._convert_nal_result(result, hypothesis.id)
-            batch.append((exp_id, exp_data))
-            
-            if len(batch) >= self.batch_size:
-                self.searcher.index_experiments_batch(batch)
-                exp_ids.extend([b[0] for b in batch])
-                batch = []
-        
-        # Index remaining
-        if batch:
-            self.searcher.index_experiments_batch(batch)
-            exp_ids.extend([b[0] for b in batch])
+            exp_ids.append(self.index_experiment_result(result, hypothesis.id))
         
         # Clear from NAL if requested
         if clear_from_nal and hasattr(hypothesis, 'results'):
@@ -148,38 +145,53 @@ class NALChromaIntegration:
         self,
         result: ExperimentResult,
         hypothesis_id: str
-    ) -> Dict[str, Any]:
+    ) -> Tuple[Dict[str, Any], Optional[List[Dict[str, Any]]]]:
         """Convert NAL ExperimentResult to storage format."""
-        # Extract key information from NAL result
+        metrics = result.metrics or {}
+        legacy_experiment = getattr(result, 'experiment', None)
+        experiment_id = getattr(result, 'experiment_id', None)
+        if experiment_id is None and legacy_experiment is not None:
+            experiment_id = legacy_experiment.id
+
+        result_hypothesis_id = getattr(result, 'hypothesis_id', hypothesis_id)
+        architecture = getattr(result, 'model_architecture', None)
+        if architecture is None and legacy_experiment is not None:
+            architecture = legacy_experiment.parameters.get('architecture', [])
+
+        parameters = getattr(legacy_experiment, 'parameters', {}) if legacy_experiment else {}
+        status = getattr(result, 'status', None)
+        if status is None:
+            status = 'failed' if result.error else 'completed'
+        elif hasattr(status, 'value'):
+            status = status.value
+
         experiment_data = {
-            'experiment_id': result.experiment.id,
-            'hypothesis_id': hypothesis_id,
-            'experiment_type': result.experiment.type,
-            'status': result.status.value if hasattr(result.status, 'value') else str(result.status),
-            'start_time': result.start_time.isoformat() if result.start_time else None,
-            'end_time': result.end_time.isoformat() if result.end_time else None,
-            'duration': result.duration,
+            'schema_version': 1,
+            'experiment_id': experiment_id,
+            'hypothesis_id': result_hypothesis_id,
+            'experiment_type': getattr(legacy_experiment, 'type', 'nal'),
+            'status': str(status),
+            'timestamp': getattr(result, 'timestamp', None),
+            'training_time': getattr(result, 'training_time', getattr(result, 'duration', 0.0)),
             'error': result.error,
-            
-            # Metrics
-            'metrics': result.metrics or {},
+            'metrics': metrics,
+            'primary_metric': getattr(result, 'primary_metric', 0.0),
             'model_parameters': result.model_parameters,
-            
-            # Architecture info
-            'architecture': result.experiment.parameters.get('architecture', []),
-            'config': result.experiment.parameters,
-            
-            # Performance
+            'architecture': architecture or [],
+            'config': parameters,
+            'model_checkpoint': getattr(result, 'model_checkpoint', None),
+            'observations': getattr(result, 'observations', []),
+            'anomalies': getattr(result, 'anomalies', []),
             'final_performance': {
-                'accuracy': result.metrics.get('accuracy', 0.0) if result.metrics else 0.0,
-                'loss': result.metrics.get('loss', 0.0) if result.metrics else 0.0,
+                'accuracy': metrics.get('accuracy', 0.0),
+                'loss': metrics.get('loss', 0.0),
             }
         }
         
         # Handle training history based on size
         training_history = None
-        if hasattr(result, 'training_history') and result.training_history:
-            if len(result.training_history) > self.timeseries_threshold:
+        if result.training_history:
+            if len(result.training_history) >= self.timeseries_threshold:
                 # Large history - will be stored separately
                 training_history = result.training_history
                 # Add summary for ChromaDB
@@ -294,7 +306,13 @@ class MemoryEfficientNAL:
     to ChromaDB, keeping only minimal data in memory.
     """
     
-    def __init__(self, nal_instance, chroma_integration: NALChromaIntegration):
+    def __init__(
+        self,
+        nal_or_config,
+        chroma_integration: Optional[NALChromaIntegration] = None,
+        chroma_config: Optional[ChromaConfig] = None,
+        timeseries_config: Optional[TimeSeriesConfig] = None,
+    ):
         """
         Wrap a NAL instance with ChromaDB integration.
         
@@ -302,12 +320,28 @@ class MemoryEfficientNAL:
             nal_instance: The NeuralArchitectureLab instance
             chroma_integration: ChromaDB integration instance
         """
-        self.nal = nal_instance
-        self.chroma = chroma_integration
-        self._original_test_hypothesis = nal_instance.test_hypothesis
+        if isinstance(chroma_integration, ChromaConfig):
+            if isinstance(chroma_config, TimeSeriesConfig) and timeseries_config is None:
+                timeseries_config = chroma_config
+            chroma_config = chroma_integration
+            chroma_integration = None
+
+        if hasattr(nal_or_config, 'test_hypothesis'):
+            self.nal = nal_or_config
+        else:
+            from .lab import NeuralArchitectureLab
+            self.nal = NeuralArchitectureLab(nal_or_config)
+
+        self.integration = chroma_integration or NALChromaIntegration(
+            getattr(self.nal, 'config', None),
+            chroma_config=chroma_config,
+            timeseries_config=timeseries_config,
+        )
+        self.chroma = self.integration
+        self._original_test_hypothesis = self.nal.test_hypothesis
         
         # Monkey-patch the test_hypothesis method
-        nal_instance.test_hypothesis = self._wrapped_test_hypothesis
+        self.nal.test_hypothesis = self._wrapped_test_hypothesis
     
     async def _wrapped_test_hypothesis(self, hypothesis_id: str) -> HypothesisResult:
         """
@@ -343,7 +377,7 @@ class MemoryEfficientNAL:
                 
                 # Clear experiments
                 if hasattr(self.nal, 'experiments'):
-                    exp_ids = [r.experiment.id for r in result.experiment_results]
+                    exp_ids = [r.experiment_id for r in result.experiment_results]
                     for exp_id in exp_ids:
                         if exp_id in self.nal.experiments:
                             del self.nal.experiments[exp_id]
@@ -351,7 +385,11 @@ class MemoryEfficientNAL:
         return result
 
 
-def create_memory_efficient_nal(nal_config: 'LabConfig'):
+def create_memory_efficient_nal(
+    nal_config: 'LabConfig',
+    chroma_config: Optional[ChromaConfig] = None,
+    timeseries_config: Optional[TimeSeriesConfig] = None,
+):
     """
     Create a memory-efficient NAL instance with ChromaDB integration.
     
@@ -363,20 +401,21 @@ def create_memory_efficient_nal(nal_config: 'LabConfig'):
     """
     from .lab import NeuralArchitectureLab
     
-    # Data factory now owns its path configuration.
-    base_results_dir = Path("data/nal_experiments")
-    run_dir = base_results_dir / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    run_dir = Path(nal_config.results_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create NAL instance
-    nal = NeuralArchitectureLab(nal_config, results_dir=run_dir)
-    
-    # Configure ChromaDB to use a subdirectory
-    chroma_persist_dir = run_dir / "chroma_db"
-    chroma_config = ChromaConfig(persist_directory=str(chroma_persist_dir))
+    nal = NeuralArchitectureLab(nal_config)
+    if chroma_config is None:
+        chroma_config = ChromaConfig(persist_directory=str(run_dir / "chroma_db"))
+    if timeseries_config is None:
+        timeseries_config = TimeSeriesConfig(storage_dir=str(run_dir / "timeseries_db"))
 
     # Create ChromaDB integration
-    chroma_integration = NALChromaIntegration(nal_config, chroma_config)
+    chroma_integration = NALChromaIntegration(
+        nal_config,
+        chroma_config=chroma_config,
+        timeseries_config=timeseries_config,
+    )
     
     # Wrap with memory-efficient layer
     wrapped_nal = MemoryEfficientNAL(nal, chroma_integration)
@@ -387,7 +426,7 @@ def create_memory_efficient_nal(nal_config: 'LabConfig'):
 # Example usage for stress test
 if __name__ == "__main__":
     # Example of how to use in stress test
-    from src.neural_architecture_lab.core import LabConfig
+    from neural_architecture_lab.core import LabConfig
     
     # Configure NAL with minimal memory usage
     nal_config = LabConfig(

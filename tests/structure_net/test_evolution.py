@@ -2,8 +2,8 @@ import torch
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 from torch.utils.data import TensorDataset, DataLoader
-from src.structure_net.evolution.components import create_standard_evolution_system, NetworkContext
-from src.structure_net.core.network_analysis import get_network_stats
+from structure_net.evolution.components import create_standard_evolution_system, NetworkContext
+from structure_net.core.network_analysis import get_network_stats
 
 def test_training_integration(standard_network, synthetic_data, device):
     X, y = synthetic_data

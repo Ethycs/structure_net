@@ -27,7 +27,7 @@ import time
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.structure_net.core.minimal_network import MinimalNetwork
+from structure_net.core.minimal_network import MinimalNetwork
 
 
 def setup_logging(log_file: str = "improved_multiscale_experiment.log"):

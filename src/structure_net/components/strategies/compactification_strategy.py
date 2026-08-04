@@ -83,8 +83,8 @@ class CompactificationStrategy(BaseStrategy):
         """Return strategy type."""
         return 'compactification'
     
-    def propose_plan(self, report: AnalysisReport, 
-                    context: EvolutionContext) -> EvolutionPlan:
+    def _create_plan(self, report: AnalysisReport,
+                     context: EvolutionContext) -> EvolutionPlan:
         """
         Propose compactification plan based on analysis.
         
@@ -131,6 +131,9 @@ class CompactificationStrategy(BaseStrategy):
     def _should_compactify(self, report: AnalysisReport, 
                           context: EvolutionContext) -> bool:
         """Determine if compactification is needed."""
+        if context.get('force_compactification', False):
+            return True
+
         # Check model size
         model_stats = report.get('model_stats', {})
         total_params = model_stats.get('total_parameters', 0)
@@ -156,10 +159,6 @@ class CompactificationStrategy(BaseStrategy):
         if adjusted_performance < self.performance_threshold:
             return True
         
-        # Check if explicitly requested
-        if context.get('force_compactification', False):
-            return True
-        
         return False
     
     def _determine_parameters(self, report: AnalysisReport,
@@ -177,7 +176,7 @@ class CompactificationStrategy(BaseStrategy):
         elif total_params > 1_000_000:
             params['sparsity'] = 0.05  # 5% for large networks
         else:
-            params['sparsity'] = 0.1   # 10% for smaller networks
+            params['sparsity'] = 0.05  # Preserve the standard 5% compact form
         
         # Patch parameters
         params['patch_density'] = 0.2  # 20% density in patches
@@ -185,7 +184,7 @@ class CompactificationStrategy(BaseStrategy):
         
         # Adjust based on performance requirements
         performance = report.get('performance_metrics', {})
-        if performance.get('accuracy', 1.0) < 0.9:
+        if performance.get('accuracy', 1.0) < self.performance_threshold:
             # Less aggressive compactification for lower performance
             params['sparsity'] *= 2
             params['patch_density'] = 0.3

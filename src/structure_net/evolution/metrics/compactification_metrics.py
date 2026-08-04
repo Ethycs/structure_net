@@ -4,7 +4,7 @@ Compactification Metrics for Neural Networks
 
 MIGRATION NOTICE: This module has been migrated to the component architecture.
 Please use the new component-based metrics from:
-    src.structure_net.components.metrics.compactification_metrics
+    structure_net.components.metrics.compactification_metrics
 
 New components:
 - CompressionRatioMetric
@@ -18,7 +18,7 @@ This legacy module will be deprecated in a future version.
 import warnings
 warnings.warn(
     "This compactification metrics module is deprecated. "
-    "Use src.structure_net.components.metrics.compactification_metrics instead.",
+    "Use structure_net.components.metrics.compactification_metrics instead.",
     DeprecationWarning,
     stacklevel=2
 )
@@ -74,29 +74,29 @@ class CompactificationAnalyzer(BaseMetricAnalyzer, NetworkAnalyzerMixin, Statist
     
     DEPRECATED: This class has been migrated to the component architecture.
     Please use the following components instead:
-    - src.structure_net.components.metrics.CompressionRatioMetric
-    - src.structure_net.components.metrics.PatchEffectivenessMetric
-    - src.structure_net.components.metrics.MemoryEfficiencyMetric
-    - src.structure_net.components.metrics.ReconstructionQualityMetric
-    - src.structure_net.components.analyzers.CompactificationAnalyzer
+    - structure_net.components.metrics.CompressionRatioMetric
+    - structure_net.components.metrics.PatchEffectivenessMetric
+    - structure_net.components.metrics.MemoryEfficiencyMetric
+    - structure_net.components.metrics.ReconstructionQualityMetric
+    - structure_net.components.analyzers.CompactificationAnalyzer
     """
     
     def __init__(self, threshold_config=None):
         raise DeprecationWarning(
             "CompactificationAnalyzer has been migrated to component architecture.\n"
             "Please use the following components instead:\n"
-            "- For compression metrics: src.structure_net.components.metrics.CompressionRatioMetric\n"
-            "- For patch analysis: src.structure_net.components.metrics.PatchEffectivenessMetric\n"
-            "- For memory analysis: src.structure_net.components.metrics.MemoryEfficiencyMetric\n"
-            "- For quality analysis: src.structure_net.components.metrics.ReconstructionQualityMetric\n"
-            "- For comprehensive analysis: src.structure_net.components.analyzers.CompactificationAnalyzer\n"
+            "- For compression metrics: structure_net.components.metrics.CompressionRatioMetric\n"
+            "- For patch analysis: structure_net.components.metrics.PatchEffectivenessMetric\n"
+            "- For memory analysis: structure_net.components.metrics.MemoryEfficiencyMetric\n"
+            "- For quality analysis: structure_net.components.metrics.ReconstructionQualityMetric\n"
+            "- For comprehensive analysis: structure_net.components.analyzers.CompactificationAnalyzer\n"
             "\nExample migration:\n"
             "# Old:\n"
             "# analyzer = CompactificationAnalyzer()\n"
             "# metrics = analyzer.compute_metrics(compact_data, original_network)\n"
             "\n"
             "# New:\n"
-            "from src.structure_net.components.analyzers import CompactificationAnalyzer\n"
+            "from structure_net.components.analyzers import CompactificationAnalyzer\n"
             "analyzer = CompactificationAnalyzer()\n"
             "context = EvolutionContext({'compact_data': compact_data, 'original_network': original_network})\n"
             "report = AnalysisReport()\n"

@@ -11,7 +11,7 @@ import torch.nn as nn
 import logging
 import numpy as np
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseMetric, ILayer, IModel, EvolutionContext,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
@@ -170,7 +170,12 @@ class ConnectivityMetric(BaseMetric):
         # Compute degrees
         out_degrees = adj_matrix.sum(dim=1)
         in_degrees = adj_matrix.sum(dim=0)
-        total_degrees = out_degrees + in_degrees
+        is_square = out_degrees.numel() == in_degrees.numel()
+        total_degrees = (
+            out_degrees + in_degrees
+            if is_square
+            else torch.cat((out_degrees, in_degrees))
+        )
         
         # Find hubs (top 5% by degree)
         threshold = torch.quantile(total_degrees, 0.95).item()
@@ -178,16 +183,29 @@ class ConnectivityMetric(BaseMetric):
         
         hubs = []
         for idx in hub_indices:
-            # Compute hub strength (sum of connected weights)
-            out_strength = weight_matrix[idx, :].abs().sum().item()
-            in_strength = weight_matrix[:, idx].abs().sum().item()
+            flat_index = idx.item()
+            if is_square or flat_index < out_degrees.numel():
+                neuron_index = flat_index
+                side = 'output'
+                out_degree = out_degrees[neuron_index].item()
+                in_degree = in_degrees[neuron_index].item() if is_square else 0.0
+                strength = weight_matrix[neuron_index, :].abs().sum().item()
+                if is_square:
+                    strength += weight_matrix[:, neuron_index].abs().sum().item()
+            else:
+                neuron_index = flat_index - out_degrees.numel()
+                side = 'input'
+                out_degree = 0.0
+                in_degree = in_degrees[neuron_index].item()
+                strength = weight_matrix[:, neuron_index].abs().sum().item()
             
             hubs.append({
-                'index': idx.item(),
+                'index': neuron_index,
+                'side': side,
                 'total_degree': total_degrees[idx].item(),
-                'out_degree': out_degrees[idx].item(),
-                'in_degree': in_degrees[idx].item(),
-                'strength': out_strength + in_strength
+                'out_degree': out_degree,
+                'in_degree': in_degree,
+                'strength': strength,
             })
         
         # Sort by total degree
@@ -203,6 +221,9 @@ class ConnectivityMetric(BaseMetric):
         among connected triples.
         """
         n = adj_matrix.shape[0]
+
+        if adj_matrix.shape[0] != adj_matrix.shape[1]:
+            return 0.0
         
         if n < 3:
             return 0.0

@@ -22,7 +22,7 @@ from tqdm import tqdm
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.structure_net.models.multi_scale_network import create_multi_scale_network
+from structure_net.models.multi_scale_network import create_multi_scale_network
 
 
 def setup_logging(log_file: str = "mnist_experiment.log"):

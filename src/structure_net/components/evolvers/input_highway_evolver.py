@@ -205,8 +205,8 @@ class InputHighwayEvolver(BaseEvolver):
         plan_type = plan.get('type', '')
         return plan_type in self._supported_plan_types
     
-    def apply_plan(self, plan: EvolutionPlan, model: IModel,
-                   trainer: ITrainer, optimizer: Any) -> Dict[str, Any]:
+    def _execute_plan(self, plan: EvolutionPlan, model: IModel,
+                      trainer: ITrainer, optimizer: Any) -> Dict[str, Any]:
         """
         Execute the input highway plan.
         
@@ -233,6 +233,7 @@ class InputHighwayEvolver(BaseEvolver):
     def _add_input_highway(self, plan: EvolutionPlan,
                           model: IModel, optimizer: Any) -> Dict[str, Any]:
         """Add input highway to model."""
+        original_model = model
         results = {
             'highway_added': False,
             'input_dim': 0,
@@ -264,8 +265,9 @@ class InputHighwayEvolver(BaseEvolver):
             results['modifications'].append(f'Inserted highway after {insert_after}')
         
         # Store highway module
-        model_id = id(model)
-        self.highway_modules[str(model_id)] = highway_module
+        self.highway_modules[str(id(original_model))] = highway_module
+        self.highway_modules[str(id(model))] = highway_module
+        results['modified_model'] = model
         
         # Update optimizer if provided
         if optimizer:
@@ -295,7 +297,7 @@ class InputHighwayEvolver(BaseEvolver):
         # Optimize based on gradient information if available
         gradient_data = plan.get('gradient_data', {})
         
-        if gradient_data and hasattr(highway_module.highway_scales, 'grad'):
+        if gradient_data and highway_module.highway_scales.grad is not None:
             # Adjust scales based on gradient magnitude
             grad_magnitude = highway_module.highway_scales.grad.abs()
             

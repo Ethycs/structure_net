@@ -13,13 +13,15 @@ import torchvision.transforms as transforms
 import numpy as np
 import time
 import traceback
+import inspect
+import pickle
 from typing import List, Dict, Any, Optional, Tuple, Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import os
 
 from .core import (
     Experiment, ExperimentResult, ExperimentStatus,
-    LabConfig, ExperimentRunnerBase
+    LabConfig, ExperimentRunnerBase, ExperimentWorker, utc_now
 )
 from .resource_monitor import get_auto_balancer, ResourceLimits
 
@@ -35,7 +37,82 @@ from structure_net.profiling.factory import create_comprehensive_profiler
 from structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
 
 # Import data factory components
-from src.structure_net.data_factory import create_dataset
+from structure_net.data_factory import create_dataset
+
+
+def run_test_function(
+    experiment: Experiment,
+    device_id: int,
+    test_function: Callable,
+) -> ExperimentResult:
+    """Adapt a hypothesis test function to the canonical worker protocol.
+
+    Modern workers accept ``(experiment, device_id)`` and return an
+    ``ExperimentResult``. Existing hypothesis functions accept a parameter
+    dictionary and return ``(model, metrics)``; that format is normalized here
+    so execution backends only have one result shape to manage.
+    """
+    positional = [
+        parameter
+        for parameter in inspect.signature(test_function).parameters.values()
+        if parameter.kind in (
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        )
+    ]
+    if len(positional) >= 2:
+        result = test_function(experiment, device_id)
+    else:
+        parameters = dict(experiment.parameters)
+        parameters.setdefault('seed', experiment.seed)
+        parameters.setdefault('device_id', device_id)
+        parameters.setdefault('device', f'cuda:{device_id}' if device_id >= 0 else 'cpu')
+        result = test_function(parameters)
+
+    if isinstance(result, ExperimentResult):
+        return result
+
+    if not isinstance(result, tuple) or len(result) != 2:
+        raise TypeError(
+            "Experiment test functions must return ExperimentResult or "
+            "a (model, metrics) tuple"
+        )
+
+    model, metrics = result
+    if not isinstance(metrics, dict):
+        raise TypeError("Experiment test function metrics must be a dictionary")
+
+    architecture = metrics.get('architecture', experiment.parameters.get('architecture', []))
+    model_parameters = metrics.get('parameters', metrics.get('model_parameters'))
+    if model_parameters is None and hasattr(model, 'parameters'):
+        model_parameters = sum(parameter.numel() for parameter in model.parameters())
+    model_parameters = int(model_parameters or 0)
+    primary_metric = float(
+        metrics.get(
+            'primary_metric',
+            metrics.get(experiment.parameters.get('primary_metric_type', 'accuracy'), 0.0),
+        )
+    )
+    training_time = float(metrics.get('training_time', 0.0))
+
+    return ExperimentResult(
+        experiment_id=experiment.id,
+        hypothesis_id=experiment.hypothesis_id,
+        metrics=metrics,
+        primary_metric=primary_metric,
+        model_architecture=list(architecture),
+        model_parameters=model_parameters,
+        training_time=training_time,
+    )
+
+
+def _can_use_process_pool(callable_: Callable) -> bool:
+    """Return whether the standard multiprocessing serializer accepts a callable."""
+    try:
+        pickle.dumps(callable_)
+    except (AttributeError, pickle.PickleError, TypeError):
+        return False
+    return True
 
 
 def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> ExperimentResult:
@@ -67,7 +144,7 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
     try:
         # Create model based on experiment type
         if params.get('use_residual', False):
-            from src.structure_net.evolution.residual_blocks import create_residual_network
+            from structure_net.evolution.residual_blocks import create_residual_network
             model = create_residual_network(
                 architecture=params['architecture'],
                 skip_frequency=params.get('skip_frequency', 2)
@@ -299,8 +376,8 @@ def run_structure_net_experiment(experiment: Experiment, device_id: int = 0) -> 
 class AsyncExperimentRunner(ExperimentRunnerBase):
     """Asynchronous experiment runner using multiprocessing with auto-balancing."""
     
-    def __init__(self, config: LabConfig):
-        self.config = config
+    def __init__(self, config: LabConfig, worker: Optional[ExperimentWorker] = None):
+        super().__init__(config, worker)
         self.device_ids = config.device_ids
         self.max_parallel = config.max_parallel_experiments
         
@@ -322,6 +399,8 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
             self.max_parallel = initial_settings['parallel_experiments']
             self.current_batch_size = initial_settings['batch_size']
             self.current_workers = initial_settings['num_workers']
+            if self.device_ids and all(device_id < 0 for device_id in self.device_ids):
+                self.current_workers = 0
             
             if config.verbose:
                 print(f"🤖 Auto-balancer initialized:")
@@ -331,12 +410,28 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
         else:
             self.balancer = None
             self.current_batch_size = 128
-            self.current_workers = 2
+            self.current_workers = (
+                0
+                if self.device_ids and all(device_id < 0 for device_id in self.device_ids)
+                else 2
+            )
     
-    async def run_experiment(self, experiment: Experiment, test_function: Callable) -> ExperimentResult:
+    async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
         """Run a single experiment asynchronously."""
+        if self.worker is None:
+            raise RuntimeError("No experiment worker has been configured")
         experiment.status = ExperimentStatus.RUNNING
-        experiment.started_at = time.time()
+        experiment.started_at = utc_now()
+
+        device_id = (
+            experiment.device_id
+            if experiment.device_id is not None
+            else self.device_ids[hash(experiment.id) % len(self.device_ids)]
+        )
+        nested_parameters = experiment.parameters.get('params')
+        display_parameters = dict(experiment.parameters)
+        if isinstance(nested_parameters, dict):
+            display_parameters.update(nested_parameters)
         
         # Register experiment start in ChromaDB if logger available
         if hasattr(self, 'logger') and self.logger:
@@ -345,18 +440,16 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
                 experiment.id,
                 experiment.hypothesis_id,
                 estimated_duration=estimated_duration,
-                architecture=str(experiment.parameters.get('architecture', [])),
-                device_id=experiment.device_id
+                architecture=str(display_parameters.get('architecture', [])),
+                device_id=device_id
             )
-        
-        device_id = experiment.device_id or self.device_ids[hash(experiment.id) % len(self.device_ids)]
         
         # Print one-line experiment status
         exp_id = experiment.id.split('_')[-1]  # Get just the experiment number
-        arch = experiment.parameters.get('architecture', [])
+        arch = display_parameters.get('architecture', [])
         n_layers = len(arch) - 1 if isinstance(arch, list) else 0
         epochs = experiment.parameters.get('epochs', 10)
-        lr_strategy = experiment.parameters.get('lr_strategy', 'default')
+        lr_strategy = display_parameters.get('lr_strategy', 'default')
         device_str = f'cuda:{device_id}' if device_id >= 0 else 'cpu'
         
         print(f"🚀 [{exp_id}] Starting on {device_str} | "
@@ -364,21 +457,30 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
               f"Strategy: {lr_strategy} | "
               f"Epochs: {epochs}", flush=True)
         
-        loop = asyncio.get_event_loop()
-        with ProcessPoolExecutor(max_workers=1) as executor:
-            result = await loop.run_in_executor(
-                executor,
-                test_function,
-                experiment,
-                device_id
-            )
+        if device_id < 0:
+            # PyTorch training/evaluation can deadlock inside a secondary CPU
+            # thread after other runtime services (for example Chroma) have
+            # initialized their own pools. Keep the async lifecycle but execute
+            # CPU workers inline; run_experiments naturally serializes these
+            # blocking calls as each coroutine reaches this point.
+            result = run_test_function(experiment, device_id, self.worker)
+        else:
+            loop = asyncio.get_running_loop()
+            # Picklable accelerator workers retain process isolation. A thread
+            # remains the compatibility fallback for locally-defined workers.
+            use_process = _can_use_process_pool(self.worker)
+            executor_type = ProcessPoolExecutor if use_process else ThreadPoolExecutor
+            with executor_type(max_workers=1) as executor:
+                result = await loop.run_in_executor(
+                    executor, run_test_function, experiment, device_id, self.worker
+                )
         
-        experiment.status = ExperimentStatus.COMPLETED if result.error is None else ExperimentStatus.FAILED
-        experiment.completed_at = time.time()
+        experiment.status = result.status
+        experiment.completed_at = utc_now()
         experiment.result = result
         
         # Print completion status
-        duration = experiment.completed_at - experiment.started_at
+        duration = (experiment.completed_at - experiment.started_at).total_seconds()
         if result.error is None:
             accuracy = result.metrics.get('accuracy', 0.0) if hasattr(result, 'metrics') else 0.0
             primary_metric = result.primary_metric if hasattr(result, 'primary_metric') else 0.0
@@ -401,15 +503,14 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
         
         return result
     
-    async def run_experiments(self, experiments: List[Experiment], test_function: Callable) -> List[ExperimentResult]:
+    async def run_experiments(self, experiments: List[Experiment]) -> List[ExperimentResult]:
         """Run multiple experiments with controlled parallelism and auto-balancing."""
         results = []
         
         # Pass runtime parameters to experiments
         for exp in experiments:
-            if self.auto_balance:
-                exp.parameters['batch_size'] = self.current_batch_size
-                exp.parameters['num_workers'] = self.current_workers
+            exp.parameters.setdefault('batch_size', self.current_batch_size)
+            exp.parameters.setdefault('num_workers', self.current_workers)
         
         i = 0
         while i < len(experiments):
@@ -451,7 +552,7 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
                 if exp.device_id is None:
                     exp.device_id = self.device_ids[j % len(self.device_ids)]
             
-            batch_tasks = [self.run_experiment(exp, test_function) for exp in batch]
+            batch_tasks = [self.run_experiment(exp) for exp in batch]
             batch_results = await asyncio.gather(*batch_tasks)
             results.extend(batch_results)
             
@@ -467,37 +568,59 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
 class ParallelExperimentRunner(ExperimentRunnerBase):
     """Parallel experiment runner using multiprocessing.Pool."""
     
-    def __init__(self, config: LabConfig):
-        self.config = config
+    def __init__(self, config: LabConfig, worker: Optional[ExperimentWorker] = None):
+        super().__init__(config, worker or run_structure_net_experiment)
         self.device_ids = config.device_ids
         self.max_parallel = config.max_parallel_experiments
     
     async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
         """Run a single experiment."""
-        device_id = experiment.device_id or self.device_ids[0]
-        return run_structure_net_experiment(experiment, device_id)
+        experiment.status = ExperimentStatus.RUNNING
+        experiment.started_at = utc_now()
+        device_id = experiment.device_id if experiment.device_id is not None else self.device_ids[0]
+        result = run_test_function(experiment, device_id, self.worker)
+        experiment.status = result.status
+        experiment.completed_at = utc_now()
+        experiment.result = result
+        return result
     
     async def run_experiments(self, experiments: List[Experiment]) -> List[ExperimentResult]:
         """Run multiple experiments in parallel."""
         # Prepare arguments
         args = []
         for i, exp in enumerate(experiments):
-            device_id = exp.device_id or self.device_ids[i % len(self.device_ids)]
-            args.append((exp, device_id))
+            exp.status = ExperimentStatus.RUNNING
+            exp.started_at = utc_now()
+            device_id = exp.device_id if exp.device_id is not None else self.device_ids[i % len(self.device_ids)]
+            args.append((exp, device_id, self.worker))
         
         # Run in parallel
         with mp.Pool(processes=self.max_parallel) as pool:
-            results = pool.starmap(run_structure_net_experiment, args)
+            results = pool.starmap(run_test_function, args)
+
+        completed_at = utc_now()
+        for experiment, result in zip(experiments, results):
+            experiment.status = result.status
+            experiment.completed_at = completed_at
+            experiment.result = result
         
         return results
 
 
-class ExperimentRunner:
+class ExperimentRunner(ExperimentRunnerBase):
     """Main experiment runner that selects appropriate backend."""
     
-    def __init__(self, config: LabConfig):
-        self.config = config
-        self.async_runner = AsyncExperimentRunner(config)
+    def __init__(self, config: LabConfig, worker: Optional[ExperimentWorker] = None):
+        super().__init__(config, worker)
+        self.async_runner = AsyncExperimentRunner(config, worker)
+
+    def set_worker(self, worker: ExperimentWorker) -> None:
+        super().set_worker(worker)
+        self.async_runner.set_worker(worker)
+
+    async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
+        """Run one experiment through the selected backend."""
+        return await self.async_runner.run_experiment(experiment)
     
     async def run_experiments(self, experiments: List[Experiment]) -> List[ExperimentResult]:
         """Run experiments using the most appropriate method."""

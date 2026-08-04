@@ -11,12 +11,12 @@ import torch.nn as nn
 import logging
 import numpy as np
 
-from src.structure_net.core import (
+from structure_net.core import (
     BaseAnalyzer, IModel, ILayer, EvolutionContext, AnalysisReport,
     ComponentContract, ComponentVersion, Maturity,
     ResourceRequirements, ResourceLevel
 )
-from src.structure_net.components.metrics import (
+from structure_net.components.metrics import (
     GraphStructureMetric, CentralityMetric, 
     SpectralGraphMetric, PathAnalysisMetric
 )
@@ -113,11 +113,12 @@ class GraphAnalyzer(BaseAnalyzer):
         })
         
         structure_key = "GraphStructureMetric"
-        if structure_key not in report.metrics:
+        cached_structure = report.get_metric(structure_key)
+        if not cached_structure or 'graph' not in cached_structure or 'active_neurons' not in cached_structure:
             structure_result = self._structure_metric.analyze(model, structure_context)
             report.add_metric_data(structure_key, structure_result)
         else:
-            structure_result = report.get(f"metrics.{structure_key}")
+            structure_result = cached_structure
         
         # Check if graph was built successfully
         if structure_result.get('num_nodes', 0) == 0:
@@ -131,27 +132,36 @@ class GraphAnalyzer(BaseAnalyzer):
         
         # Run centrality metric
         centrality_key = "CentralityMetric"
-        if centrality_key not in report.metrics:
+        centrality_result = report.get_metric(centrality_key)
+        centrality_outputs = {
+            'avg_betweenness', 'max_betweenness',
+            'centrality_concentration', 'hub_neurons',
+        }
+        if not isinstance(centrality_result, dict) or not centrality_outputs.issubset(centrality_result):
             centrality_result = self._centrality_metric.analyze(None, graph_context)
             report.add_metric_data(centrality_key, centrality_result)
-        else:
-            centrality_result = report.get(f"metrics.{centrality_key}")
         
         # Run spectral metric
         spectral_key = "SpectralGraphMetric"
-        if spectral_key not in report.metrics:
+        spectral_result = report.get_metric(spectral_key)
+        spectral_outputs = {
+            'spectral_radius', 'spectral_gap',
+            'algebraic_connectivity', 'graph_energy',
+        }
+        if not isinstance(spectral_result, dict) or not spectral_outputs.issubset(spectral_result):
             spectral_result = self._spectral_metric.analyze(None, graph_context)
             report.add_metric_data(spectral_key, spectral_result)
-        else:
-            spectral_result = report.get(f"metrics.{spectral_key}")
         
         # Run path metric
         path_key = "PathAnalysisMetric"
-        if path_key not in report.metrics:
+        path_result = report.get_metric(path_key)
+        path_outputs = {
+            'avg_shortest_path', 'diameter', 'characteristic_path_length',
+            'path_efficiency', 'critical_paths',
+        }
+        if not isinstance(path_result, dict) or not path_outputs.issubset(path_result):
             path_result = self._path_metric.analyze(None, graph_context)
             report.add_metric_data(path_key, path_result)
-        else:
-            path_result = report.get(f"metrics.{path_key}")
         
         # Create comprehensive analysis
         graph_summary = self._create_graph_summary(structure_result)

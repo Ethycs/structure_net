@@ -1,5 +1,7 @@
 # **The Structure Net Refactoring Guide: Complete System Transformation**
 
+> **Status: SUPERSEDED DESIGN SOURCE.** This document is retained as refactor provenance. Use [`01 - Design/component-architecture.md`](01%20-%20Design/component-architecture.md), [`02 - Implementation/component-migration-guide.md`](02%20-%20Implementation/component-migration-guide.md), and [`06 - Roadmaps/component-refactor.md`](06%20-%20Roadmaps/component-refactor.md) for the current documentation paradigm.
+
 This is a comprehensive programmer's guide for transforming Structure Net into a self-aware, contract-driven research framework. Follow this guide step-by-step to migrate your existing codebase.
 
 ## **Table of Contents**

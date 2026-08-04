@@ -4,8 +4,8 @@ Tests for the core functionality of the structure_net library.
 
 import torch
 import pytest
-from src.structure_net.core.layers import StandardSparseLayer
-from src.structure_net.core.network_factory import create_standard_network
+from structure_net.core.layers import StandardSparseLayer
+from structure_net.core.network_factory import create_standard_network
 
 def test_standard_sparse_layer_creation():
     """

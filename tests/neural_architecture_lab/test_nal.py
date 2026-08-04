@@ -6,7 +6,7 @@ import pytest
 import asyncio
 from typing import List, Dict, Any, Tuple
 
-from src.neural_architecture_lab.core import (
+from neural_architecture_lab.core import (
     LabConfig,
     Hypothesis,
     HypothesisCategory,
@@ -15,8 +15,8 @@ from src.neural_architecture_lab.core import (
     ExperimentStatus,
     ExperimentRunnerBase
 )
-from src.neural_architecture_lab.lab import NeuralArchitectureLab
-from src.neural_architecture_lab.analyzers import StatisticalAnalyzer, InsightExtractor
+from neural_architecture_lab.lab import NeuralArchitectureLab
+from neural_architecture_lab.analyzers import StatisticalAnalyzer, InsightExtractor
 
 # --- Mock Components ---
 

@@ -15,6 +15,7 @@ from .embedder import (
 
 from .chroma_client import (
     ChromaSearchClient,
+    ChromaDBClient,
     get_chroma_client,
     ChromaConfig
 )
@@ -37,6 +38,7 @@ __all__ = [
     
     # Client
     'ChromaSearchClient',
+    'ChromaDBClient',
     'get_chroma_client',
     'ChromaConfig',
     

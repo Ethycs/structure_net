@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Callable
 from datetime import datetime
+from enum import Enum
 from dataclasses import asdict
 import torch
 import numpy as np
@@ -20,12 +21,16 @@ from .core import (
 )
 from .runners import AsyncExperimentRunner
 from .analyzers import InsightExtractor, StatisticalAnalyzer
-from src.structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
+from structure_net.logging.standardized_logging import StandardizedLogger, LoggingConfig
 import logging
 
 class NumpyJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, np.integer):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, Enum):
+            return obj.value
+        elif isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
             return float(obj)
@@ -105,6 +110,7 @@ class NeuralArchitectureLab:
             queue_dir=str(self.results_dir / "experiment_queue"),
             sent_dir=str(self.results_dir / "experiment_sent"),
             rejected_dir=str(self.results_dir / "experiment_rejected"),
+            chromadb_path=str(self.results_dir / "chroma_db"),
             enable_wandb=self.config.enable_wandb
         )
         self.logger = StandardizedLogger(logging_config)
@@ -240,7 +246,12 @@ class NeuralArchitectureLab:
         if self.config.verbose:
             print(f"   Generated {len(experiments)} experiments")
         
-        experiment_results = await self.runner.run_experiments(experiments, hypothesis.test_function)
+        # Runners expose one canonical lifecycle method. Backends that execute
+        # hypothesis functions accept the callable through runner configuration;
+        # test doubles and result-replay runners may intentionally ignore it.
+        if hasattr(self.runner, 'set_worker'):
+            self.runner.set_worker(hypothesis.test_function)
+        experiment_results = await self.runner.run_experiments(experiments)
         
         for result in experiment_results:
             self.logger.log_experiment_result(result)

@@ -3,11 +3,26 @@ Core data structures and interfaces for the Neural Architecture Lab.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Callable, Optional, Tuple
+from typing import Dict, List, Any, Callable, Optional, Protocol, Tuple
 from abc import ABC, abstractmethod
 from enum import Enum
-import time
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+def utc_now() -> datetime:
+    """Return a timezone-aware timestamp for persisted experiment state."""
+    return datetime.now(timezone.utc)
+
+
+def _coerce_datetime(value: Optional[datetime]) -> Optional[datetime]:
+    """Accept legacy Unix timestamps while exposing one datetime contract."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(value, timezone.utc)
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
 
 
 class HypothesisCategory(Enum):
@@ -53,7 +68,7 @@ class Hypothesis:
     statistical_significance: float = 0.05
     
     # Metadata
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=utc_now)
     tags: List[str] = field(default_factory=list)
     references: List[str] = field(default_factory=list)  # Papers, previous experiments
     
@@ -85,6 +100,10 @@ class Experiment:
     # Results
     result: Optional['ExperimentResult'] = None
 
+    def __post_init__(self) -> None:
+        self.started_at = _coerce_datetime(self.started_at)
+        self.completed_at = _coerce_datetime(self.completed_at)
+
 
 @dataclass
 class ExperimentResult:
@@ -111,8 +130,23 @@ class ExperimentResult:
     anomalies: List[str] = field(default_factory=list)
     
     # Metadata
-    timestamp: float = field(default_factory=time.time)
+    timestamp: datetime = field(default_factory=utc_now)
     error: Optional[str] = None
+    status: ExperimentStatus = ExperimentStatus.COMPLETED
+
+    def __post_init__(self) -> None:
+        self.timestamp = _coerce_datetime(self.timestamp) or utc_now()
+        if isinstance(self.status, str):
+            self.status = ExperimentStatus(self.status)
+        # Error-bearing results are failures unless a caller explicitly records a
+        # terminal status such as cancellation.
+        if self.error is not None and self.status == ExperimentStatus.COMPLETED:
+            self.status = ExperimentStatus.FAILED
+
+    @property
+    def duration(self) -> float:
+        """Compatibility alias for consumers using the older result schema."""
+        return self.training_time
 
 
 @dataclass
@@ -147,7 +181,7 @@ class HypothesisResult:
     statistical_summary: Dict[str, Any]
     
     # Metadata
-    completed_at: datetime = field(default_factory=datetime.now)
+    completed_at: datetime = field(default_factory=utc_now)
 
 
 import argparse
@@ -266,7 +300,19 @@ class LabConfigFactory:
 
 
 class ExperimentRunnerBase(ABC):
-    """Base class for experiment runners."""
+    """Backend-neutral asynchronous experiment runner contract."""
+
+    def __init__(
+        self,
+        config: Optional[LabConfig] = None,
+        worker: Optional['ExperimentWorker'] = None,
+    ) -> None:
+        self.config = config or LabConfig()
+        self.worker = worker
+
+    def set_worker(self, worker: 'ExperimentWorker') -> None:
+        """Select the callable used by this runner's execution backend."""
+        self.worker = worker
     
     @abstractmethod
     async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
@@ -291,3 +337,10 @@ class HypothesisTestFunction(ABC):
             Tuple of (model, metrics_dict)
         """
         pass
+
+
+class ExperimentWorker(Protocol):
+    """Canonical callable protocol used by experiment runner backends."""
+
+    def __call__(self, experiment: Experiment, device_id: int) -> ExperimentResult:
+        ...

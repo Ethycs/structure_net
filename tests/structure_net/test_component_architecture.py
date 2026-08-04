@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Set
 import torch
 import torch.nn as nn
 
-from src.structure_net.core import (
+from structure_net.core import (
     # Interfaces
     Maturity, ComponentVersion, ResourceLevel, ResourceRequirements,
     ComponentContract, EvolutionContext, AnalysisReport, EvolutionPlan,

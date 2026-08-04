@@ -6,7 +6,7 @@ from pathlib import Path
 # Add project root to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.structure_net.core.network_factory import create_standard_network
+from structure_net.core.network_factory import create_standard_network
 
 def pytest_configure(config):
     """Configure pytest with custom markers."""
