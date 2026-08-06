@@ -7,8 +7,7 @@
 **Depends on:** `../03 - Architecture/degree-defect-cobordism.md`
 
 ## Measured verdict
-
-Both retained phase models began with winding degree zero and ended with degree `+1`. Deterministic replay localized the only degree-changing optimizer interval at step **15 for d6** and step **17 for d8**. On a 1024-phase × 66-path straight-line interpolation between each pair of parameter states, each cylinder contained one indexed cell with charge `+1`:
+Awinding degree zero and ended with degree `+1`. Deterministic replay localized the only degree-changing optimizer interval at step **15 for d6** and step **17 for d8**. On a 1024-phase × 66-path straight-line interpolation between each pair of parameter states, each cylinder contained one indexed cell with charge `+1`:
 
 | Model | Degree-changing step | Endpoint Δdegree | Defect cells | Total charge | Identity |
 | --- | ---: | ---: | ---: | ---: | --- |

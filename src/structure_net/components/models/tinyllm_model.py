@@ -494,6 +494,38 @@ class TinyLLMModel(BaseModel):
             )
         return value
 
+    def residual_at_depth(
+        self,
+        input_ids: torch.Tensor,
+        depth: float,
+    ) -> torch.Tensor:
+        """Return the unnormalized residual stream at a real-valued depth.
+
+        This is the representation counterpart of :meth:`forward_at_depth`:
+        integer depths are exact block prefixes and a fractional depth gates
+        the next block.  The final layer norm and language-model head are not
+        applied, so callers can test what information is present before the
+        shared decoder.
+        """
+        if input_ids.ndim != 2:
+            raise ValueError("input_ids must have shape (batch, sequence)")
+        _, sequence_length = input_ids.shape
+        if sequence_length > self.config.block_size:
+            raise ValueError(
+                f"Sequence length {sequence_length} exceeds block size {self.config.block_size}"
+            )
+        if input_ids.dtype not in (torch.int32, torch.int64):
+            raise TypeError("input_ids must contain integer token ids")
+        if self.feedback_connections:
+            raise ValueError("continuous depth does not support feedback connections")
+        positions = torch.arange(
+            sequence_length, device=input_ids.device, dtype=torch.long
+        )
+        embedded = self.transformer["wte"](input_ids) + self.transformer["wpe"](
+            positions
+        )
+        return self._run_blocks_to_depth(embedded, depth)
+
     def forward_at_depth(
         self,
         input_ids: torch.Tensor,
@@ -518,13 +550,7 @@ class TinyLLMModel(BaseModel):
             raise TypeError("input_ids must contain integer token ids")
         if self.feedback_connections:
             raise ValueError("continuous depth does not support feedback connections")
-        positions = torch.arange(
-            sequence_length, device=input_ids.device, dtype=torch.long
-        )
-        embedded = self.transformer["wte"](input_ids) + self.transformer["wpe"](
-            positions
-        )
-        value = self._run_blocks_to_depth(embedded, depth)
+        value = self.residual_at_depth(input_ids, depth)
         value = self.transformer["ln_f"](value)
         logits_input = value if return_full_logits else value[:, [-1], :]
         return self.lm_head(logits_input)

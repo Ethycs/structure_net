@@ -43,6 +43,12 @@ This realizes a concrete continuous residual-gate path over depth. It is a neura
 - matches ordinary `forward` exactly at maximum integer depth;
 - rejects feedback graphs because their refinement execution has a separate depth semantics.
 
+`TinyLLMModel.residual_at_depth(input_ids, depth)` executes the same exact-prefix/
+partial-block family but returns the unnormalized residual stream before `ln_f`
+and the tied language-model head. This is the supported observation boundary for
+testing whether information is present internally rather than only visible to the
+current decoder.
+
 Tests compare every integer depth to a manually evaluated prefix, compare maximum depth to ordinary forward logits, and check continuity around a fractional gate.
 
 ## Training arms
@@ -77,6 +83,32 @@ For cosine, a quotient-proxy front requires:
 
 The cosine branch-distance criterion is not conditional mutual information, and the paired metric criterion is not a Reeb graph or cosheaf.
 
+## Conditional branch-depth protocol
+
+`tinyllm_conditional_branch_depth_scan.py` adds the direct residual test that the
+original depth diagram lacked. It freezes checkpoints and evaluates exact
+cosine-matched phase pairs with:
+
+- linear and two-hidden-layer nonlinear branch probes conditioned on cosine;
+- a cross-validated cosine-only log-loss null;
+- within-pair randomized-label controls;
+- residual cosine regression, decoder cosine correlation, and posterior H1;
+- overlapping and disjoint nuisance families;
+- a finite-fiber MST merger-scale component proxy;
+- pre-attention, post-attention, and post-MLP cuts around the detected residual front.
+
+Three nested fronts keep distinct claims separate:
+
+| Front | Required evidence |
+| --- | --- |
+| ID residual quotient | branch at chance, residual cosine retained, negligible conditional log-loss gain, one-component fiber proxy |
+| ID decoder-supported quotient | ID residual quotient plus decoder cosine correlation at least 0.9 |
+| nuisance-robust quotient | decoder-supported quotient plus shifted residual cosine retention, shifted branch chance, and shifted one-component proxy |
+
+The strictest front is the preregistered headline. Failure of its nuisance gate
+does not erase an ID residual result; it limits the result to the distribution on
+which cosine itself remains recoverable.
+
 ## Depth defect charge
 
 At every phase checkpoint, posterior moments form a sampled field on the phase/depth cylinder. `complex_defect_charge` compares the degree at depth zero and full depth with the signed cell charge between them.
@@ -102,7 +134,10 @@ A well-posed ODE control remains a distinct experiment because its invertible fi
 ```bash
 pixi run pytest -q \
   tests/structure_net/components/test_tinyllm_model.py \
-  tests/structure_net/test_tinyllm_depth_graded_quotient.py
+  tests/structure_net/test_tinyllm_depth_graded_quotient.py \
+  tests/structure_net/test_tinyllm_conditional_branch_depth_scan.py
 ```
 
-The measured campaign is recorded in `../08 - Analysis/2026-08-05_tinyllm-depth-graded-quotient.md`.
+The measured campaigns are recorded in
+`../08 - Analysis/2026-08-05_tinyllm-depth-graded-quotient.md` and
+`../08 - Analysis/2026-08-05_tinyllm-conditional-branch-depth-scan.md`.
