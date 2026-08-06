@@ -168,10 +168,17 @@ class ComputeConfig:
     
     # Device settings
     device: str = field(default_factory=lambda: os.getenv('DEVICE', 'auto'))
-    device_ids: List[int] = field(default_factory=lambda: 
-        [int(x) for x in os.getenv('CUDA_VISIBLE_DEVICES', '').split(',') if x]
-        or list(range(_get_cuda_device_count()))
+    # Logical CUDA ordinals after CUDA_VISIBLE_DEVICES has been applied.  The
+    # values inside CUDA_VISIBLE_DEVICES are physical selectors and must not be
+    # reused as torch device indices.
+    device_ids: List[int] = field(default_factory=lambda:
+        list(range(_get_cuda_device_count())) or [-1]
     )
+    gpu_slots_per_device: int = 1
+    gpu_memory_per_experiment_gb: Optional[float] = None
+    max_gpu_slots_per_device: int = 4
+    max_experiment_retries: int = 0
+    resume_completed_experiments: bool = False
     
     # Parallelism
     max_parallel_experiments: int = field(default_factory=lambda: 
@@ -201,8 +208,9 @@ class ComputeConfig:
         if self.device != 'auto':
             return self.device
             
-        if torch.cuda.is_available() and self.device_ids:
-            device_id = self.device_ids[experiment_id % len(self.device_ids)]
+        cuda_devices = [device for device in self.device_ids if device >= 0]
+        if torch.cuda.is_available() and cuda_devices:
+            device_id = cuda_devices[experiment_id % len(cuda_devices)]
             return f'cuda:{device_id}'
         
         return 'cpu'
@@ -365,6 +373,11 @@ class UnifiedConfig:
             max_parallel_experiments=self.compute.max_parallel_experiments,
             experiment_timeout=self.experiment.timeout_minutes * 60,  # Convert to seconds
             device_ids=self.compute.device_ids,
+            gpu_slots_per_device=self.compute.gpu_slots_per_device,
+            gpu_memory_per_experiment_gb=self.compute.gpu_memory_per_experiment_gb,
+            max_gpu_slots_per_device=self.compute.max_gpu_slots_per_device,
+            max_experiment_retries=self.compute.max_experiment_retries,
+            resume_completed_experiments=self.compute.resume_completed_experiments,
             
             # Scientific rigor
             min_experiments_per_hypothesis=self.experiment.min_experiments,

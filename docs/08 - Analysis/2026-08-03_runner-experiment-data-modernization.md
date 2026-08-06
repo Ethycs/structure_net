@@ -11,10 +11,10 @@ The runner, experiment format, and data story now form one consistent local exec
 
 | Area | Canonical result | Readiness |
 | --- | --- | --- |
-| Runner | async runner with a shared `ExperimentWorker` protocol and compatibility adapter | ✅ Validated on CPU |
+| Runner | async local runner with logical GPU slots, spawned workers, retry/resume, and a shared `ExperimentWorker` protocol | ✅ Validated on CPU and local CUDA |
 | Experiment format | direct-ID dataclasses with timezone-aware lifecycle, explicit result status, and duration compatibility | ✅ Canonical in memory |
 | Data | schema-versioned searchable metadata plus JSON/HDF5 time-series storage | ✅ Round-trip validated |
-| Advanced GPU runner | same public protocol, backend-specific resource behavior | 🟡 Retained; GPU behavior is environment-dependent |
+| Canonical local GPU runner | fixed/memory-calibrated slots across logical devices | ✅ Real multi-process hardware shakedown |
 | Ray | optional experimental branch, not a declared canonical dependency | ⚪ Deferred explicitly |
 
 ## 1. Canonical runner protocol
@@ -92,7 +92,7 @@ The shakedown materially changed the implementation: all active source/tests/exp
 
 1. The default `run_structure_net_experiment` training implementation still reaches legacy evolution shims. The protocol around it is modern; replacing every training primitive is separate retirement work.
 2. A live external Chroma service is not required for the local acceptance path; tests use local persistence.
-3. GPU memory behavior needs hardware-specific coverage before claiming parity across all accelerators.
+3. Slot calibration is admission control rather than memory isolation; each model family still needs a representative peak-memory pilot.
 4. Ray must either become a declared optional dependency with equivalence tests or remain explicitly experimental.
 5. A future schema version should be introduced only when the wire envelope changes incompatibly; flexible metric/config contents alone do not justify replacing the current in-memory types.
 6. Chroma/PostHog telemetry callback errors and a Pydantic dataset-registry serialization warning remain non-fatal dependency noise; they should be resolved before treating logs as operationally clean.

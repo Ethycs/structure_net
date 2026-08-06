@@ -7,19 +7,23 @@ proper GPU configuration.
 
 import os
 
-# GPU Configuration
-DEFAULT_CUDA_DEVICES = "1,2"
+# GPU visibility is a deployment decision.  Leaving it unset exposes every
+# device granted to the process; launchers may pin physical devices explicitly
+# before Python starts.
+DEFAULT_CUDA_DEVICES = None
 
 def setup_cuda_devices(devices: str = None):
     """
     Set CUDA_VISIBLE_DEVICES environment variable.
     
     Args:
-        devices: Comma-separated device IDs (e.g., "0,1,2"). 
-                If None, uses DEFAULT_CUDA_DEVICES.
+        devices: Comma-separated *physical* device IDs (e.g., "0,1,2").
+                If None, preserve the caller's existing visibility.
     """
     if devices is None:
         devices = DEFAULT_CUDA_DEVICES
+    if devices is None:
+        return os.environ.get("CUDA_VISIBLE_DEVICES")
     
     if "CUDA_VISIBLE_DEVICES" not in os.environ:
         os.environ["CUDA_VISIBLE_DEVICES"] = devices
@@ -29,6 +33,7 @@ def setup_cuda_devices(devices: str = None):
     else:
         # Don't print this message - it's too noisy when spawning processes
         pass
+    return os.environ.get("CUDA_VISIBLE_DEVICES")
 
 # Automatically configure on import
 setup_cuda_devices()

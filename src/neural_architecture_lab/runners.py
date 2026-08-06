@@ -24,6 +24,10 @@ from .core import (
     LabConfig, ExperimentRunnerBase, ExperimentWorker, utc_now
 )
 from .resource_monitor import get_auto_balancer, ResourceLimits
+from .local_scheduler import (
+    ExperimentResultLedger,
+    build_device_slot_plan,
+)
 
 # Import structure_net components
 from structure_net.core.network_factory import create_standard_network
@@ -380,6 +384,22 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
         super().__init__(config, worker)
         self.device_ids = config.device_ids
         self.max_parallel = config.max_parallel_experiments
+        if self.max_parallel < 1:
+            raise ValueError("max_parallel_experiments must be positive")
+        if config.max_experiment_retries < 0:
+            raise ValueError("max_experiment_retries cannot be negative")
+        self.max_retries = config.max_experiment_retries
+        self.resume_completed = config.resume_completed_experiments
+        self.result_ledger = ExperimentResultLedger(config.results_dir)
+        self.slot_plan = build_device_slot_plan(
+            self.device_ids,
+            slots_per_device=config.gpu_slots_per_device,
+            memory_per_experiment_gb=config.gpu_memory_per_experiment_gb,
+            max_slots_per_device=config.max_gpu_slots_per_device,
+            usable_memory_fraction=config.max_memory_per_experiment,
+        )
+        self.device_slots = list(self.slot_plan.slots)
+        self.max_parallel = min(self.max_parallel, self.slot_plan.concurrency)
         
         # Initialize auto-balancer if enabled
         self.auto_balance = getattr(config, 'auto_balance', True)
@@ -397,6 +417,7 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
             # Get optimal initial settings
             initial_settings = self.balancer.get_optimal_initial_settings()
             self.max_parallel = initial_settings['parallel_experiments']
+            self.max_parallel = min(self.max_parallel, self.slot_plan.concurrency)
             self.current_batch_size = initial_settings['batch_size']
             self.current_workers = initial_settings['num_workers']
             if self.device_ids and all(device_id < 0 for device_id in self.device_ids):
@@ -407,6 +428,7 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
                 print(f"   Parallel experiments: {self.max_parallel}")
                 print(f"   Initial batch size: {self.current_batch_size}")
                 print(f"   Data workers: {self.current_workers}")
+                print(f"   Device slots: {self.slot_plan.slots_by_device}")
         else:
             self.balancer = None
             self.current_batch_size = 128
@@ -416,17 +438,64 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
                 else 2
             )
     
+    def _failure_result(
+        self, experiment: Experiment, error: BaseException, started: float
+    ) -> ExperimentResult:
+        return ExperimentResult(
+            experiment_id=experiment.id,
+            hypothesis_id=experiment.hypothesis_id,
+            metrics={},
+            primary_metric=0.0,
+            model_architecture=list(experiment.parameters.get("architecture", [])),
+            model_parameters=0,
+            training_time=time.time() - started,
+            error=f"{type(error).__name__}: {error}\n{traceback.format_exc()}",
+        )
+
+    async def _dispatch_once(
+        self, experiment: Experiment, device_id: int
+    ) -> ExperimentResult:
+        started = time.time()
+        try:
+            if device_id < 0:
+                # PyTorch CPU evaluation can deadlock in a secondary thread
+                # after other native runtime pools have initialized.
+                return run_test_function(experiment, device_id, self.worker)
+
+            loop = asyncio.get_running_loop()
+            use_process = _can_use_process_pool(self.worker)
+            executor_type = ProcessPoolExecutor if use_process else ThreadPoolExecutor
+            executor_kwargs: Dict[str, Any] = {"max_workers": 1}
+            if use_process:
+                # Spawn is CUDA-safe; forking after the parent inspected device
+                # memory can leave the child with an invalid CUDA runtime.
+                executor_kwargs["mp_context"] = mp.get_context("spawn")
+            with executor_type(**executor_kwargs) as executor:
+                return await loop.run_in_executor(
+                    executor, run_test_function, experiment, device_id, self.worker
+                )
+        except Exception as error:
+            return self._failure_result(experiment, error, started)
+
     async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
-        """Run a single experiment asynchronously."""
+        """Run, retry, persist, or resume a single experiment."""
         if self.worker is None:
             raise RuntimeError("No experiment worker has been configured")
+        if self.resume_completed:
+            resumed = self.result_ledger.load(experiment)
+            if resumed is not None:
+                experiment.status = ExperimentStatus.COMPLETED
+                experiment.result = resumed
+                experiment.completed_at = resumed.timestamp
+                return resumed
+
         experiment.status = ExperimentStatus.RUNNING
         experiment.started_at = utc_now()
 
         device_id = (
             experiment.device_id
             if experiment.device_id is not None
-            else self.device_ids[hash(experiment.id) % len(self.device_ids)]
+            else self.device_slots[hash(experiment.id) % len(self.device_slots)]
         )
         nested_parameters = experiment.parameters.get('params')
         display_parameters = dict(experiment.parameters)
@@ -457,23 +526,20 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
               f"Strategy: {lr_strategy} | "
               f"Epochs: {epochs}", flush=True)
         
-        if device_id < 0:
-            # PyTorch training/evaluation can deadlock inside a secondary CPU
-            # thread after other runtime services (for example Chroma) have
-            # initialized their own pools. Keep the async lifecycle but execute
-            # CPU workers inline; run_experiments naturally serializes these
-            # blocking calls as each coroutine reaches this point.
-            result = run_test_function(experiment, device_id, self.worker)
-        else:
-            loop = asyncio.get_running_loop()
-            # Picklable accelerator workers retain process isolation. A thread
-            # remains the compatibility fallback for locally-defined workers.
-            use_process = _can_use_process_pool(self.worker)
-            executor_type = ProcessPoolExecutor if use_process else ThreadPoolExecutor
-            with executor_type(max_workers=1) as executor:
-                result = await loop.run_in_executor(
-                    executor, run_test_function, experiment, device_id, self.worker
-                )
+        result: ExperimentResult
+        attempts = 0
+        while True:
+            attempts += 1
+            result = await self._dispatch_once(experiment, device_id)
+            if result.error is None or attempts > self.max_retries:
+                break
+
+        self.result_ledger.save(
+            experiment,
+            result,
+            attempts=attempts,
+            device_id=device_id,
+        )
         
         experiment.status = result.status
         experiment.completed_at = utc_now()
@@ -524,7 +590,13 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
                 
                 # Apply recommendations
                 if recommendations['parallel_experiments'] != self.max_parallel:
-                    self.max_parallel = recommendations['parallel_experiments']
+                    self.max_parallel = max(
+                        1,
+                        min(
+                            recommendations['parallel_experiments'],
+                            self.slot_plan.concurrency,
+                        ),
+                    )
                     if self.config.verbose:
                         print(f"🔄 Adjusted parallel experiments to {self.max_parallel}")
                 
@@ -545,12 +617,16 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
                         print(f"🔄 Adjusted data workers to {self.current_workers}")
             
             # Run batch with current settings
-            batch_size = min(self.max_parallel, len(experiments) - i)
+            batch_size = min(
+                self.max_parallel,
+                self.slot_plan.concurrency,
+                len(experiments) - i,
+            )
             batch = experiments[i:i + batch_size]
             
             for j, exp in enumerate(batch):
                 if exp.device_id is None:
-                    exp.device_id = self.device_ids[j % len(self.device_ids)]
+                    exp.device_id = self.device_slots[(i + j) % len(self.device_slots)]
             
             batch_tasks = [self.run_experiment(exp) for exp in batch]
             batch_results = await asyncio.gather(*batch_tasks)
@@ -565,46 +641,16 @@ class AsyncExperimentRunner(ExperimentRunnerBase):
         return results
 
 
-class ParallelExperimentRunner(ExperimentRunnerBase):
-    """Parallel experiment runner using multiprocessing.Pool."""
-    
+class ParallelExperimentRunner(AsyncExperimentRunner):
+    """Compatibility name for the canonical local slot runner.
+
+    The former ``multiprocessing.Pool`` implementation used CUDA-unsafe fork
+    semantics and bypassed retry/resume. Existing callers retain the class name
+    while using the same spawned-worker contract as ``AsyncExperimentRunner``.
+    """
+
     def __init__(self, config: LabConfig, worker: Optional[ExperimentWorker] = None):
         super().__init__(config, worker or run_structure_net_experiment)
-        self.device_ids = config.device_ids
-        self.max_parallel = config.max_parallel_experiments
-    
-    async def run_experiment(self, experiment: Experiment) -> ExperimentResult:
-        """Run a single experiment."""
-        experiment.status = ExperimentStatus.RUNNING
-        experiment.started_at = utc_now()
-        device_id = experiment.device_id if experiment.device_id is not None else self.device_ids[0]
-        result = run_test_function(experiment, device_id, self.worker)
-        experiment.status = result.status
-        experiment.completed_at = utc_now()
-        experiment.result = result
-        return result
-    
-    async def run_experiments(self, experiments: List[Experiment]) -> List[ExperimentResult]:
-        """Run multiple experiments in parallel."""
-        # Prepare arguments
-        args = []
-        for i, exp in enumerate(experiments):
-            exp.status = ExperimentStatus.RUNNING
-            exp.started_at = utc_now()
-            device_id = exp.device_id if exp.device_id is not None else self.device_ids[i % len(self.device_ids)]
-            args.append((exp, device_id, self.worker))
-        
-        # Run in parallel
-        with mp.Pool(processes=self.max_parallel) as pool:
-            results = pool.starmap(run_test_function, args)
-
-        completed_at = utc_now()
-        for experiment, result in zip(experiments, results):
-            experiment.status = result.status
-            experiment.completed_at = completed_at
-            experiment.result = result
-        
-        return results
 
 
 class ExperimentRunner(ExperimentRunnerBase):

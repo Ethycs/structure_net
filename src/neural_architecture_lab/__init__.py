@@ -15,9 +15,9 @@ try:
     from structure_net.config import setup_cuda_devices
     setup_cuda_devices()
 except ImportError:
-    # Fallback if structure_net is not in path
-    if "CUDA_VISIBLE_DEVICES" not in os.environ:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+    # GPU visibility belongs to the parent launcher. Importing NAL must never
+    # silently hide or renumber devices.
+    pass
 
 from .core import (
     Hypothesis,
@@ -53,6 +53,12 @@ from .runners import (
 from .advanced_runners import (
     AdvancedExperimentRunner,
     GPUMemoryManager
+)
+
+from .local_scheduler import (
+    DeviceSlotPlan,
+    ExperimentResultLedger,
+    build_device_slot_plan,
 )
 
 from .analyzers import (
@@ -91,6 +97,9 @@ __all__ = [
     "ParallelExperimentRunner",
     "AdvancedExperimentRunner",
     "GPUMemoryManager",
+    "DeviceSlotPlan",
+    "ExperimentResultLedger",
+    "build_device_slot_plan",
     
     # Analyzers
     "InsightExtractor",

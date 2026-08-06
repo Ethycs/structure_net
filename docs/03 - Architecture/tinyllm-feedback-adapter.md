@@ -119,6 +119,12 @@ pixi run python experiments/structure_net/tinyllm_feedback_shakedown.py \
 
 It writes a versioned `results.json` plus restorable weights for every arm. On a fixed CPU or CUDA software/hardware stack, the result JSON is reproducible for a fixed configuration; the test suite runs the CPU path twice and compares the artifacts. CUDA devices are selected with `--device cuda` or `--device cuda:N`. Every checkpoint is reloaded and required to reproduce logits and topology exactly. Its arithmetic-token task validates construction, training, dynamic growth, measurement, and checkpoint restoration. The result declares `systems_lifecycle_only_not_quality_evidence`; it must not enter the meta-hypothesis system as evidence that feedback improves real tasks. Timing is deliberately excluded because this sequential smoke run is not a controlled benchmark.
 
+For several seeds, use `tinyllm_feedback_nal_campaign.py`. One seed is one NAL
+job containing all three sequential matched arms; independent seed jobs may
+share a GPU through fixed or memory-calibrated slots. Completed seeds have
+fingerprinted resume records. Shared-run wall times are excluded from benchmark
+claims; `--isolated-timing` forces one job at a time.
+
 ## Explicit boundaries
 
 | Boundary | Status |
@@ -127,12 +133,13 @@ It writes a versioned `results.json` plus restorable weights for every arm. On a
 | Hugging Face GPT-2 state-dictionary translation | Supported without requiring `transformers` at runtime |
 | Hugging Face model directory/tokenizer creation | Not implemented; use TinyLLM's exporter for baseline models |
 | Feedback-aware Structure Net checkpoint | Supported; model graph and tensors only |
-| Full training resume | Not implemented; optimizer, scheduler, dataloader, scaler, and RNG state are not stored |
+| Completed-seed campaign resume | Supported through NAL's fingerprinted result ledger |
+| Mid-training resume | Not implemented; optimizer, scheduler, dataloader, scaler, and RNG state are not stored |
 | GPT-2/GGUF/`llama.cpp` feedback export | Unsupported and rejected rather than silently flattened |
 | KV-cached feedback generation | Unsupported; refinement recomputes the prefix |
 | Padding/attention-mask API | Unsupported; batches must follow TinyLLM's fixed causal token layout |
 | Sparse storage or sparse kernels | Unsupported; masks constrain gradients and active connections but weights remain dense tensors |
-| Byte-reproducible shakedown device | CPU only; the model and trainer may still run on other PyTorch devices |
+| Fixed-stack deterministic shakedown | Verified on CPU and CUDA; portability across GPU/driver stacks is not claimed |
 | Quality or edge-efficiency claim | Open; the synthetic shakedown is systems evidence only |
 
 ## Evidence boundary and first experiment

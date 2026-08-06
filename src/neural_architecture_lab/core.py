@@ -9,6 +9,18 @@ from enum import Enum
 from datetime import datetime, timezone
 
 
+def _default_device_ids() -> List[int]:
+    """Return logical CUDA ordinals, or the CPU sentinel when unavailable."""
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            return list(range(torch.cuda.device_count()))
+    except (ImportError, RuntimeError):
+        pass
+    return [-1]
+
+
 def utc_now() -> datetime:
     """Return a timezone-aware timestamp for persisted experiment state."""
     return datetime.now(timezone.utc)
@@ -193,7 +205,13 @@ class LabConfig:
     # Execution
     max_parallel_experiments: int = 8
     experiment_timeout: int = 3600  # seconds
-    device_ids: List[int] = field(default_factory=lambda: [0, 1])
+    # These are logical ordinals *after* CUDA_VISIBLE_DEVICES is applied.
+    device_ids: List[int] = field(default_factory=_default_device_ids)
+    gpu_slots_per_device: int = 1
+    gpu_memory_per_experiment_gb: Optional[float] = None
+    max_gpu_slots_per_device: int = 4
+    max_experiment_retries: int = 0
+    resume_completed_experiments: bool = False
     
     # Scientific rigor
     min_experiments_per_hypothesis: int = 5
@@ -236,7 +254,11 @@ class LabConfigFactory:
         group.add_argument('--nal-project-name', type=str, help='Name of the project for logging and organization.')
         group.add_argument('--nal-results-dir', type=str, help='Directory to save all experiment results and logs.')
         group.add_argument('--nal-max-parallel', type=int, help='Maximum number of experiments to run in parallel.')
-        group.add_argument('--nal-gpus', type=str, help='Comma-separated list of GPU device IDs to use (e.g., "0,1,2").')
+        group.add_argument('--nal-gpus', type=str, help='Comma-separated logical GPU IDs after CUDA visibility mapping, or "cpu"/"auto".')
+        group.add_argument('--nal-gpu-slots', type=int, help='Concurrent experiment slots per logical GPU; 0 selects memory-based calibration.')
+        group.add_argument('--nal-gpu-memory-gb', type=float, help='Estimated peak GPU memory per experiment, used when --nal-gpu-slots=0.')
+        group.add_argument('--nal-max-retries', type=int, help='Retries after a failed experiment attempt.')
+        group.add_argument('--nal-resume', action='store_true', help='Reuse fingerprint-matched completed per-experiment results from an earlier run.')
         group.add_argument('--nal-log-level', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help='Set the global logging level for the lab.')
         group.add_argument('--nal-log-file', type=str, help='Path to a file to write all logs.')
         group.add_argument('--nal-enable-wandb', action='store_true', help='Enable logging to Weights & Biases.')
@@ -273,7 +295,23 @@ class LabConfigFactory:
         if 'nal_max_parallel' in provided_args:
             base_config.max_parallel_experiments = provided_args['nal_max_parallel']
         if 'nal_gpus' in provided_args:
-            base_config.device_ids = [int(g.strip()) for g in provided_args['nal_gpus'].split(',')]
+            requested_devices = provided_args['nal_gpus'].strip().lower()
+            if requested_devices == 'cpu':
+                base_config.device_ids = [-1]
+            elif requested_devices == 'auto':
+                base_config.device_ids = _default_device_ids()
+            else:
+                base_config.device_ids = [
+                    int(g.strip()) for g in requested_devices.split(',')
+                ]
+        if 'nal_gpu_slots' in provided_args:
+            base_config.gpu_slots_per_device = provided_args['nal_gpu_slots']
+        if 'nal_gpu_memory_gb' in provided_args:
+            base_config.gpu_memory_per_experiment_gb = provided_args['nal_gpu_memory_gb']
+        if 'nal_max_retries' in provided_args:
+            base_config.max_experiment_retries = provided_args['nal_max_retries']
+        if provided_args.get('nal_resume'):
+            base_config.resume_completed_experiments = True
         if 'nal_log_level' in provided_args:
             base_config.log_level = provided_args['nal_log_level']
         if 'nal_log_file' in provided_args:

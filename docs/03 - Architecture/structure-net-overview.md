@@ -57,6 +57,13 @@ The depth-graded TinyLLM API evaluates exact integer prefixes and continuously g
 
 NAL owns research methodology: hypotheses, experiment definitions/results, runners, resource-aware workers, aggregate analysis, and follow-up hypothesis generation. It consumes Structure Net capabilities but is packaged as a sibling Python package. Its principal modules are `core.py`, `lab.py`, `runners.py`, `analyzers.py`, `workers/`, `seed_search/`, and `orchestrators/`.
 
+The canonical local runner schedules independent experiments onto logical CUDA
+device slots using CUDA-safe spawned processes. Slot counts may be fixed or
+derived from free memory and an experiment estimate. Successful experiments
+can be resumed from an atomic fingerprinted ledger, and failed attempts have a
+bounded retry policy. Physical GPU visibility remains a parent-launcher
+decision; NAL never silently rewrites it. See `nal-local-gpu-scheduler.md`.
+
 ## 4. Infrastructure
 
 | Subsystem | Inputs | Outputs | Target |
