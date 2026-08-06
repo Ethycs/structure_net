@@ -14,6 +14,7 @@ from .residual_block_growth_strategy import ResidualBlockGrowthStrategy
 from .scheduler_strategy_selector import SchedulerStrategySelector, SchedulingStrategy
 from .snapshot_strategy import SnapshotStrategy
 from .tournament_strategy import TournamentStrategy
+from .random_feedback_growth_strategy import RandomFeedbackGrowthStrategy
 
 __all__ = [
     'CompactificationStrategy',
@@ -25,5 +26,6 @@ __all__ = [
     'SchedulerStrategySelector',
     'SchedulingStrategy',
     'SnapshotStrategy',
-    'TournamentStrategy'
+    'TournamentStrategy',
+    'RandomFeedbackGrowthStrategy',
 ]

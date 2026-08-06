@@ -3,7 +3,7 @@ authors = [{name = "Ethycs", email = "Ethycs@users.noreply.github.com"}]
 name = "structure_net"
 requires-python = ">= 3.11"
 version = "0.1.0"
-dependencies = ["jax[cuda12]>=0.6.0,<0.7"]
+dependencies = ["jax[cuda12]>=0.6.0,<0.7", "ripser>=0.6.15,<0.7"]
 
 [build-system]
 build-backend = "hatchling.build"
@@ -39,6 +39,13 @@ notebook = ">=7.4.4,<8"
 
 [tool.pixi.pypi-dependencies]
 structure_net = { path = ".", editable = true }
+
+[tool.pixi.activation.env]
+# CUDA-enabled Python wheels bundle a mutually compatible CUDA userspace. Do
+# not let a host toolkit earlier on LD_LIBRARY_PATH override individual wheel
+# libraries (for example, CUDA 12.8 nvJitLink cannot satisfy a 12.9 cuSPARSE).
+LD_LIBRARY_PATH = ""
+CUBLAS_WORKSPACE_CONFIG = ":4096:8"
 
 [tool.pixi.tasks]
 install-torch = "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128"

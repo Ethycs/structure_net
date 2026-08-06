@@ -31,7 +31,10 @@ class BaseComponent(IComponent):
     def __init__(self, name: Optional[str] = None, version: Optional[ComponentVersion] = None):
         super().__init__()
         self._name = name or self.__class__.__name__
-        self._version = version or ComponentVersion()
+        # ``nn.Module`` reserves ``_version`` for integer state-dict migration
+        # metadata. Component layers/models inherit both classes, so storing a
+        # ComponentVersion there corrupts PyTorch's safe checkpoint envelope.
+        self._component_version = version or ComponentVersion()
         self._performance_tracker = {
             'call_count': 0,
             'error_count': 0,

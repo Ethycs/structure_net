@@ -41,6 +41,18 @@ experiments / examples / scripts
 
 The explicit contract vocabulary lives in `core/interfaces.py`: `ComponentContract`, `EvolutionContext`, `AnalysisReport`, `EvolutionPlan`, and component ABCs. **known rough edge:** not every older implementation conforms to these newer interfaces.
 
+### TinyLLM architecture family
+
+`components/models/tinyllm_model.py` implements the GPT-2 presets used by `weiserlab/TinyLLM`, direct import of its pinned `llm.c` v3/v5 checkpoints, and Hugging Face GPT-2 weight translation. Optional sparse feedback patches create delayed later-block-to-earlier-block edges evaluated through explicit refinement passes. `RandomFeedbackGrowthStrategy` owns random placement plans and `FeedbackGrowthEvolver` applies them while preserving existing optimizer state. Feedback models remain PyTorch research graphs; unmodified GPT-2, GGUF, and `llama.cpp` runtimes cannot represent their recurrent execution. The realized API and verification command are documented in `tinyllm-feedback-adapter.md`.
+
+`components/analyzers/semantic_quotient_analyzer.py` supplies task-relative Fisher--Rao distances, Euclidean/cosine baselines, k-nearest-neighbor geodesics for externally computed pullback metrics, Ripser `H0/H1` diagrams, seeded bootstrap summaries, circular-map alignment and degree, nuisance-fiber collapse ratios, and persistent-cocycle circular coordinates. It does not infer a semantic quotient from arbitrary activations without an experiment-defined sampling/readout contract. The predictive-circle, matched circle-versus-interval, and frozen internal-probe runners define their quotient, designated readout, and controls; their measured verdicts are recorded in the dated TinyLLM reports under `../08 - Analysis/`.
+
+The experimental task-geometry atlas adds paired distance correlation, scaled stress, neighborhood recall, local decoders, and sublayer tracing. It records operational carrier/retract/fiber proxies while explicitly withholding chain-level induced-map, homotopy-retract, and Reeb claims. Its as-built contract is documented in `task-geometry-atlas.md`.
+
+The degree–defect cobordism analyzer measures winding change and indexed posterior-moment zero cells on a periodic phase/path grid. The TinyLLM runner uses a declared continuous adjacent-token-embedding lift and deterministically replayed optimizer states; it does not treat the hard quantizer as a smooth map or present grid localization as certified root isolation. The contract and mathematical boundary are documented in `degree-defect-cobordism.md`.
+
+The depth-graded TinyLLM API evaluates exact integer prefixes and continuously gated partial residual blocks through one shared head. Matched ordinary, integer multi-exit, and real-depth training arms expose task fronts and depth-wise defect charge without claiming a neural-ODE limit or Reeb construction. The as-built contract is documented in `depth-graded-transformer.md`.
+
 ## 3. Neural Architecture Lab
 
 NAL owns research methodology: hypotheses, experiment definitions/results, runners, resource-aware workers, aggregate analysis, and follow-up hypothesis generation. It consumes Structure Net capabilities but is packaged as a sibling Python package. Its principal modules are `core.py`, `lab.py`, `runners.py`, `analyzers.py`, `workers/`, `seed_search/`, and `orchestrators/`.

@@ -127,6 +127,10 @@ class TestBaseComponents:
         x = torch.randn(2, 10)
         y = layer(x)
         assert y.shape == (2, 5)
+        assert all(
+            isinstance(metadata.get("version", 1), int)
+            for metadata in layer.state_dict()._metadata.values()
+        )
     
     def test_base_metric(self):
         """Test base metric implementation."""

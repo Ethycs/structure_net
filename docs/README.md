@@ -17,6 +17,17 @@ This tree separates foundations, intent, implementation, as-built architecture, 
 6. Use [`06 - Roadmaps/documentation-reconciliation.md`](06%20-%20Roadmaps/documentation-reconciliation.md) for broader documentation gaps.
 7. Read [`08 - Analysis/2026-08-03_runner-experiment-data-modernization.md`](08%20-%20Analysis/2026-08-03_runner-experiment-data-modernization.md) for the runner, experiment-schema, and data-story assessment.
 8. Check [`000 - Doc Maintenance/2026-08-03_docs-tree-gaps.md`](000%20-%20Doc%20Maintenance/2026-08-03_docs-tree-gaps.md) for known drift.
+9. Read [`03 - Architecture/tinyllm-feedback-adapter.md`](03%20-%20Architecture/tinyllm-feedback-adapter.md) for the TinyLLM-compatible GPT-2 builder and experimental delayed-feedback extension.
+10. Read [`08 - Analysis/2026-08-04_tinyllm-adapter-acceptance.md`](08%20-%20Analysis/2026-08-04_tinyllm-adapter-acceptance.md) for the upstream audit and claim-by-claim acceptance matrix.
+11. Read [`08 - Analysis/2026-08-05_tinyllm-semantic-quotient-circle.md`](08%20-%20Analysis/2026-08-05_tinyllm-semantic-quotient-circle.md) for the measured d6/d8 semantic-topology experiment and its conservative verdict.
+12. Read [`08 - Analysis/2026-08-05_tinyllm-task-quotient-contrast.md`](08%20-%20Analysis/2026-08-05_tinyllm-task-quotient-contrast.md) for the matched circle-versus-interval intervention and map-aware result.
+13. Read [`08 - Analysis/2026-08-05_tinyllm-internal-quotient-probes.md`](08%20-%20Analysis/2026-08-05_tinyllm-internal-quotient-probes.md) for the frozen layerwise branch/cross-decoding experiment and independent cohomology result.
+14. Read [`03 - Architecture/task-geometry-atlas.md`](03%20-%20Architecture/task-geometry-atlas.md) for the paired task-reference interpretability contract and its explicit proxy boundaries.
+15. Read [`08 - Analysis/2026-08-05_tinyllm-layer-task-geometry-atlas.md`](08%20-%20Analysis/2026-08-05_tinyllm-layer-task-geometry-atlas.md) for the measured attention/MLP localization atlas.
+16. Read [`03 - Architecture/degree-defect-cobordism.md`](03%20-%20Architecture/degree-defect-cobordism.md) for the numerical winding-change/defect-charge contract and its continuous-tokenizer boundary.
+17. Read [`08 - Analysis/2026-08-05_tinyllm-degree-defect-cobordism.md`](08%20-%20Analysis/2026-08-05_tinyllm-degree-defect-cobordism.md) for the localized d6/d8 training events.
+18. Read [`03 - Architecture/depth-graded-transformer.md`](03%20-%20Architecture/depth-graded-transformer.md) for the exact-prefix/partial-residual continuous-depth contract.
+19. Read [`08 - Analysis/2026-08-05_tinyllm-depth-graded-quotient.md`](08%20-%20Analysis/2026-08-05_tinyllm-depth-graded-quotient.md) for the matched ordinary, multi-exit, and continuous-gate results.
 
 ## Governance
 
