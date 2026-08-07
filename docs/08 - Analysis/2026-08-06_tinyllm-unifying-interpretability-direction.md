@@ -8,8 +8,9 @@ decompositions, local continuation and nuisance-transport audits, source
 task-covector portability, task-activation scalar sensing, and cross-seed
 symmetry-feature swap, plus the inference-only joint-error, complete-system,
 and orientation-reference robustness curves, frozen readout decomposition,
-noisy-reference readout recalibration, repeated reference acquisition, and
-reference-path residual transport
+noisy-reference readout recalibration, repeated reference acquisition,
+reference-path residual transport, and the posterior-coordinate transport
+rank ladder
 
 ## Verdict
 
@@ -77,6 +78,7 @@ new architecture.
 | Noisy-reference readout recalibration | At the first orientation failure (`0.035` radians), a noisy-fitted linear answer head repairs the learned arm in `5/5` seeds and a near-identity scalar interval map repairs `4/5`; both reach only `3/5` in the analytic arm. The learned result is preregistered unseen evidence and the analytic result is corrective. | Mild learned-arm failure is a task-interface calibration defect, but readout repair is not universal across structured arms. Keep evidence pedigree and arm stratification explicit. |
 | Repeated reference acquisition | Two stored acquisition arrays follow the inverse-square precision law and recover both structured populations at `m=64`; exact-reference controls pass and fiber-misgrouped or shuffled references fail. The first complete preregistered campaign remains invalid because its one-step residual ceiling fails. | Coherent input-side measurement precision is causally sufficient under the declared unbiased Gaussian noise, without retraining; the exact repeat threshold is draw- and checkpoint-sensitive. |
 | Reference-path residual transport | Actual and exact-residual endpoints pass `5/5` in both arms. At `K=16`, latent true-cosine rollouts pass `5/5` analytic and `4/5` learned checkpoints, but actual path-moment rollouts pass `0/5` in both arms and all shuffled schedules fail. | Repeated local gradients can create an alternative oracle task-steering path, but one ordered moment is not an integrable chart of the natural reference-conditioned residual path. Test a nested vector posterior-coordinate ladder, not another scalar writer. |
+| Posterior-coordinate rank ladder | The full centered answer-logit schedule transports the frozen task `5/5` in both arms at `K=4` and `K=16` with replay error exactly `0.0`; ranks 1--8 all fail the population gate (rank 8 reaches `3/5` analytic, `4/5` learned) and every shuffled schedule passes `0/5`. Full-rank rollouts stop `31--40%` of the chord from the actual endpoint residual while matching its posterior to JS near zero. | Posterior shape is a sufficient transport target but not compact: the answer-relevant interface needs nine to fifteen centered logit coordinates, which is why every scalar and low-rank writer was structurally undersized. The residual-writer branch closes with the full chart as an explanatory mechanism; nonintegrability is rejected and no retraining, observer, topology, or link-cobordism work is licensed. |
 
 The relevant reports are the
 [calibrated identifiability test](2026-08-06_tinyllm-calibrated-identifiability-causal.md),
@@ -479,13 +481,17 @@ only about `0.7--1.1%`, while `78--81%` of residual increments remain
 orthogonal to the scalar task gradient. Matching one output moment therefore
 does not match posterior shape or the trained residual state.
 
-The shortest remaining diagnostic is a frozen
-[centered-log-posterior Jacobian rank ladder](../07%20-%20Status%20Reports/2026-08-07_tinyllm-posterior-coordinate-transport-preregistration.md)
-(`1,2,4,8,full`) along the same path. It asks whether a small
-vector-valued output chart transports the task where one scalar fails. If the
-full answer-simplex chart also fails while exact residual replay passes, stop
-output-coordinate writers and test direct projection to the observed residual
-curve. No model, front end, denoiser, or readout training is justified first.
+The frozen
+[centered-log-posterior rank ladder](2026-08-07_tinyllm-posterior-coordinate-transport.md)
+(`1,2,4,8,full`) along the same path is now complete. The full fifteen-
+dimensional centered answer-logit schedule transports the task `5/5` in both
+arms at `K=4` and `K=16`, while ranks one through eight all fail the
+population gate and every shuffled schedule passes `0/5`. Nonintegrability is
+rejected; the classification is `high_rank_answer_chart`. Direct projection to
+the observed residual curve — reserved for the nonintegrable outcome — is not
+activated, and the residual-writer branch closes with the full chart as an
+explanatory mechanism. No model, front end, denoiser, or readout training is
+justified by this outcome.
 
 ## Program-level endpoints
 
@@ -594,12 +600,16 @@ stored acquisition arrays now recover both structured populations through
 inverse-square reference averaging, while learned denoising adds no material
 advantage. The reference-path transport audit then rejects one ordered moment
 as the natural causal chart: oracle semantic targeting succeeds, but the
-model's own scalar output path does not. The next justified mechanism
-diagnostic is the nested vector posterior-coordinate rank ladder prescribed
-above. A separate no-training acquisition-draw replication can estimate the
-stability of the `m=64` sample threshold. Do not add another topology scan,
-probe sweep, representation penalty, absolute writer, nonlinear post-hoc
-probe, unconstrained alignment map, or link-cobordism scan first.
+model's own scalar output path does not. The nested vector posterior-
+coordinate rank ladder is now complete and closes that question: the complete
+centered answer-logit schedule integrates the path `5/5` in both arms while
+every compact rank fails, so the mechanism is a high-rank answer chart and
+the residual-writer branch is closed rather than nonintegrable. The only
+remaining prescribed no-training follow-up is the acquisition-draw
+replication estimating the stability of the `m=64` sample threshold. Do not
+add another topology scan, probe sweep, representation penalty, absolute
+writer, nonlinear post-hoc probe, unconstrained alignment map, or
+link-cobordism scan first.
 
 The complementary joint-field representation-only curve has bounded intervals
 `[1,2]` analytic and `[0.5,1]` learned. It does not override this immediate
