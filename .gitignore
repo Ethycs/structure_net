@@ -21,3 +21,4 @@ Breakthroughs.md
 *.wandb
 *.gz
 *.pt
+/data

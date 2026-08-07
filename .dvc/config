@@ -1,0 +1,9 @@
+[core]
+    remote = lakefs
+[cache]
+    type = "reflink,copy"
+    protected = false
+['remote "lakefs"']
+    url = s3://artifacts/main/structure-net/
+    endpointurl = https://central-dev.lan:8000
+    ssl_verify = /home/rabbit/.config/lakefs/caddy-root.crt

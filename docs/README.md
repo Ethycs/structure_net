@@ -18,23 +18,26 @@ This tree separates foundations, intent, implementation, as-built architecture, 
 7. Use [`06 - Roadmaps/documentation-reconciliation.md`](06%20-%20Roadmaps/documentation-reconciliation.md) for broader documentation gaps.
 8. Read [`08 - Analysis/2026-08-03_runner-experiment-data-modernization.md`](08%20-%20Analysis/2026-08-03_runner-experiment-data-modernization.md) for the runner, experiment-schema, and data-story assessment.
 9. Check [`000 - Doc Maintenance/2026-08-03_docs-tree-gaps.md`](000%20-%20Doc%20Maintenance/2026-08-03_docs-tree-gaps.md) for known drift.
-10. Read [`03 - Architecture/tinyllm-feedback-adapter.md`](03%20-%20Architecture/tinyllm-feedback-adapter.md) for the TinyLLM-compatible GPT-2 builder and experimental delayed-feedback extension.
-11. Read [`08 - Analysis/2026-08-04_tinyllm-adapter-acceptance.md`](08%20-%20Analysis/2026-08-04_tinyllm-adapter-acceptance.md) for the upstream audit and claim-by-claim acceptance matrix.
-12. Read [`08 - Analysis/2026-08-05_tinyllm-semantic-quotient-circle.md`](08%20-%20Analysis/2026-08-05_tinyllm-semantic-quotient-circle.md) for the measured d6/d8 semantic-topology experiment and its conservative verdict.
-13. Read [`08 - Analysis/2026-08-05_tinyllm-task-quotient-contrast.md`](08%20-%20Analysis/2026-08-05_tinyllm-task-quotient-contrast.md) for the matched circle-versus-interval intervention and map-aware result.
-14. Read [`08 - Analysis/2026-08-05_tinyllm-internal-quotient-probes.md`](08%20-%20Analysis/2026-08-05_tinyllm-internal-quotient-probes.md) for the frozen layerwise branch/cross-decoding experiment and independent cohomology result.
-15. Read [`03 - Architecture/task-geometry-atlas.md`](03%20-%20Architecture/task-geometry-atlas.md) for the paired task-reference interpretability contract and its explicit proxy boundaries.
-16. Read [`08 - Analysis/2026-08-05_tinyllm-layer-task-geometry-atlas.md`](08%20-%20Analysis/2026-08-05_tinyllm-layer-task-geometry-atlas.md) for the measured attention/MLP localization atlas.
-17. Read [`03 - Architecture/degree-defect-cobordism.md`](03%20-%20Architecture/degree-defect-cobordism.md) for the numerical winding-change/defect-charge contract and its continuous-tokenizer boundary.
-18. Read [`08 - Analysis/2026-08-05_tinyllm-degree-defect-cobordism.md`](08%20-%20Analysis/2026-08-05_tinyllm-degree-defect-cobordism.md) for the localized d6/d8 training events.
-19. Read [`03 - Architecture/depth-graded-transformer.md`](03%20-%20Architecture/depth-graded-transformer.md) for the exact-prefix/partial-residual continuous-depth contract.
-20. Read [`08 - Analysis/2026-08-05_tinyllm-depth-graded-quotient.md`](08%20-%20Analysis/2026-08-05_tinyllm-depth-graded-quotient.md) for the matched ordinary, multi-exit, and continuous-gate results.
-21. Read [`08 - Analysis/2026-08-05_tinyllm-conditional-branch-depth-scan.md`](08%20-%20Analysis/2026-08-05_tinyllm-conditional-branch-depth-scan.md) for the five-seed direct residual-quotient test, failed nuisance-robust gate, and block-1 attention/MLP mechanism.
-22. Read [`03 - Architecture/nal-local-gpu-scheduler.md`](03%20-%20Architecture/nal-local-gpu-scheduler.md) for logical GPU IDs, experiment slots, retries, and completed-result resume.
-23. Read [`08 - Analysis/2026-08-06_nal-local-gpu-scheduler-acceptance.md`](08%20-%20Analysis/2026-08-06_nal-local-gpu-scheduler-acceptance.md) for the real three-process and dual-`d6` CUDA acceptance runs.
-24. Read [`08 - Analysis/2026-08-06_tinyllm-nuisance-support-scaling.md`](08%20-%20Analysis/2026-08-06_tinyllm-nuisance-support-scaling.md) for the five-seed nuisance-coverage scaling result, failed invariant-quotient gate, and shifted block-1 mechanism.
-25. Read [`08 - Analysis/2026-08-06_tinyllm-block1-quotient-control.md`](08%20-%20Analysis/2026-08-06_tinyllm-block1-quotient-control.md) for the causal horizontal/vertical block-1 intervention, its modest extrapolation-base improvement, and failed joint quotient gate.
-25. Read [`08 - Analysis/2026-08-06_tinyllm-block1-quotient-control.md`](08%20-%20Analysis/2026-08-06_tinyllm-block1-quotient-control.md) for the five-seed causal block-1 intervention, failed constructive quotient gate, and equivariant-front-end recommendation.
+10. Engineers integrating TinyLLM should start with [`04 - Reference/tinyllm-model-card.md`](04%20-%20Reference/tinyllm-model-card.md) for variants, interfaces, checkpoint compatibility, measured evidence, and production boundaries.
+11. Read [`03 - Architecture/tinyllm-feedback-adapter.md`](03%20-%20Architecture/tinyllm-feedback-adapter.md) for the TinyLLM-compatible GPT-2 builder and experimental delayed-feedback extension.
+12. Read [`08 - Analysis/2026-08-04_tinyllm-adapter-acceptance.md`](08%20-%20Analysis/2026-08-04_tinyllm-adapter-acceptance.md) for the upstream audit and claim-by-claim acceptance matrix.
+13. Read [`08 - Analysis/2026-08-05_tinyllm-semantic-quotient-circle.md`](08%20-%20Analysis/2026-08-05_tinyllm-semantic-quotient-circle.md) for the measured d6/d8 semantic-topology experiment and its conservative verdict.
+14. Read [`08 - Analysis/2026-08-05_tinyllm-task-quotient-contrast.md`](08%20-%20Analysis/2026-08-05_tinyllm-task-quotient-contrast.md) for the matched circle-versus-interval intervention and map-aware result.
+15. Read [`08 - Analysis/2026-08-05_tinyllm-internal-quotient-probes.md`](08%20-%20Analysis/2026-08-05_tinyllm-internal-quotient-probes.md) for the frozen layerwise branch/cross-decoding experiment and independent cohomology result.
+16. Read [`03 - Architecture/task-geometry-atlas.md`](03%20-%20Architecture/task-geometry-atlas.md) for the paired task-reference interpretability contract and its explicit proxy boundaries.
+17. Read [`08 - Analysis/2026-08-05_tinyllm-layer-task-geometry-atlas.md`](08%20-%20Analysis/2026-08-05_tinyllm-layer-task-geometry-atlas.md) for the measured attention/MLP localization atlas.
+18. Read [`03 - Architecture/degree-defect-cobordism.md`](03%20-%20Architecture/degree-defect-cobordism.md) for the numerical winding-change/defect-charge contract and its continuous-tokenizer boundary.
+19. Read [`08 - Analysis/2026-08-05_tinyllm-degree-defect-cobordism.md`](08%20-%20Analysis/2026-08-05_tinyllm-degree-defect-cobordism.md) for the localized d6/d8 training events.
+20. Read [`03 - Architecture/depth-graded-transformer.md`](03%20-%20Architecture/depth-graded-transformer.md) for the exact-prefix/partial-residual continuous-depth contract.
+21. Read [`08 - Analysis/2026-08-05_tinyllm-depth-graded-quotient.md`](08%20-%20Analysis/2026-08-05_tinyllm-depth-graded-quotient.md) for the matched ordinary, multi-exit, and continuous-gate results.
+22. Read [`08 - Analysis/2026-08-05_tinyllm-conditional-branch-depth-scan.md`](08%20-%20Analysis/2026-08-05_tinyllm-conditional-branch-depth-scan.md) for the five-seed direct residual-quotient test, failed nuisance-robust gate, and block-1 attention/MLP mechanism.
+23. Read [`03 - Architecture/nal-local-gpu-scheduler.md`](03%20-%20Architecture/nal-local-gpu-scheduler.md) for logical GPU IDs, experiment slots, retries, and completed-result resume.
+24. Read [`08 - Analysis/2026-08-06_nal-local-gpu-scheduler-acceptance.md`](08%20-%20Analysis/2026-08-06_nal-local-gpu-scheduler-acceptance.md) for the real three-process and dual-`d6` CUDA acceptance runs.
+25. Read [`08 - Analysis/2026-08-06_tinyllm-nuisance-support-scaling.md`](08%20-%20Analysis/2026-08-06_tinyllm-nuisance-support-scaling.md) for the five-seed nuisance-coverage scaling result, failed invariant-quotient gate, and shifted block-1 mechanism.
+26. Read [`08 - Analysis/2026-08-06_tinyllm-block1-quotient-control.md`](08%20-%20Analysis/2026-08-06_tinyllm-block1-quotient-control.md) for the causal horizontal/vertical block-1 intervention, its modest extrapolation-base improvement, and failed joint quotient gate.
+27. Read [`08 - Analysis/2026-08-06_tinyllm-invariant-frontend-causal.md`](08%20-%20Analysis/2026-08-06_tinyllm-invariant-frontend-causal.md) for the analytic and learned equivariant front-end intervention, four-seed compositional quotient, extrapolation failure, and exact identifiability boundary.
+28. Read [`08 - Analysis/2026-08-06_tinyllm-calibrated-identifiability-causal.md`](08%20-%20Analysis/2026-08-06_tinyllm-calibrated-identifiability-causal.md) for the observation-side gauge repair and five-seed calibrated quotient result.
+29. Read [`08 - Analysis/2026-08-06_tinyllm-io-correspondence.md`](08%20-%20Analysis/2026-08-06_tinyllm-io-correspondence.md) for the paired map-and-fiber experiment, target-side repair failure, corrected equivariant implementation, Mapper limitation, and paired-distortion result.
 
 ## Governance
 
