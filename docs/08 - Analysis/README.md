@@ -28,6 +28,8 @@ Current analysis:
 - `2026-08-06_tinyllm-normal-kernel-radius.md` — confirms the local normal-kernel radius prediction in one declared d6 transition and 384-dimensional edit space after a 4,096-point winding refinement.
 - `2026-08-06_tinyllm-deck-action-descrambler.md` — rejects a clean linear deck/isotypic split while exact orbit-average patching localizes a reproducible cover-to-quotient causal front that occurs later for degree three than degree two.
 - `2026-08-06_tinyllm-reynolds-koopman.md` — finds a reproducible cover-to-barycenter predictive closure transition at block-0 attention, but rejects its identification with the causal quotient front and finds neither stable unseen-cover response prediction nor the proposed degree-three cubic mechanism.
+- `2026-08-06_tinyllm-morse-cerf.md` — scans the complete exact-orbit mixture interval/triangle through real residual depth; near-front task-landscape events replicate, but mature basins and control specificity do not support a universal quotient-formation Morse normal form.
+- `2026-08-06_tinyllm-reynolds-character-coupling.md` — patches propagated versus actual next barycenters at every residual sublayer; exact Reynolds-defect synthesis localizes all degree-two causal fronts, while neutral quadratic task-effect sufficiency reaches only three seeds and degree three remains shift-unstable.
 
 Historical benchmark and experiment-result reports remain unpromoted because results were not re-run and several artifacts refer to historical or missing experiment code. New analyses must lead with a measured verdict and include configuration, environment, command, raw artifact path, and date.
 
