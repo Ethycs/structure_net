@@ -1,5 +1,16 @@
 # Contributing to StructureNet
 
+> **Status: ARCHIVED 2026-08-07.** Functionally superseded by
+> [`../02 - Implementation/component-migration-guide.md`](../02%20-%20Implementation/component-migration-guide.md)
+> (where components go) and
+> [`../02 - Implementation/experiment-and-report-authoring-guide.md`](../02%20-%20Implementation/experiment-and-report-authoring-guide.md)
+> (where experiments and evidence go). Verified stale on 2026-08-07: the
+> directory map names `src/structure_net/metrics/`, `src/structure_net/seed_search/`,
+> and `src/integrations/`, none of which exist; every Quick Reference row routes
+> new code into deprecated shims; the worked `CatastropheAnalyzer` example now
+> raises `DeprecationWarning` on construction. Retained verbatim below as
+> historical provenance; do not edit in place.
+
 Thank you for your interest in contributing to the StructureNet project! This guide provides a roadmap for where to add new code and how to follow the existing architectural patterns.
 
 ## Core Project Structure

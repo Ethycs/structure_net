@@ -1,5 +1,8 @@
 # Configuration Migration Guide
 
+**Status:** CURRENT — API verified against `structure_net.config` on 2026-08-07  
+**Note:** deprecation Phase 2 has not begun (the legacy configs emit no warnings), and `UnifiedConfig` adoption outside the config package remains partial (~31 call sites still construct `LabConfig` directly).
+
 This guide explains how to migrate from the old scattered configuration system to the new unified configuration system.
 
 ## Overview

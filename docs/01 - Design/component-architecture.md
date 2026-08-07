@@ -4,7 +4,7 @@
 **Date:** 2026-08-03  
 **Applies to:** `src/structure_net/core`, `src/structure_net/components`, `src/neural_architecture_lab`  
 **Depends on:** `../03 - Architecture/structure-net-overview.md`  
-**Derived from:** `docs/New Componentwise refactoring.md`, `integration_plan.md`, `to_integrate.md`
+**Derived from:** `docs/09 - Archived/New Componentwise refactoring.md`, `integration_plan.md`, `to_integrate.md`
 
 Structure Net is moving from feature-sized monoliths toward small, contract-declaring components coordinated by explicit orchestrators. This document preserves the design intent; the architecture overview records what is actually built, and the refactor roadmap records what remains.
 

@@ -3,7 +3,7 @@
 **Status:** CURRENT  
 **Date:** 2026-08-03  
 **Applies to:** `src/structure_net`, `src/neural_architecture_lab`  
-**Supersedes as trusted overview:** `docs/NAL_ARCHITECTURE.md` and architectural claims spread across the root `README.md`
+**Supersedes as trusted overview:** `docs/09 - Archived/NAL_ARCHITECTURE.md` and architectural claims spread across the root `README.md`
 
 **Active change program:** `../06 - Roadmaps/component-refactor.md`; design intent lives in `../01 - Design/component-architecture.md`.
 

@@ -1,5 +1,9 @@
 # Standardized Logging System for Structure Net
 
+**Status:** LEGACY — schema reference field-for-field accurate; operational half unreconciled  
+**Date reconciled:** 2026-08-07  
+**Known drift:** omits the live ChromaDB backend (`LoggingConfig.enable_chromadb`, `chromadb_path`, default `data/chroma_db`) and the hypothesis API NAL actually calls (`log_hypothesis`, `register_experiment_start`, `update_experiment_status`); the WandB sections describe a path disabled (`enable_wandb=False`) across current NAL usage; `create_experiment_from_metrics` does not exist. Import paths were corrected from `src.logging` to `structure_net.logging` in this revision.
+
 ## Overview
 
 The Structure Net Standardized Logging System implements a robust, schema-validated logging framework that adopts the WandB artifact standard. This system ensures all experimental data follows consistent JSON schemas, provides offline resilience, and integrates seamlessly with WandB for experiment tracking and visualization.
@@ -175,7 +179,7 @@ class GrowthEvent(BaseModel):
 ### Basic Setup
 
 ```python
-from src.logging.standardized_logging import (
+from structure_net.logging.standardized_logging import (
     initialize_logging,
     LoggingConfig,
     log_experiment,
@@ -198,7 +202,7 @@ logger = initialize_logging(config)
 #### Complete Experiment Result
 
 ```python
-from src.logging.standardized_logging import (
+from structure_net.logging.standardized_logging import (
     ExperimentResult,
     ExperimentConfig,
     MetricsData
@@ -253,7 +257,7 @@ result_hash = log_metrics("exp_002", metrics_data)
 #### Growth Event Logging
 
 ```python
-from src.logging.standardized_logging import GrowthEvent
+from structure_net.logging.standardized_logging import GrowthEvent
 
 # Log a growth event
 growth_event = GrowthEvent(
@@ -275,7 +279,7 @@ event_hash = log_growth_event("exp_003", growth_event)
 
 ```python
 from src.structure_net.evolution.metrics import create_homological_analyzer
-from src.logging.standardized_logging import HomologicalMetrics
+from structure_net.logging.standardized_logging import HomologicalMetrics
 
 # Analyze weight matrix
 analyzer = create_homological_analyzer()
@@ -304,7 +308,7 @@ experiment = ExperimentResult(
 
 ```python
 from src.structure_net.evolution.metrics import create_topological_analyzer
-from src.logging.standardized_logging import TopologicalMetrics
+from structure_net.logging.standardized_logging import TopologicalMetrics
 
 # Analyze topology
 analyzer = create_topological_analyzer()
@@ -324,7 +328,7 @@ topological_metrics = TopologicalMetrics(
 
 ```python
 from src.structure_net.evolution.metrics import create_compactification_analyzer
-from src.logging.standardized_logging import CompactificationMetrics
+from structure_net.logging.standardized_logging import CompactificationMetrics
 
 # Analyze compactification
 analyzer = create_compactification_analyzer()

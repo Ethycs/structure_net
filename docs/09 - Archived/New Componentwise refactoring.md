@@ -1,6 +1,6 @@
 # **The Structure Net Refactoring Guide: Complete System Transformation**
 
-> **Status: SUPERSEDED DESIGN SOURCE.** This document is retained as refactor provenance. Use [`01 - Design/component-architecture.md`](01%20-%20Design/component-architecture.md), [`02 - Implementation/component-migration-guide.md`](02%20-%20Implementation/component-migration-guide.md), and [`06 - Roadmaps/component-refactor.md`](06%20-%20Roadmaps/component-refactor.md) for the current documentation paradigm.
+> **Status: SUPERSEDED DESIGN SOURCE — ARCHIVED 2026-08-07.** This document is retained as refactor provenance. Use [`../01 - Design/component-architecture.md`](../01%20-%20Design/component-architecture.md), [`../02 - Implementation/component-migration-guide.md`](../02%20-%20Implementation/component-migration-guide.md), and [`../06 - Roadmaps/component-refactor.md`](../06%20-%20Roadmaps/component-refactor.md) for the current documentation paradigm. Verified 2026-08-07: Phases 1–2 landed (interfaces ~90%, analyzers complete); Phase 3 (health monitor, composition assistant) and Phase 4 (test framework, examples, migration plan) were never implemented; `CompositionBuilder` does not exist. Do not edit in place.
 
 This is a comprehensive programmer's guide for transforming Structure Net into a self-aware, contract-driven research framework. Follow this guide step-by-step to migrate your existing codebase.
 

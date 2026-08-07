@@ -1,5 +1,9 @@
 # StructureNet Methodology: A Compendium of Research Techniques
 
+**Status:** LEGACY — technique compendium for the pre-component `evolution/` stack  
+**Date reconciled:** 2026-08-07  
+**Known drift:** saturated-neuron detection uses a fixed `0.99` threshold (`evolution/extrema_analyzer.py`), not the stated mean+2σ; §8.2.1 credit-based growth was never implemented; the canonical layer and scheduler homes are now `structure_net.components.*`; nothing here covers the 2026 TinyLLM research program recorded in `../08 - Analysis/`. The planned split into validated theory (this lane) and design hypotheses (`../01 - Design/`) is still pending per `../06 - Roadmaps/documentation-reconciliation.md`.
+
 This document outlines the core principles and practical techniques developed during the StructureNet project.
 
 ## 1. Network Architecture Strategies

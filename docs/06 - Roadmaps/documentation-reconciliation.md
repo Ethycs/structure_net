@@ -34,7 +34,7 @@
 
 ## Tier 2 — Curate research knowledge
 
-1. Split `METHODOLOGY.md` into validated theory, design hypotheses, and measured analysis.
+1. Split `../00 - Theory/METHODOLOGY.md` into validated theory, design hypotheses, and measured analysis.
 2. Reconcile the remaining kernel proposal separately; the component refactor is now distilled into `component-architecture.md`, `component-migration-guide.md`, and `component-refactor.md`.
 3. Promote stable executable component contracts into a versioned standard only after conformance tests exist.
 

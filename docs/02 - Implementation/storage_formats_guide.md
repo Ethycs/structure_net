@@ -1,5 +1,9 @@
 # Storage Formats in Structure Net
 
+**Status:** LEGACY — NAL/JSON section verified; stress-test section stale  
+**Date reconciled:** 2026-08-07  
+**Known drift:** `lab_report_{lab_id}.json` is never written (`_generate_lab_report` is a stub); the `NALChromaIntegration` import path was corrected to `neural_architecture_lab.data_factory_integration` in this revision; the stress-test claims (`aggressive_memory_cleanup`, ChromaDB/HDF5 output directories) do not match `ultimate_stress_test_v2.py`, which has no such flag and produces neither.
+
 ## Current Storage Status
 
 ### 1. NAL (Neural Architecture Lab)
@@ -50,7 +54,7 @@ When enabled, the stress test will:
 
 ### For Custom NAL Usage
 ```python
-from data_factory.nal_integration import NALChromaIntegration
+from neural_architecture_lab.data_factory_integration import NALChromaIntegration
 from data_factory.search import ChromaConfig
 from data_factory.time_series_storage import TimeSeriesConfig
 

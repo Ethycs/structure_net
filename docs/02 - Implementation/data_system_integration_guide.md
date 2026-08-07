@@ -1,5 +1,9 @@
 # Structure Net Data System Integration Guide
 
+**Status:** LEGACY — search/ChromaDB and time-series sections verified; dataset and metadata sections unreconciled  
+**Date reconciled:** 2026-08-07  
+**Known drift:** the package root is `src/structure_net/data_factory` and `nal_integration.py` does not exist (`NALChromaIntegration` and `create_memory_efficient_nal` live in `neural_architecture_lab.data_factory_integration`; paths corrected in this revision); `create_dataset` takes `subset_fraction`/`use_cache`, not `subset_size`/`force_reload`, and `dataset_name` is required; the `DatasetMetadata` and `track_dataset_usage` signatures differ entirely from those shown; Fashion-MNIST is registered but unlisted while ImageNet is listed without a loader; `DatasetNotFoundError` does not exist and `reset_chroma_client` is not exported.
+
 ## Overview
 
 The Structure Net Data System provides a flexible, extensible framework for dataset management with integrated semantic search capabilities through ChromaDB. This guide covers installation, configuration, usage, and extension of the data system.
@@ -47,13 +51,13 @@ print(f"ChromaDB collections: {client.count()} experiments indexed")
 The data system consists of several key components:
 
 ```
-src/data_factory/
+src/structure_net/data_factory/
 ├── __init__.py          # Main entry point
 ├── config.py            # Dataset configurations
 ├── datasets.py          # Dataset loading implementations
 ├── factory.py           # High-level factory functions
 ├── metadata.py          # Metadata tracking
-├── nal_integration.py   # NAL-ChromaDB integration
+├── (NAL integration lives in neural_architecture_lab/data_factory_integration.py)
 ├── time_series_storage.py # Efficient time series storage
 └── search/              # ChromaDB search layer
     ├── embedder.py      # Embedding generation
@@ -275,7 +279,7 @@ track_dataset_usage(
 ### Step 1: Define Configuration
 
 ```python
-# In src/data_factory/config.py
+# In src/structure_net/data_factory/config.py
 from data_factory.config import DatasetConfig, register_dataset
 
 # Define your dataset
@@ -296,7 +300,7 @@ register_dataset(MY_DATASET)
 ### Step 2: Implement Loader
 
 ```python
-# In src/data_factory/datasets.py
+# In src/structure_net/data_factory/datasets.py
 from data_factory.datasets import DatasetLoader, register_loader
 
 class MyDatasetLoader(DatasetLoader):
@@ -520,7 +524,7 @@ print(f"Total experiments indexed: {client.count()}")
 The data system now includes integration with NAL to offload experiment data and prevent memory accumulation:
 
 ```python
-from data_factory.nal_integration import create_memory_efficient_nal
+from neural_architecture_lab.data_factory_integration import create_memory_efficient_nal
 from neural_architecture_lab.core import LabConfig
 from data_factory.search import ChromaConfig
 from data_factory.time_series_storage import TimeSeriesConfig

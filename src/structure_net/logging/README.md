@@ -281,7 +281,7 @@ logger = create_growth_logger(
 
 ## 📚 Documentation
 
-- **[Complete Beginner's Guide](../../../docs/logging_guide.md)** - Comprehensive tutorial with examples
+- **[Complete Beginner's Guide](../../../docs/02%20-%20Implementation/logging_guide.md)** - Comprehensive tutorial with examples
 - **[Example Script](../../../examples/standardized_logging_example.py)** - Runnable demonstrations
 - **[Schema Reference](schemas.py)** - All available data models
 - **[CLI Reference](cli.py)** - Command-line tools
@@ -336,7 +336,7 @@ logger = create_growth_logger(
 
 2. **Read the guide**:
    ```bash
-   open docs/logging_guide.md
+   open "docs/02 - Implementation/logging_guide.md"
    ```
 
 3. **Replace your logger**:
@@ -355,7 +355,7 @@ logger = create_growth_logger(
 
 ## 🆘 Getting Help
 
-- **Check the [Beginner's Guide](../../../docs/logging_guide.md)** for detailed tutorials
+- **Check the [Beginner's Guide](../../../docs/02%20-%20Implementation/logging_guide.md)** for detailed tutorials
 - **Run the [example script](../../../examples/standardized_logging_example.py)** to see it in action
 - **Use CLI tools** for debugging: `python -m structure_net.logging.cli status`
 - **Validate your data**: `python -m structure_net.logging.cli validate file.json`

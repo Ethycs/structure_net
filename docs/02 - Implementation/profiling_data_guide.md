@@ -1,5 +1,9 @@
 # Profiling Data Handling in Structure Net
 
+**Status:** MIXED — §1 layout and the `ProfiledOperation` structure are a valid reference; everything from the schema proposal onward is an unbuilt design sketch  
+**Date reconciled:** 2026-08-07  
+**Known drift:** `ProfilingMetrics`, `ProfiledExperiment`, `ProfilingStorage`, and `ProfilingSearcher` were never implemented; the documented signatures for `create_standard_profiler` (`profile_memory`/`profile_compute` → real `enable_memory`/`enable_compute`), `profile_operation` (no `enabled` kwarg), and `@profile_memory_intensive` (bare decorator) do not match `structure_net.profiling`; the yielded `ProfilerContext` has none of `duration`, `memory_peak`, or `gpu_memory_peak`; the `evaluate_competitor_task` integration example predates the `(experiment, device_id) -> ExperimentResult` worker signature.
+
 ## Overview
 
 Structure Net includes a comprehensive profiling system that can track performance, memory usage, and execution patterns. This guide explains how profiling data is collected, stored, and integrated with the data system.

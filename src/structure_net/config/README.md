@@ -86,7 +86,7 @@ from config import LabConfigShim
 lab_config = LabConfigShim(project_name="test")  # Works like old LabConfig
 ```
 
-See `docs/CONFIG_MIGRATION_GUIDE.md` for detailed migration instructions.
+See `docs/02 - Implementation/CONFIG_MIGRATION_GUIDE.md` for detailed migration instructions.
 
 ## Best Practices
 

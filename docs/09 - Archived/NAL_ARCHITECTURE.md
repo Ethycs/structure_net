@@ -1,5 +1,17 @@
 # Neural Architecture Lab (NAL) Architecture Guide
 
+> **Status: ARCHIVED 2026-08-07.** Superseded as trusted overview by
+> [`../03 - Architecture/structure-net-overview.md`](../03%20-%20Architecture/structure-net-overview.md);
+> the current execution contract is
+> [`../03 - Architecture/nal-local-gpu-scheduler.md`](../03%20-%20Architecture/nal-local-gpu-scheduler.md).
+> Verified stale on 2026-08-07: the walkthrough is built on `TournamentExecutor`,
+> which no longer exists (`TournamentOrchestrator` replaced it); the documented
+> `test_function(config=...)` convention and the claim that
+> `AdvancedExperimentRunner` is the default do not match `neural_architecture_lab`
+> (`AsyncExperimentRunner` is hardcoded); the fingerprint ledger and device-slot
+> scheduler are absent. Retained verbatim below as historical provenance; do not
+> edit in place.
+
 ## Overview
 
 The Neural Architecture Lab (NAL) is a framework designed for the systematic, scientific, and reproducible exploration of neural network architectures and training strategies. It provides a high-level, hypothesis-driven interface that allows researchers to focus on the science of their experiments, while the lab handles the complex orchestration of execution, parallelization, and data management.

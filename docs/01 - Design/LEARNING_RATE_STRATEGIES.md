@@ -1,5 +1,9 @@
 # Learning Rate Strategies in StructureNet
 
+**Status:** LEGACY DESIGN CATALOGUE — implementations live in the deprecated `evolution/adaptive_learning_rates/` package  
+**Date reconciled:** 2026-08-07  
+**Known drift:** 10 of the 12 strategies exist as named classes in the deprecated package (which emits `DeprecationWarning` on import); §10 differential decay after events was never implemented; the canonical `structure_net.components.schedulers` exposes only four schedulers. Do not treat this catalogue as the current scheduler API.
+
 This document provides a comprehensive overview of the various learning rate adaptation strategies implemented and discussed in the StructureNet project. These strategies are crucial for maintaining stability and promoting efficient learning in dynamically growing networks.
 
 ## 1. **Cascading/Exponential Decay Learning Rates**

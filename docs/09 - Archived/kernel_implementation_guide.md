@@ -1,3 +1,19 @@
+# Kernel Implementation Guide (archived design conversation)
+
+> **Status: ARCHIVED 2026-08-07.** Aspirational microkernel design, never
+> implemented as specified. This file is a raw LLM-conversation transcript
+> (`Retry`/`Edit` artifacts retained below); it never carried a status block or
+> date. What survived: the interface/contract layer landed as
+> `src/structure_net/core/interfaces.py` and `base_components.py` (see
+> [`../01 - Design/component-architecture.md`](../01%20-%20Design/component-architecture.md)),
+> and `KernelProfiler`/`ComponentProfiler` exist under `structure_net.profiling`.
+> What never existed: `StructureNetKernel`, `EventBus`, `src/tracking/`
+> (scorecards, experiment manager), `KernelLogger`, `FeedbackOrchestrator`, and
+> the kernel-aware `NeuralArchitectureLab(kernel=...)` constructor. Retained
+> verbatim below as historical provenance; do not edit in place.
+
+---
+
 Complete Structure Net Implementation Guide
 Phase 1: Core Foundation
 1.1 Directory Structure
