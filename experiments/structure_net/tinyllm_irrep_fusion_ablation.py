@@ -167,7 +167,11 @@ def _effect_distance(left: torch.Tensor, right: torch.Tensor) -> float:
     # Float32 Bhattacharyya affinities can make identical posteriors appear one
     # machine epsilon apart after arccos.  The group contract needs a genuine
     # numerical-zero check, so compute all Fisher endpoints in float64.
-    return float(coupling.fisher_rao_squared(left.double(), right.double()).mean().cpu())
+    left64 = left.double()
+    right64 = right.double()
+    left64 = left64 / left64.sum(-1, keepdim=True).clamp_min(1e-15)
+    right64 = right64 / right64.sum(-1, keepdim=True).clamp_min(1e-15)
+    return float(coupling.fisher_rao_squared(left64, right64).mean().cpu())
 
 
 def _effect_preservation(

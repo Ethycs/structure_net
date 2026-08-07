@@ -3,6 +3,7 @@ import math
 import torch
 
 from experiments.structure_net.tinyllm_irrep_fusion_ablation import (
+    _effect_distance,
     deck_fourier_components,
     phase_phenotype,
     reconstruct_character_phase,
@@ -52,3 +53,8 @@ def test_phase_phenotype_uses_frozen_thresholds() -> None:
     assert phase_phenotype(0.10, 0.10, 0.25) == "radial"
     assert phase_phenotype(0.17, 0.10, 0.25) == "mixed"
     assert phase_phenotype(0.25, 0.10, 0.25) == "finite_group_phase_sensitive"
+
+
+def test_fisher_distance_normalizes_float_posteriors_before_identity_check() -> None:
+    posterior = torch.tensor([[0.2, 0.3, 0.49999994]], dtype=torch.float32)
+    assert _effect_distance(posterior, posterior) < 1e-14
