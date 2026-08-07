@@ -15,7 +15,7 @@ This inventory classifies pre-existing prose without silently upgrading its clai
 | `02 - Implementation/CONFIG_MIGRATION_GUIDE.md` | filed 2026-08-07 | Current; API verified | Track `UnifiedConfig` adoption |
 | `02 - Implementation/{logging_guide, standardized_logging_system, storage_formats_guide, profiling_data_guide, data_system_integration_guide}.md` | filed 2026-08-07 | Mixed; import paths corrected, remaining drift itemized in each status block | Reconcile the flagged sections by subsystem |
 | `09 - Archived/New Componentwise refactoring.md` | archived 2026-08-07 | Superseded design source | Authority: component design, migration guide, refactor roadmap |
-| `09 - Archived/kernel_implementation_guide.md` | archived 2026-08-07 | Aspirational; microkernel never implemented | Interface layer survives in `core/interfaces.py` |
+| `09 - Archived/kernel_implementation_guide.md` | archived 2026-08-07 | Historical design source; a reconciled kernel was implemented 2026-08-07 | As-built authority: `../03 - Architecture/kernel.md` |
 | `09 - Archived/NAL_ARCHITECTURE.md` | archived 2026-08-07 | Superseded; links migrated | Authority: `03 - Architecture/structure-net-overview.md` |
 | `09 - Archived/CONTRIBUTING.md` | archived 2026-08-07 | Stale; routed contributors into deprecated shims | Authority: the two `02 - Implementation` guides |
 | `integration_plan.md`, `to_integrate.md` (repo root) | unmoved | Reconciled and substantially implemented | Source provenance; current authority is `docs/06 - Roadmaps/component-refactor.md` |

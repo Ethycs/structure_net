@@ -78,6 +78,9 @@ try:
     from .compatibility import (
         CompatibilityLevel, CompatibilityIssue, ComponentRegistry, CompatibilityManager
     )
+    from .events import Event, EventBus
+    from .kernel_config import KernelConfig
+    from .kernel import StructureNetKernel
     _COMPONENT_ARCHITECTURE_AVAILABLE = True
 except ImportError:
     _COMPONENT_ARCHITECTURE_AVAILABLE = False
@@ -132,5 +135,6 @@ if _COMPONENT_ARCHITECTURE_AVAILABLE:
         "IStrategy", "IEvolver", "IScheduler", "IOrchestrator",
         "BaseComponent", "BaseLayer", "BaseModel", "BaseTrainer", "BaseMetric",
         "BaseAnalyzer", "BaseStrategy", "BaseEvolver", "BaseScheduler", "BaseOrchestrator",
-        "CompatibilityLevel", "CompatibilityIssue", "ComponentRegistry", "CompatibilityManager"
+        "CompatibilityLevel", "CompatibilityIssue", "ComponentRegistry", "CompatibilityManager",
+        "Event", "EventBus", "KernelConfig", "StructureNetKernel"
     ])

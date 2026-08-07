@@ -48,14 +48,23 @@ class NeuralArchitectureLab:
     neural network architectures, training strategies, and growth patterns.
     """
     
-    def __init__(self, config: LabConfig):
+    def __init__(self, config: LabConfig, kernel: Optional[Any] = None):
         """
         Initialize the Neural Architecture Lab.
-        
+
         Args:
             config: Lab configuration
+            kernel: Optional StructureNetKernel. When provided, NAL reuses the
+                kernel's logging and profiling services; NAL remains fully
+                functional without one (the kernel is infrastructure, not a
+                replacement for NAL's scientific methodology).
         """
         self.config = config
+        self.kernel = kernel
+        self.kernel_logger = kernel.get_logger("NAL") if kernel is not None else None
+        self.kernel_profiler = (
+            kernel.get_profiler("NAL") if kernel is not None else None
+        )
         self.hypotheses: Dict[str, Hypothesis] = {}
         
         # Create results directory

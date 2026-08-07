@@ -10,7 +10,7 @@ The existing `archive/` tree and `docs/old docs/` remain historical sources but 
 | --- | --- | --- |
 | `NAL_ARCHITECTURE.md` | `../03 - Architecture/structure-net-overview.md`; `../03 - Architecture/nal-local-gpu-scheduler.md` | 2026-08-07 |
 | `CONTRIBUTING.md` | `../02 - Implementation/component-migration-guide.md`; `../02 - Implementation/experiment-and-report-authoring-guide.md` | 2026-08-07 |
-| `kernel_implementation_guide.md` | `../01 - Design/component-architecture.md` (interface layer only; microkernel never built) | 2026-08-07 |
+| `kernel_implementation_guide.md` | `../03 - Architecture/kernel.md` (reconciled kernel implemented 2026-08-07; the snapshot's header predates that and is retained unedited) | 2026-08-07 |
 | `New Componentwise refactoring.md` | `../01 - Design/component-architecture.md`; `../02 - Implementation/component-migration-guide.md`; `../06 - Roadmaps/component-refactor.md` | 2026-08-07 |
 
 ## Verification

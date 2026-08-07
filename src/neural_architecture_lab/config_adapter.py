@@ -65,10 +65,10 @@ def update_lab_for_unified_config():
     # Store original init
     original_init = lab.NeuralArchitectureLab.__init__
     
-    def new_init(self, config: Union[LabConfig, UnifiedConfig, dict, None] = None):
+    def new_init(self, config: Union[LabConfig, UnifiedConfig, dict, None] = None, **kwargs):
         """Enhanced init that accepts multiple config types."""
         lab_config = ensure_lab_config(config)
-        original_init(self, lab_config)
+        original_init(self, lab_config, **kwargs)
     
     # Replace init
     lab.NeuralArchitectureLab.__init__ = new_init
