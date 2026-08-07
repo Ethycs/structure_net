@@ -27,10 +27,19 @@ def _campaign(path: Path) -> dict[str, Any]:
         value.get("schema_version") != EXPERIMENT_SCHEMA
         or value.get("hypothesis_id") != HYPOTHESIS_ID
         or value.get("status") != "completed"
+        or value.get("evidence_role")
+        != "preregistered_underpowered_mechanistic_evidence"
         or int(value.get("summary", {}).get("completed", -1)) != 3
         or int(value.get("summary", {}).get("failed", -1)) != 0
         or int(value.get("summary", {}).get("trained_models", -1)) != 0
         or int(value.get("summary", {}).get("fitted_predictive_observers", -1)) != 0
+        or value.get("aggregates", {}).get("confirmed") is not False
+        or int(
+            value.get("aggregates", {})
+            .get("gate_counts", {})
+            .get("shuffled_and_random_specificity", -1)
+        )
+        != 0
     ):
         raise ValueError(f"invalid defect-boundary basis campaign {path}")
     return value
@@ -48,6 +57,8 @@ def _details(path: Path) -> list[dict[str, Any]]:
             detail.get("schema_version") != EXPERIMENT_SCHEMA
             or detail.get("hypothesis_id") != HYPOTHESIS_ID
             or detail.get("status") != "completed"
+            or detail.get("evidence_role")
+            != "preregistered_underpowered_mechanistic_evidence"
             or detail.get("implementation_sha256") != campaign["implementation_sha256"]
             or int(detail.get("seed", -1)) != seed
             or not detail.get("scientific_fingerprint")
@@ -75,6 +86,7 @@ def build_defect_boundary_basis_meta_hypothesis(
             "checkpoint": detail["provenance"]["checkpoint"],
             "checkpoint_sha256": detail["provenance"]["checkpoint_sha256"],
             "scientific_fingerprint": detail["scientific_fingerprint"],
+            "evidence_role": detail["evidence_role"],
             "gates": detail["gates"],
             "source_basis": {
                 "base_rank": detail["source_basis"]["base_rank"],
@@ -113,6 +125,7 @@ def build_defect_boundary_basis_meta_hypothesis(
             "evidence_count": 3,
             "direct_experiment_count": 3,
             "power_profile": "underpowered_three_checkpoint_mechanistic_cohort",
+            "evidence_role": "preregistered_underpowered_mechanistic_evidence",
             "tested_scope": "three selected stable d6 C2 block-0 fronts; source-only local margin normals; two held-out cohorts and both shifts",
             "subclaims": {
                 "basis_and_endpoint_contracts": "supported_three_of_three",
@@ -218,6 +231,27 @@ def store_defect_boundary_basis_meta_hypothesis(
         logger.log_hypothesis(record["hypothesis"])
         storage["result_hashes"] = [logger.log_experiment_result(item) for item in experiments]
         storage["chromadb_path"] = str(chromadb_path)
+        hypothesis_readback = logger.hypotheses_collection.get(
+            ids=[HYPOTHESIS_ID], include=["metadatas"]
+        )
+        experiment_readback = logger.experiments_collection.get(
+            ids=storage["result_hashes"], include=["metadatas"]
+        )
+        experiment_hypotheses = {
+            metadata.get("hypothesis_id")
+            for metadata in experiment_readback.get("metadatas", [])
+        }
+        if (
+            hypothesis_readback.get("ids") != [HYPOTHESIS_ID]
+            or len(experiment_readback.get("ids", [])) != len(experiments)
+            or experiment_hypotheses != {HYPOTHESIS_ID}
+        ):
+            raise RuntimeError("defect-boundary basis ChromaDB read-back failed")
+        storage["readback"] = {
+            "verified": True,
+            "hypothesis_id": HYPOTHESIS_ID,
+            "experiment_count": len(experiment_readback["ids"]),
+        }
     record["storage"] = storage
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(record, indent=2, sort_keys=True, allow_nan=False) + "\n")
@@ -229,4 +263,3 @@ __all__ = [
     "build_defect_boundary_basis_experiment_results",
     "store_defect_boundary_basis_meta_hypothesis",
 ]
-

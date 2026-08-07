@@ -28,9 +28,9 @@ def main() -> None:
         "hypothesis_id": record["hypothesis"]["id"],
         "confirmation_status": record["hypothesis"]["confirmation_status"],
         "experiment_count": len(record["storage"]["experiment_ids"]),
+        "readback": record["storage"].get("readback"),
     }, indent=2))
 
 
 if __name__ == "__main__":
     main()
-

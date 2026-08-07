@@ -1,16 +1,20 @@
 # TinyLLM defect-subspace decoder-boundary audit
 
-**Status:** NOT CONFIRMED — MIXED BOUNDARY REPAIR AND A DISTINCT THIRD SEMANTIC DIRECTION  
+**Status:** NOT CONFIRMED — CORRECTIVE REPLICATION FINDS MIXED BOUNDARY REPAIR AND A DISTINCT THIRD SEMANTIC DIRECTION
 **Date:** 2026-08-06  
-**Conformance:** NAL-STD-EXPERIMENT `PREREGISTERED`, `UNDERPOWERED`  
+**Conformance:** NAL-STD-EXPERIMENT `PREREGISTERED` WITH POST-OUTCOME IMPLEMENTATION CORRECTION, `UNDERPOWERED`
 **Hypothesis:** `tinyllm-c2-defect-boundary-correction-v1`  
 **Preregistration:** [`2026-08-06_tinyllm-defect-boundary-audit-preregistration.md`](../07%20-%20Status%20Reports/2026-08-06_tinyllm-defect-boundary-audit-preregistration.md)
 
 ## Verdict
 
 The hypothesis that every extra causal defect rank is only an exact-bin margin
-correction is falsified. The three preregistered rank near misses split into
-one `boundary_only` cell and two `continuous_map_distortion` cells.
+correction is **not confirmed**. The schema-v1.1 post-outcome corrective
+replication split the three registered rank near misses into one
+`boundary_only` cell and two `continuous_map_distortion` cells. This supports
+rejection of the uniform boundary-only mechanism, but it is not fresh
+confirmatory evidence because the classifications were visible before the
+reproduction-gate implementation was corrected.
 
 Seed 29 is the clean boundary case. Its rank-4 miss differs from the exact
 posterior on only one of 64 held-out-B extrapolation orbits, by one adjacent
@@ -51,19 +55,42 @@ replication.
 | individual directions | 5--8 for seed 29; 3--4 for seed 53 |
 | device | NVIDIA GeForce RTX 2060 SUPER, CUDA |
 | PyTorch / Python | 2.5.1+cu121 / 3.11.13 |
-| summed per-seed analysis time | 7.8 seconds |
+| summed per-seed analysis time | 8.9 seconds |
 | maximum decomposition relative error | `2.09e-7` |
-| implementation SHA-256 | `20e2d7123313004f9664850a85c26204060020afb4548bb37fcd4f4df4d51521` |
-| campaign SHA-256 | `67b338a222ca965f193933194af04fbb110a3b92ce2f982d3a68b3bd064ecd0a` |
+| maximum predecessor Fisher drift | `5.71e-9` |
+| implementation SHA-256 | `f6c91f13a539acd64a925b3176bdbfbe77a47d932c992fbd147d207cf9e43ae4` |
+| campaign SHA-256 | `869cd0bd6160164e2a83810e7088a4232a278767d1e76bec1fae59247ada8490` |
 
 Exact and previously sufficient-rank patches passed, while the registered near
-rank failed, in every primary cell. Predecessor identities and exact
-decomposition passed for both checkpoints. A separate eight-orbit CUDA
-lifecycle was systems-only and was not pooled.
+rank failed, in every primary cell. Predecessor identities, all 24 near/
+sufficient/exact causal-label comparisons, Fisher reproduction, and exact
+decomposition passed for both checkpoints. Auxiliary moment/increment
+diagnostics drifted by at most `6.33e-8` and were reported but were never a
+declared predecessor gate. A separate eight-orbit schema-v1.1 CUDA lifecycle
+was systems-only and was not pooled.
 
 The NAL draft recommends five seeds. This targeted audit reused the only two
 stable checkpoints with dyadic-rank near misses, so it is marked `UNDERPOWERED`
 and makes a mechanism claim only for those frozen cells.
+
+## Correction and evidence status
+
+Three roots are preserved. The original `20260806_d6_preregistered` root was
+produced concurrently by digest `20e2d7...` without the required predecessor-
+endpoint or joint aggregate controls; its producing source state is not the
+audited runner and it is excluded. The `_v2` root added those controls, but its
+implementation incorrectly applied the declared `1e-8` Fisher tolerance to
+auxiliary derived diagnostics. It consequently failed its implemented
+reproduction gate at `6.33e-8` even though every causal label matched and the
+Fisher errors were below the declared tolerance.
+
+The authoritative `_v3` correction uses schema
+`nal.tinyllm-defect-boundary-audit.v1.1`, gates exactly the preregistered causal
+labels and Fisher values, and labels itself
+`post_outcome_corrective_replication_evidence`. It preserved the same
+classification pattern, passed predecessor reproduction 2/2, and remained
+byte-identical across fingerprint-matched resume. No boundary threshold,
+registered cell, interpolation coefficient, or classification rule changed.
 
 ## Preregistered endpoint
 
@@ -73,8 +100,9 @@ and makes a mechanism claim only for those frozen cells.
 | 53 | held-out A / composition | 2 | **continuous distortion** | 27/64 | 0.3644 | 0.296 |
 | 53 | held-out B / composition | 2 | **continuous distortion** | 31/64 | 0.4077 | 0.226 |
 
-The registered hypothesis required `boundary_only` in 3/3 cells. It achieved
-1/3 and is not confirmed. All prediction disagreements were adjacent-bin, but
+The registered hypothesis required `boundary_only` in 3/3 cells. The
+corrective replication achieved 1/3 and the hypothesis is not confirmed. All
+prediction disagreements were adjacent-bin, but
 adjacency alone is too weak: seed 53 changes a broad fraction of the orbit and
 its continuous posterior map, not just examples sitting on decision margins.
 
@@ -149,11 +177,20 @@ dimension and decoder calibration separate without retraining the transformer.
 
 ## Artifacts and reproduction
 
-- Aggregate: `data/experiments/tinyllm_defect_boundary_audit/20260806_d6_preregistered/campaign_results.json`
-- Per-seed records: `data/experiments/tinyllm_defect_boundary_audit/20260806_d6_preregistered/runs/seed_*/result.json`
-- Disposable lifecycle: `data/experiments/tinyllm_defect_boundary_audit/20260806_shakedown_cuda/`
+- Corrective aggregate: `data/experiments/tinyllm_defect_boundary_audit/20260806_d6_preregistered_v3/campaign_results.json`
+- Corrective per-seed records: `data/experiments/tinyllm_defect_boundary_audit/20260806_d6_preregistered_v3/runs/seed_*/result.json`
+- Preserved failed-gate attempt: `data/experiments/tinyllm_defect_boundary_audit/20260806_d6_preregistered_v2/`
+- Preserved nonconforming original: `data/experiments/tinyllm_defect_boundary_audit/20260806_d6_preregistered/`
+- Disposable schema-v1.1 lifecycle: `data/experiments/tinyllm_defect_boundary_audit/shakedown_20260806_v4/`
+- Meta-hypothesis record: `data/meta_hypotheses/tinyllm-c2-defect-boundary-correction-v1.json`
 - Runner: `experiments/structure_net/tinyllm_defect_boundary_audit.py`
 - Tests: `tests/structure_net/test_tinyllm_defect_boundary_audit.py`
+
+The meta-hypothesis write was verified by authoritative Chroma readback of the
+named hypothesis and both experiment records. The legacy Chroma dependency
+emitted NumPy-2.0 consumer and telemetry warnings during the write; these are
+transport diagnostics, not failed evidence gates, and the JSON ledger remains
+the portable source record.
 
 ```bash
 CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=2 \
@@ -161,6 +198,5 @@ MPLCONFIGDIR=/tmp/matplotlib-structure-net \
 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
 pixi run python -m experiments.structure_net.tinyllm_defect_boundary_audit \
   --device cuda:0 \
-  --output data/experiments/tinyllm_defect_boundary_audit/20260806_d6_preregistered
+  --output data/experiments/tinyllm_defect_boundary_audit/20260806_d6_preregistered_v3
 ```
-

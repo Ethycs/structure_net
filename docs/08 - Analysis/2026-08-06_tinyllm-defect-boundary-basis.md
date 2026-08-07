@@ -55,6 +55,8 @@ predictive observer, used no target label, and trained no model.
 | implementation SHA-256 | `ae578ba04b9eb1b4b44a155295f159e6c9b35f1eab799a95d32d817f845b1fd5` |
 | campaign SHA-256 | `c4cbcec89a0f64a94da29c4add90f61bdbc4b6a618caa70779663c1afbdd1a39` |
 | scientific payload SHA-256 | `54acd44cd92584e65b557b3d0197a76f7d65232857798c4f10cf75cb0d2b3267` |
+| DVC data root | `d00be93952814208093232c628e786f1.dir` |
+| lakeFS commit | `cc04198391cb10c880b1b528539999a02ba5d3a5c3821f3d4a2a3dc17d18e766` |
 
 The exact/zero endpoints and predecessor failure cells reproduced in all three
 checkpoints. Every inherited head decomposition error remained below `1e-6`,
@@ -170,8 +172,15 @@ separate without retraining the transformer.
   `data/experiments/tinyllm_defect_boundary_basis/20260806_d6_preregistered/runs/seed_*/result.json`
 - Disposable systems-only lifecycle:
   `data/experiments/tinyllm_defect_boundary_basis/shakedown_20260806/`
+- Meta-hypothesis record:
+  `data/meta_hypotheses/tinyllm-c2-defect-boundary-basis-v1.json`
 - Runner: `experiments/structure_net/tinyllm_defect_boundary_basis.py`
 - Tests: `tests/structure_net/test_tinyllm_defect_boundary_basis.py`
+
+The named hypothesis and all three experiment records passed authoritative
+Chroma readback after ledger storage. The legacy Chroma transport emitted
+known NumPy-2.0 consumer and telemetry warnings; the readback gate passed and
+the JSON record remains the portable source artifact.
 
 ```bash
 CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=2 \
