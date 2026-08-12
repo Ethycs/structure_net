@@ -360,6 +360,26 @@ Create `docs/08 - Analysis/YYYY-MM-DD_<study>.md`. Use this order:
 
 Lead with the result, not the chronology of implementation. A failed full hypothesis can coexist with a useful narrower finding; state both without upgrading the latter into confirmation.
 
+### Activation-averaging reports need a Jensen comparator
+
+When an intervention averages same-target activations and reports lower
+cross-entropy, also evaluate the native answer-logit midpoint whenever the cut
+permits it. For endpoint logits `z1`, `z2`, activation-midpoint logits `z_act`,
+and their shared target `t`, report
+
+```text
+J = mean(CE(t, z1), CE(t, z2)) - CE(t, (z1 + z2) / 2)
+N = CE(t, z_act) - CE(t, (z1 + z2) / 2)
+G = J - N.
+```
+
+`J >= 0` follows generically from cross-entropy convexity and is not evidence
+that the pairing is semantically correct. Include a target-changing or
+pairing control where available, and keep frozen-posterior/task preservation
+as the causal endpoint. An activation average that lowers loss but fails the
+causal gate MUST NOT be described as partial quotient closure solely because
+of the lower loss.
+
 ## 13. Register the result in the meta-hypothesis system
 
 After the raw aggregate and report stabilize:

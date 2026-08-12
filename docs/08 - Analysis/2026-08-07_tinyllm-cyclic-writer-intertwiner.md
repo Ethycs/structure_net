@@ -119,13 +119,17 @@ may combine charges only through declared neutral/equivariant products. This
 retains the higher-harmonic corrections that helped the failed writer without
 mixing incompatible charges into one ordinary three-vector.
 
-The next experiment on this architecture branch should compare the unchanged
-order-four write with an exactly typed harmonic-fusion write of matched
-capacity. First verify the intertwiner contract by construction; then evaluate
-the same four held-out continuation cells and scalar tangent endpoint. This
-branch is subordinate to the cheaper signed-residual sensor already isolated
-by the continuation studies. Do not run a generic learned alignment or another
-topology scan.
+**Superseded program instruction (2026-08-10):** this report originally
+recommended comparing the order-four write with an exactly typed
+harmonic-fusion write of matched capacity after the cheaper signed-residual
+sensor test. That sensor, its action law, the exact groupoid decomposition, and
+the posterior-coordinate rank ladder are now complete. Together they close the
+post-hoc fitted-writer/sidecar branch: another Fourier or harmonic writer is no
+longer the next experiment. Preserve the typed direct-sum construction only as
+a candidate for a prospectively trained architecture whose sign, basis,
+normalization, metric, fusion, and downstream embedding are fixed by design.
+See the
+[current frontier audit](../07%20-%20Status%20Reports/2026-08-10_tinyllm-interpretability-frontier.md).
 
 ## Campaign integrity
 

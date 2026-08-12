@@ -150,7 +150,8 @@ independent confirmation of the wider quotient program.
 | result-manifest SHA-256 | `317cc0840c8808dc82632f19acb45c6a255853d3c13d1a2ef225b356b2ce33ef` |
 | meta-hypothesis JSON SHA-256 | `d408ac5b41c6e2b92d8e831820de4121557c55f493ef552f7329de6f37b894dc` |
 | final DVC data root | `b76d24966f6e969b1998cd825edeb15c.dir` (`2,712` files; `40,062,661,789` bytes) |
-| DVC / lakeFS | post-ledger snapshot pushed; `dvc status --cloud` reports cache and `lakefs` remote in sync |
+| lakeFS commit | `1f7ec52afae01257084c6cf85106d01126f61d061b0cf11415ffeb861b4313a0` |
+| DVC / lakeFS | post-ledger snapshot pushed; local cache and `lakefs` remote in sync |
 
 Every source campaign, result, array, checkpoint, and system-state hash of the
 reference-path transport predecessor validated before intervention, and the
@@ -163,6 +164,9 @@ digests were unchanged after intervention. An exact resume returned
 focused runner and meta-hypothesis suites completed with **17 passed**; the
 ChromaDB readback verified the hypothesis and all ten experiment records (the
 18 legacy telemetry warnings are the repository's known Chroma/NumPy noise).
+The campaign and meta-ledger blobs were independently verified at the lakeFS
+commit above, and the branch has no uncommitted diff. The immutable DVC root is
+`lakefs://artifacts/1f7ec52afae01257084c6cf85106d01126f61d061b0cf11415ffeb861b4313a0/structure-net/files/md5/b7/6d24966f6e969b1998cd825edeb15c.dir`.
 
 ## Mechanistic decision
 

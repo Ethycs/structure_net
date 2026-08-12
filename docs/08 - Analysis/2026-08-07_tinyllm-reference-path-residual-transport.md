@@ -175,14 +175,19 @@ localized degree/branch-locus program.
 | result-manifest SHA-256 | `5d765445082346512092dfa0acb00e3e39db369bd71829cbe4d96c8871593b4b` |
 | campaign SHA-256 | `6b232f523cd570f10ebfcc07c47abae6a724b568d4cfc2852e4b91ccff01321f` |
 | meta-hypothesis JSON SHA-256 | `3b2bcc1f11f8143aeabde44af6d32f0cfcec58af686956a438ae92f80c0778c5` |
-| local DVC data root | `2f6f7ce1015064c3ada677e3d2e46047.dir` (`2,675` files; `40,026,781,693` bytes) |
-| meta-hypothesis SHA-256 | `3b2bcc1f11f8143aeabde44af6d32f0cfcec58af686956a438ae92f80c0778c5` |
-| DVC / lakeFS | final post-ledger snapshot pending; no final remote claim is made here |
+| DVC data root | `b76d24966f6e969b1998cd825edeb15c.dir` (`2,712` files; `40,062,661,789` bytes) |
+| lakeFS commit | `1f7ec52afae01257084c6cf85106d01126f61d061b0cf11415ffeb861b4313a0` |
 
 An exact resume returned `campaign already complete` and preserved the campaign
 SHA byte-for-byte. The focused transport, source-acquisition, and source-ledger
 verification completed with **28 passed**. The hypothesis and ten direct
 experiment records were read back successfully from the persistent ledger.
+
+The configured DVC remote reports `Everything is up to date`. The immutable
+DVC directory object, campaign blob, and meta-hypothesis blob were verified at
+the lakeFS commit above; the branch has no uncommitted diff. The directory
+object is
+`lakefs://artifacts/1f7ec52afae01257084c6cf85106d01126f61d061b0cf11415ffeb861b4313a0/structure-net/files/md5/b7/6d24966f6e969b1998cd825edeb15c.dir`.
 
 ## Artifacts and reproduction
 
