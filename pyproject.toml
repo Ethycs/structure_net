@@ -39,6 +39,7 @@ notebook = ">=7.4.4,<8"
 
 [tool.pixi.pypi-dependencies]
 structure_net = { path = ".", editable = true }
+transformers = ">=4.42,<5"
 
 [tool.pixi.activation.env]
 # CUDA-enabled Python wheels bundle a mutually compatible CUDA userspace. Do
