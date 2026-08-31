@@ -18,6 +18,16 @@ from .tinyllm_model import (
     build_tinyllm_model,
     create_tinyllm_model,
 )
+from .calm_tinyllm_model import (
+    CALMTinyLLMConfig,
+    CALMTinyLLMModel,
+    CALMTinyLLMOutput,
+    ChunkAutoencoderOutput,
+    EnergyBasedGenerativeHead,
+    EnergyScoreObjective,
+    PatchInputAdapter,
+    RobustChunkAutoencoder,
+)
 
 __all__ = [
     'MinimalModel',
@@ -32,4 +42,12 @@ __all__ = [
     'TinyLLMOutput',
     'create_tinyllm_model',
     'build_tinyllm_model',
+    'CALMTinyLLMConfig',
+    'CALMTinyLLMModel',
+    'CALMTinyLLMOutput',
+    'ChunkAutoencoderOutput',
+    'EnergyBasedGenerativeHead',
+    'EnergyScoreObjective',
+    'PatchInputAdapter',
+    'RobustChunkAutoencoder',
 ]

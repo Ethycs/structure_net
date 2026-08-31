@@ -212,7 +212,13 @@ class LabConfig:
     max_gpu_slots_per_device: int = 4
     max_experiment_retries: int = 0
     resume_completed_experiments: bool = False
-    
+
+    # Execution backend: "local" (spawn process pool + device-slot plan) or
+    # "ray" (submit experiments as tasks on a shared Ray cluster; requires a
+    # ray install matching the network-wide version pin).
+    execution_backend: str = "local"
+    ray_address: Optional[str] = None  # None = start local; "auto" = join cluster
+
     # Scientific rigor
     min_experiments_per_hypothesis: int = 5
     require_statistical_significance: bool = True

@@ -75,7 +75,12 @@ class NeuralArchitectureLab:
         self.setup_logging()
 
         # Initialize components
-        self.runner = AsyncExperimentRunner(config)
+        if getattr(config, "execution_backend", "local") == "local":
+            self.runner = AsyncExperimentRunner(config)
+        else:
+            from .ray_runner import select_runner
+
+            self.runner = select_runner(config)
         self.runner.logger = self.logger  # Pass logger to runner
         self.insight_extractor = InsightExtractor()
         self.statistical_analyzer = StatisticalAnalyzer(

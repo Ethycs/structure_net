@@ -593,6 +593,7 @@ before model optimization:
 36. [C3 posterior-estimator training-license audit](2026-08-11_tinyllm-c3-posterior-estimator-training-license.md)
 37. [publication-claim audit](../08%20-%20Analysis/2026-08-11_tinyllm-publication-claim-audit.md)
 38. [program terminal audit](2026-08-11_tinyllm-program-terminal-audit.md)
+39. [independent-analysis packet](../08%20-%20Analysis/2026-08-11_tinyllm-independent-analysis-packet.md)
 
 This record supersedes older standalone “next experiment” paragraphs wherever
 they conflict. The measured reports and their original outcome tables remain
