@@ -1,10 +1,10 @@
 # TinyLLM TTNO cut-localization and parity-control preregistration
 
-**Status:** REGISTERED — NOT RUN
-**Date:** 2026-08-30
-**Menu ID:** A5
-**Hypothesis:** `tinyllm-ttno-cut-localization-parity-v1`
-**Planned schema:** `nal.tinyllm-ttno-cut-localization-parity.v1`
+**Status:** REGISTERED — NOT RUN  
+**Date:** 2026-08-30  
+**Menu ID:** A5  
+**Hypothesis:** `tinyllm-ttno-cut-localization-parity-v1`  
+**Planned schema:** `nal.tinyllm-ttno-cut-localization-parity.v1`  
 **Parent:** `tinyllm-dynamic-ttno-rank-pilot-v1`
 
 ## Question
@@ -129,3 +129,4 @@ data/experiments/tinyllm_ttno_cut_localization_parity/20260830_registered/
   not natural language attention distributions.
 - A topology-sensitive result would motivate tree search; it would not establish
   a subquadratic input-conditioned tree compiler.
+

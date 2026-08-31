@@ -1,10 +1,10 @@
 # TinyLLM HSS shared-basis and nesting diagnostic preregistration
 
-**Status:** REGISTERED — NOT RUN
-**Date:** 2026-08-30
-**Menu ID:** A6
-**Hypothesis:** `tinyllm-hss-shared-basis-nesting-v1`
-**Planned schema:** `nal.tinyllm-hss-shared-basis-nesting.v1`
+**Status:** REGISTERED — NOT RUN  
+**Date:** 2026-08-30  
+**Menu ID:** A6  
+**Hypothesis:** `tinyllm-hss-shared-basis-nesting-v1`  
+**Planned schema:** `nal.tinyllm-hss-shared-basis-nesting.v1`  
 **Parent:** `tinyllm-dynamic-ttno-rank-pilot-v1`
 
 ## Question
@@ -138,3 +138,4 @@ data/experiments/tinyllm_hss_shared_basis_nesting/20260830_registered/
   an H2 admissibility rule for A7.
 - One pretrained checkpoint does not establish cross-model repeatability.
 - A6 cannot rescue A4's failed paired-bit TTNO envelope.
+

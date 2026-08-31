@@ -1,11 +1,11 @@
 # TinyLLM constructive causal H2 attention preregistration
 
-**Status:** REGISTERED — NOT RUN
-**Date:** 2026-08-30
-**Menu ID:** A7
-**Hypothesis:** `tinyllm-causal-h2-attention-v1`
-**Planned schema:** `nal.tinyllm-causal-h2-attention.v1`
-**Evidence parent:** `tinyllm-dynamic-ttno-rank-pilot-v1`
+**Status:** REGISTERED — NOT RUN  
+**Date:** 2026-08-30  
+**Menu ID:** A7  
+**Hypothesis:** `tinyllm-causal-h2-attention-v1`  
+**Planned schema:** `nal.tinyllm-causal-h2-attention.v1`  
+**Evidence parent:** `tinyllm-dynamic-ttno-rank-pilot-v1`  
 **Diagnostic predecessor:** `tinyllm-hss-shared-basis-nesting-v1`
 
 ## Question and primary lock
