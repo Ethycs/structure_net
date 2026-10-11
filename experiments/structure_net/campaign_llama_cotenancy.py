@@ -47,6 +47,7 @@ def main():
     parser.add_argument("--halt", action="store_true", help="stop only this exact owned campaign root after user steering")
     parser.add_argument("--lossless", action="store_true", help="execute the fixed exact-residual follow-up")
     parser.add_argument("--lossless-timing", type=Path, help="decoded checkpoint for the counterbalanced timing follow-up")
+    parser.add_argument("--exact-deployment", choices=("pilot", "full"), help="unchanged-model CUDA graph deployment comparison")
     args = parser.parse_args()
     if args.halt:
         halt_owned_campaign(args.output)
@@ -56,6 +57,14 @@ def main():
     args.output.mkdir(parents=True)
     os.environ.update(CUDA_DEVICE_ORDER="PCI_BUS_ID", CUDA_VISIBLE_DEVICES="0", LD_LIBRARY_PATH="",
                       PYTHONPATH=str(Path.cwd())+":"+str(Path.cwd()/"src"))
+    if args.exact_deployment:
+        command = [sys.executable, "-m", "experiments.structure_net.run_llama_exact_deployment", "--output", str(args.output / "deployment")]
+        if args.exact_deployment == "pilot":
+            command.append("--pilot")
+        with (args.output / "deployment.log").open("w") as log:
+            subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=True)
+        print(json.dumps({"completed": str(args.output / "deployment/result.json")}), flush=True)
+        return
     if args.lossless_timing:
         command=[sys.executable,"-m","experiments.structure_net.run_llama_lossless_timing","--checkpoint",str(args.lossless_timing),"--output",str(args.output/"timing")]
         with (args.output/"timing.log").open("w") as log:
