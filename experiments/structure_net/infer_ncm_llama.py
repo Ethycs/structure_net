@@ -7,6 +7,7 @@ import time
 import torch
 
 from experiments.structure_net.ncm_llama import BASE, infer_ncm, load_ncm, tokenizers, write_json
+from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
     if args.output and args.output.exists():raise ValueError("new output path required")
     if not torch.cuda.is_available() or torch.cuda.device_count()!=1:raise RuntimeError("select physical GPU0 before starting Python")
     text=args.text if args.text is not None else args.input.read_text()
-    gpt,llama=tokenizers();ids=gpt.encode(text,add_special_tokens=False)
+    gpt,llama=tokenizers();gpt=CachedVocabulary(gpt);ids=gpt.encode(text,add_special_tokens=False)
     if not 0<len(ids)<=512:raise ValueError("NCM requires a nonempty source of at most512 GPT-2 tokens; no truncation")
     vae,net,_=load_ncm(args.codec,args.model,adaptation=True)
     runtime=None
