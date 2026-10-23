@@ -77,3 +77,32 @@ def test_two_update_pilot_is_never_reused_as_full_training(tmp_path, monkeypatch
         "codec_sha256": file_hash(codec), "stage_results": {"conditional": {"updates": 2}}}))
     with pytest.raises(ValueError, match="incomplete updates"):
         campaign.completed(tmp_path, "native", codec)
+
+
+def test_trained_codec_output_must_match_its_saved_digest(tmp_path):
+    from experiments.structure_net.ncm_paper_campaign_v2 import controls
+    codec = tmp_path / "model.pt"
+    codec.write_bytes(b"trained codec")
+    (tmp_path / "producer.json").write_text(json.dumps({"input_hashes": {}}))
+    (tmp_path / "result.json").write_text(json.dumps({"model_sha256": "different checkpoint"}))
+    with pytest.raises(ValueError, match="different codec"):
+        controls(codec, tmp_path / "result.json", tmp_path / "oracle.json")
+
+
+@pytest.mark.parametrize("reconstruction,codec_sha", [(.97, "valid"), (.99, "wrong")])
+def test_noisy_label_diagnostic_never_bypasses_codec_integrity(tmp_path, monkeypatch, reconstruction, codec_sha):
+    from types import SimpleNamespace
+    from experiments.structure_net import ncm_paper_train_generic as training
+    from experiments.structure_net.ncm_memory_data import file_hash
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    codec = tmp_path / "codec.pt"
+    codec.write_bytes(b"codec")
+    (tmp_path / "train.json").write_text('[{}]')
+    (tmp_path / "result.json").write_text('{"status":"passed"}')
+    control = tmp_path / "codec_result.json"
+    control.write_text(json.dumps({"nonpad_reconstruction": reconstruction,
+        "model_sha256": file_hash(codec) if codec_sha == "valid" else "wrong"}))
+    args = SimpleNamespace(command="unpaired", training_data=tmp_path, label_audit=None,
+        diagnostic=True, codec=codec, codec_control=control, oracle_control=None)
+    with pytest.raises(ValueError, match="codec competence gates required"):
+        training.run(args)
