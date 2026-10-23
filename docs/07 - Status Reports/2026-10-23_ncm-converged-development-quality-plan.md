@@ -51,6 +51,11 @@ Pass focused CPU lifecycle checks and a real two-case CUDA inference/reload
 pilot before the full run. Reuse the identical qualified rubric and existing
 CUDA word-kernel memory controls where justified; no new memory-concurrency
 assumptions. Physical GPU0 only, BF16 native/FP32 new weights, TF32 disabled.
+The pilot uses the first two development sources, checks exact inference after
+deliberately perturbing and reloading new parameters, and retains its first
+outputs and complete word states unchanged in the full 64-case generation.
+It makes no API requests or quality decisions. The remaining 62 cases are
+generated once after the pilot's observed terminal success.
 Freeze producer source, original checkpoint, complete source identities,
 tokenizer/profile, prior caches and qualified judge evidence under fresh roots:
 `20261023_converged_native_{pilot,outputs,grade,results}_v1`.
