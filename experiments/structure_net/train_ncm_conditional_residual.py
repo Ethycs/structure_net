@@ -25,6 +25,9 @@ from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_memory import save
 
 PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-conditional-residual-learning-plan.md")
+AMENDMENT = Path("docs/07 - Status Reports/2026-10-22_ncm-conditional-residual-mild-amendment.md")
+CAPACITY = ROOT / "20261022_noise_capacity_measure_v1"
+STOP = ROOT / "20261022_residual_learning_stop_v1/result.json"
 CHECKPOINT = ROOT / "20261022_full_train_v1/step5120.pt"
 CODEC = ROOT / "20261022_decoder_train_v1/model.pt"
 DATA = ROOT / "20261022_teacher_v1/train.json"
@@ -48,6 +51,7 @@ class Config:
     root_neighbors: int = 8
     first_corruption: float = .5
     final_corruption: float = 0.
+    first_fine_corruption: float = .05
 
 
 @torch.inference_mode()
@@ -98,7 +102,14 @@ def main(pilot):
     if torch.cuda.mem_get_info()[0] < 4_800_000_000:
         raise ValueError("insufficient intended GPU2 headroom")
     cases = sorted(q.read(DATA), key=lambda r: text_hash("ncm-residual-learning-v1:"+r["id"]))[:4 if pilot else cfg.cases]
-    inputs = [DATA, CODEC, CHECKPOINT, ROOT / "20261022_full_train_v1/result.json"]
+    capacity = q.read(CAPACITY / "result.json")
+    if capacity["status"] != "completed_noise_capacity_measurement" or not capacity["metrics"]["mild_fine"]["capacity_qualified"]:
+        raise ValueError("qualified conditional noise capacity required")
+    verify(q.read(CAPACITY / "producer.json"))
+    if q.read(STOP)["status"] != "full_training_stopped_after_noise_capacity_failure":
+        raise ValueError("preserved v1 stop receipt required")
+    inputs = [DATA, CODEC, CHECKPOINT, ROOT / "20261022_full_train_v1/result.json",
+              CAPACITY / "result.json", CAPACITY / "producer.json", STOP]
     manifest = q.read(PREP / "producer.json")["input_hashes"]
     features = []
     for case in cases:
@@ -108,14 +119,14 @@ def main(pilot):
         inputs.append(path)
         state = torch.load(path, weights_only=True)
         features.append(last_valid(state["hidden"][None], state["pad_mask"][None])[0].clone())
-    base = ROOT / ("20261022_residual_learning_pilot_v1" if pilot else "20261022_residual_learning_train_v1")
+    base = ROOT / ("20261022_residual_learning_pilot_v2" if pilot else "20261022_residual_learning_train_v2")
     if base.exists():
         raise ValueError("fresh append-only campaign required")
-    sources = [Path(__file__), PLAN, *[Path("experiments/structure_net") / name for name in
+    sources = [Path(__file__), PLAN, AMENDMENT, *[Path("experiments/structure_net") / name for name in
         ("ncm_conditional_residual_targets.py", "ncm_coarse_curriculum.py", "ncm_global_context.py",
          "ncm_residual_oracle.py", "ncm_paper_train_generic.py")]]
     if not pilot:
-        previous = ROOT / "20261022_residual_learning_pilot_v1"
+        previous = ROOT / "20261022_residual_learning_pilot_v2"
         receipt = q.read(previous / "result.json")
         if receipt["status"] != "passed" or any(file_hash(p) != expected for p, expected in receipt["source_hashes"].items()):
             raise ValueError("matching two-arm lifecycle pilot required")
@@ -125,7 +136,7 @@ def main(pilot):
     for path in sources:
         campaign_producer["source_hashes"][str(path)] = file_hash(path)
         (base / "producer_source" / ("residual_"+path.name)).write_bytes(path.read_bytes())
-    campaign_producer["hypothesis_id"] = "ncm-conditional-residual-learning-v1"
+    campaign_producer["hypothesis_id"] = "ncm-conditional-residual-learning-v2"
     campaign_producer["fingerprint"] = q.digest({k: v for k, v in campaign_producer.items() if k != "fingerprint"})
     write_json(base / "producer.json", campaign_producer)
     torch.manual_seed(cfg.seed); torch.cuda.reset_peak_memory_stats()
@@ -190,7 +201,7 @@ def main(pilot):
         for path in sources:
             p["source_hashes"][str(path)] = file_hash(path)
             (run / "producer_source" / ("residual_"+path.name)).write_bytes(path.read_bytes())
-        p["hypothesis_id"] = "ncm-conditional-residual-learning-v1"
+        p["hypothesis_id"] = "ncm-conditional-residual-learning-v2"
         p["fingerprint"] = q.digest({k: v for k, v in p.items() if k != "fingerprint"})
         write_json(run / "producer.json", p)
         net.load_state_dict(initial_net, strict=True); enable_coarse_ar(net)
@@ -216,6 +227,10 @@ def main(pilot):
             clean = labels[indices].cuda()
             corruption = sample_corruption(clean, vae.vq.levels, vae.vq.vqvae_vocab_sizes,
                 neighbors, noise_rng, cfg.first_corruption, cfg.final_corruption)
+            first_fine = cfg.first_corruption*(len(vae.vq.levels)-2)/(len(vae.vq.levels)-1)
+            keep = (torch.rand(clean.shape, generator=noise_rng) < cfg.first_fine_corruption/first_fine).to(clean.device)
+            keep[:, :vae.vq.levels[0]] = True
+            corruption = Corruption(corruption.mask & keep, corruption.replacements)
             expert, conditioning, info = training_targets(vae.vq, z[indices].cuda(), clean, corruption, repair=arm == "repair")
             context = source_context(vae, net, adapter, prefix[indices].cuda(), last[indices].cuda())
             logits = logits_for_codes(vae, net, context, prefix[indices].cuda(), clean, conditioning)
@@ -283,7 +298,7 @@ def main(pilot):
         "final_test_opened": False, "speed_tested": False, "underpowered": True, "confirmed": False}
     verify(campaign_producer)
     write_json(base / "result.json", aggregate)
-    print(json.dumps({k: v for k, v in aggregate.items() if k != "results"}), flush=True)
+    print(json.dumps({k: v for k, v in aggregate.items() if k not in ("results", "source_hashes")}), flush=True)
 
 
 if __name__ == "__main__":
