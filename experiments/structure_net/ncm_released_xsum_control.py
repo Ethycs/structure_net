@@ -17,6 +17,7 @@ PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-released-xsum-control-plan.
 REVISION = "6580ba41a4b0a976dde876fbe84d25327617b0e6"
 DATA = ROOT / "20261022_released_xsum_data_v1"
 NAMES = ("passages.pickle", "reference_summaries.pickle")
+AMENDMENT = Path("docs/07 - Status Reports/2026-10-22_ncm-released-xsum-runtime-amendment.md")
 
 
 class PrimitiveUnpickler(pickle.Unpickler):
@@ -64,7 +65,7 @@ def run(pilot):
     import torch
     from experiments.structure_net.ncm_decode_policy import pick_tokens, render_author
     from experiments.structure_net.ncm_frozen_body import module_hash
-    from experiments.structure_net.ncm_llama import INITIAL, VENDOR, load_ncm, tokenizers
+    from experiments.structure_net.ncm_llama import DEPENDENCIES, INITIAL, VENDOR, load_ncm, tokenizers
     from experiments.structure_net.ncm_paper_controls import producer
     from experiments.structure_net.ncm_training_recipe import cumulative_latent
     if os.environ.get("CUDA_VISIBLE_DEVICES") != "0" or os.environ.get("CUDA_DEVICE_ORDER") != "PCI_BUS_ID":
@@ -75,12 +76,12 @@ def run(pilot):
     for name in NAMES:
         if file_hash(DATA / name) != receipt["files"][name]["sha256"]:
             raise ValueError("released data changed")
-    root = ROOT / ("20261022_released_xsum_pilot_v1" if pilot else "20261022_released_xsum_control_v1")
+    root = ROOT / ("20261022_released_xsum_pilot_v2" if pilot else "20261022_released_xsum_control_v2")
     n = 4 if pilot else 32
     p = producer(root, "systems_lifecycle_only_not_quality_evidence" if pilot else "released_domain_inference_path_control",
         [DATA / name for name in (*NAMES, "result.json")] + [INITIAL / name for name in ("config.yaml", "tokenizer.pt", "generator.pt")],
         {"cases": n, "batch": 4, "seed": 42, "precision": "FP32", "source_prefix": "author first512 tokens"})
-    for path in (Path(__file__), PLAN, VENDOR / "scripts/eval_shard.py",
+    for path in (Path(__file__), PLAN, AMENDMENT, VENDOR / "scripts/eval_shard.py",
                  Path("experiments/structure_net/ncm_decode_policy.py")):
         p["source_hashes"][str(path)] = file_hash(path)
         (root / "producer_source" / ("xsum_"+path.name)).write_bytes(path.read_bytes())
@@ -88,12 +89,13 @@ def run(pilot):
     p["fingerprint"] = q.digest({k: v for k, v in p.items() if k != "fingerprint"})
     write_json(root / "producer.json", p)
     if not pilot:
-        pr = ROOT / "20261022_released_xsum_pilot_v1"
+        pr = ROOT / "20261022_released_xsum_pilot_v2"
         if q.read(pr / "result.json")["status"] != "passed" or q.read(pr / "producer.json")["source_hashes"] != p["source_hashes"]:
             raise ValueError("matching GPU pilot required")
     command = [sys.executable, str(VENDOR / "scripts/eval_shard.py"), "--config", str(INITIAL / "config.yaml"),
         "--checkpoint-dir", str(INITIAL), "--data-dir", str(DATA), "--n", str(n), "--bs", "4", "--out", str(root / "author.pickle")]
-    environment = {**os.environ, "NCM_ROOT": str(VENDOR.resolve())}
+    environment = {**os.environ, "NCM_ROOT": str(VENDOR.resolve()),
+                   "PYTHONPATH": str(DEPENDENCIES.resolve())+os.pathsep+os.environ.get("PYTHONPATH", "")}
     write_json(root / "author_command.json", command)
     with (root / "author.log").open("w") as log:
         subprocess.run(command, env=environment, stdout=log, stderr=subprocess.STDOUT, check=True)
