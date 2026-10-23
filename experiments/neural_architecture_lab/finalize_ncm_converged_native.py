@@ -10,6 +10,8 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 DEST = ROOT / "20261023_converged_native_results_v1"
 REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-converged-native-development-quality.md")
+SPLIT_AUDIT = ROOT / "20261023_converged_native_split_audit_v1.json"
+SCORE_REPLAY = ROOT / "20261023_converged_native_score_replay_v1.json"
 
 
 def replay_role(cases, role, cache, expected):
@@ -82,6 +84,22 @@ def finalize():
         if case["native_output_ids"] != full[:end] or case["text"] != tokenizer.decode(full[:end], skip_special_tokens=True).strip():
             raise ValueError("first stop or final decoded text differs")
     prior = study.load_prior_cache()
+    split_audit = study.run.q.read(SPLIT_AUDIT)
+    training = [c for rows in study.run.q.read(study.run.data.DEST / "cases.json").values() for c in rows]
+    overlaps = {key: len({c[key] for c in training} & {c[key] for c in original})
+                for key in ("id", "source_id", "group_id", "source_sha256")}
+    if (any(overlaps.values()) or split_audit["overlap_counts"] != overlaps
+            or split_audit["training_manifest_sha256"] != file_hash(study.run.data.DEST / "cases.json")
+            or split_audit["development_sources_sha256"] != file_hash(PREP / "development_sources.json")):
+        raise ValueError("case/session/group/source-hash disjointness audit differs")
+    scorer_replay = study.run.q.read(SCORE_REPLAY)
+    if (scorer_replay["source_sha256"] != file_hash(study.__file__)
+            or scorer_replay["plan_sha256"] != file_hash(study.PLAN)
+            or scorer_replay["prior_first_judgments"] != len(prior)
+            or scorer_replay["prior_cache_keys_sha256"] != study.run.q.digest(sorted(prior))
+            or scorer_replay["API_requests"] != 0
+            or scorer_replay["original_failed_outputs_replayed"]["passed"] != 0):
+        raise ValueError("new scorer's offline old-endpoint replay differs")
     cache = study.run.q.read(study.GRADE / "judgment_cache.json")
     if any(cache.get(k) != v for k, v in prior.items()) or grading["prior_first_judgments_preserved"] != 192:
         raise ValueError("prior192 first judgments changed")
@@ -95,13 +113,14 @@ def finalize():
         raise ValueError("joint quality gate differs")
     paths = [Path(__file__), Path(study.__file__), study.PLAN,
         Path("experiments/neural_architecture_lab/ncm_result_registry.py"),
-        study.PRIOR_CAMPAIGN, study.PRIOR_REGISTRY,
+        study.PRIOR_CAMPAIGN, study.PRIOR_REGISTRY, SPLIT_AUDIT, SCORE_REPLAY,
         ROOT / "20261023_budget128_baselines_results_v1/campaign_results.json"]
     for root in (study.PILOT, study.OUTPUTS, study.GRADE):
         paths += [p for p in root.rglob("*") if p.is_file() and "producer_source" not in p.parts]
     aggregate = {"schema": "nal.ncm-converged-native-results.v1", "classification": grading["classification"],
         "generation": generated, "grading": grading, "components": components,
         "task_accuracy_measured": True, "prior_192_first_judgments_preserved": True,
+        "split_audit": split_audit, "old_endpoint_scorer_replay": scorer_replay,
         "all_raw_word_states_and_decisions_replayed": True, "original_nine_pass_score": {"passed": 0, "cases": 64},
         "development_reused_not_final": True, "source_scope": "original short-source64development, not full application range",
         "NCM_trained": True, "NCM_causal_hybrid": True, "NCM_success_established": False,
@@ -152,6 +171,10 @@ earlier first judgments, including negatives, were audited and preserved.
 Raw requests, first-valid response parsing, token counts, complete histories,
 source identities and whole-summary decisions were replayed offline. New
 endpoints correctly identify NCM_trained=true. All workers terminated normally.
+An independent metadata audit found no overlap by case ID, source session,
+group or exact source hash against all 1,231 stored training/diagnostic cases.
+The new scorer also reproduced the old0/64 endpoint and its component counts
+without making API requests. These controls are separate from new model quality.
 
 This is a new causal-decoding hybrid endpoint, not a reproduction of released
 NCM training and not a repair of the original nine-pass result. It uses 134
