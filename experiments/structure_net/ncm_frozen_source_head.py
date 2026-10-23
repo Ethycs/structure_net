@@ -129,7 +129,7 @@ def greedy_concepts(generator, prefix_latent, source_mask):
 
 
 class FrozenSourceConceptHead(nn.Module):
-    def __init__(self, generator, parent_hidden_size):
+    def __init__(self, generator, parent_hidden_size, residual_prefix=False):
         super().__init__()
         validate_generator(generator)
         codec = generator.vqvae_local[0]
@@ -137,12 +137,16 @@ class FrozenSourceConceptHead(nn.Module):
         if original.training or any(p.requires_grad for p in original.parameters()):
             raise ValueError("concept targets and text decoder must be explicitly frozen")
         self.generator = generator
+        self.residual_prefix = bool(residual_prefix)
         self.source_norm = nn.LayerNorm(parent_hidden_size)
         self.source_projection = nn.Linear(parent_hidden_size, codec.embed_dim)
-        nn.init.normal_(self.source_projection.weight, std=1 / math.sqrt(parent_hidden_size))
+        if self.residual_prefix:
+            nn.init.zeros_(self.source_projection.weight)
+        else:
+            nn.init.normal_(self.source_projection.weight, std=1 / math.sqrt(parent_hidden_size))
         nn.init.zeros_(self.source_projection.bias)
 
-    def source_latents(self, features, source_mask):
+    def source_latents(self, features, source_mask, source_ids=None):
         if (features.ndim != 3 or features.shape[1] != self.generator.prefix_len
                 or features.shape[-1] != self.source_projection.in_features
                 or source_mask.shape != features.shape[:2]
@@ -153,15 +157,25 @@ class FrozenSourceConceptHead(nn.Module):
         detached = features.detach().masked_fill(~mask[..., None], 0)
         if not torch.isfinite(detached).all():
             raise ValueError("nonfinite valid source feature")
-        return self.source_projection(self.source_norm(detached)).masked_fill(~mask[..., None], 0)
+        latent = self.source_projection(self.source_norm(detached))
+        if self.residual_prefix:
+            codec = self.generator.vqvae_local[0]
+            if source_ids is None or source_ids.shape != source_mask.shape:
+                raise ValueError("residual source fusion requires the complete source token IDs")
+            with torch.no_grad():
+                raw = codec.encoder.wte(source_ids)
+            latent = raw + latent
+        elif source_ids is not None:
+            raise ValueError("source token fusion must be explicitly enabled")
+        return latent.masked_fill(~mask[..., None], 0)
 
-    def forward(self, features, source_mask, codes):
-        latent = self.source_latents(features, source_mask)
+    def forward(self, features, source_mask, codes, source_ids=None):
+        latent = self.source_latents(features, source_mask, source_ids)
         return teacher_concept_logits(self.generator, latent, source_mask, codes)
 
     @torch.no_grad()
-    def generate(self, features, source_mask):
+    def generate(self, features, source_mask, source_ids=None):
         if self.training:
             raise ValueError("the complete new head must be in eval mode")
-        latent = self.source_latents(features, source_mask)
+        latent = self.source_latents(features, source_mask, source_ids)
         return greedy_concepts(self.generator, latent, source_mask)

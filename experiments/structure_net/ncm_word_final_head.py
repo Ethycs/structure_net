@@ -10,7 +10,7 @@ from torch import nn
 
 
 class WordFinalConceptHead(nn.Module):
-    def __init__(self, source_head):
+    def __init__(self, source_head, word_vocab_limit=None):
         super().__init__()
         self.source_head = source_head
         generator = source_head.generator
@@ -19,6 +19,9 @@ class WordFinalConceptHead(nn.Module):
         self.blocks = getattr(codec, "blocks", 1)
         self.block_length = original.context_length
         self.width = generator.levels[-1]
+        self.word_vocab_limit = word_vocab_limit
+        if word_vocab_limit is not None and not 1 <= word_vocab_limit <= original.in_vocab_size:
+            raise ValueError("invalid explicit word vocabulary limit")
         if self.width != self.blocks * self.block_length:
             raise ValueError("full text-token level must cover every independent codec block")
         # Reuse the released finest-level projection and a new decoder copy.
@@ -39,12 +42,13 @@ class WordFinalConceptHead(nn.Module):
         logits = self.word_decoder(latent.reshape(batch*self.blocks, self.block_length, dim))
         return logits.reshape(batch, width, logits.shape[-1])
 
-    def forward(self, features, source_mask, target_concepts):
+    def forward(self, features, source_mask, target_concepts, source_ids=None):
         """No target word IDs or finest VQ labels enter prediction inputs."""
         g = self.generator
         codec = g.vqvae_local[0]
-        source = self.source_head.source_latents(features, source_mask)
-        previous = codec.vq.idx_to_ncm_input(target_concepts).to(source.dtype)
+        source = self.source_head.source_latents(features, source_mask, source_ids)
+        with torch.autocast(features.device.type, enabled=False):
+            previous = codec.vq.idx_to_ncm_input(target_concepts).to(source.dtype)
         queries = torch.cat((g.build_l0_query_input(len(source), dtype=source.dtype), previous), dim=1)
         target = g.transformer.wte(queries) + g.transformer.wle(g.lvl_1L)
         prefix = g.transformer.wte(source)
@@ -77,12 +81,12 @@ class WordFinalConceptHead(nn.Module):
         return g.transformer.ln_f(hidden)[:,g.prefix_len:]
 
     @torch.no_grad()
-    def generate(self, features, source_mask):
+    def generate(self, features, source_mask, source_ids=None):
         if self.training:
             raise ValueError("the complete new head must be in eval mode")
         g = self.generator
         codec = g.vqvae_local[0]
-        source = self.source_head.source_latents(features,source_mask)
+        source = self.source_head.source_latents(features,source_mask,source_ids)
         prefix = g.transformer.wte(source)
         reconstruction = torch.zeros(len(source),self.width,codec.embed_dim,dtype=source.dtype,device=source.device)
         conditioning = g.build_l0_query_input(len(source),dtype=source.dtype)
@@ -90,11 +94,15 @@ class WordFinalConceptHead(nn.Module):
         for level,width in enumerate(g.levels):
             hidden = self._level_hidden(prefix,source_mask,conditioning,level,position)
             if level == len(g.levels)-1:
-                return {"coarse_codes":coarse,"raw_word_ids":self._word_logits(hidden,conditioning).argmax(-1)}
+                logits = self._word_logits(hidden,conditioning)
+                if self.word_vocab_limit is not None:
+                    logits = logits[..., :self.word_vocab_limit]
+                return {"coarse_codes":coarse,"raw_word_ids":logits.argmax(-1)}
             current = g.lm_heads[level](hidden).argmax(-1)
             coarse.append(current)
-            reconstruction,conditioning = codec.vq.get_next_autoregressive_input(
-                level,reconstruction,codec.vq.embeddings[level](current))
+            with torch.autocast(features.device.type, enabled=False):
+                reconstruction,conditioning = codec.vq.get_next_autoregressive_input(
+                    level,reconstruction,codec.vq.embeddings[level](current))
             conditioning = conditioning.to(source.dtype)
             position += width
         raise RuntimeError("the word level was not reached")

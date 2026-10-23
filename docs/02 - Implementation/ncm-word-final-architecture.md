@@ -62,10 +62,12 @@ codes. They establish neither full-size memory viability nor training success.
 Before a model run, specify and freeze the pretrained-weight migration, source
 feature preparation, vocabulary constraints, complete EOS/PAD handling, paired
 controls, precision, loss weights, any neighborhood corruption, seeds and fixed
-budget. The current source bridge starts randomly and requires learned alignment;
-the generator/projection/decoder can inherit released weights. A raw source-token
-embedding path with an initially zero parent-feature residual is another
-initialization option, but is not implemented here.
+budget. The feature-only source bridge starts randomly and requires learned
+alignment; the generator/projection/decoder can inherit released weights. The
+implemented `residual_prefix=True` option retains raw source-token embeddings
+and adds an initially zero parent-feature residual. The new training protocol
+uses this option with character-aligned per-token parent features. Dynamic
+right-padding geometry retains every source token while reducing padding work.
 
 The 252 labels, including the 64 codec-audit cases, are future conditional-model
 **training** data. A source-to-summary model must be evaluated on the separate

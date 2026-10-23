@@ -24,8 +24,12 @@ during source encoding; no parent weights train.
 
 `FrozenSourceConceptHead(generator, parent_hidden_size)` adds a new LayerNorm
 and a projection from the parent hidden dimension to the codec latent dimension.
-The projection starts with normal weights of standard deviation
-`1/sqrt(parent_hidden_size)` and zero bias. The caller supplies the generator;
+The feature-only projection starts with normal weights of standard deviation
+`1/sqrt(parent_hidden_size)` and zero bias. Optional `residual_prefix=True`
+instead adds the projected features to frozen raw source-token embeddings and
+initializes the projection to zero, preserving the pretrained source path.
+That mode requires the complete source token IDs and aligned features.
+The caller supplies the generator;
 the interface does not reset its weights. Only new-module weights receive
 gradients. Source features are detached again at the boundary, and padded
 features are masked before normalization/projection.
