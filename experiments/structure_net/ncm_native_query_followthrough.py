@@ -4,12 +4,14 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 from experiments.structure_net import train_ncm_native_query_neighborhood as run
-from experiments.structure_net.ncm_memory_data import write_json
+from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 
 DEST = ROOT / "20261023_native_query_neighborhood_followthrough_v1"
+API_WORKFLOW = ROOT / "20261023_wide_labels_main_workflow_v1"
 
 
 def main():
@@ -26,18 +28,32 @@ def main():
         + [Path(__file__), Path(run.__file__)],
         {"fixed_updates": 2048, "cases": 64, "parallel_passes": 9, "output_repair": False,
          "source_disjoint_development": True, "quality_gate_per_judge": 61,
-         "final_test_opened": False, "speed_tested": False})
+         "final_test_opened": False, "speed_tested": False,
+         "wait_for_existing_label_pipeline_before_API_grading": True})
     journal = {"status": "running", "observer_pid": os.getpid(), "stages": [], "producer_fingerprint": p["fingerprint"]}
     write_json(DEST / "progress.json", journal)
     try:
         for stage, destination in (("generate", run.OUTPUTS), ("grade", run.GRADE)):
             verify(p)
+            if stage == "grade" and API_WORKFLOW.exists():
+                journal.update(status="waiting_for_label_pipeline_API_barrier", active_stage=stage)
+                write_json(DEST / "progress.json", journal)
+                while not (API_WORKFLOW / "result.json").exists():
+                    if (API_WORKFLOW / "failure.json").exists():
+                        raise RuntimeError("label workflow failed; preserve outputs and stop before API grading")
+                    time.sleep(5)
+                api_result = run.q.read(API_WORKFLOW / "result.json")
+                audit = ROOT / "20261023_wide_labels_main_audit_v1/worker_terminal_receipt.json"
+                if (api_result["status"] != "completed_training_labels_only"
+                        or run.q.read(audit)["exit_code"] != 0):
+                    raise ValueError("completed label pipeline and observed terminal audit required")
+                journal["API_barrier_result_sha256"] = file_hash(API_WORKFLOW / "result.json")
             environment = os.environ.copy()
             environment.update(LD_LIBRARY_PATH="", HF_HUB_OFFLINE="1", OMP_NUM_THREADS="2", PYTHONPATH="src:.",
                 PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True", CUDA_DEVICE_ORDER="PCI_BUS_ID",
                 CUDA_VISIBLE_DEVICES="0" if stage == "generate" else "")
             child = subprocess.Popen([sys.executable, "-m", "experiments.structure_net.train_ncm_native_query_neighborhood", stage], env=environment)
-            journal.update(active_stage=stage, child_pid=child.pid)
+            journal.update(status="running", active_stage=stage, child_pid=child.pid)
             write_json(DEST / "progress.json", journal)
             code = child.wait()
             if destination.exists():
