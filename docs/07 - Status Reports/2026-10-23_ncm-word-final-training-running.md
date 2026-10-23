@@ -51,3 +51,12 @@ and reload evidence, run the two-case source-only inference pilot, generate
 both64-case cohorts, freeze exact public judge payloads, then grade and archive
 the actual outcome. Training loss and oracle reconstruction are not task
 accuracy. Preserve every earlier failed codec, native hybrid and systems run.
+
+Completion update: training exited0after512updates, with exact reload, frozen
+codec and5,142,067,200bytes peak allocation. Source-only inference/reload and
+all128outputs completed. Qualified Terra found0/64complete-summary passes on
+each cohort, all128judgments valid. Sonnet was not admitted after either failed
+gate. The measured failure and TRAIN-only mechanism diagnostic are documented
+in the [analysis report](../08%20-%20Analysis/2026-10-23_ncm-word-final-frozen-parent.md).
+The systems checks passed; the summarization model failed. The95%goal remains
+unmet, both final cohorts closed, and no speedup established.

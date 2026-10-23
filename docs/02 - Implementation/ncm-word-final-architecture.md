@@ -1,7 +1,11 @@
 # NCM adaptation with a direct vocabulary-token final level
 
-Prototype: `experiments/structure_net/ncm_word_final_head.py`.
-Status: small CPU mechanism tests passed; no task training or accuracy result.
+Implementation: `experiments/structure_net/ncm_word_final_head.py`.
+Status: the fixed512-update model completed training and scored **0/64short and
+0/64longer complete-summary passes**, with all128Terra judgments valid. Both
+development gates failed; independent Sonnet was not admitted. See the
+[measured report](../08%20-%20Analysis/2026-10-23_ncm-word-final-frozen-parent.md).
+This adaptation has not established task quality, final accuracy or speedup.
 
 The completed oracle semantic audit found 8/64 complete-summary passes for the
 released codec and 6/64 for the EMA-adapted codec, against 63/64 Terra and 64/64
@@ -59,18 +63,27 @@ no gradients into parent features or frozen codec weights, and agreement between
 source-only generation and teacher evaluation at that generation's own coarse
 codes. They establish neither full-size memory viability nor training success.
 
-Before a model run, specify and freeze the pretrained-weight migration, source
-feature preparation, vocabulary constraints, complete EOS/PAD handling, paired
-controls, precision, loss weights, any neighborhood corruption, seeds and fixed
-budget. The feature-only source bridge starts randomly and requires learned
+The [fixed training protocol](../07%20-%20Status%20Reports/2026-10-23_ncm-word-final-frozen-parent-plan.md)
+froze pretrained-weight migration, source features, vocabulary constraints,
+complete EOS/PAD handling, paired controls, precision, losses, neighborhood
+corruption, seeds and budget before the run. The feature-only source bridge
+starts randomly and requires learned
 alignment; the generator/projection/decoder can inherit released weights. The
 implemented `residual_prefix=True` option retains raw source-token embeddings
 and adds an initially zero parent-feature residual. The new training protocol
 uses this option with character-aligned per-token parent features. Dynamic
 right-padding geometry retains every source token while reducing padding work.
 
-The 252 labels, including the 64 codec-audit cases, are future conditional-model
+The 252 labels, including the 64 codec-audit cases, are conditional-model
 **training** data. A source-to-summary model must be evaluated on the separate
 source-disjoint development and longer-source cohorts. Oracle reconstruction,
 training fit and this interface's tests cannot count toward the 95% task goal.
 Both final cohorts remain sealed until the actual development gate is met.
+
+A separately planned16-TRAIN-case diagnostic recovered1567/1635target words
+when supplied correct earlier concepts, versus21/1635with source-generated
+concepts. Actual generation and the full forward at its own concepts agreed
+on3067/3072raw word IDs. Root predictions matched only6/176labels in active
+blocks. These literal component scores are not task accuracy. They motivate
+isolating source-to-concept learning and then training on generated histories,
+rather than treating low teacher-conditioned word loss as a working summarizer.

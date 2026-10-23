@@ -6,6 +6,7 @@ from pathlib import Path
 import torch
 
 from experiments.structure_net import ncm_word_final_eval as study
+from experiments.structure_net import ncm_word_final_generation_gap as gap
 from experiments.structure_net.ncm_memory_data import file_hash,write_json
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
@@ -62,6 +63,51 @@ def replay_scores(rows,packets,role,cache,recorded,endpoint,encoding):
     return summary,scores
 
 
+def replay_generation_gap():
+    study.data.terminal(gap.DEST)
+    result=study.q.read(gap.DEST/"result.json")
+    measured=study.q.read(gap.DEST/"case_measurements.json")
+    if (result["status"]!="TRAIN_only_generation_gap_measured" or result["cases"]!=16
+            or result["task_accuracy"] is not None or result["complete_summary_quality_measured"]
+            or file_hash(gap.DEST/"case_measurements.json")!=result["case_measurements_sha256"]):
+        raise ValueError("complete TRAIN-only component diagnostic required")
+    selected=gap.selection(study.q.read(study.data.DATA/"cases.json")["train"])
+    neighbors=torch.load(study.recovery.TRAIN/"neighbors.pt",map_location="cpu",weights_only=True)
+    if len(measured)!=16:raise ValueError("all16component cases required")
+    for case,row in zip(selected,measured):
+        if (any(case[k]!=row[k] for k in ("id","source_id","source_sha256","source_cl100k_tokens","source_frame"))
+                or row["target_word_ids"]!=case["word_ids"]):
+            raise ValueError("TRAIN-only selection/source/word target changed")
+        target=torch.tensor([row["target_word_ids"]]);mask=target!=50257
+        for name,ids in (("gold_conditioned_words","gold_conditioned_word_ids"),
+                ("source_only_words","raw_word_ids"),("own_conditioning_forward_words","own_conditioning_forward_word_ids")):
+            actual=torch.tensor([row[ids]])
+            if actual.shape!=(1,192) or (actual<0).any() or (actual>=50257).any():
+                raise ValueError("complete valid diagnostic word frame required")
+            counted={"correct":int(((actual==target)&mask).sum()),"total":int(mask.sum())}
+            if row[name]!=counted:raise ValueError("component word recovery differs")
+        agreement={"correct":sum(a==b for a,b in zip(row["raw_word_ids"],row["own_conditioning_forward_word_ids"])),"total":192}
+        if row["generation_forward_agreement"]!=agreement:raise ValueError("generation/forward agreement differs")
+        active=mask.reshape(4,48).any(-1);position=0
+        for level,width in enumerate([4*n for n in (4,6,10,14,20,26,32,40)]):
+            labels=torch.tensor([case["concept_ids"][position:position+width]])
+            actual=torch.tensor([row["source_only_codes"][level]])
+            teacher=torch.tensor([row["gold_conditioned_codes"][level]])
+            if actual.shape!=labels.shape or teacher.shape!=labels.shape:
+                raise ValueError("component concept shape differs")
+            valid=active.repeat_interleave(width//4)[None];wrong=(actual!=labels)&valid
+            covered=(neighbors[level][labels]==actual[...,None]).any(-1)&wrong
+            counted={"level":level,"total":labels.numel(),"active_total":int(valid.sum()),
+                "gold_conditioned_correct":int((teacher==labels).sum()),"source_only_correct":int((actual==labels).sum()),
+                "gold_conditioned_active_correct":int(((teacher==labels)&valid).sum()),
+                "source_only_active_correct":int(((actual==labels)&valid).sum()),
+                "source_only_active_wrong":int(wrong.sum()),"wrong_within_eight_neighbors":int(covered.sum())}
+            if row["concepts"][level]!=counted:raise ValueError("active-block concept/error-neighborhood counts differ")
+            position+=width
+    if gap.merge_counts(measured)!=result["components"]:raise ValueError("component aggregate differs")
+    return result
+
+
 def finalize():
     if DEST.exists() or REPORT.exists():raise ValueError("fresh append-only finalization required")
     study.data.prior.dependencies();study.profile.install()
@@ -72,6 +118,7 @@ def finalize():
     failed=study.q.read(study.recovery.FAILED/"worker_terminal_receipt.json")
     if failed["exit_code"]!=1:raise ValueError("preserved initial systems failure required")
     trained=replay_training()
+    mechanism=replay_generation_gap()
     generated=study.q.read(study.OUTPUTS/"result.json")
     grade=study.q.read(study.GRADE/"result.json")
     source_sets=study.sources()
@@ -122,17 +169,18 @@ def finalize():
     if grade["classification"]!=classification or grade["development_gate"]!=passed or grade["NCM_success_established"]:
         raise ValueError("final/unseen quality scope must remain unproven")
     paths=[Path(__file__),Path(study.__file__),study.data.PLAN,study.data.AMENDMENT,
-        study.recovery.AMENDMENT,Path("experiments/neural_architecture_lab/ncm_result_registry.py"),
+        study.recovery.AMENDMENT,Path(gap.__file__),gap.PLAN,Path("experiments/neural_architecture_lab/ncm_result_registry.py"),
         study.previous.GRADE/"judgment_cache.json",study.recovery.FAILED/"producer.json",
         study.recovery.FAILED/"worker_terminal_receipt.json",
         study.data.ROOT/"20261023_word_final_train_pilot_v1.worker.log"]
     for root in roots:
         paths += [p for p in root.rglob("*") if p.is_file() and "producer_source" not in p.parts]
+    paths += [p for p in gap.DEST.rglob("*") if p.is_file() and "producer_source" not in p.parts]
     DEST.mkdir();write_json(DEST/"case_failures.json",failures)
     paths.append(DEST/"case_failures.json")
     aggregate={"schema":"nal.ncm-word-final-development.v1","hypothesis_id":study.data.HYPOTHESIS,
         "classification":classification,"training":trained,"generation":generated,"grading":grade,
-        "components":components,"training_samples_noise_LRs_replayed":True,
+        "components":components,"TRAIN_only_generation_gap":mechanism,"training_samples_noise_LRs_replayed":True,
         "raw_words_texts_and_first_judgments_replayed":True,"prior_802_judgments_preserved":True,
         "initial_systems_failure_preserved":True,"task_accuracy_measured":True,"NCM_adaptation":True,
         "NCM_success_established":False,"confirmed":False,"final_test_opened":False,"speed_tested":False,
@@ -143,6 +191,7 @@ def finalize():
         for role,m in roles.items():
             c=m["components"]
             table.append(f"| {split} | {role} | {m['passed']}/64 | {m['valid']}/64 | {c['faithful']} | {c['salient']} | {c['readable']} | {m['stored_overflow']} |")
+    m=mechanism["components"]
     REPORT.write_text(f'''# Word-final NCM attached to a frozen Llama body
 
 Date:2026-10-23. Hypothesis `{study.data.HYPOTHESIS}`.
@@ -200,6 +249,19 @@ judgments replayed. All802prior judgments, including failures, stayed exact.
 Public full-source payload proofs were fixed before external judging. Detailed
 failures are retained in `{DEST/'case_failures.json'}`. All earlier codec and
 native-hybrid failures remain failures. Quality must precede speed claims.
+
+The separately planned16-TRAIN-case mechanism diagnostic recovered
+{m['gold_conditioned_words']['correct']}/{m['gold_conditioned_words']['total']}
+non-PAD target words with correct earlier concepts, versus
+{m['source_only_words']['correct']}/{m['source_only_words']['total']} with
+source-only generated concepts. Generation agreed with the full forward at its
+own concepts on{m['generation_forward_agreement']['correct']}/3072raw word IDs.
+The first concept level recovered only{m['concepts'][0]['source_only_active_correct']}/
+{m['concepts'][0]['active_total']}labels in blocks containing target text.
+These are TRAIN-only literal component measurements, not task accuracy or a
+new codec qualification. They support investigating source-conditioned concept
+learning and the mismatch between training and generated histories. Alternate
+wording can be valid; this diagnostic alone cannot assign semantic failure.
 ''')
     print(json.dumps({"status":"finalized","classification":classification,"components":components}),flush=True)
 
