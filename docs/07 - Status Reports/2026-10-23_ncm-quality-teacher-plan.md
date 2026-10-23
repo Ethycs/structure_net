@@ -22,12 +22,16 @@ a replacement standalone AR model claimed as NCM success.
 Use all 143 existing accepted short-summary TRAIN labels plus all 109 vetted
 longer-source TRAIN labels, 252 total. The latter cover 512–2048 cl100k source
 tokens with accepted counts 27/28/26/28 by band. No diagnostic or sealed source
-labels, new teacher calls, saved QA targets or development judgments enter
+labels, new teacher calls, saved atomic snippets or development judgments enter
 training. Verify source IDs, sessions, groups and exact hashes are disjoint
 from all held-out cohorts using metadata, without opening sealed texts.
 Verify canonical public provenance and all original label-audit artifacts.
 Do not trim a target to fit: require its complete native text plus EOS to fit
 128 tokens, storage at most128cl100k, with exact native round trip.
+The provided native-training store includes single-atom targets, such as one
+item from a multi-item passage. Those are not treated as complete-passage
+summary labels in this control; the vetted whole-passage labels supply that
+task supervision.
 
 Prepare immutable source-only KV caches for the 109 longer training cases
 using the unchanged native chat instructions. Retain existing 143 cache
