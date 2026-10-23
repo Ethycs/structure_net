@@ -57,6 +57,8 @@ def model():
     if saved["step"]!=1024:raise ValueError("exact final root checkpoint required")
     study.set_source_frame(net.generator,saved["source_frame"],maximum=8192)
     net.load_state_dict(saved["model"],strict=True);net.eval();core.concept_scope(net)
+    if study.core.released.module_hash(codec)!=study.q.read(ROOT_TRAIN/"result.json")["frozen_codec_sha256_unchanged"]:
+        raise ValueError("root checkpoint must retain the exact original codec representation")
     return net,codec
 
 
@@ -74,6 +76,7 @@ def producing(root,pilot,rows,manifest):
         inputs.append(Path(entry["path"]))
     p=study.producing(root,"source_hierarchy_gradient_reload_pilot" if pilot else "source_hierarchy_fixed_bootstrap_training",
         inputs+files,{**asdict(Config()),"actual_updates":2 if pilot else Config().updates,"batch":1,
+            "cases":2 if pilot else 252,"training_pool_cases":252,
             "word_losses":False,"word_modules_frozen":True,"new_teacher_labels_used":False,
             "physical_gpu":0,"matmul_TF32":False,"cuDNN_TF32":False,"precision":"FP32masters/BF16forward/FP32loss_and_reconstruction"})
     p["hypothesis_id"]=HYPOTHESIS
@@ -127,7 +130,8 @@ def train(pilot=False):
         row=probes[step] if pilot else rows[int(torch.randint(len(rows),(1,),generator=sampler))]
         batch=study.recovery.base.batch_for(row,manifest,frame=maximum if pilot and step==1 else None)
         study.set_source_frame(net.generator,batch["source_ids"].shape[1],maximum=8192)
-        corrupt=bool(torch.rand((),generator=noise)<config.corrupt_probability)
+        draw=bool(torch.rand((),generator=noise)<config.corrupt_probability)
+        corrupt=bool(step%2) if pilot else draw
         history=core.uniform_history(batch["codes"],net.generator.levels,noise,config.maximum_uniform_rate) if corrupt else batch["codes"]
         with torch.autocast("cuda",dtype=torch.bfloat16):
             logits=core.concept_logits(net,batch["features"],batch["mask"],history,batch["source_ids"])
@@ -162,7 +166,7 @@ def train(pilot=False):
         raise ValueError("source concepts must change while frozen words/finest/codec remain exact")
     study.data.verify(p);write_json(root/"source_only_reload_probe.json",reloaded)
     result={"status":"systems_source_hierarchy_bootstrap_passed" if pilot else "source_hierarchy_bootstrap_pending_generated_history_word_training",
-        "updates":updates,"cases":252,"initial_parameter_sha256":initial,
+        "updates":updates,"cases":2 if pilot else 252,"training_pool_cases":252,"initial_parameter_sha256":initial,
         "frozen_parameter_sha256_unchanged":frozen,"frozen_codec_sha256_unchanged":codec_hash,
         "word_modules_finest_head_and_codec_frozen":True,"parent_loaded":False,
         "reload_exact":True,"source_only_reload_probe_exact":True,"checkpoint_sha256":file_hash(root/"model.pt"),

@@ -43,7 +43,8 @@ Retain generator dropout.3. No word loss or teacher word logits in this phase.
 
 Before the full run, require a fresh two-update GPU0pilot using the first and
 longest old TRAINsources; pad the latter to3,328, the observed maximum source
-frame of the additional512-source preparation. Use real features and labels,
+frame of the additional512-source preparation. Use a clean first update and
+a uniformly corrupted second update so both paths are exercised. Use real features and labels,
 finite loss, gradients in every coarse head and source bridge, frozen words/
 finest head/codec, peak allocation below8GB, exact model/optimizer/CPU-CUDA/
 sampler/noise RNG reload and exact source-only code/word probe after reload.
