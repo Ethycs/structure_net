@@ -55,3 +55,25 @@ def test_unpaired_windows_cover_all_source_tokens_and_never_use_saved_targets():
     recovered = [v for window in windows.tolist() for v in window if v not in (50256, 50257)]
     assert recovered == list(range(100))
     assert windows.shape == (3, 48)
+
+
+def test_quality_control_for_a_different_codec_cannot_authorize_training(tmp_path):
+    from experiments.structure_net.ncm_paper_campaign import controls
+    codec = tmp_path / "codec.pt"
+    codec.write_bytes(b"actual codec")
+    (tmp_path / "producer.json").write_text(json.dumps({"input_hashes": {str(codec): "wrong sha"}}))
+    with pytest.raises(ValueError, match="different codec"):
+        controls(codec, tmp_path / "result.json", tmp_path / "oracle.json")
+
+
+def test_two_update_pilot_is_never_reused_as_full_training(tmp_path, monkeypatch):
+    from experiments.structure_net import ncm_paper_campaign as campaign
+    from experiments.structure_net.ncm_memory_data import file_hash
+    codec = tmp_path / "codec.pt"
+    codec.write_bytes(b"codec")
+    monkeypatch.setattr(campaign, "verify", lambda p: None)
+    (tmp_path / "producer.json").write_text(json.dumps({"stage": "native", "fingerprint": "f"}))
+    (tmp_path / "result.json").write_text(json.dumps({"status": "passed", "producer_fingerprint": "f",
+        "codec_sha256": file_hash(codec), "stage_results": {"conditional": {"updates": 2}}}))
+    with pytest.raises(ValueError, match="incomplete updates"):
+        campaign.completed(tmp_path, "native", codec)
