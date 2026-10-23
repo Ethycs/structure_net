@@ -55,3 +55,47 @@ def test_conditioning_excludes_current_future_labels_and_decoder_keeps_input_gra
     facade.decoder(latent).square().mean().backward()
     assert latent.grad is not None and torch.isfinite(latent.grad).all() and torch.count_nonzero(latent.grad)
     assert all(p.grad is None for p in original.parameters())
+
+
+def test_released_generator_accepts_blockwise_codec_and_has_no_label_leakage():
+    torch.manual_seed(31)
+    OmegaConf,_,Generator=vendor_classes()
+    original=tiny_codec();facade=BlockwiseCodec(original,4)
+    config=OmegaConf.create({'n_layer':2,'n_head':4,'n_embd':16,'bias':True,'dropout':0.,
+        'prefix_len':4,'prefix_pad_token_id':31,'vocab_size':[16]*4,
+        'raw_token_prefix':True,'query_level0':True,'predict_level0':False,
+        'attn_pattern':'block_diagonal','use_positional_encoding':True,
+        'use_level_encoding':True,'use_rope':True,'rope_base':10000,
+        'use_qk_norm':True,'use_flex_attention':False,'tie_heads_to_codebook':True})
+    generator=Generator(facade,config).eval()
+    prefix=torch.randint(0,30,(2,4));prefix[0,-1]=31
+    words=torch.randint(0,30,(2,32));labels=facade.encode(words)
+    prefix_latent=original.encoder.wte(prefix)
+    def logits(codes):
+        current=facade.vq.idx_to_ncm_input(codes)
+        conditioning=torch.cat([generator.build_l0_query_input(2),current],dim=1)
+        return generator(torch.cat([prefix_latent,conditioning],dim=1),prefix_pad_mask=prefix.eq(31))
+    clean=logits(labels)
+    assert clean.shape==(2,sum(facade.vq.levels),16)
+    altered=labels.clone();altered[:,sum(facade.vq.levels[:2]):]=(altered[:,sum(facade.vq.levels[:2]):]+1)%16
+    changed=logits(altered)
+    # Neither current nor future gold codes enter the first three predictions.
+    cutoff=sum(facade.vq.levels[:3])
+    assert torch.equal(clean[:,:cutoff],changed[:,:cutoff])
+    assert not torch.equal(clean[:,cutoff:],changed[:,cutoff:])
+    torch.nn.functional.cross_entropy(clean.reshape(-1,16),labels.reshape(-1)).backward()
+    assert any(p.grad is not None and p.grad.abs().sum()>0 for p in generator.parameters() if p.requires_grad)
+    assert all(p.grad is None for p in original.parameters())
+    with torch.no_grad():
+        predicted=generator.generate(None,prefix,temperature=0.,top_k=1,top_p=1.,use_kv_cache=False)
+    assert predicted.shape==labels.shape
+    assert facade.decode(predicted).shape==(2,32,32)
+
+
+def test_codec_decoder_reads_future_latents_within_its_block():
+    torch.manual_seed(71);codec=tiny_codec()
+    assert type(codec.decoder.middle_block.attn).__module__=='models.vae'
+    z=torch.randn(1,8,16);changed=z.clone();changed[:,-1]+=torch.randn(1,16)*5
+    with torch.no_grad():
+        a=codec.decoder(z);b=codec.decoder(changed)
+    assert not torch.equal(a[:,0],b[:,0])
