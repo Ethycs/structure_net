@@ -126,7 +126,28 @@ def finalize():
         "NCM_trained": True, "NCM_causal_hybrid": True, "NCM_success_established": False,
         "confirmed": False, "final_test_opened": False, "speed_tested": False,
         "artifacts": {str(p): file_hash(p) for p in dict.fromkeys(paths)}}
-    DEST.mkdir(); campaign = DEST / "campaign_results.json"; write_json(campaign, aggregate)
+    DEST.mkdir()
+    failures = {}
+    for role in components:
+        scores = study.run.q.read(study.GRADE / (role + "_summary") / "case_scores.json")
+        failures[role] = []
+        for case, score in zip(cases, scores):
+            if score["passed"] is True:
+                continue
+            evaluation = score["evaluations"][0] if score["valid"] else None
+            failed = [k for k in ("faithful", "salient", "readable") if evaluation and not evaluation[k]]
+            failed += (["stored_overflow"] if score["tokens"] > 128 else [])
+            failed += (["empty"] if not case["text"].strip() else [])
+            failed += (["invalid_judgment"] if not score["valid"] else [])
+            failures[role].append({"id": case["id"], "source_id": case["source_id"],
+                "source": case["source"], "summary": case["text"], "tokens": score["tokens"],
+                "failed_components": failed, "evaluation": evaluation,
+                "first_origin": score["first_origin"], "attempts": score["attempts"]})
+    failure_path = DEST / "case_failures.json"
+    write_json(failure_path, failures)
+    aggregate["failure_case_counts"] = {role: len(rows) for role, rows in failures.items()}
+    aggregate["artifacts"][str(failure_path)] = file_hash(failure_path)
+    campaign = DEST / "campaign_results.json"; write_json(campaign, aggregate)
     secondary = grading["secondary"]
     rows = []
     for role, value in components.items():
@@ -154,6 +175,9 @@ Whole-summary success requires faithfulness, salience, readability and at most
 summaries. Its Wilson 95% interval is `{secondary['wilson_95']}`. Independent
 Sonnet grading was {'executed on the identical frozen texts' if grading['primary'] is not None else 'not admitted because Terra did not reach 64 valid judgments and 61 passing summaries'}.
 The joint development gate **{'passed' if passed else 'failed'}**.
+Every failed case, source text, component failure, reason and cited claim
+evaluation is retained in `{failure_path}`. This includes invalid judgments
+and format failures; no failed case is removed from the denominator.
 
 This uses the original 2,048-update model, not the later four-case capacity
 control. Original embeddings, all 28 Llama3B body blocks including MLPs, native
