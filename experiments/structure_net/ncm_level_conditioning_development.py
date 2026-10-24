@@ -29,6 +29,10 @@ WORKFLOW, METADATA, PILOT, OUTPUTS, PACKETS, JUDGE_PILOT, GRADE, RESULTS = (
         'outputs', 'packets', 'judge_pilot', 'grade', 'results'))
 TRAIN_AUDIT = ROOT / '20261024_level_conditioning_FP16_native655_training_audit_v1'
 SCHEMA = 'nal.ncm-level-conditioning-native655-source-only-dev.v1'
+# The BERT and then codec component studies advance the canonical cache while
+# training runs. Pin their completed lineage in a prospective amendment before
+# enabling this evaluator; never silently branch a second study from3350.
+SEMANTIC_LINEAGE_READY = False
 head, semantic, reference, oracle = training.lifecycle.head, base.semantic, base.reference, base.oracle
 SOURCE, FEATURES, SOURCE_SHA, FEATURE_SHA, COHORTS = base.SOURCE, base.FEATURES, base.SOURCE_SHA, base.FEATURE_SHA, base.COHORTS
 OLD_CACHE, CACHE_SHA = lineage.CACHE, lineage.CACHE_SHA
@@ -154,6 +158,8 @@ def producing(root, stage, inputs=(), config=None):
 
 
 def workflow():
+    if not SEMANTIC_LINEAGE_READY:
+        raise ValueError('pin completed latest component-study lineage before student DEV launch')
     configure()
     checkpoint_contract()
     lineage.require_judges()
@@ -189,6 +195,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('stage', choices=('prepare', 'inference-pilot', 'generate', 'packets', 'judge-pilot', 'grade', 'workflow'))
     args = parser.parse_args()
+    if not SEMANTIC_LINEAGE_READY:
+        raise ValueError('student DEV awaits explicit latest-lineage binding after component studies')
     configure()
     {'prepare': base.prepare, 'inference-pilot': lambda: base.generate(True), 'generate': base.generate,
         'packets': base.packets, 'judge-pilot': lambda: base.grade(True), 'grade': base.grade, 'workflow': workflow}[args.stage]()

@@ -100,3 +100,9 @@ def test_current_lineage_and_gpu_binding_are_prospective():
     assert run.base.load_selected is run.load_selected
     assert run.base.base_cache is run.lineage.base_cache
     assert run.q.JUDGES == {'primary': 'codex_sdk/gpt-5.6-sol', 'secondary': 'codex_sdk/gpt-5.6-terra'}
+
+
+def test_semantic_launch_waits_for_latest_component_lineage():
+    assert run.SEMANTIC_LINEAGE_READY is False
+    with pytest.raises(ValueError, match='latest component-study lineage'):
+        run.workflow()
