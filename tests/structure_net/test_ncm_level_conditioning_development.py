@@ -94,7 +94,7 @@ def test_actual_complete_source_boundary_and_same_case_gate():
 def test_current_lineage_and_gpu_binding_are_prospective():
     assert run.file_hash(run.lineage.CACHE) == run.lineage.CACHE_SHA
     assert run.file_hash(run.lineage.CAMPAIGN) == run.lineage.CAMPAIGN_SHA
-    assert len(run.q.read(run.lineage.CACHE)) == run.lineage.COUNT == 3350
+    assert len(run.q.read(run.lineage.CACHE)) == run.lineage.COUNT == 3523
     run.configure()
     assert run.base.training.training.require_gpu is run.training.require_gpu
     assert run.base.load_selected is run.load_selected
@@ -102,7 +102,8 @@ def test_current_lineage_and_gpu_binding_are_prospective():
     assert run.q.JUDGES == {'primary': 'codex_sdk/gpt-5.6-sol', 'secondary': 'codex_sdk/gpt-5.6-terra'}
 
 
-def test_semantic_launch_waits_for_latest_component_lineage():
-    assert run.SEMANTIC_LINEAGE_READY is False
+def test_semantic_launch_waits_for_latest_component_lineage(monkeypatch):
+    assert run.SEMANTIC_LINEAGE_READY is True
+    monkeypatch.setattr(run, 'SEMANTIC_LINEAGE_READY', False)
     with pytest.raises(ValueError, match='latest component-study lineage'):
         run.workflow()

@@ -12,7 +12,7 @@ import torch
 
 from experiments.structure_net import ncm_lm1b_native_development as base
 from experiments.structure_net import ncm_level_conditioning_training as training
-from experiments.structure_net import ncm_current_judgment_lineage as lineage
+from experiments.structure_net import ncm_after_codec_judgment_lineage as lineage
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 native, q, ROOT = training.native, training.q, training.ROOT
@@ -21,6 +21,7 @@ MODULE = 'experiments.structure_net.ncm_level_conditioning_development'
 AUDITOR_MODULE = 'experiments.neural_architecture_lab.finalize_ncm_level_conditioning_development'
 AUDITOR = Path('experiments/neural_architecture_lab/finalize_ncm_level_conditioning_development.py')
 PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-level-conditioning-development-plan.md')
+AMENDMENT = Path('docs/07 - Status Reports/2026-10-24_ncm-level-conditioning-development-lineage-amendment.md')
 TEST = Path('tests/structure_net/test_ncm_level_conditioning_development.py')
 REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-level-conditioning-development.md')
 PREFIX = '20261024_level_conditioning_native655_development_'
@@ -32,7 +33,7 @@ SCHEMA = 'nal.ncm-level-conditioning-native655-source-only-dev.v1'
 # The BERT and then codec component studies advance the canonical cache while
 # training runs. Pin their completed lineage in a prospective amendment before
 # enabling this evaluator; never silently branch a second study from3350.
-SEMANTIC_LINEAGE_READY = False
+SEMANTIC_LINEAGE_READY = True
 head, semantic, reference, oracle = training.lifecycle.head, base.semantic, base.reference, base.oracle
 SOURCE, FEATURES, SOURCE_SHA, FEATURE_SHA, COHORTS = base.SOURCE, base.FEATURES, base.SOURCE_SHA, base.FEATURE_SHA, base.COHORTS
 OLD_CACHE, CACHE_SHA = lineage.CACHE, lineage.CACHE_SHA
@@ -125,7 +126,8 @@ def configure():
 
 
 def producing(root, stage, inputs=(), config=None):
-    files = [Path(__file__), PLAN, TEST, AUDITOR, Path(base.__file__), Path(lineage.__file__),
+    files = [Path(__file__), PLAN, AMENDMENT, TEST, AUDITOR, Path(base.__file__), Path(lineage.__file__),
+        Path(lineage.preceding.__file__), Path(lineage.codec.__file__), lineage.codec.PLAN,
         Path(lineage.historical.__file__), Path(training.__file__), training.PLAN, training.AUDITOR,
         Path(training.lifecycle.__file__), Path(training.lifecycle.mechanism.__file__),
         Path(training.lifecycle.head.__file__), Path(training.lifecycle.head.concepts.__file__),
