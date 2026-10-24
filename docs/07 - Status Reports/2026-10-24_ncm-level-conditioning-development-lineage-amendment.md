@@ -30,3 +30,11 @@ admission and same-case61 thresholds remain unchanged. Student task accuracy
 is still unmeasured for this candidate. Final320 sources stay unopened and
 unhashed. The newly failed representation controls motivate future repair
 studies but cannot retroactively change this candidate or its evaluation.
+
+Subsequent prospective update: the matched same-decoder source-attention
+oracle study is now queued, with its semantic protocol frozen in
+`2026-10-24_ncm-sol64-grounded-oracle-semantics-plan.md`. It will advance the
+3523cache before this student DEV. The launch guard is therefore disabled
+again until its actual completion, independent backend read-back, and explicit
+descendant-cache rebind. The running training budget and all evaluation gates
+remain fixed. No student DEV or sealed final source has been opened.

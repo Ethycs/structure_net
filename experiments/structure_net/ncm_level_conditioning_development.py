@@ -33,7 +33,9 @@ SCHEMA = 'nal.ncm-level-conditioning-native655-source-only-dev.v1'
 # The BERT and then codec component studies advance the canonical cache while
 # training runs. Pin their completed lineage in a prospective amendment before
 # enabling this evaluator; never silently branch a second study from3350.
-SEMANTIC_LINEAGE_READY = True
+# A matched source-attention oracle study is queued after the full feature
+# audit. Its complete descendant cache must be pinned before this DEV starts.
+SEMANTIC_LINEAGE_READY = False
 head, semantic, reference, oracle = training.lifecycle.head, base.semantic, base.reference, base.oracle
 SOURCE, FEATURES, SOURCE_SHA, FEATURE_SHA, COHORTS = base.SOURCE, base.FEATURES, base.SOURCE_SHA, base.FEATURE_SHA, base.COHORTS
 OLD_CACHE, CACHE_SHA = lineage.CACHE, lineage.CACHE_SHA

@@ -103,7 +103,7 @@ def test_current_lineage_and_gpu_binding_are_prospective():
 
 
 def test_semantic_launch_waits_for_latest_component_lineage(monkeypatch):
-    assert run.SEMANTIC_LINEAGE_READY is True
+    assert run.SEMANTIC_LINEAGE_READY is False
     monkeypatch.setattr(run, 'SEMANTIC_LINEAGE_READY', False)
     with pytest.raises(ValueError, match='latest component-study lineage'):
         run.workflow()
