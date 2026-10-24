@@ -18,6 +18,7 @@ import torch.nn.functional as F
 
 from experiments.structure_net import ncm_decoder_latent_convergence as upstream
 from experiments.structure_net import ncm_dense_semantic_development as semantic
+from experiments.structure_net import ncm_dense_source_overlap_audit as split_audit
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 prior = upstream.prior
@@ -118,6 +119,17 @@ def inputs(require_admission=True):
         semantic.reference.data.prior.check_disjoint(rows, values)
     if require_admission and not admitted():
         raise ValueError("registered semantic development quality failure required before CUDA work")
+    if require_admission:
+        path = split_audit.DEST / "campaign_results.json"
+        receipt = q.read(split_audit.DEST / (split_audit.HYPOTHESIS + "_registry_readback.json"))
+        completed = q.read(split_audit.WORKFLOW / "result.json")
+        if (receipt["status"] != "registered_and_read_back"
+                or receipt["record"]["campaign_sha256"] != file_hash(path)
+                or receipt["exact"]["campaign_sha256"] != file_hash(path)
+                or q.read(path)["classification"] != "development_split_contaminated"
+                or completed["status"] != "source_overlap_audit_completed"
+                or len(completed["stages"]) != 2 or any(r["exit_code"] for r in completed["stages"])):
+            raise ValueError("registered source-overlap amendment must precede label preparation")
     return rows, previous, labels
 
 
@@ -133,6 +145,7 @@ def producing(destination, stage, extra=()):
     old = semantic.reference.q.read(upstream.WORKFLOW / "producer.json")
     files = list(dict.fromkeys([Path(__file__), PLAN, AUDITOR_FILE,
         Path(upstream.__file__), Path(prior.__file__), Path(semantic.__file__),
+        Path(split_audit.__file__), Path(split_audit.integrity.__file__), split_audit.PLAN,
         *[Path(p) for p in old["source_hashes"]]]))
     common = [CASES, semantic.reference.SOURCES / "cases.json"]
     common += [upstream.RESULTS / "campaign_results.json",
@@ -141,6 +154,8 @@ def producing(destination, stage, extra=()):
         ("case_measurements.json", "latents.pt", "result.json", "producer.json", "worker_terminal_receipt.json")]
     common += [semantic.RESULTS / "campaign_results.json",
         semantic.RESULTS / (semantic.HYPOTHESIS + "_registry_readback.json"), semantic.WORKFLOW / "result.json"]
+    common += [split_audit.DEST / "campaign_results.json",
+        split_audit.DEST / (split_audit.HYPOTHESIS + "_registry_readback.json"), split_audit.WORKFLOW / "result.json"]
     common += [prior.continuous.released.INITIAL / n for n in ("config.yaml", "tokenizer.pt")]
     common += sorted(p for p in semantic.reference.data.GPT2.iterdir() if p.suffix in (".json", ".txt"))
     p = semantic.reference.data.freeze(destination, stage, [*common, *files, *extra],
@@ -148,6 +163,7 @@ def producing(destination, stage, extra=()):
          "reused_cases": 32, "fresh_cases": 658, "precision": "FP32_math_SDPA_TF32_off",
          "parent_body_loaded": False, "student_training": False, "oracle_target_labels": True,
          "optimized_variable": "per_case_latent_only", "codec_and_decoder_frozen": True,
+         "old_development_contaminated": True, "future_student_requires_fresh_source_disjoint_development": True,
          "minimum_token_agreement": "199/200_each_stratum_and_union",
          "selected_target": "fixed256_only", "task_accuracy": None,
          "torch": torch.__version__, "cuda": torch.version.cuda,
@@ -325,7 +341,8 @@ if __name__ == "__main__":
     if args.stage == "check":
         rows, previous, _ = inputs(require_admission=False)
         print(json.dumps({"TRAIN_cases": len(rows), "reused": len(previous), "fresh": len(rows) - len(previous),
-            "pilot_ids": [r["id"] for r in probes(rows, previous)], "admitted": admitted(), "final_test_opened": False}))
+            "pilot_ids": [r["id"] for r in probes(rows, previous)], "semantic_evaluation_admission": admitted(),
+            "registered_source_overlap_amendment_required_before_CUDA": True, "final_test_opened": False}))
     elif args.stage == "workflow":
         workflow()
     else:

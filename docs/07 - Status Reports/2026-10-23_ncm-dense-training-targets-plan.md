@@ -3,16 +3,21 @@
 Date: 2026-10-23. Exploratory hypothesis `ncm-dense-full-TRAIN-targets-v1`.
 This prepares labels for a future source-only student across the complete690
 approved TRAIN summaries. The32-case dense student established strong fitting;
-its inspected development outputs remain garbled. Its ongoing128-case semantic
-evaluation must finish unchanged, be audited and registered as a quality failure
-before this study starts CUDA work. A development pass instead declines this
-follow-up. Existing fitting and semantic failures remain unchanged.
+its128-case semantic evaluation failed, with0/64 short and1/64 long passes.
+Inspection found that the single passing output exactly copied a TRAIN label
+from a nearly identical source under a different session ID. Before any CUDA
+launch, require the original semantic study and a separate source-overlap
+amendment to finish, be audited and registered. The original quality failure
+stays unchanged; its source-disjoint generalization claim is invalidated.
 
 Use the ordered690 TRAIN rows from `20261023_reviewed_draft_data_v1/cases.json`,
 SHA256 ac3c56f7d03cf9160de9e719ef042b44a0bf12dececd778949b46e7288aac983.
 Preserve the original252 and additional438 populations, all targets and full
-192-word frames. Check source/group/session/hash exclusion against both existing
-development cohorts. Never read either sealed final source file.
+192-word frames. Retain the historical metadata exclusion checks against old
+development, binding the separate audit showing why those checks were
+insufficient. All690 cases remain TRAIN data. Future student evaluation must
+use fresh development sources passing source-family, public-turn and normalized
+text-overlap checks before generation. Never read either sealed final source file.
 
 Reuse the exact32 registered256-step target latent, initial latent and AdamW
 states, complete traces and raw outputs from the successful latent convergence
