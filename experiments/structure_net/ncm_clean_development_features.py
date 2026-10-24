@@ -21,6 +21,7 @@ HYPOTHESIS = "ncm-clean-development-frozen-features-v1"
 PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-clean-development-features-plan.md")
 REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-clean-development-features.md")
 WORKFLOW = ROOT / "20261024_clean_development_features_workflow_v1"
+METADATA_PILOT = ROOT / "20261024_clean_development_tokenizer_pilot_v1"
 DATA = ROOT / "20261024_clean_development_metadata_v1"
 PILOT = ROOT / "20261024_clean_development_feature_pilot_v1"
 FEATURES = ROOT / "20261024_clean_development_features_v1"
@@ -107,7 +108,9 @@ def select_pilot(parts):
 
 
 def producing(root, stage, inputs, config):
-    _, paths = admitted_sources()
+    paths = []
+    if stage != "systems_actual_public_source_tokenizer_pilot":
+        _, paths = admitted_sources()
     files = [Path(__file__), PLAN, AUDITOR_FILE, Path(base.__file__), Path(partitions.__file__),
         Path(base.source.__file__), Path("experiments/structure_net/ncm_native_parent_control.py"),
         Path("experiments/structure_net/ncm_matched_parent_control.py"),
@@ -116,7 +119,7 @@ def producing(root, stage, inputs, config):
         Path("experiments/neural_architecture_lab/ncm_result_registry.py")]
     p = base.freeze(root, stage, [*paths, *inputs, *files], {**config,
         "hypothesis_id": HYPOTHESIS, "schema": "nal.ncm-clean-development-features.v1",
-        "counts": EXPECTED, "max_source_frame": MAXIMUM,
+        "counts": config.get("counts", EXPECTED), "max_source_frame": MAXIMUM,
         "native_system": base.SYSTEM, "parent_layers": 28, "parent_precision": "BF16",
         "aligned_features": "FP32", "parent_weights_frozen": True, "original_MLPs_frozen": True,
         "source_right_padding": True, "all_source_tokens_retained": True,
@@ -148,7 +151,11 @@ def tokenizers():
 def prepare():
     if os.environ.get("CUDA_VISIBLE_DEVICES") != "" or torch.cuda.is_initialized():
         raise ValueError("metadata preparation must stay CPU only")
+    base.terminal(METADATA_PILOT)
+    if q.read(METADATA_PILOT / "result.json")["status"] != "systems_public_tokenizer_alignment_passed":
+        raise ValueError("actual public tokenizer lifecycle pilot required")
     parts, inputs = admitted_sources()
+    inputs += [METADATA_PILOT / n for n in ("producer.json", "result.json", "cases.json", "public_proof.json", "worker_terminal_receipt.json")]
     native, gpt, storage = tokenizers()
     rows = [r for values in parts.values() for r in values]
     proof = base.verify_public(rows)
@@ -173,6 +180,52 @@ def prepare():
         "producer_fingerprint": p["fingerprint"]}
     write_json(DATA / "result.json", result)
     print(json.dumps(result), flush=True)
+
+
+def metadata_pilot():
+    if os.environ.get("CUDA_VISIBLE_DEVICES") != "" or torch.cuda.is_initialized():
+        raise ValueError("public tokenizer pilot must stay CPU only")
+    partitions.terminal(partitions.PILOT)
+    paths = [partitions.PILOT / n for n in ("producer.json", "result.json", "pilot_sources.json", "worker_terminal_receipt.json")]
+    rows = q.read(partitions.PILOT / "pilot_sources.json")
+    if len(rows) != 5 or {r["bin"] for r in rows} != set(range(5)):
+        raise ValueError("actual five public source bands required")
+    native, gpt, storage = tokenizers()
+    proof = base.verify_public(rows)
+    paths += [base.PUBLIC_FILE]
+    paths += [base.MODEL_PATH / n for n in ("config.json", "tokenizer.json", "tokenizer_config.json")]
+    paths += [base.GPT2 / n for n in ("tokenizer.json", "tokenizer_config.json") if (base.GPT2 / n).exists()]
+    p = producing(METADATA_PILOT, "systems_actual_public_source_tokenizer_pilot", paths,
+        {"CPU_only": True, "systems_lifecycle_only_not_quality_evidence": True, "counts": {"systems_pilot": 5}})
+    prepared = [prepare_row(r, "systems_pilot", native, gpt, storage) for r in rows]
+    write_json(METADATA_PILOT / "cases.json", prepared)
+    write_json(METADATA_PILOT / "public_proof.json", proof)
+    if q.read(METADATA_PILOT / "cases.json") != prepared or len(proof) != 5 or torch.cuda.is_initialized():
+        raise ValueError("complete CPU metadata/provenance strict JSON lifecycle required")
+    base.verify(p)
+    result = {"status": "systems_public_tokenizer_alignment_passed", "cases": 5,
+        "all_five_source_bands": True, "CPU_only": True, "task_accuracy": None,
+        "all_sources_complete": True, "target_labels_used": False,
+        "max_native_prompt": max(len(r["context_ids"]) for r in prepared),
+        "max_GPT2_source": max(len(r["source_ids"]) for r in prepared),
+        "max_source_frame": max(r["source_frame"] for r in prepared),
+        "cases_sha256": file_hash(METADATA_PILOT / "cases.json"), "producer_fingerprint": p["fingerprint"]}
+    write_json(METADATA_PILOT / "result.json", result)
+    print(json.dumps(result), flush=True)
+
+
+def observe_metadata_pilot():
+    if METADATA_PILOT.exists():
+        raise ValueError("fresh actual public metadata pilot required")
+    command = [sys.executable, "-u", "-m", MODULE, "metadata-pilot-worker"]
+    child = subprocess.Popen(command, env={**os.environ, "CUDA_VISIBLE_DEVICES": ""})
+    code = child.wait()
+    if METADATA_PILOT.exists():
+        write_json(METADATA_PILOT / "worker_terminal_receipt.json", {"stage": "metadata-pilot",
+            "exit_code": code, "child_pid": child.pid, "observer_pid": os.getpid(),
+            "observer": "subprocess.wait", "command": command})
+    if code:
+        raise RuntimeError("actual public metadata pilot failure preserved")
 
 
 def configure():
@@ -267,10 +320,14 @@ def workflow():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(__doc__)
-    parser.add_argument("stage", choices=("check", "prepare", "feature-pilot", "features", "workflow"))
+    parser.add_argument("stage", choices=("check", "metadata-pilot", "metadata-pilot-worker", "prepare", "feature-pilot", "features", "workflow"))
     args = parser.parse_args()
     configure()
-    if args.stage == "check":
+    if args.stage == "metadata-pilot":
+        observe_metadata_pilot()
+    elif args.stage == "metadata-pilot-worker":
+        metadata_pilot()
+    elif args.stage == "check":
         parts, _ = admitted_sources()
         print(json.dumps({"counts": {s: len(v) for s, v in parts.items()}, "task_accuracy": None}))
     elif args.stage == "prepare":

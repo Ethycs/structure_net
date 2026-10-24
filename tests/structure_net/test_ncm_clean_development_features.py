@@ -107,6 +107,18 @@ def test_producer_fingerprint_changes_with_configuration_and_binds_sources(tmp_p
     run.base.verify(first)
 
 
+def test_public_metadata_pilot_can_run_before_full_source_admission(tmp_path, monkeypatch):
+    def not_ready():
+        raise AssertionError("full reservation has not completed")
+
+    monkeypatch.setattr(run, "admitted_sources", not_ready)
+    value = run.producing(tmp_path / "pilot", "systems_actual_public_source_tokenizer_pilot", [],
+        {"CPU_only": True, "counts": {"systems_pilot": 5}})
+    assert value["config"]["counts"] == {"systems_pilot": 5}
+    assert value["config"]["task_accuracy"] is None
+    assert not any("sources.json" in p for p in value["input_hashes"])
+
+
 def test_forecaster_wait_accepts_completed_fit_miss_but_not_missing_exits(tmp_path, monkeypatch):
     for name in ("WORKFLOW", "RESULTS"):
         path = tmp_path / name

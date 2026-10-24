@@ -29,13 +29,23 @@ def finalize():
     parts, source_inputs = run.admitted_sources()
     if run.RESULTS.exists() or run.REPORT.exists():
         raise ValueError("fresh complete DEV feature aggregate/report required")
-    for root in (run.DATA, run.PILOT, run.FEATURES):
+    for root in (run.METADATA_PILOT, run.DATA, run.PILOT, run.FEATURES):
         run.base.terminal(root)
     receipts = [run.WORKFLOW / "stage_receipts" / (s + ".json")
         for s in ("prepare", "feature-pilot", "features")]
     if any(run.q.read(p)["exit_code"] or run.q.read(p)["observer"] != "subprocess.wait" for p in receipts):
         raise ValueError("three observed successful numerical children required")
     native, gpt, storage = run.tokenizers()
+    pilot_rows = run.q.read(run.partitions.PILOT / "pilot_sources.json")
+    pilot_prepared = [run.prepare_row(r, "systems_pilot", native, gpt, storage) for r in pilot_rows]
+    tokenizer_result = run.q.read(run.METADATA_PILOT / "result.json")
+    if (len(pilot_rows) != 5 or {r["bin"] for r in pilot_rows} != set(range(5))
+            or run.q.read(run.METADATA_PILOT / "cases.json") != pilot_prepared
+            or run.q.read(run.METADATA_PILOT / "public_proof.json") != run.base.verify_public(pilot_rows)
+            or tokenizer_result["status"] != "systems_public_tokenizer_alignment_passed"
+            or tokenizer_result["cases"] != 5 or tokenizer_result["task_accuracy"] is not None
+            or tokenizer_result["cases_sha256"] != file_hash(run.METADATA_PILOT / "cases.json")):
+        raise ValueError("actual five-band public metadata lifecycle pilot differs")
     replayed = {split: [run.prepare_row(r, split, native, gpt, storage) for r in values]
         for split, values in parts.items()}
     prepared = run.q.read(run.DATA / "cases.json")
@@ -90,7 +100,7 @@ def finalize():
         run.WORKFLOW / "producer.json", observed_path, *receipts, *source_inputs, upstream_path,
         run.forecaster.RESULTS / (run.forecaster.HYPOTHESIS + "_registry_readback.json")]}
     artifacts.update(workflow["input_hashes"])
-    for root in (run.DATA, run.PILOT, run.FEATURES):
+    for root in (run.METADATA_PILOT, run.DATA, run.PILOT, run.FEATURES):
         producer = run.q.read(root / "producer.json")
         artifacts.update(producer["input_hashes"])
         artifacts.update({str(p): file_hash(p) for p in root.rglob("*")

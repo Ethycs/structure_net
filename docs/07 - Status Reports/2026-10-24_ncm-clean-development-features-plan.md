@@ -30,7 +30,12 @@ frozen. Store detached aligned source features in FP32, shape
 `(complete_GPT2_source_tokens, 3072)`. No labels or model outputs enter extraction.
 
 Before any GPU extraction, run focused CPU contract tests and real tokenizer
-alignment tests, then complete all 128 metadata records. The CUDA pilot contains
+alignment tests, then an observed CPU lifecycle pilot on the five actual public
+pilot sources spanning all five input bands. That separate pilot may run while
+full source grouping is unfinished; it uses no final source files or model
+outputs. Its `metadata-pilot` entry point must finish with an observed zero exit
+before full metadata preparation, and its producing source must remain unchanged.
+Then complete all 128 metadata records. The CUDA pilot contains
 the first short source and the longest native prompt among the other cases.
 Extract each twice and require exact raw and aligned feature equality. Reload
 and verify saved FP32 tensors. Reuse those exact pilot files in the full cache;
