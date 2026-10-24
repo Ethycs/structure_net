@@ -150,7 +150,7 @@ def inputs(require_gate=True):
     return rows, manifest, histories, labels
 
 
-def producing(destination, stage, extra=(), pending=False):
+def producing(destination, stage, extra=(), pending=False, upstream_identity=None):
     study = clean.recovery.study
     files = [Path(__file__), PLAN, AUDITOR_FILE, Path(core.__file__), Path(dropout.__file__), dropout.PLAN]
     common = [teacher.RESULTS / "campaign_results.json",
@@ -172,6 +172,8 @@ def producing(destination, stage, extra=(), pending=False):
         "body_MLPs_forecaster_codec_original_decoder_and_unused_heads_frozen": True,
         "conditioning": "actual_cached_source_only_forecaster_history",
         "teacher_latents_and_words_are_labels_only": True, "training_dropout": 0,
+        "upstream_kernel_identity": upstream_identity if pending else
+            study.q.read(WORKFLOW / "producer.json")["config"]["upstream_kernel_identity"],
         "task_accuracy": None, "final_test_opened": False, "speed_tested": False}
     for i, path in enumerate(files):
         p["source_hashes"][str(path)] = file_hash(path)
@@ -439,7 +441,7 @@ def workflow():
     identity = kernel_identity(progress["observer_pid"])
     if identity is None and admission() is None:
         raise ValueError("unfinished dropout comparison must be authoritatively live")
-    p = producing(WORKFLOW, "wait_for_failed_dropout_fit_then_dense_source_fit", pending=True)
+    p = producing(WORKFLOW, "wait_for_failed_dropout_fit_then_dense_source_fit", pending=True, upstream_identity=identity)
     (WORKFLOW / "stage_receipts").mkdir()
     journal = {"status": "waiting_for_dropout_comparison", "observer_pid": os.getpid(),
         "upstream_kernel_identity": identity, "stages": [], "producer_fingerprint": p["fingerprint"], "final_test_opened": False}
