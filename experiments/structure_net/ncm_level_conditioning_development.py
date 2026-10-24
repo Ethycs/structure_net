@@ -103,6 +103,7 @@ def load_selected():
 
 
 def configure():
+    native.vendor.corpus.quality.dependencies()
     lineage.configure()
     for name in ('WORKFLOW', 'METADATA', 'PILOT', 'OUTPUTS', 'PACKETS', 'JUDGE_PILOT', 'GRADE', 'RESULTS', 'REPORT'):
         setattr(base, name, globals()[name])
