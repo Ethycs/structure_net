@@ -30,8 +30,16 @@ original dropout distribution; no bitwise identity of optimizer trajectories is
 claimed. If parity or memory fails, preserve failure and do not launch full training.
 
 Run focused CPU objective tests and a two-update actual CUDA lifecycle pilot.
+User hardware amendment before any generator stage launch: migrate to the actual
+6GiB RTX2060, physical GPU1. Existing Triton services stay running, leaving about
+2.5GiB free. Keep AdamW master weights and all moments in CPU RAM in FP32; copy
+unscaled GPU gradients to CPU and updated weights back to GPU. This does not
+quantize the model. CPU and CUDA arithmetic may differ in rounding; no identical
+optimizer trajectory or GTX1070 performance claim is made. Require CPU optimizer
+equivalence/reload tests and actual RTX2060 mixed-precision step/reload tests.
+
 Train FP32 weights with FP16 autocast/scaling; FP32 inference; no TF32; physical
-GPU2; allocation cap 4.9GB. AdamW .9/.95, epsilon 1e-8, decay .01, clip 1; linear
+GPU1; allocation cap 2.2GB. AdamW .9/.95, epsilon 1e-8, decay .01, clip 1; linear
 64-update warmup to 1e-4 then cosine to 1e-5. Sampler/noise/dropout seeds are
 161142/162142/163142. Reserve a bounded 24GiB host feature cache: all 17.44GiB of
 unchanged FP32 TRAIN features fit in available RAM. This cache accelerates training

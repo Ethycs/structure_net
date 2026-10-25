@@ -11,6 +11,7 @@ import torch
 
 from experiments.structure_net import ncm_sequential_decoder as decoder
 from experiments.structure_net import ncm_packed_sequential_objective as objective
+from experiments.structure_net import ncm_cpu_adamw as offload
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 prior, base, native, preparation, q, ROOT = decoder.prior, decoder.base, decoder.native, decoder.preparation, decoder.q, decoder.ROOT
@@ -20,9 +21,9 @@ TEST = Path('tests/structure_net/test_ncm_packed_sequential_objective.py')
 CONFIG = dict(updates=2048, accumulation=4, warmup=64, max_lr=1e-4, min_lr=1e-5,
     sampler_seed=161142, corruption_seed=162142, dropout_seed=163142,
     training='packed_native_block_diagonal_teacher_forcing', inference='explicit_sequential_source_only',
-    precision='FP32weights_FP16training_FP32inference', optimizer='AdamW', betas=[.9,.95],
-    eps=1e-8, weight_decay=.01, clip=1., physical_GPU=2, TF32=False,
-    peak_limit_bytes=4_900_000_000, host_feature_cache_bytes=24*1024**3,
+    precision='FP32weights_FP16training_FP32inference', optimizer='CPU_master_FP32_AdamW', betas=[.9,.95],
+    eps=1e-8, weight_decay=.01, clip=1., physical_GPU=1, TF32=False,
+    peak_limit_bytes=2_200_000_000, host_feature_cache_bytes=24*1024**3,
     codec_and_word_source_attention_frozen=True, task_accuracy=None, final_test_opened=False, speed_tested=False)
 
 
@@ -80,7 +81,7 @@ def freeze(root, stage):
 
 def run(stage):
     native.vendor.corpus.quality.dependencies()
-    preparation.checkpoint.training.require_gpu()
+    offload.require_rtx2060()
     preparation.completed(base.DATA)
     if stage == 'train':
         preparation.completed(RUNS['pilot'])
@@ -117,7 +118,7 @@ def run(stage):
     write_json(root / 'initial_outputs.json',initial)
     prior.mechanism.configure(model,True)
     params = [p for p in model.parameters() if p.requires_grad]
-    opt = torch.optim.AdamW(params,lr=1e-4,betas=(.9,.95),eps=1e-8,weight_decay=.01)
+    opt = offload.CPUAdamW(params,lr=1e-4,betas=(.9,.95),eps=1e-8,weight_decay=.01)
     scaler = torch.amp.GradScaler('cuda',init_scale=128.,growth_interval=2000)
     sampler = torch.Generator().manual_seed(CONFIG['sampler_seed'])
     noise = torch.Generator().manual_seed(CONFIG['corruption_seed'])
@@ -142,6 +143,7 @@ def run(stage):
                 raise ValueError('native root queries must learn')
             if any(p.grad is not None for p in model.codec.parameters()):raise ValueError('frozen codec gradient')
             scaler.step(opt);scaler.update()
+            offload.assert_cpu_state(opt)
             peak=torch.cuda.max_memory_allocated()
             if peak>CONFIG['peak_limit_bytes']:raise ValueError('full732 memory cap exceeded')
             record={'step':step,'updates':steps,'lr':rate(step),'gradient_norm':float(norm),'metrics':metrics,
@@ -151,6 +153,7 @@ def run(stage):
                 write_json(root / 'progress.json',record)
                 print(json.dumps({k:v for k,v in record.items() if k!='metrics'}),flush=True)
     training_seconds=time.monotonic()-started
+    opt.zero_grad(set_to_none=True)
     # Complete TRAIN rollout is diagnostic; source-disjoint semantic grading is separate.
     final=prior.diagnostics(model,controls if stage=='pilot' else rows,loader,tokenizer)
     shuffled=prior.diagnostics(model,controls,loader,tokenizer,shuffle=True)
@@ -162,7 +165,7 @@ def run(stage):
     del opt;gc.collect();torch.cuda.empty_cache()
     saved=torch.load(root / 'model.pt',map_location='cpu',weights_only=True,mmap=True)
     model.load_state_dict(saved['model'],strict=True)
-    opt=torch.optim.AdamW(params,lr=1e-4,betas=(.9,.95),eps=1e-8,weight_decay=.01)
+    opt=offload.CPUAdamW(params,lr=1e-4,betas=(.9,.95),eps=1e-8,weight_decay=.01)
     opt.load_state_dict(saved['optimizer']);scaler.load_state_dict(saved['scaler'])
     sampler.set_state(saved['sampler_rng']);noise.set_state(saved['noise_rng'])
     torch.set_rng_state(saved['CPU_rng']);torch.cuda.set_rng_state_all(saved['CUDA_rng'])

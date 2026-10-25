@@ -79,7 +79,7 @@ def predict(model,row,manifest,tokenizer):
 
 def generate(pilot):
     native.vendor.corpus.quality.dependencies();lineage.configure()
-    preparation.checkpoint.training.require_gpu()
+    training.offload.require_rtx2060()
     preparation.completed(training.RUNS['train'])
     state=q.read(training.RUNS['train']/'result.json')
     if not state['strict_reload_passed'] or file_hash(training.RUNS['train']/'model.pt')!=state['checkpoint_sha256']:
