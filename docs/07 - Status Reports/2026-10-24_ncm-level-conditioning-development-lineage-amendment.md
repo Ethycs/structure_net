@@ -38,3 +38,13 @@ oracle study is now queued, with its semantic protocol frozen in
 again until its actual completion, independent backend read-back, and explicit
 descendant-cache rebind. The running training budget and all evaluation gates
 remain fixed. No student DEV or sealed final source has been opened.
+
+Further prospective serial-order update: expanded raw-text decoder training
+and fixed64numeric comparison have now completed actual0with independent CPU
+audits0. Its full semantic protocol is frozen separately in
+`2026-10-24_ncm-expanded-codec-semantics-plan.md`. Close the matched source
+study first, then the expanded decoder study, each preserving the complete
+descendant cache. Student DEV must pin the final completed descendant before
+its launch; its guard remains disabled. These component studies neither
+change the currently training student nor substitute for its source-only
+128-case semantic evaluation.
