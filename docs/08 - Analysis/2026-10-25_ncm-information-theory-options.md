@@ -80,3 +80,36 @@ stored code bytes but does not itself improve summary quality or token throughpu
 
 Quality remains the first constraint. Rate, model size and measured compute can
 be optimized after establishing the original95% complete-summary task criterion.
+
+## Conditional coding and useful refinement
+
+Let X be source text, S the source information accessible to the decoder, Z the
+predicted codes, and Y the desired facts in the summary. The useful uncertainty
+to reduce is H(Y | Z,S), not simply the marginal entropy H(Z). Our decoder already
+has source-feature attention. This means a code can identify which fact to express
+while a separate source-span route supplies its exact spelling, number and unit.
+An incorrect span or role still produces an incorrect fact; copying needs its own
+supervision and end-to-end evaluation.
+
+[Wyner and Ziv](https://web.mit.edu/6.962/www/www_fall_2001/kusuma/wynerziv.pdf)
+formalize source coding with decoder side information. This is a design analogy,
+not a claim that their asymptotic rate bound applies to our finite neural system:
+our predictor also sees the source, and runtime compute is a separate constraint.
+For this application, an appropriate engineering objective is factual distortion
+plus weighted code rate and measured compute. Entropy coding lowers storage rate;
+it does not remove a forward pass or reduce a fixed number of predicted positions.
+
+Another candidate is to train later code levels to repair specific remaining
+factual errors and allow early exit when a separately calibrated check succeeds.
+[Successive refinement](https://isl.stanford.edu/~cover/papers/paper94.pdf)
+explains why a hierarchy is not automatically an efficient progressive code:
+some source/distortion combinations are not successively refinable. The existing
+residual VQ structure alone therefore does not justify a refinement or speed claim.
+Any early exit needs source-disjoint quality/latency measurements, including tail
+latency and missed-error rates. The current fixed run does not change its levels.
+
+Before replacing the quantizer, compare reconstruction with correct versus
+predicted codes, and hold codes fixed while changing source access. Those controls
+distinguish decoder robustness, useful side information and generator failure.
+Neither higher code entropy nor a lower reconstruction loss substitutes for the
+complete-summary semantic endpoint.
