@@ -66,6 +66,10 @@ def finalize():
     if q.read(run.METADATA / "public_proof.json") != public_proof:
         raise ValueError("metadata exact public source proof differs")
     values, pilot = q.read(run.OUTPUTS / "outputs.json"), q.read(run.PILOT / "outputs.json")
+    archived = run.archive_outputs()
+    if values != archived:
+        raise ValueError("all128 predictions must reproduce the first independent numeric archive")
+    run.assert_archive_match(pilot, archived)
     rows = [r for c in run.COHORTS for r in cases[c]]
     tokenizer = run.native.tokenizer()
     replay_outputs(values, rows, manifest, tokenizer)
@@ -80,7 +84,9 @@ def finalize():
                 or not state["model_unchanged"] or state["model_sha256"] != training["full_model_sha256"] or state["outputs_sha256"] != file_hash(root / "outputs.json")
                 or state["model_sha256"] != q.read(run.PILOT / "result.json")["model_sha256"]
                 or producer["config"]["precision"] != "FP32" or producer["config"]["TF32"]
-                or producer["config"]["oracle_target_codes"] or not producer["config"]["source_only"]):
+                or producer["config"]["oracle_target_codes"] or not producer["config"]["source_only"]
+                or not state["first_numeric_archive_exact_match"]
+                or state["first_numeric_archive_sha256"] != file_hash(run.archive.OUTPUTS / "outputs.json")):
             raise ValueError("fixed checkpoint, inference state or precision differs")
     packet_cases = {c: [{**r, "texts": {"student": by_id[r["id"]]["text"]}} for r in cases[c]] for c in run.COHORTS}
     packets = {c: {"student": [q.packet(r["id"], r["source"], [{"candidate_id": "summary", "text": r["texts"]["student"]}])

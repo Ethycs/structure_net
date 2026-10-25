@@ -107,3 +107,12 @@ def test_semantic_launch_waits_for_latest_component_lineage(monkeypatch):
     monkeypatch.setattr(run, 'SEMANTIC_LINEAGE_READY', False)
     with pytest.raises(ValueError, match='latest component-study lineage'):
         run.workflow()
+
+
+def test_inference_archive_cannot_be_replaced_with_different_output():
+    reference = [{'id': 'a', 'codes': [1], 'raw_word_ids': [2], 'text': 'original'}]
+    run.assert_archive_match(reference, reference)
+    with pytest.raises(ValueError, match='first inference archive'):
+        run.assert_archive_match([{**reference[0], 'text': 'different'}], reference)
+    with pytest.raises(ValueError, match='first inference archive'):
+        run.assert_archive_match([reference[0], reference[0]], reference)

@@ -12,6 +12,7 @@ import torch
 
 from experiments.structure_net import ncm_lm1b_native_development as base
 from experiments.structure_net import ncm_level_conditioning_training as training
+from experiments.structure_net import ncm_level_conditioning_numeric as archive
 from experiments.structure_net import ncm_after_codec_judgment_lineage as lineage
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
@@ -29,6 +30,7 @@ WORKFLOW, METADATA, PILOT, OUTPUTS, PACKETS, JUDGE_PILOT, GRADE, RESULTS = (
     ROOT / (PREFIX + name + '_v1') for name in ('workflow', 'metadata', 'inference_pilot',
         'outputs', 'packets', 'judge_pilot', 'grade', 'results'))
 TRAIN_AUDIT = ROOT / '20261024_level_conditioning_FP16_native655_training_audit_v1'
+NUMERIC_AUDIT = ROOT / '20261024_level_conditioning_numeric_audit_v1'
 SCHEMA = 'nal.ncm-level-conditioning-native655-source-only-dev.v1'
 # The BERT and then codec component studies advance the canonical cache while
 # training runs. Pin their completed lineage in a prospective amendment before
@@ -109,6 +111,42 @@ def load_selected():
     return model.cuda().eval().requires_grad_(False), state
 
 
+def archive_outputs():
+    if (q.read(archive.WORKFLOW / 'actual_tool_receipt.json')['actual_tool_exit_code'] != 0
+            or q.read(NUMERIC_AUDIT / 'actual_tool_receipt.json')['actual_tool_exit_code'] != 0):
+        raise ValueError('actual complete independent source-only inference archive required')
+    audit = q.read(NUMERIC_AUDIT / 'result.json')
+    if (audit['status'] != 'all128_new_source_only_state_feature_code_and_rendering_bindings_replayed_semantics_pending'
+            or audit['cases'] != 128 or not audit['semantic_cache_untouched']
+            or audit['checkpoint_sha256'] != q.read(training.TRAIN / 'result.json')['checkpoint_sha256']):
+        raise ValueError('same new checkpoint and complete128 source-only archive required')
+    for path, expected in audit['artifacts'].items():
+        if file_hash(path) != expected:
+            raise ValueError('archived source-only evidence changed: ' + path)
+    return q.read(archive.OUTPUTS / 'outputs.json')
+
+
+def assert_archive_match(values, reference):
+    by_id = {r['id']: r for r in reference}
+    if (len({r['id'] for r in values}) != len(values)
+            or any(r['id'] not in by_id or r != by_id[r['id']] for r in values)):
+        raise ValueError('source-only predictions must exactly reproduce the first inference archive')
+
+
+def generate(pilot=False):
+    reference = archive_outputs()
+    base.generate(pilot)
+    root = PILOT if pilot else OUTPUTS
+    values = q.read(root / 'outputs.json')
+    assert_archive_match(values, reference)
+    if not pilot and values != reference:
+        raise ValueError('all128 archived predictions must retain their complete order')
+    result = q.read(root / 'result.json')
+    result.update(first_numeric_archive_exact_match=True,
+        first_numeric_archive_sha256=file_hash(archive.OUTPUTS / 'outputs.json'))
+    write_json(root / 'result.json', result)
+
+
 def configure():
     native.vendor.corpus.quality.dependencies()
     lineage.configure()
@@ -135,9 +173,12 @@ def producing(root, stage, inputs=(), config=None):
         Path(training.lifecycle.head.__file__), Path(training.lifecycle.head.concepts.__file__),
         Path(base.framed.__file__), Path(base.oracle.__file__), Path(base.semantic.__file__),
         Path(base.reference.first.__file__), Path(base.reference.profile.__file__),
-        base.reference.profile.PLAN, *sorted(native.vendor.VENDOR.rglob('*.py'))]
+        base.reference.profile.PLAN, Path(archive.__file__), Path(archive.checkpoint.__file__),
+        archive.PLAN, archive.AUDITOR, *sorted(native.vendor.VENDOR.rglob('*.py'))]
     common = [*lineage.inputs(), base.SOURCE / 'cases.json', base.FEATURES / 'manifest.json',
-        TRAIN_AUDIT / 'result.json', TRAIN_AUDIT / 'actual_tool_terminal_receipt.json']
+        TRAIN_AUDIT / 'result.json', TRAIN_AUDIT / 'actual_tool_terminal_receipt.json',
+        archive.WORKFLOW / 'actual_tool_receipt.json', archive.OUTPUTS / 'outputs.json',
+        archive.OUTPUTS / 'result.json', NUMERIC_AUDIT / 'result.json', NUMERIC_AUDIT / 'actual_tool_receipt.json']
     cfg = {**(config or {}), 'schema': SCHEMA, 'hypothesis_id': HYPOTHESIS,
         'source_only': True, 'source_prediction': True, 'oracle_target_codes': False,
         'target_fields_in_prediction': False, 'all128_cases': True, 'date_string': '23 Oct 2026',
@@ -150,7 +191,8 @@ def producing(root, stage, inputs=(), config=None):
         'full_concepts': 641, 'output_policy': 'native CLS renderer; full-vocabulary argmax; no repair or masking',
         'canonical_prior_firsts': lineage.COUNT, 'rubric': q.RUBRIC, 'judges': q.JUDGES,
         'source_disjoint_task_accuracy': None, 'task_accuracy': None, 'final_test_opened': False, 'speed_tested': False,
-        'comparison_confounded_by_noise_precision_microbatch_and_seed': True}
+        'comparison_confounded_by_noise_precision_microbatch_and_seed': True,
+        'must_reproduce_all_first_numeric_outputs': True, 'numeric_archive_had_no_semantic_cache': True}
     p = native.vendor.freeze(root, stage, list(dict.fromkeys([*inputs, *common, *files])), cfg)
     p['hypothesis_id'] = HYPOTHESIS
     for i, path in enumerate(files):
@@ -166,6 +208,7 @@ def workflow():
         raise ValueError('pin completed latest component-study lineage before student DEV launch')
     configure()
     checkpoint_contract()
+    archive_outputs()
     lineage.require_judges()
     lineage.base_cache()
     roots = (WORKFLOW, METADATA, PILOT, OUTPUTS, PACKETS, JUDGE_PILOT, GRADE, RESULTS)
@@ -202,5 +245,5 @@ if __name__ == '__main__':
     if not SEMANTIC_LINEAGE_READY:
         raise ValueError('student DEV awaits explicit latest-lineage binding after component studies')
     configure()
-    {'prepare': base.prepare, 'inference-pilot': lambda: base.generate(True), 'generate': base.generate,
+    {'prepare': base.prepare, 'inference-pilot': lambda: generate(True), 'generate': generate,
         'packets': base.packets, 'judge-pilot': lambda: base.grade(True), 'grade': base.grade, 'workflow': workflow}[args.stage]()

@@ -48,3 +48,15 @@ descendant cache. Student DEV must pin the final completed descendant before
 its launch; its guard remains disabled. These component studies neither
 change the currently training student nor substitute for its source-only
 128-case semantic evaluation.
+
+Transport decoupling amendment: observed gateway read timeouts now delay the
+parent semantic pipeline. Generate the same fixed128source-only predictions
+in the independent numeric protocol `2026-10-24_ncm-level-conditioning-numeric-plan.md`,
+after actual training0/CPUaudit0, without reading or writing semantic caches.
+That protocol freezes its own checkpoint/source implementation, independent
+of this still-pending lineage binding. Later complete DEV inference must
+exactly reproduce all128archived outputs, including codes and raw word IDs,
+before judging. No favorable regeneration, candidate selection, repair or
+change to the checkpoint/source cohorts/semantic thresholds is permitted.
+The semantic launch guard remains disabled until the final parent lineage
+closes; sealed final320sources remain unopened and unhashed.
