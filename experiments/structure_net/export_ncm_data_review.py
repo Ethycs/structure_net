@@ -34,7 +34,7 @@ a{color:#245eb1}details{margin-top:14px}summary{cursor:pointer}#counter{font-siz
 <p class="sub">Held-out semantic score: <strong>0/128 (0%)</strong>, judged by gpt-5.6-terra. Training references are existing stored summaries, not independently verified gold.</p></header>
 <div class="toolbar"><select id="split" aria-label="Dataset"><option value="DEV">Held-out DEV (128)</option><option value="DEV short">DEV short (64)</option><option value="DEV long">DEV long (64)</option><option value="TRAIN">Training (732)</option><option value="">All (860)</option></select>
 <input id="search" type="search" placeholder="Search sources, summaries, or case IDs" aria-label="Search data"><span id="counter"></span>
-<a class="download" href="records.jsonl" download>Download JSONL</a><a class="download" href="records.txt">Plain text</a></div>
+<a class="download" href="records.jsonl" download>Download JSONL</a><a class="download" href="records.md">Text view</a></div>
 <main><nav id="list" aria-label="Cases"></nav><article>
 <div class="heading"><button id="prev">← Previous</button><button id="next">Next →</button><h2 id="title"></h2><span id="status"></span></div>
 <div class="grid"><section class="card"><h3>Original source</h3><div id="source" class="text"></div></section><div>
@@ -114,7 +114,7 @@ def main():
     with (DEST / 'records.jsonl').open('w') as output:
         for row in records:
             output.write(json.dumps(row, ensure_ascii=False) + '\n')
-    with (DEST / 'records.txt').open('w') as output:
+    with (DEST / 'records.md').open('w') as output:
         for row in records:
             output.write('\n' + '=' * 80 + '\n' + row['split'] + ' · ' + row['id'] + '\n\nSOURCE\n' + row['source'])
             if row['stored_summary'] is not None:
