@@ -19,7 +19,8 @@ predictions (96 in its last bulk checkpoint). Its exact owned PID/command was
 verified before SIGTERM; the tool actually exited143. The unexecuted 5,681-pair
 training proposal and tests were archived with hashes under
 `data/experiments/ncm_paper_regime/20261025_core_target_task_mismatch_v1/`.
-No student weight update used these labels. The 732 engineering TRAIN summaries
+No new student update used this proposed pool. Earlier historical exposures remain
+recorded. The 732 engineering TRAIN summaries
 remain a separate candidate pool, with 156 additional engineering test inputs.
 All original DEV/final/component exclusions stay intact.
 
