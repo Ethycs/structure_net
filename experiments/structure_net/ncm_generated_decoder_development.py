@@ -57,8 +57,15 @@ def run(stage):
         print(training.json.dumps({'source_disjoint':guard,'prior_firsts':len(cache),
             'cases':sum(len(v) for v in cohorts.values()),'final_test_opened':False}))
         return
-    training.preparation.completed(AUDIT)
+    # Independent audits contain an aggregate and an observed process receipt,
+    # not the producer/result pair used by model execution stages.
+    if training.q.read(AUDIT/'actual_tool_receipt.json')['actual_tool_exit_code']!=0:
+        raise ValueError('completed independent training audit required')
     audit=training.q.read(AUDIT/'campaign_results.json')
+    auditor=Path(__file__).with_name('audit_ncm_generated_decoder_training.py')
+    if (audit['status']!='generated_code_decoder_training_independently_replayed'
+            or study.file_hash(auditor)!=audit['auditor_sha256']):
+        raise ValueError('completed audit or auditor identity differs')
     for path,expected in audit['artifacts'].items():
         if study.file_hash(Path(path))!=expected:raise ValueError('audited training artifact changed')
     if stage in ('inference_pilot','outputs'):evaluation.generate(stage=='inference_pilot')
