@@ -104,10 +104,14 @@ def run(stage):
     tokenizer = native.tokenizer()
     parity = []
     if stage == 'pilot':
+        torch.cuda.reset_peak_memory_stats()
         for i,noisy in ((0,False),(longest,True)):
             f,m,gold = prior.tensors(rows[i],loader)
             parity.append(objective.gradient_parity(model,f,m,gold,noisy))
             parity[-1]['id'] = rows[i]['id']
+            parity[-1]['peak_allocated_bytes'] = torch.cuda.max_memory_allocated()
+            if parity[-1]['peak_allocated_bytes'] > CONFIG['peak_limit_bytes']:
+                raise ValueError('FP32 gradient parity exceeds declared allocation cap')
         write_json(root / 'gradient_parity.json',parity)
     initial = prior.diagnostics(model,controls,loader,tokenizer)
     write_json(root / 'initial_outputs.json',initial)
