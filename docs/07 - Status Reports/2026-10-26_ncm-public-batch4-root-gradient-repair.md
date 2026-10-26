@@ -22,6 +22,10 @@ not against itself. Require a nonzero root gradient in the reference and
 compare every trainable gradient under the unchanged numerical tolerances.
 Use the corrected helper for the subsequent optimizer/resume checks. The
 initializer, four selected cases, update count and memory gates are unchanged.
+The lifecycle also requires the completed exhaustive CPU code-target audit
+and its actual successful receipt, honoring the target-preparation admission
+rule before optimizer use. It re-encodes the four selected labels with the
+initializer and compares them to the completed full target corpus.
 
 A CPU regression test must demonstrate the old helper's missing root
 gradient and the corrected helper's equality to the native reference. This

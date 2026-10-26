@@ -196,6 +196,12 @@ def run():
         raise ValueError('fresh append-only public batch4 lifecycle root required')
     from experiments.structure_net import ncm_public_code_targets as targets
     data.completed(targets.ROOTS['full'])
+    target_receipt = data.read(targets.ROOTS['full']/'audit_actual_tool_receipt.json')
+    data.verify(target_receipt['artifacts'])
+    target_audit = data.read(targets.ROOTS['full']/'audit_result.json')
+    if (target_receipt['actual_tool_exit_code'] != 0 or not target_audit['all_bindings_replayed']
+            or not target_audit['targets_admitted_for_training'] or target_audit['cases'] != 162353):
+        raise ValueError('actual exhaustive public code-target binding audit required')
     training, environment = broad.runtime.configure()
     broad.offload.require_rtx2060()
     data.completed(public.ROOTS['pilot'])
@@ -229,7 +235,8 @@ def run():
     if any(targets.bind(row, code) != saved_labels[row['id']] for row, code in zip(rows, codes)):
         raise ValueError('full public label corpus differs from selected initializer codec')
     proof = freeze(training, environment, chosen, [source/'index.jsonl', public.STORAGE/'pilot/index.jsonl',
-        *[targets.ROOTS['full']/name for name in ('result.json', 'actual_tool_receipt.json', 'index.jsonl', 'codes.jsonl')]])
+        *[targets.ROOTS['full']/name for name in ('result.json', 'actual_tool_receipt.json', 'index.jsonl', 'codes.jsonl',
+                                               'audit_result.json', 'audit_actual_tool_receipt.json')]])
     data.write(ROOT/'cases.json', [{'id': r['id'], 'source_positions': len(v), 'native_word_ids': r['native_word_ids'],
                                   'codes': c} for r, v, c in zip(rows, values, codes)])
     torch.cuda.reset_peak_memory_stats()
