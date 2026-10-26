@@ -27,6 +27,7 @@ def record_for(result):
             or not result['pilot_full_equal'] or not result['selection_replayed_from_163051_candidates']
             or not result['no_source_attention_or_generator'] or not result['target_aware_diagnostic']
             or result['model_training'] or result['new_judge_requests'] or result['final_task_goal_achieved']
+            or result['final_test_opened'] or result['speed_tested']
             or result['source_only_task_accuracy'] is not None or result['training_data_admitted']):
         raise ValueError('complete component-only diagnostic required')
     record = {'name': 'Frozen codec reconstruction on candidate public XSum training summaries',
@@ -37,12 +38,25 @@ def record_for(result):
     descriptions = []
     for arm in ('released', 'repaired'):
         metric = result['metrics']['representative'][arm]
-        if metric['cases'] != 256: raise ValueError('full representative denominators required')
+        if (metric['cases'] != 256 or not 0 <= metric['exact_rendered'] <= 256
+                or not 0 <= metric['content_matches'] <= metric['content_tokens'] or metric['content_tokens'] <= 0
+                or not 0 <= metric['digit_cases_preserved'] <= metric['has_digits'] <= 256 or metric['has_digits'] == 0):
+            raise ValueError('full valid representative denominators required')
+        expected = (metric['exact_rendered'] >= 244 and metric['content_matches']*100 >= metric['content_tokens']*99
+            and metric['digit_cases_preserved']*100 >= metric['has_digits']*95
+            and metric['invalid_outputs'] == 0 and metric['empty'] == 0)
+        if metric['descriptive_reconstruction_gate'] != expected:
+            raise ValueError('reconstruction gate differs from counts')
         for key in ('exact_rendered', 'content_matches', 'content_tokens', 'has_digits', 'digit_cases_preserved', 'descriptive_reconstruction_gate'):
             record[arm+'_'+key] = metric[key]
         descriptions.append(f"{arm}: {metric['exact_rendered']}/256 exact, "
             f"{metric['content_matches']}/{metric['content_tokens']} content tokens, "
             f"{metric['digit_cases_preserved']}/{metric['has_digits']} digit sequences")
+    expected_classification = ('repaired_public_TRAIN_codec_gate_passed_task_unproven'
+        if result['metrics']['representative']['repaired']['descriptive_reconstruction_gate']
+        else 'repaired_public_TRAIN_codec_reconstruction_gate_failed')
+    if result['classification'] != expected_classification:
+        raise ValueError('classification differs from the fixed repaired-codec gate')
     record['description'] = ('Fixed target-aware reconstruction of unchanged public TRAIN summaries, '
         'comparing released and repaired codecs without source attention or a generator. '+ '; '.join(descriptions)+
         '. Full pilot, control, tensor and metric bindings replayed. This does not measure source-only summarization accuracy, '

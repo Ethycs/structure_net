@@ -103,7 +103,8 @@ def main():
                       else 'repaired_public_TRAIN_codec_reconstruction_gate_failed')
     root = probe.RUNS['results']
     inputs = [p for stage in ('prepare', 'pilot', 'eval') for p in probe.RUNS[stage].glob('*.json')]
-    inputs += [Path(__file__), REGISTRAR, released_path, probe.BROAD/'model.pt']
+    inputs += [Path(__file__), REGISTRAR, Path('tests/structure_net/test_ncm_public_xsum_codec_registry.py'),
+        released_path, probe.BROAD/'model.pt']
     proof = probe.freeze(root, 'results', training, environment, inputs)
     probe.prior.verify(proof)
     campaign = {'hypothesis_id': probe.HYPOTHESIS, 'classification': classification,
