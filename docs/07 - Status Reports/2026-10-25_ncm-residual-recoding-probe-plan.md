@@ -51,3 +51,14 @@ Record actual peak allocation and fail above 4.9 GB. New append-only roots are
 `data/experiments/ncm_paper_regime`. Fail closed on provenance, parity, numeric,
 or lifecycle violations. No quality cutoff admits a new training study: inspect
 the complete diagnostic and then specify any training intervention separately.
+
+## Lifecycle amendment, before any probe output
+
+The v1 pilot exited with `KeyError: path` while building its input manifest,
+before diagnostic inference or output creation. It incorrectly treated the
+streaming feature manifest as a single-path file. Preserve its failure receipt
+under the v1 pilot root. Revision v2 binds and verifies the source metadata,
+feature header, and compressed payload separately before model construction,
+with a representative manifest test. Use fresh `_pilot_v2` and `_full_v2` roots.
+All examples, comparisons, model tensors, numerical settings, and interpretation
+remain as specified above; no diagnostic quality outcome was available.

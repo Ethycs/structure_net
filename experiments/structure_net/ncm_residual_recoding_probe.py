@@ -11,8 +11,25 @@ from experiments.structure_net import ncm_broad_generator as study
 PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-residual-recoding-probe-plan.md')
 TEST = Path('tests/structure_net/test_ncm_residual_recoding_probe.py')
 PREFIX_LEVELS = (0, 2, 3, 4, 6, 9, 11, 12)
-ROOTS = {s: study.runtime.ROOT / ('20261025_residual_recoding_probe_' + s + '_v1')
+ROOTS = {s: study.runtime.ROOT / ('20261025_residual_recoding_probe_' + s + '_v2')
          for s in ('pilot', 'full')}
+
+
+def feature_inputs(rows, index, manifest):
+    """Bind the streaming header/payload format before loading a model."""
+    lookup = {r['id']: r for r in index}
+    paths = []
+    for row in rows:
+        metadata, feature = lookup[row['id']], manifest[row['id']]
+        for path_key, hash_key, entry in (
+                ('path', 'sha256', metadata),
+                ('header_path', 'header_sha256', feature),
+                ('payload_path', 'payload_sha256', feature)):
+            path = Path(entry[path_key])
+            if study.file_hash(path) != entry[hash_key]:
+                raise ValueError('original full source feature identity changed')
+            paths.append(path)
+    return paths
 
 
 @torch.no_grad()
@@ -132,6 +149,7 @@ def main(stage):
     predictions = {r['id']: r for r in training.q.read(study.RUNS['train'] / 'outputs.json')}
     index, manifest = [training.q.read(study.catalog.DEST / n)
                        for n in ('source_index.json', 'feature_manifest.json')]
+    feature_paths = feature_inputs(selected, index, manifest)
     before = {}
     if stage == 'full':
         training.preparation.completed(ROOTS['pilot'])
@@ -157,7 +175,7 @@ def main(stage):
         'outputs.json', 'actual_tool_receipt.json')]
     inputs += [study.RUNS['prepare'] / n for n in ('cases.json', 'selection.json')]
     inputs += [study.catalog.DEST / n for n in ('source_index.json', 'feature_manifest.json')]
-    inputs += [Path(manifest[r['id']]['path']) for r in selected]
+    inputs += feature_paths
     if stage == 'full':
         inputs += [ROOTS['pilot'] / n for n in ('result.json', 'outputs.json', 'actual_tool_receipt.json')]
     proof = {'schema': 'nal.ncm-residual-recoding-probe.v1', 'stage': stage,

@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-from experiments.structure_net.ncm_residual_recoding_probe import recode
+from experiments.structure_net.ncm_residual_recoding_probe import feature_inputs, recode, study
 
 
 def quantizer():
@@ -44,3 +44,16 @@ def test_rejects_nonfinite_target_and_requires_full_fp32_latent():
     for z in (torch.tensor([[[float('nan')]]]), torch.tensor([[[2.]]]).half(), torch.ones(1, 2, 1)):
         with pytest.raises(ValueError):
             recode(quantizer(), z, torch.empty(1, 0, dtype=torch.long), 0)
+
+
+def test_streaming_features_bind_metadata_header_and_compressed_payload(tmp_path):
+    paths = [tmp_path / n for n in ('source.json', 'header.json', 'payload.zlib')]
+    for p in paths:
+        p.write_bytes(p.name.encode())
+    index = [{'id': 'case', 'path': str(paths[0]), 'sha256': study.file_hash(paths[0])}]
+    manifest = {'case': {'header_path': str(paths[1]), 'header_sha256': study.file_hash(paths[1]),
+                         'payload_path': str(paths[2]), 'payload_sha256': study.file_hash(paths[2])}}
+    assert feature_inputs([{'id': 'case'}], index, manifest) == paths
+    paths[2].write_bytes(b'changed payload')
+    with pytest.raises(ValueError, match='feature identity'):
+        feature_inputs([{'id': 'case'}], index, manifest)
