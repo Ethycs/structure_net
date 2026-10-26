@@ -1,0 +1,23 @@
+# Data conversion only. Keep the root NCM manifest and lock unchanged.
+[workspace]
+name = "structure-net-ncm-parquet"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+python = "==3.11.13"
+pip = "*"
+
+[pypi-dependencies]
+pyarrow = "==18.1.0"
+
+[environments]
+parquet = []
+
+[activation.env]
+PYTHONPATH = "${PIXI_PROJECT_ROOT}/../.."
+PYTHONNOUSERSITE = "1"
+OMP_NUM_THREADS = "2"
+
+[tasks]
+export-xsum = { cmd = "python -m experiments.structure_net.ncm_public_xsum_data export", cwd = "../.." }
