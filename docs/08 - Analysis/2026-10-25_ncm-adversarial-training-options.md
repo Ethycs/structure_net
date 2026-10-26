@@ -55,6 +55,6 @@ The following is an inference and proposed experiment, not a proven NCM fix:
 
 The 64 reserved codec/teacher summaries, all 128 DEV sources and the sealed
 320 final sources remain excluded from TRAIN. The observed 2019/2021 example
-must not be added to training. Broader reviewed teacher firsts are being
+must not be added to training. Broader reviewed teacher firsts have been
 consolidated under the existing protected-source guards. No GAN, contrastive
 training run, or new judge call was executed for this literature check.
