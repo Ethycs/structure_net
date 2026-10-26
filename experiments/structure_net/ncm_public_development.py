@@ -56,6 +56,7 @@ def public_guard(evaluation, cohorts):
 
 
 def configure(epoch, attempt):
+    study.pipeline.determinism.configure_runtime()
     training, evaluation, environment = previous.configure('residual_targets')
     ancestor = evaluation.lineage
     catalog = study.pipeline.bundle.catalog

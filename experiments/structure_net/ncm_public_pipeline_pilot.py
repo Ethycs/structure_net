@@ -12,6 +12,7 @@ import torch
 
 from experiments.structure_net import ncm_public_training_bundle as bundle
 from experiments.structure_net import ncm_public_batch4_lifecycle as lifecycle
+from experiments.structure_net import ncm_public_batch4_deterministic as determinism
 from experiments.structure_net import ncm_public_training_engine as engine
 from experiments.structure_net import ncm_public_curriculum as curriculum
 
@@ -25,13 +26,16 @@ TESTS = [Path('tests/structure_net')/name for name in (
 
 
 def ready(training):
-    qualified = data.completed(lifecycle.ROOT)
-    qualification = data.read(lifecycle.ROOT/'producer.json')
+    determinism.configure_runtime()
+    qualified = data.completed(determinism.ROOT)
+    qualification = data.read(determinism.ROOT/'producer.json')
     data.verify(qualification['source_hashes']); data.verify(qualification['input_hashes'])
     if (qualified['status'] != 'public_batch4_lifecycle_passed'
             or not qualified['FP32_clean_and_noisy_gradient_parity_passed']
             or not qualified['strict_resumed_update_passed']
-            or not qualified['protected_tensors_unchanged']):
+            or not qualified['protected_tensors_unchanged']
+            or not qualification['config']['deterministic_algorithms']
+            or qualification['config']['CUBLAS_WORKSPACE_CONFIG'] != curriculum.CONFIG.CUBLAS_WORKSPACE_CONFIG):
         raise ValueError('corrected native-reference batch4 GPU lifecycle must pass first')
     public = bundle.open_dataset()
     data.completed(broad.RUNS['prepare'])
@@ -66,7 +70,7 @@ def freeze(training, environment, *, root=ROOT, extra=(), stage='pilot'):
                     or p.is_relative_to(training.native.vendor.VENDOR.resolve())):
                 files.add(p)
     paths = [bundle.ROOT/name for name in ('manifest.json', 'result.json', 'actual_tool_receipt.json')]
-    paths += [lifecycle.ROOT/name for name in ('producer.json', 'result.json', 'actual_tool_receipt.json')]
+    paths += [determinism.ROOT/name for name in ('producer.json', 'result.json', 'actual_tool_receipt.json')]
     paths += [broad.RUNS['prepare']/name for name in ('cases.json', 'selection.json', 'oracle_outputs.json',
                                                   'result.json', 'actual_tool_receipt.json')]
     paths += [broad.catalog.DEST/name for name in ('source_index.json', 'feature_manifest.json')]

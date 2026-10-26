@@ -26,6 +26,8 @@ class Config:
     min_lr: float = 1e-5
     recovery_interval: int = 256
     peak_limit_bytes: int = 4_900_000_000
+    deterministic_algorithms: bool = True
+    CUBLAS_WORKSPACE_CONFIG: str = ':4096:8'
 
     @property
     def anchors_per_epoch(self):

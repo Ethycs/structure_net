@@ -102,3 +102,16 @@ policy and judge gates. Preserve all4,179 historical first judgments and each
 subsequent milestone's firsts. This does not complete the separate sealed-final
 source comparison. Successful CPU checks or creation of these entry points
 does not mean that full training started or that task quality improved.
+
+Execution amendment, before any mixed-data training: the first batch4 GPU
+lifecycle passed gradient parity but failed exact optimizer replay. The fresh
+deterministic lifecycle passed all original gates, including identical model,
+optimizer/scaler/RNG states and source-only outputs; peak allocation was
+4,057,702,912bytes. Preserve both roots. Require the completed
+`20261026_public_batch4_lifecycle_deterministic_v2` qualification and its
+unchanged source/input hashes. Set `CUBLAS_WORKSPACE_CONFIG=:4096:8` in the
+environment for the mixed pipeline, full trainer and DEV entry points; they
+enable strict deterministic algorithms and deterministic cuDNN with benchmarking
+disabled. The frozen feature producer continues under its original configuration.
+See the [failure and intervention](2026-10-26_ncm-public-batch4-determinism.md).
+The effective128 mixed-data lifecycle still must pass before full training.
