@@ -11,12 +11,14 @@ import torch
 
 from experiments.structure_net import ncm_example_batching as batching
 from experiments.structure_net import ncm_example_batching_probe as probe
-from experiments.structure_net import ncm_example_batching_codec_probe as serial
+from experiments.structure_net import ncm_trainable_example_batching as serial
+from experiments.structure_net import ncm_lm1b_native_finetuning as native_reference
 from experiments.structure_net import ncm_public_feature_store as public
 
 parent, broad, data = probe.parent, probe.broad, public.data
 ROOT = data.ROOT/'20261026_public_batch4_lifecycle_v1'
 PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-batch4-lifecycle-plan.md')
+AMENDMENT = Path('docs/07 - Status Reports/2026-10-26_ncm-public-batch4-root-gradient-repair.md')
 TEST = Path('tests/structure_net/test_ncm_public_batch4_lifecycle.py')
 
 
@@ -73,6 +75,7 @@ def parity(model, values, codes, noisy):
         torch.Generator().manual_seed(CONFIG.noise_seed), [noisy]*4)
     params = {n: p for n, p in model.named_parameters() if p.requires_grad}
     outputs = []
+    model.concepts.teacher_logits = types.MethodType(native_reference.teacher_logits, model.concepts)
     for i in range(4):
         features, mask, target = batching.collate([values[i]], [codes[i]], device='cuda')
         logits = model.concepts.teacher_logits(features, mask, histories[i:i+1].cuda())
@@ -80,7 +83,11 @@ def parity(model, values, codes, noisy):
         outputs.append(logits.detach().cpu())
         del features, mask, target, logits
     expected = {n: p.grad.detach().cpu().clone() if p.grad is not None else None for n, p in params.items()}
+    root_name = next(n for n, p in params.items() if p is model.concepts.generator.l0_queries)
+    if expected[root_name] is None or not expected[root_name].abs().sum():
+        raise ValueError('original native reference must train learned root queries')
     model.zero_grad(set_to_none=True); gc.collect(); torch.cuda.empty_cache()
+    model.concepts.teacher_logits = types.MethodType(serial.teacher_logits, model.concepts)
     features, mask, target = batching.collate(values, codes, device='cuda')
     logits = model.concepts.teacher_logits(features, mask, histories.cuda())
     batching.weighted_loss(logits, target, levels, examples_in_update=4).backward()
@@ -160,7 +167,8 @@ def outputs(model, values):
 
 
 def freeze(training, environment, identities, extra):
-    files = {Path(__file__).resolve(), PLAN.resolve(), TEST.resolve()}
+    files = {Path(__file__).resolve(), PLAN.resolve(), AMENDMENT.resolve(), TEST.resolve(),
+             Path('tests/structure_net/test_ncm_trainable_example_batching.py').resolve()}
     for module in tuple(sys.modules.values()):
         name = getattr(module, '__file__', None)
         if name:
@@ -213,7 +221,7 @@ def run():
         metadata_record_sha256=all_meta[k]['record_sha256']) for k in chosen]
     pairs.close()
     model = parent.load_initial(training)
-    model.concepts.teacher_logits = types.MethodType(serial.serial_codec_logits, model.concepts)
+    model.concepts.teacher_logits = types.MethodType(serial.teacher_logits, model.concepts)
     broad.mechanism.configure(model, False)
     frozen = training.prior.protected(model)
     with torch.no_grad():
