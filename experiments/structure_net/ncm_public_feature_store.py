@@ -19,9 +19,10 @@ from experiments.structure_net import ncm_public_feature_pilot as prior
 from experiments.structure_net import ncm_packed_feature_store as store
 
 data, original = metadata.data, prior.original
-ROOTS = {s: data.ROOT/f'20261026_public_feature_store_{s}_v1' for s in ('pilot', 'full')}
-STORAGE = Path('/data2/structure_net/ncm_public_features_20261026_v1')
+ROOTS = {s: data.ROOT/f'20261026_public_feature_store_{s}_v2' for s in ('pilot', 'full')}
+STORAGE = Path('/data2/structure_net/ncm_public_features_20261026_v2')
 PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-feature-store-plan.md')
+AMENDMENT = Path('docs/07 - Status Reports/2026-10-26_ncm-public-feature-store-progress-recovery.md')
 TESTS = [Path('tests/structure_net/test_ncm_packed_feature_store.py'),
          Path('tests/structure_net/test_ncm_public_feature_store.py')]
 HYPOTHESIS = 'ncm-public-feature-store-v1'
@@ -70,8 +71,14 @@ def encode_verified(features, binding):
     return header, payload
 
 
+def write_progress(root, value):
+    path = root/f"progress_{value['cases']:06d}.json"
+    data.write(path, value)
+    return path
+
+
 def freeze(root, stage, environment, selection):
-    files = {Path(__file__).resolve(), PLAN.resolve(), *[p.resolve() for p in TESTS]}
+    files = {Path(__file__).resolve(), PLAN.resolve(), AMENDMENT.resolve(), *[p.resolve() for p in TESTS]}
     for module in tuple(sys.modules.values()):
         name = getattr(module, '__file__', None)
         if name:
@@ -154,7 +161,7 @@ def run(stage):
             value = {**counters, 'total': len(positions), 'elapsed_seconds': time.monotonic()-started,
                 'last_extraction_seconds': extract_seconds, 'last_id': identity,
                 'peak_GPU_allocated_bytes': torch.cuda.max_memory_allocated(), 'pending_matrices': len(pending)}
-            data.write(root/'progress.json', value)
+            write_progress(root, value)
             print(json.dumps(value), flush=True)
         if counters['cases'] % 1024 == 0 and shutil.disk_usage(STORAGE).free < 100*1024**3:
             raise ValueError('feature disk headroom exhausted')

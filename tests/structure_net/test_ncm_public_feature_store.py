@@ -16,3 +16,9 @@ def test_parallel_encoder_preserves_every_feature_byte_and_binding():
     header, payload = features.encode_verified(value, {'id': 'source', 'original_body_sha256': 'body'})
     assert header['binding']['original_body_sha256'] == 'body'
     assert torch.equal(features.store.codec.decode(header, payload).view(torch.uint8), value.view(torch.uint8))
+
+
+def test_progress_records_are_append_only_and_distinct(tmp_path):
+    for count in (1, 2, 128):
+        features.write_progress(tmp_path, {'cases': count})
+    assert len(list(tmp_path.glob('progress_*.json'))) == 3
