@@ -1,0 +1,10 @@
+# Source attention throughout the NCM generator
+
+Classification: `source_coverage_systems_pilot_passed`. This is an untrained architecture pilot, not summary accuracy.
+Hypothesis: `ncm-source-coverage-pilot-v1`. Aggregate: `data/experiments/ncm_paper_regime/20261027_source_coverage_pilot_audit_v1/campaign_results.json`; SHA256 `3673c014061a58bf8ec5039b64da1dc30e385e11fcf104db286c83cc022a2711`.
+
+The original generator reads source memory after blocks 8, 10 and 11. Nine added attention modules now give every existing block source access. Each new query projection copies the nearest original module; every new output projection is zero. The earlier 12-versus-24-block experiment retained only three source-attention modules, so it did not test this intervention.
+On two fixed TRAIN controls, the initial expanded model exactly preserved all FP32 teacher logits, source-only generated codes and raw word IDs. The baseline codes and words also reproduced the saved epoch2 checkpoint outputs. Every original tensor stayed unchanged. All nine new output projections received finite, nonzero gradients; their query gradients were zero as expected at zero-output initialization. No optimizer step occurred.
+Trainable generator/concept-source parameters increased from 105,323,136 to 115,939,968. Peak own CUDA allocation was 1,949,571,072 bytes on physical GPU2 RTX2060SUPER. The frozen Llama body remained unloaded; original FP32 source features were streamed. Codec and word-source parameters stayed frozen. Both ongoing training service identities were preserved.
+CPU replay verified every saved logit, output pair, tensor hash and initialization binding. It validated the recorded gradient statistics without repeating GPU autograd. Three CPU contract tests also passed.
+A representative mixed-precision microbatch, fresh optimizer, checkpoint/restart and full concurrency lifecycle still must pass before a fixed-budget training comparison. This pilot establishes no semantic improvement, full-run memory guarantee or speedup. Latest application semantic DEV remains 0/128, and final320 remains sealed.
