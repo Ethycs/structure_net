@@ -82,6 +82,8 @@ def test_bridged_generator_receives_only_dummy_content_ids_and_exact_padding():
     vae = SimpleNamespace(encoder=SimpleNamespace(wte=embedding))
     seen = []
     class Generator:
+        def _sample_level_raw(self, *args):
+            raise AssertionError('unused in this embedding-only test')
         def generate(self, idx, ids, **kwargs):
             seen.append(ids.clone())
             return embedding(ids)
@@ -92,6 +94,20 @@ def test_bridged_generator_receives_only_dummy_content_ids_and_exact_padding():
     assert torch.equal(result[0, :4], learned)
     assert torch.equal(result[0, 4:], embedding.weight[50257].expand(508, 3))
     assert not embedding._forward_hooks
+
+
+def test_fixed_greedy_matches_actual_released_sampler_including_ties():
+    bridge.active.broad.runtime.configure()
+    from experiments.structure_net import ncm_llama as legacy
+    _, _, generator = legacy.vendor_classes()
+    rng = torch.Generator().manual_seed(12)
+    inputs = [torch.randn(2, 4, 31, generator=rng), torch.zeros(2, 4, 31),
+              torch.tensor([[[1000., 1000., -1000., 2., 3.], [-1000., -1000., -1000., -1000., -1000.]]])]
+    for logits in inputs:
+        expected = generator._sample_level_raw(None, logits, 1., 1, 0.)
+        assert torch.equal(bridge.fixed_greedy(logits), expected)
+    with pytest.raises(ValueError): bridge.fixed_greedy(inputs[0], top_k=2)
+    with pytest.raises(ValueError): bridge.fixed_greedy(torch.tensor([[[float('nan'), 1.]]]))
 
 
 def record():

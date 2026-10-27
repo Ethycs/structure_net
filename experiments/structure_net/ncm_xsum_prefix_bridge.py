@@ -9,6 +9,7 @@ import math
 import os
 from pathlib import Path
 import sys
+from types import MethodType
 
 import torch
 from torch import nn
@@ -20,12 +21,16 @@ from experiments.structure_net.ncm_training_recipe import cumulative_latent
 
 data = bundle.data
 HYPOTHESIS = 'ncm-xsum-prefix-bridge-v1'
-SCHEMA = 'nal.ncm-xsum-prefix-bridge.v1'
-ROOTS = {s: data.ROOT/f'20261027_xsum_prefix_bridge_{s}_v1'
+SCHEMA = 'nal.ncm-xsum-prefix-bridge.v2'
+ROOTS = {s: data.ROOT/f'20261027_xsum_prefix_bridge_{s}_v2'
          for s in ('prepare', 'pilot', 'train', 'evaluate', 'audit', 'results')}
 PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-xsum-prefix-bridge-plan.md')
 TEST = Path('tests/structure_net/test_ncm_xsum_prefix_bridge.py')
 AUDITOR = Path('experiments/neural_architecture_lab/ncm_xsum_prefix_bridge_results.py')
+RECOVERY = Path('docs/07 - Status Reports/2026-10-27_ncm-xsum-prefix-bridge-greedy-recovery.md')
+FAILED_PILOT = data.ROOT/'20261027_xsum_prefix_bridge_pilot_v1'
+ORIGINAL_PREPARE = data.ROOT/'20261027_xsum_prefix_bridge_prepare_v1'
+ORIGINAL_CASES_SHA = '04cfc18fdaca0aea88bff865a17860815f75799deab9f85981f4f8e7507ede09'
 RELEASE = Path('data/experiments/ncm_llama/inputs/hazy-xsum-d342ce8/xsum')
 RELEASE_HASHES = dict(zip(('config.yaml', 'tokenizer.pt', 'generator.pt'), (
     '5dee6b7339645a22362f695fbadb27df6e5254db2d3be0bff8516138d95da493',
@@ -90,7 +95,7 @@ def require(root, names=('producer.json', 'result.json')):
 def freeze(root, stage, inputs, environment=None):
     if root.exists():
         raise ValueError('fresh append-only root required')
-    files = {Path(__file__).resolve(), PLAN.resolve(), TEST.resolve(), AUDITOR.resolve()}
+    files = {Path(__file__).resolve(), PLAN.resolve(), RECOVERY.resolve(), TEST.resolve(), AUDITOR.resolve()}
     files.update(p.resolve() for p in Path('experiments/structure_net').glob('ncm*.py'))
     files.update(p.resolve() for p in active.broad.runtime.PROJECT.joinpath(
         'data/experiments/ncm_llama/vendor/ncm-20261021').rglob('*.py'))
@@ -100,7 +105,9 @@ def freeze(root, stage, inputs, environment=None):
             p = Path(name).resolve()
             if p.is_file() and p.suffix == '.py' and p.is_relative_to(Path('experiments').resolve()):
                 files.add(p)
-    inputs = [*inputs, Path('pyproject.toml'), Path('pixi.lock'), *[RELEASE/n for n in RELEASE_HASHES]]
+    inputs = [*inputs, Path('pyproject.toml'), Path('pixi.lock'), *[RELEASE/n for n in RELEASE_HASHES],
+              *[FAILED_PILOT/n for n in ('producer.json', 'failure.json', 'actual_tool_receipt.json')],
+              ORIGINAL_PREPARE/'cases.json', ORIGINAL_PREPARE/'actual_tool_receipt.json']
     for name, expected in RELEASE_HASHES.items():
         if data.sha(RELEASE/name) != expected:
             raise ValueError('released conditional checkpoint changed')
@@ -173,6 +180,8 @@ def prepare():
                     'source_ids': ids, 'binding': binding, 'metadata_record_sha256': entry['record_sha256'],
                     'feature': feature})
     data.write(root/'cases.json', cases)
+    if data.sha(root/'cases.json') != ORIGINAL_CASES_SHA or data.sha(ORIGINAL_PREPARE/'cases.json') != ORIGINAL_CASES_SHA:
+        raise ValueError('original fixed bridge population changed during sampler recovery')
     finish(root, proof, {'status': 'bridge_source_selection_bound', 'fit_cases': 512,
         'probe_cases': 128, 'summary_targets_read': False}, [root/'cases.json'])
 
@@ -220,9 +229,31 @@ def replace_prefix(embedding, replacement, dummy):
 
 
 @torch.no_grad()
+def fixed_greedy(logits, temperature=1., top_k=1, top_p=0.):
+    if temperature != 1. or top_k != 1 or top_p != 0. or not torch.isfinite(logits).all():
+        raise ValueError('only the fixed finite released greedy policy is supported')
+    flat = logits.reshape(-1, logits.shape[-1])/temperature
+    threshold = torch.topk(flat, 1, dim=-1).values[:, -1, None]
+    masked = flat.masked_fill(flat < threshold, -torch.inf)
+    # At top_p=0 exactly the first sorted maximum survives the released
+    # cumulative-probability mask. Preserve its tie ordering, not argmax's.
+    chosen = torch.sort(masked, dim=-1, descending=True).indices[:, 0]
+    return chosen.reshape(logits.shape[:-1])
+
+
+@torch.no_grad()
 def codes_native(net, ids):
-    return net.generate(None, ids, temperature=1., top_k=1, top_p=0.,
-                        use_kv_cache=False, cfg_scale=0.)
+    existed = '_sample_level_raw' in net.__dict__
+    original = net._sample_level_raw
+    def sample(self, logits, temperature, top_k, top_p):
+        return fixed_greedy(logits, temperature, top_k, top_p)
+    net._sample_level_raw = MethodType(sample, net)
+    try:
+        return net.generate(None, ids, temperature=1., top_k=1, top_p=0.,
+                            use_kv_cache=False, cfg_scale=0.)
+    finally:
+        if existed: net._sample_level_raw = original
+        else: del net._sample_level_raw
 
 
 @torch.no_grad()
