@@ -1,6 +1,7 @@
 """No GPU or corpus access: diagnostic selection, pairing and raw-count contracts."""
 from copy import deepcopy
 from dataclasses import FrozenInstanceError
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -95,3 +96,43 @@ def test_archived_control_requires_exact_codes_but_bounded_float_loss():
     with pytest.raises(ValueError): probe.compare_archived(actual, archived)
     actual = output(cases(1)[0]); actual['codes'][0] = 1
     with pytest.raises(ValueError): probe.compare_archived(actual, archived)
+
+
+def legacy_fixture(tmp_path, monkeypatch, audit_exit=0):
+    root, audit, campaign = [tmp_path/n for n in ('parent', 'audit', 'campaign')]
+    for path in (root, audit, campaign): path.mkdir()
+    for name in ('producer.json', 'result.json', 'model.pt', 'outputs.json'):
+        (root/name).write_text('{}')
+    (root/'actual_tool_receipt.json').write_text(json.dumps({'session_id': 62755,
+        'actual_tool_exit_code': 0, 'tool_chunk': '3b6d46'}))
+    (audit/'campaign_results.json').write_text(json.dumps({
+        'status': 'broad_generator_training_independently_replayed', 'updates': 4096, 'cases': 1376,
+        'artifacts': {str(p): probe.data.sha(p) for p in root.iterdir()}}))
+    (audit/'actual_tool_receipt.json').write_text(json.dumps({'actual_tool_exit_code': audit_exit}))
+    p = campaign/'campaign_results.json'
+    p.write_text(json.dumps({'artifacts': {str(v): probe.data.sha(v) for v in audit.iterdir()}}))
+    monkeypatch.setattr(probe, 'PARENTS', {'BROAD': root})
+    monkeypatch.setattr(probe, 'BROAD_RESULTS', campaign)
+    monkeypatch.setattr(probe, 'LEGACY_AUDIT', audit)
+    monkeypatch.setattr(probe, 'BROAD_CAMPAIGN_SHA', probe.data.sha(p))
+    return root, p
+
+
+def test_legacy_parent_requires_the_published_audit_chain(tmp_path, monkeypatch):
+    root, _ = legacy_fixture(tmp_path, monkeypatch)
+    probe.receipt(root)
+
+
+@pytest.mark.parametrize('fault', ['stale_campaign', 'mutated_parent', 'failed_audit', 'other_root'])
+def test_legacy_chain_rejects_broken_or_unrelated_evidence(tmp_path, monkeypatch, fault):
+    root, campaign = legacy_fixture(tmp_path, monkeypatch, audit_exit=int(fault == 'failed_audit'))
+    if fault == 'stale_campaign': campaign.write_text(campaign.read_text()+' ')
+    if fault == 'mutated_parent': (root/'result.json').write_text('{"changed":true}')
+    if fault == 'other_root': root = tmp_path/'unrelated'
+    with pytest.raises(ValueError): probe.legacy_broad_receipt(root)
+
+
+def test_new_stages_still_require_artifact_bound_receipts(tmp_path):
+    for name in ('producer.json', 'result.json'): (tmp_path/name).write_text('{}')
+    (tmp_path/'actual_tool_receipt.json').write_text('{"actual_tool_exit_code":0}')
+    with pytest.raises(ValueError): probe.receipt(tmp_path)

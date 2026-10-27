@@ -7,17 +7,23 @@ import math
 import os
 from pathlib import Path
 import subprocess
+import sys
 
 import torch
 
 from experiments.structure_net import ncm_public_training as study
 
 data, broad = study.data, study.pipeline.broad
-SCHEMA = 'nal.ncm-public-training-probe.v1'
+SCHEMA = 'nal.ncm-public-training-probe.v2'
 HYPOTHESIS = 'ncm-public-epoch2-training-probe-v1'
 PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_training_probe.py')
-ROOTS = {s: data.ROOT/f'20261027_public_epoch2_TRAIN_probe_{s}_v1'
+AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-receipt-recovery.md')
+INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_launch_failure_v1'
+BROAD_RESULTS = data.ROOT/'20261025_broad_generator_results_v1'
+LEGACY_AUDIT = data.ROOT/'20261025_broad_generator_train_audit_v1'
+BROAD_CAMPAIGN_SHA = '2c0241923d497be9d92589fe4845d3e7013f7754e0d3588cf4c2094be4b77299'
+ROOTS = {s: data.ROOT/f'20261027_public_epoch2_TRAIN_probe_{s}_v2'
          for s in ('pilot', 'run', 'audit', 'results')}
 PARENTS = {'BROAD': broad.RUNS['train'], 'epoch2': study.root_for(2, 1)}
 LEVELS = (1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128)
@@ -145,10 +151,35 @@ def score_rows(outputs, cases, shuffled=False):
     return totals
 
 
-def receipt(root, names=('producer.json', 'result.json')):
+def legacy_broad_receipt(root):
+    if root != PARENTS['BROAD']:
+        raise ValueError('legacy receipt support is restricted to the recorded BROAD parent')
+    campaign = BROAD_RESULTS/'campaign_results.json'
+    if data.sha(campaign) != BROAD_CAMPAIGN_SHA:
+        raise ValueError('published BROAD campaign changed')
+    bound = data.read(campaign)['artifacts']
+    audit_paths = [LEGACY_AUDIT/n for n in ('campaign_results.json', 'actual_tool_receipt.json')]
+    if any(bound.get(str(p)) != data.sha(p) for p in audit_paths):
+        raise ValueError('published campaign does not bind the exact completed training audit')
+    audited = data.read(audit_paths[0])
+    audit_receipt = data.read(audit_paths[1])
     value = data.read(root/'actual_tool_receipt.json')
-    if value['actual_tool_exit_code'] != 0 or any(
-            value['artifacts'].get(str(root/n)) != data.sha(root/n) for n in names):
+    if (audited['status'] != 'broad_generator_training_independently_replayed'
+            or audited['updates'] != 4096 or audited['cases'] != 1376
+            or type(value['actual_tool_exit_code']) is not int or value['actual_tool_exit_code'] != 0
+            or type(audit_receipt['actual_tool_exit_code']) is not int or audit_receipt['actual_tool_exit_code'] != 0
+            or any(audited['artifacts'].get(str(root/n)) != data.sha(root/n) for n in
+                   ('producer.json', 'result.json', 'model.pt', 'outputs.json', 'actual_tool_receipt.json'))):
+        raise ValueError('complete successful independently audited BROAD evidence required')
+    data.verify(audited['artifacts'])
+
+
+def receipt(root, names=('producer.json', 'result.json')):
+    if root == PARENTS['BROAD'] and names == ('producer.json', 'result.json'):
+        return legacy_broad_receipt(root)
+    value = data.read(root/'actual_tool_receipt.json')
+    if type(value['actual_tool_exit_code']) is not int or value['actual_tool_exit_code'] != 0 or any(
+            value.get('artifacts', {}).get(str(root/n)) != data.sha(root/n) for n in names):
         raise ValueError('actual successful artifact-bound receipt required')
     data.verify(value['artifacts'])
 
@@ -166,13 +197,22 @@ def live_training():
 
 
 def freeze(root, stage, training, environment, cases):
-    files = {Path(__file__), PLAN, TEST, Path('pyproject.toml'), Path('pixi.lock')}
+    files = {Path(__file__), PLAN, AMENDMENT, TEST, Path('pyproject.toml'), Path('pixi.lock')}
     files.update(Path('experiments/structure_net').glob('ncm*.py'))
     files.update(training.native.vendor.VENDOR.rglob('*.py'))
+    for module in tuple(sys.modules.values()):
+        name = getattr(module, '__file__', None)
+        if name:
+            p = Path(name).resolve()
+            if p.is_file() and p.suffix == '.py' and p.is_relative_to(Path('experiments').resolve()):
+                files.add(p)
     paths = [broad.RUNS['prepare']/n for n in ('cases.json', 'selection.json', 'result.json', 'actual_tool_receipt.json')]
     paths += [broad.catalog.DEST/n for n in ('source_index.json', 'feature_manifest.json')]
     paths += [PARENTS['BROAD']/n for n in ('outputs.json', 'shuffled_source_outputs.json')]
     paths += [p/n for p in PARENTS.values() for n in ('producer.json', 'result.json', 'actual_tool_receipt.json', 'model.pt')]
+    paths += [BROAD_RESULTS/'campaign_results.json', *[LEGACY_AUDIT/n for n in
+        ('campaign_results.json', 'actual_tool_receipt.json')], *[INCIDENT/n for n in
+        ('failure.json', 'actual_tool_receipt.json')]]
     if stage == 'run':
         paths += [ROOTS['pilot']/n for n in ('producer.json', 'result.json', 'outputs.json', 'actual_tool_receipt.json')]
     root.mkdir(); data.write(root/'cases.json', cases)
