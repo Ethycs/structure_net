@@ -51,6 +51,8 @@ def report():
     for arm,modes in value['scores'].items():
         for mode,s in modes.items():
             lines.append(f"| {arm} | {mode} | {s['teacher_code_agreement']:.2%} | {s['rollout_code_agreement']:.2%} | {s['native_word_agreement']:.2%} |")
+    matched, shuffled = (value['scores']['epoch2'][mode] for mode in ('matched','shuffled'))
+    lines += ['',f"At epoch2, matched minus shuffled source agreement is {100*(matched['rollout_code_agreement']-shuffled['rollout_code_agreement']):+.2f} percentage points for generated codes and {100*(matched['native_word_agreement']-shuffled['native_word_agreement']):+.2f} points for native words. These reference comparisons do not establish reliable source-grounded summarization or identify insufficient data as the cause of failure."]
     lines += ['',
         'The sample contains 32 public TRAIN pairs selected by a fixed hash from all 162,353 admitted pairs before inspecting outputs. Each public pair had two presentations by epoch2. The earlier 16-case TRAIN result instead measured frequently repeated application anchors. These populations differ, so their score difference does not isolate repetition as a cause.',
         'Each checkpoint generated from complete source features alone. Teacher forcing was a separate diagnostic. Shuffled conditions cyclically permuted sources while retaining targets. The two-case pilot included the longest selected source, repeated exactly under both checkpoints, and reproduced in the full run. CPU replay checked selection, source pairing, raw counts and rendered words.',
