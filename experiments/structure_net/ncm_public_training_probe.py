@@ -14,7 +14,7 @@ import torch
 from experiments.structure_net import ncm_public_training as study
 
 data, broad = study.data, study.pipeline.broad
-SCHEMA = 'nal.ncm-public-training-probe.v3'
+SCHEMA = 'nal.ncm-public-training-probe.v4'
 HYPOTHESIS = 'ncm-public-epoch2-training-probe-v1'
 PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_training_probe.py')
@@ -22,10 +22,12 @@ AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-
 INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_launch_failure_v1'
 INPUT_AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-input-recovery.md')
 INPUT_INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_launch_failure_v2'
+OUTPUT_AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-output-recovery.md')
+OUTPUT_INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_pilot_v3'
 BROAD_RESULTS = data.ROOT/'20261025_broad_generator_results_v1'
 LEGACY_AUDIT = data.ROOT/'20261025_broad_generator_train_audit_v1'
 BROAD_CAMPAIGN_SHA = '2c0241923d497be9d92589fe4845d3e7013f7754e0d3588cf4c2094be4b77299'
-ROOTS = {s: data.ROOT/f'20261027_public_epoch2_TRAIN_probe_{s}_v3'
+ROOTS = {s: data.ROOT/f'20261027_public_epoch2_TRAIN_probe_{s}_v4'
          for s in ('pilot', 'run', 'audit', 'results')}
 PARENTS = {'BROAD': broad.RUNS['train'], 'epoch2': study.root_for(2, 1)}
 LEVELS = (1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128)
@@ -218,7 +220,8 @@ def live_training():
 
 
 def freeze(root, stage, training, environment, cases):
-    files = {Path(__file__), PLAN, AMENDMENT, INPUT_AMENDMENT, TEST, Path('pyproject.toml'), Path('pixi.lock')}
+    files = {Path(__file__), PLAN, AMENDMENT, INPUT_AMENDMENT, OUTPUT_AMENDMENT,
+             TEST, Path('pyproject.toml'), Path('pixi.lock')}
     files.update(Path('experiments/structure_net').glob('ncm*.py'))
     files.update(training.native.vendor.VENDOR.rglob('*.py'))
     for module in tuple(sys.modules.values()):
@@ -234,7 +237,8 @@ def freeze(root, stage, training, environment, cases):
     paths += [BROAD_RESULTS/'campaign_results.json', *[LEGACY_AUDIT/n for n in
         ('campaign_results.json', 'actual_tool_receipt.json')], *[INCIDENT/n for n in
         ('failure.json', 'actual_tool_receipt.json')], *[INPUT_INCIDENT/n for n in
-        ('failure.json', 'actual_tool_receipt.json')]]
+        ('failure.json', 'actual_tool_receipt.json')], *[OUTPUT_INCIDENT/n for n in
+        ('producer.json', 'failure.json', 'actual_tool_receipt.json')]]
     if stage == 'run':
         paths += [ROOTS['pilot']/n for n in ('producer.json', 'result.json', 'outputs.json', 'actual_tool_receipt.json')]
     root.mkdir(); data.write(root/'cases.json', cases)
@@ -319,8 +323,9 @@ def run(stage):
                     or torch.cuda.max_memory_allocated() > CONFIG.peak_limit_bytes):
                 raise ValueError('model mutation, gradient or memory limit violation')
             outputs[arm][name] = rows
-            data.write(root/'outputs.json', outputs)
+            data.write(root/f'outputs_{arm}_{name}.json', rows)
             print(json.dumps({'arm': arm, 'condition': name, 'cases': len(rows)}), flush=True)
+    data.write(root/'outputs.json', outputs)
     data.write(root/'training_service_after.json', live_training())
     training.native.vendor.verify(proof)
     result = {'schema': SCHEMA, 'hypothesis_id': HYPOTHESIS,
@@ -328,7 +333,8 @@ def run(stage):
         'peak_allocated_bytes': torch.cuda.max_memory_allocated(), 'model_updates': 0,
         'new_judge_requests': 0, 'task_accuracy': None, 'final_test_opened': False,
         'speed_tested': False, 'artifacts': {str(root/n): data.sha(root/n) for n in
-            ('producer.json', 'cases.json', 'outputs.json', 'training_service_before.json', 'training_service_after.json')}}
+            ['producer.json', 'cases.json', 'outputs.json', 'training_service_before.json', 'training_service_after.json',
+             *[f'outputs_{arm}_{name}.json' for arm, conditions in outputs.items() for name in conditions]]}}
     data.write(root/'result.json', result); model.close()
     print(json.dumps({'status': result['status'], 'cases': len(cases), 'task_accuracy': None}), flush=True)
 
