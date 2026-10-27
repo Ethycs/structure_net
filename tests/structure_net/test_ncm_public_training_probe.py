@@ -136,3 +136,17 @@ def test_new_stages_still_require_artifact_bound_receipts(tmp_path):
     for name in ('producer.json', 'result.json'): (tmp_path/name).write_text('{}')
     (tmp_path/'actual_tool_receipt.json').write_text('{"actual_tool_exit_code":0}')
     with pytest.raises(ValueError): probe.receipt(tmp_path)
+
+
+@pytest.mark.parametrize('fault', [None, 'wrong_file', 'unbound'])
+def test_inputs_use_their_own_original_producer_hashes(tmp_path, fault):
+    catalog, prepared = tmp_path/'catalog.json', tmp_path/'prepared.json'
+    catalog.write_text('[{"id":1}]')
+    prepared.write_text('[{"id":1,"oracle_codes":[2]}]')
+    bindings = {str(p): probe.data.sha(p) for p in (catalog, prepared)}
+    if fault == 'wrong_file': bindings[str(prepared)] = bindings[str(catalog)]
+    if fault == 'unbound': bindings.pop(str(prepared))
+    if fault:
+        with pytest.raises(ValueError): probe.verify_training_inputs([catalog, prepared], bindings)
+    else:
+        probe.verify_training_inputs([catalog, prepared], bindings)

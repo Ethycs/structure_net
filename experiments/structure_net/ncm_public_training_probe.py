@@ -14,16 +14,18 @@ import torch
 from experiments.structure_net import ncm_public_training as study
 
 data, broad = study.data, study.pipeline.broad
-SCHEMA = 'nal.ncm-public-training-probe.v2'
+SCHEMA = 'nal.ncm-public-training-probe.v3'
 HYPOTHESIS = 'ncm-public-epoch2-training-probe-v1'
 PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_training_probe.py')
 AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-receipt-recovery.md')
 INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_launch_failure_v1'
+INPUT_AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-input-recovery.md')
+INPUT_INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_launch_failure_v2'
 BROAD_RESULTS = data.ROOT/'20261025_broad_generator_results_v1'
 LEGACY_AUDIT = data.ROOT/'20261025_broad_generator_train_audit_v1'
 BROAD_CAMPAIGN_SHA = '2c0241923d497be9d92589fe4845d3e7013f7754e0d3588cf4c2094be4b77299'
-ROOTS = {s: data.ROOT/f'20261027_public_epoch2_TRAIN_probe_{s}_v2'
+ROOTS = {s: data.ROOT/f'20261027_public_epoch2_TRAIN_probe_{s}_v3'
          for s in ('pilot', 'run', 'audit', 'results')}
 PARENTS = {'BROAD': broad.RUNS['train'], 'epoch2': study.root_for(2, 1)}
 LEVELS = (1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128)
@@ -184,6 +186,25 @@ def receipt(root, names=('producer.json', 'result.json')):
     data.verify(value['artifacts'])
 
 
+def verify_training_inputs(paths, bindings):
+    if any(bindings.get(str(p)) != data.sha(p) for p in paths):
+        raise ValueError('diagnostic inputs differ from the original BROAD training producer')
+
+
+def prepared_controls():
+    paths = [broad.RUNS['prepare']/n for n in
+             ('cases.json', 'selection.json', 'result.json', 'actual_tool_receipt.json')]
+    paths += [broad.catalog.DEST/n for n in ('cases.json', 'source_index.json', 'feature_manifest.json')]
+    verify_training_inputs(paths, data.read(PARENTS['BROAD']/'producer.json')['input_hashes'])
+    if data.sha(broad.catalog.DEST/'cases.json') != broad.CASES_SHA:
+        raise ValueError('original catalog hash differs')
+    rows = data.read(broad.RUNS['prepare']/'cases.json')
+    if len(rows) != 1376:
+        raise ValueError('all original prepared TRAIN cases required')
+    selection = data.read(broad.RUNS['prepare']/'selection.json')
+    return select(rows, selection), selection
+
+
 def live_training():
     raw = subprocess.run(['systemctl', '--user', 'show', UNIT,
         '--property=ActiveState,SubState,MainPID,InvocationID,NRestarts'],
@@ -197,7 +218,7 @@ def live_training():
 
 
 def freeze(root, stage, training, environment, cases):
-    files = {Path(__file__), PLAN, AMENDMENT, TEST, Path('pyproject.toml'), Path('pixi.lock')}
+    files = {Path(__file__), PLAN, AMENDMENT, INPUT_AMENDMENT, TEST, Path('pyproject.toml'), Path('pixi.lock')}
     files.update(Path('experiments/structure_net').glob('ncm*.py'))
     files.update(training.native.vendor.VENDOR.rglob('*.py'))
     for module in tuple(sys.modules.values()):
@@ -212,6 +233,7 @@ def freeze(root, stage, training, environment, cases):
     paths += [p/n for p in PARENTS.values() for n in ('producer.json', 'result.json', 'actual_tool_receipt.json', 'model.pt')]
     paths += [BROAD_RESULTS/'campaign_results.json', *[LEGACY_AUDIT/n for n in
         ('campaign_results.json', 'actual_tool_receipt.json')], *[INCIDENT/n for n in
+        ('failure.json', 'actual_tool_receipt.json')], *[INPUT_INCIDENT/n for n in
         ('failure.json', 'actual_tool_receipt.json')]]
     if stage == 'run':
         paths += [ROOTS['pilot']/n for n in ('producer.json', 'result.json', 'outputs.json', 'actual_tool_receipt.json')]
@@ -250,11 +272,7 @@ def run(stage):
         if pilot['status'] != 'TRAIN_probe_pilot_passed':
             raise ValueError('passing real inference/concurrency pilot required')
         training.native.vendor.verify(data.read(ROOTS['pilot']/'producer.json'))
-    all_rows = data.read(broad.RUNS['prepare']/'cases.json')
-    if len(all_rows) != 1376 or data.sha(broad.RUNS['prepare']/'cases.json') != broad.CASES_SHA:
-        raise ValueError('complete unchanged BROAD TRAIN labels required')
-    selection = data.read(broad.RUNS['prepare']/'selection.json')
-    controls = select(all_rows, selection)
+    controls, selection = prepared_controls()
     cases = [controls[0], next(r for r in controls if r['id'] == selection['longest_source_id'])] if stage == 'pilot' else controls
     proof = freeze(root, stage, training, environment, cases)
     data.write(root/'training_service_before.json', before_service)
