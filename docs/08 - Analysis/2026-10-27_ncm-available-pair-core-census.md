@@ -1,5 +1,9 @@
 # Counted supply in the 500 original summary stores
 
+Subsequent result: the [completed full-archive census](2026-10-27_ncm-available-pair-census.md)
+finds 259,636 length-fitting ordinary candidates. The core-only result below is
+retained as the earlier stage of that census.
+
 The complete core-store census finds **85,471 distinct non-verbatim source–summary pairs that fit the application length limits**, before source-disjoint splitting, native-codec capacity checks and label-quality review. This is a measured core-store count, not the total available across the broader archive, whose census is running.
 
 | Population | Distinct pairs | Distinct inputs | Fits the applicable length limits |
