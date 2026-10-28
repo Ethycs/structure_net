@@ -8,7 +8,8 @@ import torch
 from experiments.structure_net import ncm_recovered_decoder_evaluation as evaluation
 
 study, data = evaluation.study, evaluation.data
-ROOT = data.ROOT/'20261028_recovered_decoder_confusion_codes_v1'
+INCIDENT = data.ROOT/'20261028_recovered_decoder_confusion_codes_v1'
+ROOT = data.ROOT/'20261028_recovered_decoder_confusion_codes_v2'
 PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-codec-confusion-codes.md')
 
 
@@ -28,8 +29,9 @@ def run():
         raise ValueError('same ordered128 diagnostic cases required')
     paths = [Path(__file__), PLAN]
     for source in (evaluation.ROOTS['evaluate'], evaluation.ROOTS['replay']):
-        paths += [source/n for n in ('producer.json', 'result.json', 'actual_tool_receipt.json')]
-    paths += [evaluation.ROOTS['evaluate']/n for n in ('cases.json', 'outputs.json')]
+        paths += [source/n for n in ('result.json', 'actual_tool_receipt.json')]
+    paths += [evaluation.ROOTS['evaluate']/n for n in ('producer.json', 'cases.json', 'outputs.json')]
+    paths += [INCIDENT/n for n in ('failure.json', 'actual_tool_receipt.json', 'failed_producer_source.py')]
     paths += [study.runtime.codec_source.BROAD/'model.pt']
     proof = evaluation.freeze(ROOT, 'reference_vs_decoded_code_collision_diagnostic', training, environment, paths)
     torch.cuda.reset_peak_memory_stats(); codec, frozen = study.load_initial(training)
