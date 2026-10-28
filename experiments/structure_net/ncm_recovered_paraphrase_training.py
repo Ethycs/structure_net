@@ -25,6 +25,7 @@ TESTS = [Path('tests/structure_net')/n for n in ('test_ncm_recovered_training_sc
 ROOTS = {s: inputs.BASE/f'20261028_recovered_paraphrase_training_{s}_v1'
          for s in ('prepare', 'pilot', 'pilot_audit', 'train', 'audit')}
 STORAGE = Path('/data2/structure_net/ncm_recovered_paraphrase_20261028_v1/training')
+CPU_QUALIFICATION = inputs.BASE/'20261028_recovered_paraphrase_training_CPU_v1.json'
 
 
 def require(proofs, stage):
@@ -91,7 +92,12 @@ def prepare():
     root = ROOTS['prepare']
     if root.exists() or os.environ.get('CUDA_VISIBLE_DEVICES') != '': raise ValueError('fresh CPU-only preparation required')
     training, environment = broad.runtime.configure()
-    proofs = inputs.Proofs(); sources, groups, controls = inputs.ready(proofs)
+    proofs = inputs.Proofs(); qualification = proofs.read(CPU_QUALIFICATION)
+    if (qualification['actual_tool_exit_code'] != 0 or qualification['tests_passed'] != 13
+            or not qualification['actual_parent_tensor_identity_verified']):
+        raise ValueError('completed CPU contracts and actual initializer tensor check required')
+    proofs.verify(qualification['artifacts'])
+    sources, groups, controls = inputs.ready(proofs)
     proof = freeze(root, 'prepare', proofs, training, environment)
     data.write(root/'controls.json', controls)
     data.write(root/'bindings.json', {'recovered_pairs': str(inputs.qualified.CATALOG/'pairs.jsonl'),
