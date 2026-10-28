@@ -56,6 +56,9 @@ non-substring targets and58,968 of59,125 substring targets. Date and summarizer
 identity metadata are available for44,501 non-substring targets. No conflicting
 roles or dates were found among these recovered records. These counts describe
 available provenance, not semantic correctness or training admission.
+The44,777 paraphrase pairs cover39,257 distinct source texts and8,169 source
+components;43,821 have assistant roles and956 have user roles. Multiple target
+variants therefore must not be counted as independent source coverage.
 
 The public epoch4 semantic grader is still active. Its saved attempts show
 repeated180-second read timeouts; the gateway liveliness endpoint responded200
