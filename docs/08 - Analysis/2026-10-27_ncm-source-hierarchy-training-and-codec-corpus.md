@@ -47,6 +47,8 @@ blocks after these two warmup updates; the other seven routers remained at their
 initial uniform mixture. This does not prevent their nonzero tree-output updates.
 There were 64 scheduled TRAIN presentations plus one replayed verification
 update. These are systems checks, not a full trained hierarchy or quality result.
+The memory measurement covers the NCM with cached frozen-body source features;
+it excludes a simultaneously resident Llama source encoder.
 
 Separately, all 99,367 reserved-training native text frames now have their full
 641-code targets cached. The unchanged released encoder/codebooks produced the
