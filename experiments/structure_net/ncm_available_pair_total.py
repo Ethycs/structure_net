@@ -1,5 +1,6 @@
 """Reconcile all completed census stages into one content-deduplicated supply."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import sqlite3
@@ -37,6 +38,34 @@ def summarize(db,where='1'):
             raise ValueError('length partition does not reconcile')
         item['disjoint_length_partition']=parts;result.append(item)
     return result
+
+
+def export_candidates(db):
+    """Materialize the counted population without assigning any training split."""
+    readers={name:census.readonly(root/'pairs.sqlite') for name,root in
+        [('indexed',deep.BASE),('body_and_pointer',supplement.ROOT),('deep',deep.ROOT)]}
+    path=ROOT/'candidate_pairs_unsplit.jsonl';digest=hashlib.sha256();count=0
+    with path.open('xb') as out:
+        for ident,kind,source_sha,target_sha,input_tokens,target_tokens in db.execute(
+            "SELECT id,input_kind,input_sha,target_sha,input_tokens,target_tokens FROM pairs WHERE input_kind IN ('raw','children') AND "+FIT+' ORDER BY id'):
+            for name,reader in readers.items():
+                row=reader.execute('''SELECT s.text,t.text FROM pairs p JOIN texts s ON s.sha=p.input_sha
+                  JOIN texts t ON t.sha=p.target_sha WHERE p.id=?''',(ident,)).fetchone()
+                if row is not None:break
+            else:raise ValueError('counted pair has no retrievable source/target')
+            source,target=row
+            if census.digest(source)!=source_sha or census.digest(target)!=target_sha:
+                raise ValueError('exported pair does not match counted content')
+            occurrence=reader.execute('SELECT origin,record,kind FROM occurrences WHERE pair_id=? LIMIT 1',(ident,)).fetchone()
+            value={'pair_id':ident,'input_kind':kind,'source':source,'target':target,'input_tokens':input_tokens,
+                'target_tokens':target_tokens,'representative_stage':name,'representative_origin':occurrence,
+                'split':'unassigned','training_admitted':False}
+            encoded=(json.dumps(value,ensure_ascii=False,separators=(',',':'))+'\n').encode()
+            out.write(encoded);digest.update(encoded);count+=1
+    for reader in readers.values():reader.close()
+    result={'path':str(path),'pairs':count,'sha256':digest.hexdigest(),'bytes':path.stat().st_size,
+        'source_group_split_and_quality_review_required':True,'training_admitted':False}
+    archive.write(ROOT/'candidate_export.json',result);return result
 
 
 def main():
@@ -77,6 +106,9 @@ def main():
         '-p','ActiveState,SubState,MainPID,ExecMainPID,ExecMainStatus,InvocationID,NRestarts'],text=True) for u in units}
     if any('SubState=exited' not in s or 'ExecMainStatus=0' not in s for s in states.values()):
         raise ValueError('all census workers must have an observed successful terminal')
+    exported=export_candidates(db)
+    if exported['pairs']!=sum(r['application_length_fit_pairs'] for r in ordinary):
+        raise ValueError('export count differs from reconciled supply')
     value={'status':'available_pair_content_census_reconciled','ordinary_source_summary_pairs':sum(r['distinct_pairs'] for r in ordinary),
         'ordinary_noncopy_source_summary_pairs':sum(r['noncopy_pairs'] for r in ordinary),
         'ordinary_application_length_fit_pairs':sum(r['application_length_fit_pairs'] for r in ordinary),
@@ -91,7 +123,7 @@ def main():
             'source_group_split_applied':False,'semantic_label_quality_reviewed':False,'test_fixture_filter_applied':False,
             'native_codec_capacity_applied':False,'training_admitted':False,'all_theoretically_possible_pairs_claimed':False,
             'raw_structural_conversion_and_image_context_pairs_excluded_from_ordinary_total':True},
-        'workers':states,'producer_sha256':archive.sha(Path(__file__)),
+        'workers':states,'candidate_export':exported,'producer_sha256':archive.sha(Path(__file__)),
         'result_bindings':{str(root/name):archive.sha(root/name) for root,name in prerequisites}}
     archive.write(ROOT/'result.json',value);db.close()
     print(json.dumps({k:v for k,v in value.items() if k in ('status','ordinary_source_summary_pairs','ordinary_noncopy_source_summary_pairs','ordinary_application_length_fit_pairs','by_input_kind','remaining_unjoined_cache_contents')}),flush=True)
