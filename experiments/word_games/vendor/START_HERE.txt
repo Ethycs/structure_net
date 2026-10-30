@@ -1,0 +1,14 @@
+Neighborhood Bridge V2: deeper prototype tests
+
+Read long_workflow/REPORT.md and long_workflow/INDEPENDENT_REVIEW.md for the 32-event continuous model test. Read comparison/REPORT.md for matched controls and scaling.
+
+32 fresh model events:31 exact operation matches,32 status/invariant matches,14 exact state/projection matches. One plausibly requested extra note at event15 caused all later state mismatches; strict scores were retained. Semantic review passes32 with that caveat, not an overall32/32 result.
+
+16 scripted matched controls:five boundary-error proposals succeed only with the guard disabled;11 unchanged. Six actual model proposals were correct with both modes, so no observed model accuracy benefit. Two additional sparse/dense model proposals passed.
+
+0 to100k outside-neighborhood records:compact host-selected payload1824 to1829 bytes. This is not total token usage or storage. Active-neighborhood100k distractors increased BM25 computation to~678ms; dense writes take~1 second because runtime copies/scans state. Timings are local samples.
+
+Use README.md for API and tests. Fresh model trials use native agent calls; archived proposals can be replayed without model access. Initial V1 is included as a sibling only to reproduce backwards-compatibility checks:
+python replay_v1.py ../neighborhood_bridge_20261030/stress_test
+
+All files are a research prototype on synthetic data, not a production or security guarantee. No source state repair, frozen-score rewriting, or arbitrary-domain generality claim.

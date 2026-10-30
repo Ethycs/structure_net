@@ -1,0 +1,568 @@
+[
+  {
+    "id": "L01",
+    "timestamp": "2026-10-30",
+    "source": "Opening intake, reference opening-heron: put Bronze Heron (the original, not Bronze Herons) on display in North Gallery N1, returning by January 25, 2027.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:bronze",
+        "gallery_id": "gal:north",
+        "slot": "N1",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L02",
+    "timestamp": "2026-10-30",
+    "source": "Give Bronze Clock the adjacent North position N2 with the same January 25 return date.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:clock",
+        "gallery_id": "gal:north",
+        "slot": "N2",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L03",
+    "timestamp": "2026-10-30",
+    "source": "Arrange the Orchid Embroidery in South S1 until January 25 under approval:orchid:south.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:orchid",
+        "gallery_id": "gal:south",
+        "slot": "S1",
+        "due": "2027-01-25",
+        "approval_id": "approval:orchid:south"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L04",
+    "timestamp": "2026-10-30",
+    "source": "Stage Celestial Atlas, the restricted original, in Archive A1 through January 25, using approval:atlas:archive.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:atlas",
+        "gallery_id": "gal:archive",
+        "slot": "A1",
+        "due": "2027-01-25",
+        "approval_id": "approval:atlas:archive"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L05",
+    "timestamp": "2026-10-30",
+    "source": "Accession a new unrestricted paper work titled Celestial Atlas, home Archive Vault, as loan:atlas-new. This is the blue-intake accession; do not display it yet.",
+    "expected_operations": [
+      {
+        "op": "create",
+        "loan_id": "loan:atlas-new",
+        "title": "Celestial Atlas",
+        "home": "gal:archive",
+        "medium": "paper",
+        "restricted": false
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L06",
+    "timestamp": "2026-10-30",
+    "source": "Display the blue-intake accession in North N3 through January 30, 2027.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:atlas-new",
+        "gallery_id": "gal:north",
+        "slot": "N3",
+        "due": "2027-01-30",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L07",
+    "timestamp": "2026-10-30",
+    "source": "Correction to the blue-intake display: January 28, not January 30. Keep its current position.",
+    "expected_operations": [
+      {
+        "op": "transfer",
+        "loan_id": "loan:atlas-new",
+        "to_gallery_id": "gal:north",
+        "slot": "N3",
+        "due": "2027-01-28",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L08",
+    "timestamp": "2026-10-30",
+    "source": "Add the note \"review pending\" to Celestial Atlas.",
+    "expected_operations": [],
+    "expected_status": "clarify",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L09",
+    "timestamp": "2026-10-30",
+    "source": "For the work accessioned under blue-intake, append exactly \"paper verified\".",
+    "expected_operations": [
+      {
+        "op": "annotate",
+        "loan_id": "loan:atlas-new",
+        "text": "paper verified"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L10",
+    "timestamp": "2026-10-30",
+    "source": "Trade the North display positions of Bronze Clock and the original Bronze Heron in one indivisible change; neither return date changes.",
+    "expected_operations": [
+      {
+        "op": "transfer",
+        "loan_id": "loan:clock",
+        "to_gallery_id": "gal:north",
+        "slot": "N1",
+        "due": "2027-01-25",
+        "approval_id": null
+      },
+      {
+        "op": "transfer",
+        "loan_id": "loan:bronze",
+        "to_gallery_id": "gal:north",
+        "slot": "N2",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L11",
+    "timestamp": "2026-10-30",
+    "source": "Attempt to display the unrestricted Silk Banner in North N6 through January 25, without an exception. Do not substitute another gallery if blocked.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:banner",
+        "gallery_id": "gal:north",
+        "slot": "N6",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "rejected",
+    "expected_reason": "medium_not_allowed",
+    "admin": null
+  },
+  {
+    "id": "L12",
+    "timestamp": "2026-10-30",
+    "source": "Relocate Orchid Embroidery to North N4, still due January 25, under the narrow approval:orchid:north:exception.",
+    "expected_operations": [
+      {
+        "op": "transfer",
+        "loan_id": "loan:orchid",
+        "to_gallery_id": "gal:north",
+        "slot": "N4",
+        "due": "2027-01-25",
+        "approval_id": "approval:orchid:north:exception"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L13",
+    "timestamp": "2026-10-30",
+    "source": "My curator role can write South. Attempt to display Jade Tablet there in S2 until January 25 with no approval; leave a rejection intact rather than supplying one.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:jade",
+        "gallery_id": "gal:south",
+        "slot": "S2",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "rejected",
+    "expected_reason": "approval_required",
+    "admin": null
+  },
+  {
+    "id": "L14",
+    "timestamp": "2026-10-30",
+    "source": "Now use approval:jade:south to display Jade Tablet in South S2 until January 25.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:jade",
+        "gallery_id": "gal:south",
+        "slot": "S2",
+        "due": "2027-01-25",
+        "approval_id": "approval:jade:south"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L15",
+    "timestamp": "2026-10-30",
+    "source": "Accession another unrestricted metal Bronze Heron at home North, ID loan:heron-new. Mark this accession in the project history as copper-intake; no display yet.",
+    "expected_operations": [
+      {
+        "op": "create",
+        "loan_id": "loan:heron-new",
+        "title": "Bronze Heron",
+        "home": "gal:north",
+        "medium": "metal",
+        "restricted": false
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L16",
+    "timestamp": "2026-10-30",
+    "source": "Give the copper-intake accession North N5 until January 25.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:heron-new",
+        "gallery_id": "gal:north",
+        "slot": "N5",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L17",
+    "timestamp": "2026-10-30",
+    "source": "End the display of the work from opening-heron, returning custody home. Leave the later same-title accession alone.",
+    "expected_operations": [
+      {
+        "op": "cancel",
+        "loan_id": "loan:bronze"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L18",
+    "timestamp": "2026-10-30",
+    "source": "Append exactly \"opening intake closed\" to that opening-heron work, even though it is no longer displayed.",
+    "expected_operations": [
+      {
+        "op": "annotate",
+        "loan_id": "loan:bronze",
+        "text": "opening intake closed"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L19",
+    "timestamp": "2026-10-30",
+    "source": "Move the copper-intake accession into the North position just vacated when opening-heron was closed. Keep its return date.",
+    "expected_operations": [
+      {
+        "op": "transfer",
+        "loan_id": "loan:heron-new",
+        "to_gallery_id": "gal:north",
+        "slot": "N2",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L20",
+    "timestamp": "2026-10-30",
+    "source": "End the Orchid Embroidery display and return it to home custody.",
+    "expected_operations": [
+      {
+        "op": "cancel",
+        "loan_id": "loan:orchid"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L21",
+    "timestamp": "2026-10-30",
+    "source": "The administrator has revoked approval:orchid:north:exception. My curator permission remains. Attempt to display Orchid Embroidery in North N4 until January 25 with that revoked approval, and preserve the rejection.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:orchid",
+        "gallery_id": "gal:north",
+        "slot": "N4",
+        "due": "2027-01-25",
+        "approval_id": "approval:orchid:north:exception"
+      }
+    ],
+    "expected_status": "rejected",
+    "expected_reason": "unknown_approval",
+    "admin": {
+      "revoke": "approval:orchid:north:exception"
+    }
+  },
+  {
+    "id": "L22",
+    "timestamp": "2026-10-30",
+    "source": "Instead display Orchid Embroidery back in South S1 until January 25 using the still-valid approval:orchid:south.",
+    "expected_operations": [
+      {
+        "op": "reserve",
+        "loan_id": "loan:orchid",
+        "gallery_id": "gal:south",
+        "slot": "S1",
+        "due": "2027-01-25",
+        "approval_id": "approval:orchid:south"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L23",
+    "timestamp": "2026-10-30",
+    "source": "Using the supplied context without refreshing it, append exactly \"ancestor checked\" to Bronze Clock. An administrator shortened the public department deadline after that context was issued; this is an intentional stale submission, so do not repair it.",
+    "expected_operations": [
+      {
+        "op": "annotate",
+        "loan_id": "loan:clock",
+        "text": "ancestor checked"
+      }
+    ],
+    "expected_status": "rejected",
+    "expected_reason": "stale_rule_version",
+    "admin": {
+      "after_context_rule_patch": [
+        "rule:public",
+        {
+          "latest_due": "2027-02-01"
+        }
+      ]
+    }
+  },
+  {
+    "id": "L24",
+    "timestamp": "2026-10-30",
+    "source": "With newly fetched context and current ancestor rules, append exactly \"ancestor checked\" to Bronze Clock now.",
+    "expected_operations": [
+      {
+        "op": "annotate",
+        "loan_id": "loan:clock",
+        "text": "ancestor checked"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L25",
+    "timestamp": "2026-10-30",
+    "source": "Attempt to move the blue-intake accession to the North bed occupied by Bronze Clock. Preserve its January 28 deadline; do not displace the clock or pick another bed.",
+    "expected_operations": [
+      {
+        "op": "transfer",
+        "loan_id": "loan:atlas-new",
+        "to_gallery_id": "gal:north",
+        "slot": "N1",
+        "due": "2027-01-28",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "rejected",
+    "expected_reason": "slot_occupied",
+    "admin": null
+  },
+  {
+    "id": "L26",
+    "timestamp": "2026-10-30",
+    "source": "Attempt to relocate Bronze Clock to South S3 with its current return date and no exception. Do not fix an incompatibility automatically.",
+    "expected_operations": [
+      {
+        "op": "transfer",
+        "loan_id": "loan:clock",
+        "to_gallery_id": "gal:south",
+        "slot": "S3",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "rejected",
+    "expected_reason": "medium_not_allowed",
+    "admin": null
+  },
+  {
+    "id": "L27",
+    "timestamp": "2026-10-30",
+    "source": "Atomically exchange the current North positions of the blue-intake and copper-intake accessions, retaining each individual return date.",
+    "expected_operations": [
+      {
+        "op": "transfer",
+        "loan_id": "loan:atlas-new",
+        "to_gallery_id": "gal:north",
+        "slot": "N2",
+        "due": "2027-01-28",
+        "approval_id": null
+      },
+      {
+        "op": "transfer",
+        "loan_id": "loan:heron-new",
+        "to_gallery_id": "gal:north",
+        "slot": "N3",
+        "due": "2027-01-25",
+        "approval_id": null
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L28",
+    "timestamp": "2026-10-30",
+    "source": "End only the blue-intake accession display; it should return to its accession home, not remain planted there.",
+    "expected_operations": [
+      {
+        "op": "cancel",
+        "loan_id": "loan:atlas-new"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L29",
+    "timestamp": "2026-10-30",
+    "source": "Bring the restricted original Celestial Atlas from Archive into the North position vacated by blue-intake, until January 30, using approval:atlas:north.",
+    "expected_operations": [
+      {
+        "op": "transfer",
+        "loan_id": "loan:atlas",
+        "to_gallery_id": "gal:north",
+        "slot": "N2",
+        "due": "2027-01-30",
+        "approval_id": "approval:atlas:north"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L30",
+    "timestamp": "2026-10-30",
+    "source": "Append exactly \"original relocated\" to it.",
+    "expected_operations": [
+      {
+        "op": "annotate",
+        "loan_id": "loan:atlas",
+        "text": "original relocated"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L31",
+    "timestamp": "2026-10-30",
+    "source": "Find the accession recorded as copper-intake earlier in this project and append exactly \"new casting checked\"; do not annotate the original with the same title.",
+    "expected_operations": [
+      {
+        "op": "annotate",
+        "loan_id": "loan:heron-new",
+        "text": "new casting checked"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  },
+  {
+    "id": "L32",
+    "timestamp": "2026-10-30",
+    "source": "Clear every currently occupied North display position in a single transaction, returning each work to its own home custody. Do not touch South or undisplayed works.",
+    "expected_operations": [
+      {
+        "op": "cancel",
+        "loan_id": "loan:clock"
+      },
+      {
+        "op": "cancel",
+        "loan_id": "loan:atlas"
+      },
+      {
+        "op": "cancel",
+        "loan_id": "loan:heron-new"
+      }
+    ],
+    "expected_status": "committed",
+    "expected_reason": null,
+    "admin": null
+  }
+]

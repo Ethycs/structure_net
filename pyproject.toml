@@ -65,6 +65,24 @@ print('LD_LIBRARY_PATH:', os.environ.get('LD_LIBRARY_PATH',''))"
 # `pixi run --locked -e ncm ...`. Never install experiment environments in data/.
 [tool.pixi.environments]
 ncm = { features = ["ncm"], no-default-feature = true }
+word-games = { features = ["word-games"], no-default-feature = true }
+
+[tool.pixi.feature.word-games.dependencies]
+python = "==3.11.13"
+
+[tool.pixi.feature.word-games.pypi-dependencies]
+requests = "==2.32.4"
+pytest = "==8.4.1"
+
+[tool.pixi.feature.word-games.activation.env]
+PYTHONPATH = "${PIXI_PROJECT_ROOT}/src:${PIXI_PROJECT_ROOT}"
+PYTHONNOUSERSITE = "1"
+# Avoid damaged precompiled stdlib caches shipped in the shared Conda cache.
+PYTHONPYCACHEPREFIX = "${PIXI_PROJECT_ROOT}/.pixi/word-games-bytecode"
+
+[tool.pixi.feature.word-games.tasks]
+word-games = "python -m experiments.word_games.cli"
+test-word-games = "python -m pytest --confcutdir=tests/word_games -q tests/word_games"
 
 [tool.pixi.feature.ncm.dependencies]
 python = "==3.11.13"

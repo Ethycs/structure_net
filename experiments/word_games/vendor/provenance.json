@@ -1,0 +1,22 @@
+{
+  "archive_root": "neighborhood_bridge_v2_20261030",
+  "archive_sha256": "e6d1c595a5819ef55e632b6efa1792b1fccbc13e581ee16ffafd6e4fb713c561",
+  "files": {
+    "BACKEND_SHA256.txt": "6edd378fd45f4d864a4f668eff3ddc3785b6ed8ab752b0b8529d82ab7607edf8",
+    "README.md": "fa8e81f42e25988461f721a039a60375cacae220af0260035cb5215fd84779ce",
+    "START_HERE.txt": "af08a0dbd9e35e6c1a40c2a76dab211b0b22cb778bc81c06f39543fd877c932f",
+    "bridge.py": "4171fc0259bf280555220b17d56347eca15caadc7094fd1f0cc779a3e1184c33",
+    "bridge_cli.py": "7ffe7de2b30bedc09457446b66596b2f45c499ccaa1aa33c7f154d9aea1f07b1",
+    "check_index_workloads.py": "a1b3cb6baf74080624dfa57fab9d3789411b8e73a392723b80a397552453e62a",
+    "comparison/compare.py": "2f1700c0702b7d346d072365b9ef1074b44e5bf70f304bbdcad71f61300c1222",
+    "comparison/manifest.json": "f104a2989c6e6b64d3a73a011386741a6c266969288b56447912c37e3ff59718",
+    "long_workflow/INTERPRETER_CONTRACT.md": "5eb57d5fabe9c1cffcde5b1e0af65fa37d4bacd08e0b738fd3a1e69a10644a0e",
+    "long_workflow/cases.json": "f1095b026b091243c19b624a12c8f3317d8cf21e27475a1f8a4a4b39abf69f65",
+    "long_workflow/fixture_factory.py": "4f812b45f98d554b8101a7bcbb2c0db48f04d385f11fc46bb98053167f8dab57",
+    "long_workflow/semantic_rubric.md": "e2fc395b9f55400651132bebb5d2078aabee184e0b3c5baad58cbf4511a54797",
+    "stress_valid.py": "b5619838cf8e38239dad7cc9ab026a760026f40f66451df9ff0166b847d2f3e9",
+    "test_bridge.py": "dd28c6e916f49726fd3946fb2acab25b560fa5101d701f35ed93a04dcee38e87",
+    "test_v2.py": "e1c75687be4341c030557e011505d195ad31dd82db359e031a9a9a9fa763b53a"
+  },
+  "source_modified": false
+}
