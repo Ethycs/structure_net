@@ -61,6 +61,21 @@ live cases. It uses less GPU memory than the Qwen target but is slower and adds
 unsupported approval claims to receiver summaries. It remains an exploratory
 candidate; structured state correctness does not establish semantic fidelity.
 
+## Qwen3.8-35B-A3B distillation
+
+`prepare_qwen38_moe.py` fetches Empero's pinned Q4_K_M GGUF;
+`qwen38_moe_runtime.py` tests it with Flash Attention, Q8 K/V cache and exactly
+26 CPU expert layers, with remaining computation on the RTX 3060. It supports
+`--stage pilot`, `full` and `live` with fresh output directories and the same
+locked Pixi environment. Native logs verify the CPU expert placement.
+
+The [measured result](../../docs/08%20-%20Analysis/2026-10-31_word-games-qwen38-moe.md)
+is 24.37 full-request output tokens/s and 37.68 decode-only tokens/s. The live
+selector reused `dock` for location and deadline, so no live case-accuracy
+percentage was measured. A separate frozen-packet diagnostic is explicitly
+distinct from end-to-end bridge performance. This is the community distillation,
+tested with thinking disabled, not an official Qwen3.8 release evaluation.
+
 Historical Phi workflow:
 
 ```sh
