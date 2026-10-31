@@ -47,6 +47,20 @@ request/prefix identity. Its target verification is an autoregressive reference;
 external-drafter batched speculation is not yet implemented. Run it with a fresh
 `--output` using the same locked Pixi environment.
 
+## Standalone Bonsai 2 27B
+
+`prepare_bonsai.py` downloads and verifies the pinned official Q2_0 checkpoint.
+`bonsai_runtime.py` evaluates it alone on the RTX 3060 with native b11960,
+thinking disabled, no draft or lookup, and the existing bridge prompts. It
+supports `--stage pilot`, `full` and `live`, each with a fresh `--output`.
+Use the locked `word-games` Pixi environment from the repository root.
+
+The [measured Bonsai result](../../docs/08%20-%20Analysis/2026-10-31_word-games-bonsai-naked.md)
+is 24.31 output tokens/s over 36 frozen requests and 10/12 joint structured
+live cases. It uses less GPU memory than the Qwen target but is slower and adds
+unsupported approval claims to receiver summaries. It remains an exploratory
+candidate; structured state correctness does not establish semantic fidelity.
+
 Historical Phi workflow:
 
 ```sh
