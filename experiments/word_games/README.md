@@ -1,6 +1,8 @@
 # WORD_GAMES
 
-A two-agent information firewall experiment using Phi-4 14B. Phi chooses a
+A two-agent information firewall experiment. The active model pair is
+**Qwen2.5-14B-Instruct (target) and Qwen2.5-3B-Instruct (draft), Q4_K_M GGUF**.
+The target chooses a
 metaphor from the public task structure before private source details arrive.
 The source agent proposes typed actions; a host policy and the imported
 Neighborhood Bridge backend validate them. The receiving agent gets only
@@ -13,7 +15,39 @@ synthetic scenarios. The receiver's structured state accuracy, the sender's
 operation accuracy, and disclosure checks are reported separately. Permitted
 actions and timing remain possible covert channels.
 
-Run from the repository root with the locked environment:
+Run the active Qwen workflow from the repository root with the locked environment:
+
+```sh
+pixi run --locked -e word-games test-word-games
+pixi run --locked -e word-games python -m experiments.word_games.prepare_qwen_pair --output data/experiments/word_games/NEW_QWEN_DOWNLOAD
+pixi run --locked -e word-games python -m experiments.word_games.run_phi_token_map --worker check_qwen_tokenizers --output data/experiments/word_games/NEW_QWEN_TOKENIZERS
+pixi run --locked -e word-games python -m experiments.word_games.qwen_runtime --stage pilot --tokenizer-check data/experiments/word_games/NEW_QWEN_TOKENIZERS/build/campaign_results.json --output data/experiments/word_games/NEW_QWEN_PILOT
+pixi run --locked -e word-games python -m experiments.word_games.qwen_runtime --stage pilot --draft 3 --output data/experiments/word_games/NEW_QWEN_DRAFT_PILOT
+pixi run --locked -e word-games python -m experiments.word_games.qwen_runtime --stage live --output data/experiments/word_games/NEW_QWEN_LIVE
+```
+
+The Qwen entry point defaults to target-only until the measured speculative
+speed and task-quality gates pass. `--draft 3` selects native draft-simple with
+three proposed tokens; the 14B target verifies every proposal. The models use
+the RTX 3060 and RTX 2060 SUPER respectively, with unrelated services preserved.
+Each run starts and closes its own native server; this does not deploy a
+persistent production bridge. The embedded Qwen chat template is applied by the
+server. The original Phi transport remains available for historical reproduction.
+
+[Qwen protocol](../../docs/07%20-%20Status%20Reports/2026-10-31_word-games-qwen-pair-plan.md)
+defines the new model identity, pinned releases, checks and decision order.
+
+The [measured switch result](../../docs/08%20-%20Analysis/2026-10-31_word-games-qwen-pair.md)
+reports 5/12 joint cases for target-only and a metaphor-validation failure with
+the draft. The pair is a research configuration, not a production promotion.
+
+`experiments.word_games_ipc.run` provides separate native workers on the 3060
+and 2060 SUPER over Unix-domain sockets. It exchanges token IDs and validates
+request/prefix identity. Its target verification is an autoregressive reference;
+external-drafter batched speculation is not yet implemented. Run it with a fresh
+`--output` using the same locked Pixi environment.
+
+Historical Phi workflow:
 
 ```sh
 pixi run --locked -e word-games test-word-games

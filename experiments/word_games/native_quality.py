@@ -20,7 +20,7 @@ def matched_setup(original, root, case):
     return engine, context
 
 
-def run_quality(out, identity, client, paired_root=None):
+def run_quality(out, identity, client, paired_root=None, **campaign_options):
     from . import campaign
     original = campaign.setup
     manager = nullcontext()
@@ -30,4 +30,4 @@ def run_quality(out, identity, client, paired_root=None):
             raise ValueError("completed baseline fixture set required")
         manager = patch.object(campaign, "setup", lambda case: matched_setup(original, paired_root, case))
     with manager:
-        return campaign.run(out, identity, client=client)
+        return campaign.run(out, identity, client=client, **campaign_options)

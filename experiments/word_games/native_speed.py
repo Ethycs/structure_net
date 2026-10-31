@@ -54,10 +54,13 @@ class NativePhi4:
         self.compact_json = compact_json
         self.greedy_only, self.no_grammar = greedy_only, no_grammar
 
-    def complete(self, prompt, path, *, max_tokens=1024):
+    def format_prompt(self, prompt):
         # Exact template embedded in the frozen target GGUF; no source text is
         # inserted beyond the current agent's authorized input.
-        formatted = "<|im_start|>user<|im_sep|>" + prompt + "<|im_end|><|im_start|>assistant<|im_sep|>"
+        return "<|im_start|>user<|im_sep|>" + prompt + "<|im_end|><|im_start|>assistant<|im_sep|>"
+
+    def complete(self, prompt, path, *, max_tokens=1024):
+        formatted = self.format_prompt(prompt)
         body = {"prompt": formatted, "n_predict": max_tokens, "temperature": 0,
                 "seed": 73, "repeat_penalty": 1.0, "cache_prompt": False,
                 "json_schema": {"type": "object"}, "stream": False, "return_tokens": True}
