@@ -1,0 +1,6 @@
+FROM ubuntu@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 libstdc++6 libcurl4t64 libssl3t64 && rm -rf /var/lib/apt/lists/*
+# Runtime binary and CUDA libraries are read-only mounts. The experiment
+# records the resulting image ID and package versions before measurement.
+ENV LD_LIBRARY_PATH=/cuda:/llama
+ENTRYPOINT ["/llama/llama-server"]
