@@ -143,3 +143,18 @@ failed experimental arm for reproducibility; it is not a recommended setting.
 
 [Speed protocol](../../docs/07%20-%20Status%20Reports/2026-10-31_word-games-phi4-40tps-plan.md)
 records prospective gates and exploratory amendments.
+
+## MoE placement and CPU tuning
+
+The 2026-10-31 exploratory placement study is implemented in
+`moe_placement.py`. It compares CPU thread/affinity settings, eight whole blocks
+on RTX 2060 SUPER, an exact-weight expert cache, and routed-expert-only placement
+while attention/KV remain on RTX 3060. Use Pixi from the repository root and
+fresh output directories. The resident 6 GB RTX 2060 Qwen3-8B is preserved.
+
+Expert-only placement reached 31.02 versus 26.17 full-request tok/s in repeated
+36-request replays. Generated answers changed and existing semantic errors
+remain; this is not deployment or accuracy approval. See
+[the measured report](../../docs/08%20-%20Analysis/2026-10-31_word-games-moe-placement.md)
+and its prospective plans. Individual experts split between CPU and GPU within
+each layer are a separate, unimplemented research direction.
