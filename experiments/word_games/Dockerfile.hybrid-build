@@ -1,0 +1,4 @@
+FROM word-games-native:b11960
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends cmake ninja-build g++ libcurl4-openssl-dev git && rm -rf /var/lib/apt/lists/*
+ENTRYPOINT []
