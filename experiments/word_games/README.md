@@ -97,6 +97,20 @@ The default URL is `http://127.0.0.1:18091`. Use a fresh output directory.
 This remains a bounded fact channel; questions do not authorize arbitrary
 worker prose to cross. The report includes restart and reproduction commands.
 
+The [worker environment optimization](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-rlm-overhead.md)
+now keeps Claude Code and the reference tokenizer alive across turns. The
+matched sixteen-turn run took 116.1 seconds with process restarts versus 87.5
+seconds with reuse; estimated time outside provider calls fell from 16.4 to
+1.45 seconds. Coverage was 29/36 versus 31/36 and recall stayed 11/11. Cloud
+generation also varied, so the full elapsed-time difference is not solely a
+transport effect. The original conversation continued through turn 22.
+
+`worker_environment.py` owns the sequential transports and fails closed on
+timeouts, EOF and changed session identity. Persistent mode is the bridge
+default; `--one-shot-workers` selects the earlier lifecycle. No response cache
+or source-validation bypass was introduced. The new report records the current
+server root, timing components, independent audits and restart commands.
+
 ## Earlier Qwen2.5 target/draft experiment
 
 The earlier pair is Qwen2.5-14B-Instruct / Qwen2.5-3B-Instruct, both Q4_K_M.

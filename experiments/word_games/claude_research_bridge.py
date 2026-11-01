@@ -4,6 +4,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import signal
 import subprocess
 import threading
 import time
@@ -12,6 +13,7 @@ import uuid
 from .common import read, write, sha, digest
 from .research_profile import (build_catalog, menu, authorize, validate_mapping, translate, KEYS)
 from .golf_poker_proxy import reference_counts
+from .worker_environment import ClaudeWorker, ReferenceTokenizer
 from experiments.word_games_triton.validate import Client
 
 QUERIES = [
@@ -89,7 +91,7 @@ def frozen_source_path(root,path):
 
 
 class ResearchBridge:
-    def __init__(self, root, model='sonnet', resume_from=None):
+    def __init__(self, root, model='sonnet', resume_from=None, persistent=True):
         self.root=root
         root.mkdir(parents=True,exist_ok=False)
         self.catalog=build_catalog()
@@ -104,6 +106,8 @@ class ResearchBridge:
         self.mapping=None
         self.interactive=resume_from is not None
         self.base_revision=0
+        self.persistent=persistent
+        self.live_diagnostics={'private/worker_stderr.txt','private/tokenizer_stderr.txt'}
         parent=None
         parent_path=None
         if resume_from is not None:
@@ -123,7 +127,8 @@ class ResearchBridge:
         write(root/'private'/'catalog.json',self.catalog)
         write(root/'private'/'control.json',{'canary':self.canary,'session_id':self.session_id})
         producer_paths=[Path(__file__),Path('experiments/word_games/research_profile.py'),
-                        Path('experiments/word_games/common.py'),Path('experiments/word_games/golf_poker_proxy.py')]
+                        Path('experiments/word_games/common.py'),Path('experiments/word_games/golf_poker_proxy.py'),
+                        Path('experiments/word_games/worker_environment.py')]
         self.producer={'study':'word-games-claude-research-thread-v1','exploratory':True,
             'requested_worker_model':model,'claude_version':subprocess.check_output(['claude','--version'],text=True).strip(),
             'session_id':self.session_id,'source_hashes':{str(p):sha(p) for p in producer_paths},
@@ -136,6 +141,8 @@ class ResearchBridge:
             'parent_result_sha256':sha(parent_path) if parent_path else None,
             'worker_access':'read-only file tools, restricted directories, no Bash/MCP/web/agents',
             'source_quotes_disclosed':False,'local_serving_config_changed':False}
+        self.producer['worker_transport']='persistent_stream_json' if persistent else 'process_per_turn'
+        self.producer['tokenizer_transport']='persistent_json_lines' if persistent else 'process_per_request'
         write(root/'producer.json',self.producer)
         for p in producer_paths:
             dest=frozen_source_path(root,p)
@@ -152,6 +159,9 @@ class ResearchBridge:
         if self.mapping is None:
             self.mapping=validate_mapping(json.loads(Client().complete(prompt,root/'mapping_call',768)))
         write(root/'public'/'mapping.json',self.mapping)
+        self.worker=ClaudeWorker(model,SYSTEM+self.canary,SCHEMA,self.session_id,
+            persistent=persistent,resume=self.already_called,stderr_path=root/'private/worker_stderr.txt')
+        self.tokenizer=ReferenceTokenizer(root/'private/tokenizer_stderr.txt') if persistent else None
         print(json.dumps({'ready':True,'session_id':self.session_id,'metaphor':self.mapping['name']}),flush=True)
 
     def query(self, query_id, topic=None, question=None):
@@ -175,36 +185,13 @@ class ResearchBridge:
             turn=self.root/'private'/'turns'/query_id
             write(turn/'request.json',{'query_id':query_id,'topic':topic,'prompt':prompt,
                                      'session_id':self.session_id})
-            command=['claude','--safe-mode','--restricted','--setting-sources','',
-                '--strict-mcp-config','--mcp-config','{"mcpServers":{}}','--disable-slash-commands',
-                '--no-chrome','--permission-mode','dontAsk','--tools','Read,Grep,Glob',
-                '--allowedTools','Read,Grep,Glob','--model',self.model,
-                '--system-prompt',SYSTEM+self.canary,'--json-schema',json.dumps(SCHEMA),
-                '-p','--output-format','stream-json','--verbose']
-            command += ['--resume' if self.already_called else '--session-id',self.session_id]
-            env=dict(os.environ)
-            env.pop('CLAUDECODE',None)
-            env['CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC']='1'
-            # Keep account authentication; bare mode would disable the subscription.
             start=time.perf_counter()
             self.already_called=True
             try:
-                with (turn/'worker.jsonl').open('x') as stdout,(turn/'stderr.txt').open('x') as stderr:
-                    process=subprocess.run(command,input=prompt,text=True,stdout=stdout,stderr=stderr,
-                        env=env,timeout=300,check=False)
-                seconds=time.perf_counter()-start
-                events=[json.loads(line) for line in (turn/'worker.jsonl').read_text().splitlines() if line.strip()]
-                results=[e for e in events if e.get('type')=='result']
-                if process.returncode or len(results)!=1 or results[0].get('is_error'):
-                    raise ValueError('Claude Code worker did not return a successful result')
-                result=results[0]
-                if result.get('session_id')!=self.session_id:
-                    raise ValueError('worker conversation identity changed')
-                proposal=result.get('structured_output')
-                if proposal is None:
-                    from .golf_poker_proxy import parsed_object
-                    proposal=parsed_object(result['result'])
+                result,events,seconds=self.worker.complete(prompt,turn)
+                proposal=result['structured_output']
                 write(turn/'proposal.json',proposal)
+                validation_start=time.perf_counter()
                 facts,receipts=authorize(proposal,self.catalog,{f['topic'] for f in scoped.values()})
                 public_facts=[{**f,'id':'finding:'+f['id'][1:]} for f in facts]
                 if self.interactive:
@@ -221,18 +208,35 @@ class ResearchBridge:
                     raise AssertionError('private canary crossed boundary')
                 if translate(packet,self.mapping,reverse=True)!=plain:
                     raise AssertionError('mapping failed roundtrip')
+                validation_seconds=time.perf_counter()-validation_start
                 tools=[]
                 for e in events:
                     if e.get('type')=='assistant':
                         for b in e.get('message',{}).get('content',[]):
                             if b.get('type')=='tool_use':tools.append(b['name'])
+                tokenization_start=time.perf_counter()
+                counts=self.tokenizer.counts if self.tokenizer else reference_counts
+                public_tokens=counts([json.dumps(packet,separators=(',',':'))])[0]
+                tokenization_seconds=time.perf_counter()-tokenization_start
+                # Live diagnostic streams may grow after a checkpoint. Snapshot
+                # their current bytes per turn; never hash mutable streams as
+                # if they were immutable evidence.
+                for name in self.live_diagnostics:
+                    path=self.root/name
+                    if path.exists():
+                        with (turn/path.name).open('xb') as destination:
+                            destination.write(path.read_bytes())
                 row={'query_id':query_id,'session_id':self.session_id,'topic':topic,'seconds':seconds,
                     'requested_facts':len(scoped),'proposed_citations':len(proposal['citations']),
                     'released_facts':len(facts),'rejected_citations':sum(not r['accepted'] for r in receipts),
                     'newly_released_ids':sorted({f['id'] for f in facts}-self.released),
                     'tool_calls':tools,'worker_usage':result.get('usage'),
                     'worker_model_usage':result.get('modelUsage'),
-                    'public_reference_tokens':reference_counts([json.dumps(packet,separators=(',',':'))])[0],
+                    'public_reference_tokens':public_tokens,
+                    'validation_seconds':validation_seconds,'tokenization_seconds':tokenization_seconds,
+                    'cli_duration_ms':result.get('duration_ms'),'cumulative_api_duration_ms':result.get('duration_api_ms'),
+                    'worker_transport':self.producer['worker_transport'],
+                    'worker_pid':self.worker.stream.process.pid if self.worker.stream else None,
                     'packet_sha256':digest(packet),'worker_log_sha256':sha(turn/'worker.jsonl')}
                 self.released.update(f['id'] for f in facts)
                 write(turn/'receipts.json',receipts)
@@ -241,11 +245,17 @@ class ResearchBridge:
                 self.rows.append(row)
                 print(json.dumps({'query_id':query_id,'released':len(facts),'expected':len(scoped),
                                   'seconds':round(seconds,2),'tool_calls':tools}),flush=True)
+                checkpoint_start=time.perf_counter()
                 if self.interactive:self.finish(checkpoint=query_id)
                 elif len(self.rows)==len(QUERIES):self.finish()
+                write(turn/'latency.json',{'worker_seconds':seconds,'validation_seconds':validation_seconds,
+                    'tokenization_seconds':tokenization_seconds,
+                    'checkpoint_seconds':time.perf_counter()-checkpoint_start,
+                    'request_processing_seconds':time.perf_counter()-start})
                 return packet
             except Exception as exc:
                 self.poisoned=True
+                self.close()
                 write(turn/'error.json',{'type':type(exc).__name__,'message':str(exc),
                                          'seconds':time.perf_counter()-start})
                 self.finish(error=type(exc).__name__)
@@ -261,12 +271,18 @@ class ResearchBridge:
             'total_public_reference_tokens':sum(r['public_reference_tokens'] for r in self.rows),
             'population_accuracy_established':False,'general_free_text_firewall':False,
             'sources_unchanged':all(sha(p)==h for p,h in self.producer['source_hashes'].items()),
-            'artifacts':{str(p.relative_to(self.root)):sha(p) for p in self.root.rglob('*') if p.is_file()}}
+            'live_diagnostics_excluded':sorted(self.live_diagnostics),
+            'artifacts':{str(p.relative_to(self.root)):sha(p) for p in self.root.rglob('*')
+                         if p.is_file() and str(p.relative_to(self.root)) not in self.live_diagnostics}}
         write(self.root/('checkpoints/'+checkpoint+'.json' if checkpoint else 'result.json'),result)
 
+    def close(self):
+        self.worker.close()
+        if self.tokenizer:self.tokenizer.close()
 
-def serve(root,port,model,resume_from=None):
-    bridge=ResearchBridge(root,model,resume_from)
+
+def serve(root,port,model,resume_from=None,persistent=True):
+    bridge=ResearchBridge(root,model,resume_from,persistent)
     class Handler(BaseHTTPRequestHandler):
         def log_message(self,*args):pass
         def respond(self,status,payload):
@@ -277,7 +293,8 @@ def serve(root,port,model,resume_from=None):
             if self.path=='/health':
                 self.respond(200,{'ready':not bridge.poisoned,'turns':bridge.base_revision+len(bridge.rows),
                                   'planned_turns':None if bridge.interactive else len(QUERIES),
-                                  'interactive_questions':bridge.interactive,'session_id':bridge.session_id})
+                                  'interactive_questions':bridge.interactive,'session_id':bridge.session_id,
+                                  'busy':bridge.lock.locked(),'worker_transport':bridge.producer['worker_transport']})
             elif self.path=='/mapping':self.respond(200,bridge.mapping)
             else:self.respond(404,{'error':'not_found'})
         def do_POST(self):
@@ -293,8 +310,18 @@ def serve(root,port,model,resume_from=None):
                 self.respond(400 if not bridge.poisoned else 502,{'error':'request_blocked' if not bridge.poisoned else 'worker_unavailable'})
     server=ThreadingHTTPServer(('127.0.0.1',port),Handler)
     write(root/'server.json',{'pid':os.getpid(),'url':f'http://127.0.0.1:{port}',
-                              'session_id':bridge.session_id,'worker_process_per_turn':True})
-    server.serve_forever()
+                              'session_id':bridge.session_id,'worker_process_per_turn':not persistent})
+    previous=signal.getsignal(signal.SIGTERM)
+    def stop(signum,frame):raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM,stop)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+        bridge.close()
+        signal.signal(signal.SIGTERM,previous)
 
 
 if __name__=='__main__':
@@ -303,5 +330,6 @@ if __name__=='__main__':
     p.add_argument('--port',type=int,default=18091)
     p.add_argument('--model',default='sonnet')
     p.add_argument('--resume-from',type=Path)
+    p.add_argument('--one-shot-workers',action='store_true',help='Use the earlier process-per-request transport')
     a=p.parse_args()
-    serve(a.output,a.port,a.model,a.resume_from)
+    serve(a.output,a.port,a.model,a.resume_from,not a.one_shot_workers)
