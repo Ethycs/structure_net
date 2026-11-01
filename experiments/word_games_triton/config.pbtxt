@@ -1,0 +1,13 @@
+name: "word-games-qwen38-native"
+backend: "python"
+max_batch_size: 0
+input [
+  { name: "text_input" data_type: TYPE_STRING dims: [1] },
+  { name: "sampling_parameters" data_type: TYPE_STRING dims: [1] optional: true }
+]
+output [
+  { name: "text_output" data_type: TYPE_STRING dims: [1] },
+  { name: "generation_info" data_type: TYPE_STRING dims: [1] }
+]
+instance_group [{ count: 1 kind: KIND_CPU }]
+parameters: { key: "EXECUTION_ENV_PATH" value: { string_value: "/opt/pixi-gemma4/.pixi/envs/default" } }
