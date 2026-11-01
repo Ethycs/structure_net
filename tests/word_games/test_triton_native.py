@@ -76,3 +76,67 @@ def test_mutable_deployment_state_can_transition_twice(monkeypatch, tmp_path):
     deploy.save_state({'running': False, 'evidence': 'first'})
     deploy.save_state({'running': True, 'evidence': 'second'})
     assert json.loads((tmp_path / 'state.json').read_text()) == {'running': True, 'evidence': 'second'}
+
+
+def test_public_prefix_restores_every_request_and_never_saves_user_data(backend):
+    model = backend.TritonPythonModel()
+    model.prefixes = [{'name': 'sender', 'text': 'PUBLIC\n', 'tokens': [1, 2], 'filename': 'fixed.bin'}]
+    model.tokenize = Mock(return_value=[1, 2, 999])
+    model.call = Mock(return_value={'n_restored': 2})
+    for private in ('private event one', 'unrelated secret two'):
+        prompt, info = model.restore_public_prefix('PUBLIC\n' + private, 'formatted ' + private)
+        assert prompt == [1, 2, 999] and info['hit'] and info['tokens'] == 2
+    assert model.call.call_count == 2
+    assert all(c.args == ('POST', '/slots/0?action=restore', {'filename': 'fixed.bin'})
+               for c in model.call.call_args_list)
+    assert model.prefixes[0]['tokens'] == [1, 2]
+
+
+def test_unknown_or_mismatching_prefix_cannot_reuse_previous_state(backend):
+    model = backend.TritonPythonModel()
+    model.prefixes = [{'name': 'sender', 'text': 'PUBLIC\n', 'tokens': [1, 2], 'filename': 'fixed.bin'}]
+    model.call = Mock()
+    model.tokenize = Mock(return_value=[1, 3, 999])
+    assert not model.restore_public_prefix('PRIVATE', 'formatted')[1]['hit']
+    model.tokenize.assert_not_called()
+    assert model.restore_public_prefix('PUBLIC\nprivate', 'formatted') == (
+        'formatted', {'hit': False, 'reason': 'token_prefix_mismatch'})
+    model.call.assert_not_called()
+    model.tokenize.return_value = [1, 2, 999]
+    model.call.return_value = {'n_restored': 1}
+    with pytest.raises(ValueError, match='restore length'):
+        model.restore_public_prefix('PUBLIC\nprivate', 'formatted')
+
+
+def test_prefix_build_is_zero_generation_and_drops_boundary_token(backend, tmp_path):
+    model = backend.TritonPythonModel()
+    model.prefixes, model.prefix_dir = [], tmp_path
+    model.tokenize = Mock(return_value=[1, 2, 3])
+    model.call = Mock(side_effect=[{'content': '{', 'tokens_predicted': 1, 'tokens_cached': 2}, {'n_saved': 2}, {}])
+    model.initialize_prefixes([{'name': 'sender', 'text': 'PUBLIC\n'}])
+    body = model.call.call_args_list[0].args[2]
+    assert body == {'prompt': [1, 2], 'n_predict': 0, 'cache_prompt': False, 'id_slot': 0}
+    assert model.call.call_args_list[-1].args == ('POST', '/slots/0?action=erase', {})
+    receipt = json.loads((tmp_path / 'receipt.json').read_text())
+    assert receipt['public_only'] and receipt['rebuild_on_every_model_load']
+
+
+def test_prefix_snapshot_rejects_any_extra_cached_token(backend, tmp_path):
+    model = backend.TritonPythonModel()
+    model.prefixes, model.prefix_dir = [], tmp_path
+    model.tokenize = Mock(return_value=[1, 2, 3])
+    model.call = Mock(return_value={'tokens_cached': 3})
+    with pytest.raises(ValueError, match='unexpected tokens'):
+        model.initialize_prefixes([{'name': 'sender', 'text': 'PUBLIC\n'}])
+    assert model.call.call_count == 1
+
+
+def test_sender_and_receiver_caches_are_distinct(backend):
+    model = backend.TritonPythonModel()
+    model.prefixes = [{'name': n, 'text': n + '\n', 'tokens': [1, t], 'filename': n + '.bin'}
+                      for n, t in [('sender', 2), ('receiver', 3)]]
+    model.tokenize = Mock(return_value=[1, 3, 9])
+    model.call = Mock(return_value={'n_restored': 2})
+    _, info = model.restore_public_prefix('receiver\npacket', 'formatted')
+    assert info['name'] == 'receiver'
+    assert model.call.call_args.args[2] == {'filename': 'receiver.bin'}

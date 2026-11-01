@@ -1,9 +1,11 @@
 """Triton Python backend: one native server per explicit model instance."""
 import http.client
+import hashlib
 import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import time
 
@@ -37,8 +39,16 @@ def sampling(text):
 class TritonPythonModel:
     def initialize(self, args):
         self.process = self.log = self.http = None
+        self.prefixes = []
+        self.prefix_dir = None
         config = json.loads((Path(__file__).parent / 'runtime.json').read_text())
         self.profile = config['profile']
+        if config.get('public_prefixes'):
+            self.prefix_dir = Path('/runtime') / ('public-prefixes-' + str(time.time_ns()))
+            # These files contain public instructions only. Read access lets
+            # the host benchmark audit the container-owned snapshot receipts.
+            self.prefix_dir.mkdir(mode=0o755)
+            config['native_args'] = [*config['native_args'], '--slot-save-path', str(self.prefix_dir)]
         self.http = http.client.HTTPConnection('127.0.0.1', 18080, timeout=240)
         self.log = open('/runtime/native-' + str(time.time_ns()) + '.log', 'w')
         env = dict(os.environ)
@@ -59,14 +69,66 @@ class TritonPythonModel:
                     raise RuntimeError('native process exited; inspect /runtime/native-*.log')
                 try:
                     self.call('GET', '/health')
-                    return
+                    break
                 except (OSError, http.client.HTTPException, RuntimeError):
                     self.http.close()
                     time.sleep(.25)
-            raise TimeoutError('native model load exceeded 240 seconds')
+            else:
+                raise TimeoutError('native model load exceeded 240 seconds')
+            self.initialize_prefixes(config.get('public_prefixes', []))
         except BaseException:
             self.finalize()
             raise
+
+    def tokenize(self, text):
+        return self.call('POST', '/tokenize', {'content': text, 'add_special': True,
+                                             'parse_special': True})['tokens']
+
+    def initialize_prefixes(self, prefixes):
+        """Snapshot only operator-configured public text, before any user request."""
+        started = time.perf_counter()
+        for prefix in prefixes:
+            if set(prefix) != {'name', 'text'} or not prefix['text']:
+                raise ValueError('named, nonempty public prefix required')
+            # Leave the final token out to tolerate BPE merges at the boundary.
+            # Every hit also verifies the exact token prefix of the full prompt.
+            tokens = self.tokenize('<|im_start|>user\n' + prefix['text'])[:-1]
+            if not tokens:
+                raise ValueError('empty public prefix tokens')
+            filename = hashlib.sha256(json.dumps(tokens).encode()).hexdigest() + '.bin'
+            evaluated = self.call('POST', '/completion', {
+                'prompt': tokens, 'n_predict': 0, 'cache_prompt': False, 'id_slot': 0})
+            # This pinned runtime samples one unused token even for n_predict=0,
+            # but does not evaluate it into the sequence. Verify stored length,
+            # not the response's sampled-token counter, before accepting state.
+            if evaluated.get('tokens_cached') != len(tokens):
+                raise ValueError('prefix warmup cached unexpected tokens')
+            saved = self.call('POST', '/slots/0?action=save', {'filename': filename})
+            if saved.get('n_saved') != len(tokens):
+                raise ValueError('public snapshot includes unexpected tokens')
+            self.prefixes.append({**prefix, 'tokens': tokens, 'filename': filename,
+                                  'save': saved, 'prefill': evaluated})
+        if prefixes:
+            self.call('POST', '/slots/0?action=erase', {})
+            receipt = {'seconds': time.perf_counter() - started, 'prefixes': self.prefixes,
+                       'public_only': True, 'rebuild_on_every_model_load': True}
+            (self.prefix_dir / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+
+    def restore_public_prefix(self, prompt, formatted):
+        for prefix in self.prefixes:
+            if not prompt.startswith(prefix['text']):
+                continue
+            tokens = self.tokenize(formatted)
+            count = len(prefix['tokens'])
+            if tokens[:count] != prefix['tokens'] or len(tokens) <= count:
+                return formatted, {'hit': False, 'reason': 'token_prefix_mismatch'}
+            started = time.perf_counter()
+            restored = self.call('POST', '/slots/0?action=restore', {'filename': prefix['filename']})
+            if restored.get('n_restored') != count:
+                raise ValueError('public prefix restore length mismatch')
+            return tokens, {'hit': True, 'name': prefix['name'], 'tokens': count,
+                            'restore_seconds': time.perf_counter() - started, 'receipt': restored}
+        return formatted, {'hit': False, 'reason': 'unrecognized_public_prefix'}
 
     def call(self, method, path, body=None):
         encoded = json.dumps(body).encode() if body is not None else None
@@ -97,12 +159,15 @@ class TritonPythonModel:
                 expected = '<|im_start|>user\n' + prompt.strip() + '<|im_end|>\n'
                 if expected not in formatted or not formatted.endswith('<|im_start|>assistant\n<think>\n\n</think>\n\n'):
                     raise ValueError('embedded template changed')
+                completion_prompt, prefix_info = self.restore_public_prefix(prompt, formatted)
                 result = self.call('POST', '/completion', {
-                    'prompt': formatted, 'n_predict': maximum, 'temperature': 0, 'seed': 73,
-                    'repeat_penalty': 1.0, 'cache_prompt': False, 'json_schema': {'type': 'object'},
+                    'prompt': completion_prompt, 'n_predict': maximum, 'temperature': 0, 'seed': 73,
+                    'repeat_penalty': 1.0, 'cache_prompt': prefix_info['hit'], 'id_slot': 0,
+                    'json_schema': {'type': 'object'},
                     'stream': False, 'return_tokens': True})
                 info = {k: v for k, v in result.items() if k != 'content'}
                 info['profile'] = self.profile
+                info['public_prefix'] = prefix_info
                 responses.append(pb.InferenceResponse(output_tensors=[
                     pb.Tensor('text_output', np.array([result['content']], dtype=object)),
                     pb.Tensor('generation_info', np.array([json.dumps(info)], dtype=object))]))
@@ -124,3 +189,5 @@ class TritonPythonModel:
                 self.process.wait(timeout=10)
         if self.log:
             self.log.close()
+        if getattr(self, 'prefix_dir', None):
+            shutil.rmtree(self.prefix_dir, ignore_errors=True)
