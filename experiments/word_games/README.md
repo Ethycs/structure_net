@@ -158,3 +158,19 @@ remain; this is not deployment or accuracy approval. See
 [the measured report](../../docs/08%20-%20Analysis/2026-10-31_word-games-moe-placement.md)
 and its prospective plans. Individual experts split between CPU and GPU within
 each layer are a separate, unimplemented research direction.
+
+## Sampling-output acquisition patch
+
+`native_sampling/sampling-output-once.patch` adds a combined sampling-output
+view and reuses it during grammar rejection. `prepare_sampling_runtime.py`
+builds matched control/candidate libraries from pinned b11960 source;
+`check_sampling_output.py` verifies real GPU outputs and synchronization counts;
+`run_sampling_output.py` compares the frozen requests with packed38 placement.
+Use Pixi from the repository root and fresh output directories. The replay
+temporarily unloads Qwen3-8B from the regular 2060 and restores it afterward.
+
+Native tests reduced sampling synchronization from six calls to one, or ten
+to one after grammar rejection. All 36 replay outputs matched exactly. Timing
+is exploratory: median per-request throughput improved 0.74%, while one slow
+control request dominates the larger aggregate difference. See the
+[implementation, measurements and reproduction commands](../../docs/08%20-%20Analysis/2026-10-31_word-games-sampling-output-once.md).
