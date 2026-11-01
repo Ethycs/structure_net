@@ -39,11 +39,35 @@ event five of the persistent workflow, and a separate failed name-only lookup.
 It distinguishes correct host mutations and firewall rejection from model task
 success. Normal operation is not yet reliable across the tested workflow.
 
+The supplied [V3 autonomous mapping bundle has been reviewed](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-v3-bundle-review.md).
+Its saved 16-event trajectory, 91 mapping probes and four broader controls pass.
+Ordinary saved prompt/output pairs fit the current context; fresh mapping creation
+needs a higher output cap. Its operational mapping pipeline is not integrated,
+and replay success is not a fresh Qwen accuracy result.
+
 The supplied [V4 bundle has been reviewed](../../docs/08%20-%20Analysis/2026-11-01_word-games-v4-bundle-review.md):
 its saved trajectories and checkpoint audits replay successfully, but its
 generated schema mappings/capsules are not integrated here. It requires adapting
 the disclosed view to this project's policy and increasing generation budgets
 for fresh mapping/capsule creation. The active vendor remains V2.
+
+## Golf through poker on the central proxy
+
+`golf_poker_proxy.py` runs a small stochastic golf game through a model-generated
+poker vocabulary, alongside direct golf controls. The host executes moves and
+scores expected-stroke optimality; `audit_golf_poker_proxy.py` independently checks
+the trajectory and solves the oracle by policy iteration. This is a separate
+task fixture, not deployment of the V3 placement codec.
+
+```sh
+pixi run python -m experiments.word_games.golf_poker_proxy --model codex_sdk/gpt-5.6-sol --output data/experiments/word_games/NEW_GOLF_POKER
+```
+
+Use a fresh output directory. The central proxy returns zero usage for this SDK
+route, so the experiment uses the running local Qwen server's read-only tokenizer
+to report visible token-equivalent throughput. It does not measure local GPU
+generation speed or native provider tokens. See the
+[measured proxy task report](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-golf-poker-proxy.md).
 
 ## Earlier Qwen2.5 target/draft experiment
 
