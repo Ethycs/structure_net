@@ -1,8 +1,12 @@
 # WORD_GAMES
 
-A two-agent information firewall experiment. The active model pair is
-**Qwen2.5-14B-Instruct (target) and Qwen2.5-3B-Instruct (draft), Q4_K_M GGUF**.
-The target chooses a
+A two-agent information firewall experiment. The current research endpoint is
+**Empero's Qwen3.8-35B-A3B distillation, Q4_K_M**, served as
+`word-games-qwen38-native` at `http://127.0.0.1:8020` through Triton. The
+`free_whole1024` configuration uses the 3060 and both 2060 cards, Q8 KV,
+Flash Attention, no speculative draft and no public-prefix cache. This
+endpoint serves model calls; the host bridge runs through the separate Python
+orchestrator. The model chooses a
 metaphor from the public task structure before private source details arrive.
 The source agent proposes typed actions; a host policy and the imported
 Neighborhood Bridge backend validate them. The receiving agent gets only
@@ -15,7 +19,30 @@ synthetic scenarios. The receiver's structured state accuracy, the sender's
 operation accuracy, and disclosure checks are reported separately. Permitted
 actions and timing remain possible covert channels.
 
-Run the active Qwen workflow from the repository root with the locked environment:
+Run ordinary live functionality from the repository root against the already
+loaded research endpoint:
+
+```sh
+pixi run python -m experiments.word_games_triton.normal_operation --output data/experiments/word_games/NEW_NORMAL_OPERATION
+```
+
+This uses actual sender-selected retrievals, host-applied transactions and fresh
+receiver calls. It covers four independent ordinary cases followed by seven
+dependent events on one persistent synthetic state. It stops the dependent
+workflow at its first failed event and never repairs state using expected answers.
+Receiver state accuracy, sender fidelity, actual mutation correctness and prose
+fidelity are separate measurements.
+
+The [current live functionality tracker](../../docs/08%20-%20Analysis/2026-11-01_word-games-normal-operation.md)
+records 4/4 ordinary independent tasks passing, a receiver state omission at
+event five of the persistent workflow, and a separate failed name-only lookup.
+It distinguishes correct host mutations and firewall rejection from model task
+success. Normal operation is not yet reliable across the tested workflow.
+
+## Earlier Qwen2.5 target/draft experiment
+
+The earlier pair is Qwen2.5-14B-Instruct / Qwen2.5-3B-Instruct, both Q4_K_M.
+Historical reproduction commands use the locked environment:
 
 ```sh
 pixi run --locked -e word-games test-word-games

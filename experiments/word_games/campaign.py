@@ -53,9 +53,9 @@ def paired_checks(metaphor):
     return checks
 
 
-def evaluate_case(client, case, out, metaphor):
+def evaluate_case(client, case, out, metaphor, *, engine_context=None):
     out.mkdir(parents=True, exist_ok=False)
-    engine, context = setup(case)
+    engine, context = setup(case) if engine_context is None else engine_context
     write(out / "host_case.json", case)
     write(out / "before.json", engine.snapshot())
     write(out / "context.json", context)
