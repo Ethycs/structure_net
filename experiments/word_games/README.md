@@ -69,6 +69,34 @@ to report visible token-equivalent throughput. It does not measure local GPU
 generation speed or native provider tokens. See the
 [measured proxy task report](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-golf-poker-proxy.md).
 
+## Claude Code research worker behind WORD_GAMES
+
+`claude_research_bridge.py` provides a loopback proxy between a receiving client
+and a read-only Claude Code worker, preserving one native conversation ID across
+turns. `research_profile.py` defines 36 explicitly authorized repository facts;
+the source worker retrieves evidence and the host emits approved values in a
+model-chosen archival-ledger schema. Raw worker prose and quotes remain source-side.
+This is a new bounded research profile, separate from the placement Engine.
+
+`run_claude_research_thread.py` executes sixteen dependent turns through the proxy;
+`audit_claude_research_thread.py` checks the private/public boundary and source
+receipts. The [measured thread](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-claude-research-thread.md)
+released 30/36 unique facts and recalled 11/11 facts without source rereads.
+The frozen benchmark executes sixteen queries once. `--resume-from` starts an
+interactive continuation in a fresh artifact directory, preserving the native
+conversation and mapping. Each completed turn writes a durable checkpoint.
+`ask_claude_research_bridge.py` accepts natural-language questions within the
+approved catalog; it fetches the next query ID and saves only the authorized
+response. The same conversation reached twenty turns across restarts.
+
+```sh
+pixi run python -m experiments.word_games.ask_claude_research_bridge --topic all --question 'What does the NCM summarization evidence establish?' --output data/experiments/word_games/NEW_RESEARCH_QUESTION
+```
+
+The default URL is `http://127.0.0.1:18091`. Use a fresh output directory.
+This remains a bounded fact channel; questions do not authorize arbitrary
+worker prose to cross. The report includes restart and reproduction commands.
+
 ## Earlier Qwen2.5 target/draft experiment
 
 The earlier pair is Qwen2.5-14B-Instruct / Qwen2.5-3B-Instruct, both Q4_K_M.
