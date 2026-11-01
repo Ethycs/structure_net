@@ -174,3 +174,18 @@ to one after grammar rejection. All 36 replay outputs matched exactly. Timing
 is exploratory: median per-request throughput improved 0.74%, while one slow
 control request dominates the larger aggregate difference. See the
 [implementation, measurements and reproduction commands](../../docs/08%20-%20Analysis/2026-10-31_word-games-sampling-output-once.md).
+
+## Grammar logits on demand
+
+The next opt-in patch keeps full vocabulary logits on the GPU when an eligible
+greedy winner passes grammar. Apply `native_sampling/grammar-on-demand.patch`
+and `native_sampling/grammar-partitioned-preview.patch` after the acquisition
+patch. `prepare_grammar_runtime.py`, `prepare_grammar_reduction.py`,
+`check_grammar_reduction.py` and `run_grammar_reduction.py` build and verify the
+candidate with `LLAMA_WORD_GAMES_GREEDY_PREVIEW=1`.
+
+The final two full replays preserved all 72 paired outputs and reduced raw
+vocabulary readback by 99.96%. Throughput was 48.08 versus 48.51 tok/s pooled;
+the median paired request was about 3% slower. This remains an experimental
+transfer optimization, with no production promotion. See the
+[measured report and fresh-directory reproduction commands](../../docs/08%20-%20Analysis/2026-10-31_word-games-grammar-on-demand.md).

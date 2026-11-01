@@ -1,0 +1,443 @@
+--- a/include/llama.h
++++ b/include/llama.h
+@@ -1168,6 +1168,15 @@
+     LLAMA_API struct llama_sampling_output llama_get_sampling_output_ith(
+             struct llama_context * ctx, int32_t i);
+ 
++    // Experimental, opt-in greedy grammar preview. The ordinary snapshot ABI
++    // stays unchanged; the extra scalar rejects non-finite backend logits.
++    LLAMA_API struct llama_sampling_output llama_get_sampling_preview_ith(
++            struct llama_context * ctx, int32_t i, float * finite_sum);
++    // Always the full, unmodified vocabulary, materializing deferred output.
++    LLAMA_API float * llama_get_raw_logits_ith(struct llama_context * ctx, int32_t i);
++    LLAMA_API struct llama_sampler * llama_sampler_init_greedy_preview(void);
++    LLAMA_API bool llama_sampler_is_greedy_preview(const struct llama_sampler * smpl);
++
+     // Get all output token embeddings.
+     // when pooling_type == LLAMA_POOLING_TYPE_NONE or when using a generative model,
+     // the embeddings for which llama_batch.logits[i] != 0 are stored contiguously
+--- a/src/llama-sampler.cpp
++++ b/src/llama-sampler.cpp
+@@ -1537,6 +1537,27 @@
+             /* .k = */ k,
+         }
+     );
++}
++
++// A tagged top-2 preview; the original CPU chain remains the sampling authority.
++static llama_sampler * greedy_preview_clone(const llama_sampler *) {
++    return llama_sampler_init_greedy_preview();
++}
++static llama_sampler_i greedy_preview_i = [] {
++    auto iface = llama_sampler_top_k_i;
++    iface.clone = greedy_preview_clone;
++    return iface;
++}();
++
++llama_sampler * llama_sampler_init_greedy_preview(void) {
++    auto * result = llama_sampler_init_top_k(2);
++    result->iface = &greedy_preview_i;
++    return result;
++}
++
++bool llama_sampler_is_greedy_preview(const llama_sampler * smpl) {
++    return smpl && llama_sampler_chain_n(smpl) == 1 &&
++        static_cast<const llama_sampler_chain *>(smpl->ctx)->samplers[0].ptr->iface == &greedy_preview_i;
+ }
+ 
+ // top-p
+--- a/src/llama-graph.h
++++ b/src/llama-graph.h
+@@ -973,6 +973,7 @@
+     std::vector<ggml_tensor *> t_sampled_probs;
+     std::vector<ggml_tensor *> t_sampled_logits;
+     std::vector<ggml_tensor *> t_candidates;
++    std::vector<ggml_tensor *> t_preview_sum;
+ 
+     std::vector<llm_graph_input_ptr> inputs;
+     std::vector<llm_graph_fused_node> fused_nodes;
+--- a/src/llama-graph.cpp
++++ b/src/llama-graph.cpp
+@@ -1414,6 +1414,7 @@
+     t_layer_inp.resize(LLAMA_MAX_LAYERS + 1);
+     std::fill(t_layer_inp.begin(), t_layer_inp.end(), nullptr);
+ 
++    t_preview_sum.clear();
+     t_sampled.clear();
+     t_sampled_probs.clear();
+     t_sampled_logits.clear();
+@@ -1465,6 +1466,9 @@
+                 ggml_set_output(t_layer_inp[il]);
+             }
+         }
++    }
++    for (auto * tensor : t_preview_sum) {
++        if (tensor) ggml_set_output(tensor);
+     }
+     for (auto * tensor : t_sampled) {
+         if (tensor != nullptr) {
+@@ -4235,6 +4239,7 @@
+         }
+     }
+ 
++    res->t_preview_sum.resize(n_rows, nullptr);
+     res->t_sampled.resize(n_rows, nullptr);
+     res->t_sampled_probs.resize(n_rows, nullptr);
+     res->t_sampled_logits.resize(n_rows, nullptr);
+@@ -4267,6 +4272,14 @@
+ 
+             ggml_tensor * logits_seq = ggml_view_1d(ctx0, logits_t, logits_t->ne[0], row * logits_t->nb[1]);
+             ggml_format_name(logits_seq, "logits_seq_%d_%u", seq_id, i);
++
++            if (llama_sampler_is_greedy_preview(sampler)) {
++                auto * guard = ggml_sum_rows(ctx0, logits_seq);
++                ggml_set_name(guard, "greedy_preview_sum");
++                if (active) res->t_preview_sum[row] = guard;
++                outs[1] = guard;
++                ggml_build_forward_select(gf, outs.data(), outs.size(), i_out);
++            }
+ 
+             struct llama_sampler_data data = {
+                 /*.logits       =*/ logits_seq,
+--- a/src/llama-context.h
++++ b/src/llama-context.h
+@@ -82,6 +82,8 @@
+     enum llama_pooling_type pooling_type() const;
+ 
+     float * get_logits();
++    float get_preview_sum_ith(int32_t i);
++    void materialize_deferred_logits();
+     float * get_logits_ith(int32_t i);
+ 
+     float * get_embeddings();
+@@ -311,6 +313,10 @@
+ 
+     // decode output (2-dimensional array: [n_outputs][n_vocab])
+     buffer_view<float> logits = {nullptr, 0};
++    // Only a single-output logical batch may defer its raw logits. The graph
++    // marks this tensor as output, so its storage survives until graph reuse.
++    ggml_tensor * deferred_logits = nullptr;
++    ggml_backend_t deferred_backend = nullptr;
+ 
+     // embeddings output (2-dimensional array: [n_outputs][n_embd])
+     // populated only when pooling_type == LLAMA_POOLING_TYPE_NONE
+@@ -335,6 +341,7 @@
+         buffer_view<float>       probs      = {nullptr, 0};
+         buffer_view<llama_token> candidates = {nullptr, 0};
+ 
++        buffer_view<float> preview_sum = {nullptr, 0};
+         std::vector<uint32_t> logits_count;
+         std::vector<uint32_t> probs_count;
+         std::vector<uint32_t> candidates_count;
+--- a/src/llama-context.cpp
++++ b/src/llama-context.cpp
+@@ -1027,7 +1027,24 @@
+     return cparams.pooling_type;
+ }
+ 
++void llama_context::materialize_deferred_logits() {
++    if (!deferred_logits) return;
++    GGML_ASSERT(logits.data && deferred_backend);
++    ggml_backend_tensor_get_async(deferred_backend, deferred_logits, logits.data,
++                                 0, model.vocab.n_tokens()*sizeof(float));
++    ggml_backend_synchronize(deferred_backend);
++    deferred_logits = nullptr;
++    deferred_backend = nullptr;
++}
++
++float llama_context::get_preview_sum_ith(int32_t i) {
++    output_reorder();
++    if (!sampling.preview_sum.has_data()) return NAN;
++    return sampling.preview_sum.data[output_resolve_row(i)];
++}
++
+ float * llama_context::get_logits() {
++    materialize_deferred_logits();
+     output_reorder();
+ 
+     return logits.data;
+@@ -1063,6 +1080,7 @@
+ }
+ 
+ float * llama_context::get_logits_ith(int32_t i) {
++    materialize_deferred_logits();
+     output_reorder();
+ 
+     try {
+@@ -1659,6 +1677,9 @@
+     }
+ 
+     n_outputs = n_outputs_all;
++
++    deferred_logits = nullptr;
++    deferred_backend = nullptr;
+ 
+     const auto causal_attn_org = cparams.causal_attn;
+ 
+@@ -1903,6 +1924,9 @@
+         return -1;
+     }
+ 
++    deferred_logits = nullptr;
++    deferred_backend = nullptr;
++
+     const uint32_t n_tokens_all  = balloc->get_n_tokens();
+     const uint32_t n_outputs_all = balloc->get_n_outputs();
+ 
+@@ -2003,6 +2027,9 @@
+     do {
+         const auto & ubatch = mctx->get_ubatch();
+ 
++        // A following microbatch may reuse the deferred tensor storage.
++        materialize_deferred_logits();
++
+         // count the outputs in this ubatch
+         {
+             int32_t n_outputs_new = 0;
+@@ -2067,8 +2094,13 @@
+             t_embd = res->get_embd_pooled();
+         }
+ 
+-        // extract logits
+-        if (logits.data && t_logits && n_outputs > 0 && needs_raw_logits(ubatch, sampling.samplers)) {
++        bool has_preview = false;
++        for (const auto & entry : sampling.samplers) {
++            has_preview |= llama_sampler_is_greedy_preview(entry.second);
++        }
++        // Preview fallback needs raw logits, retained on-device for one output.
++        if (logits.data && t_logits && n_outputs > 0 &&
++            (has_preview || needs_raw_logits(ubatch, sampling.samplers))) {
+             ggml_backend_t backend_res = ggml_backend_sched_get_tensor_backend(sched.get(), t_logits);
+             GGML_ASSERT(backend_res != nullptr);
+             GGML_ASSERT(logits.data != nullptr);
+@@ -2078,7 +2110,12 @@
+             if (n_outputs) {
+                 GGML_ASSERT( n_outputs_prev + n_outputs <= n_outputs_all);
+                 GGML_ASSERT((n_outputs_prev + n_outputs)*n_vocab <= (int64_t) logits.size);
+-                ggml_backend_tensor_get_async(backend_res, t_logits, logits_out, 0, n_outputs*n_vocab*sizeof(float));
++                if (has_preview && n_outputs_all == 1 && n_outputs == 1 && n_outputs_prev == 0) {
++                    deferred_logits = t_logits;
++                    deferred_backend = backend_res;
++                } else {
++                    ggml_backend_tensor_get_async(backend_res, t_logits, logits_out, 0, n_outputs*n_vocab*sizeof(float));
++                }
+             }
+         }
+ 
+@@ -2174,6 +2211,8 @@
+ 
+         if (has_samplers) {
+             const auto stride = n_vocab;
++
++            copy_tensor_async_rows(res->t_preview_sum, sampling.preview_sum, 1, n_outputs_prev, sched.get());
+ 
+             // async copy the sampling data from the backend to the host
+             copy_tensor_async_rows(res->t_sampled,        sampling.sampled,    1,      n_outputs_prev, sched.get());
+@@ -2290,7 +2329,7 @@
+     // Allocate backend sampling output buffers if there are backend samplers configured.
+     const bool has_sampling = !sampling.samplers.empty();
+     if (has_sampling) {
+-        backend_float_count = 2 * n_vocab * n_outputs_max;      // logits + probs
++        backend_float_count = (2 * n_vocab + 1) * n_outputs_max;      // logits + probs
+         backend_token_count = (1 + n_vocab) * n_outputs_max;    // sampled + candidates
+     }
+ 
+@@ -2369,6 +2408,10 @@
+         sampling.probs = {(float *) (base + offset), (size_t)(n_vocab*n_outputs_max)};
+         offset += sampling.probs.size * sizeof(float);
+ 
++        sampling.preview_sum = {(float *) (base + offset), (size_t)n_outputs_max};
++        offset += sampling.preview_sum.size * sizeof(float);
++        std::fill_n(sampling.preview_sum.data, sampling.preview_sum.size, NAN);
++
+         sampling.sampled = {(llama_token *) (base + offset), (size_t)n_outputs_max};
+         offset += sampling.sampled.size * sizeof(llama_token);
+ 
+@@ -2388,6 +2431,7 @@
+ 
+         std::fill_n(sampling.sampled.data, sampling.sampled.size, LLAMA_TOKEN_NULL);
+     } else {
++        sampling.preview_sum = {nullptr, 0};
+         sampling.logits     = {nullptr, 0};
+         sampling.probs      = {nullptr, 0};
+         sampling.sampled    = {nullptr, 0};
+@@ -2469,6 +2513,7 @@
+         }
+ 
+         if (!sampling.samplers.empty()) {
++            std::swap(sampling.preview_sum.data[i0], sampling.preview_sum.data[i1]);
+             assert(sampling.logits.size > 0);
+             assert(sampling.probs.size > 0);
+             assert(sampling.candidates.size > 0);
+@@ -2651,6 +2696,7 @@
+         LLAMA_LOG_DEBUG("%s: making n_tokens a multiple of n_seqs - n_tokens = %u, n_seqs = %u, n_outputs = %u\n", __func__, n_tokens, n_seqs, n_outputs);
+     }
+ 
++    materialize_deferred_logits();
+     ggml_backend_sched_reset(sched.get());
+ 
+     // when the scheduler is reset, we cannot reuse old graphs, so we reset the previous graph results
+@@ -4278,6 +4324,17 @@
+     return output;
+ }
+ 
++llama_sampling_output llama_get_sampling_preview_ith(llama_context * ctx, int32_t i, float * finite_sum) {
++    auto output = llama_get_sampling_output_ith(ctx, i);
++    *finite_sum = ctx->get_preview_sum_ith(i);
++    return output;
++}
++
++float * llama_get_raw_logits_ith(llama_context * ctx, int32_t i) {
++    ctx->synchronize();
++    return ctx->get_logits_ith(i);
++}
++
+ float * llama_get_embeddings(llama_context * ctx) {
+     ctx->synchronize();
+ 
+--- a/common/sampling.cpp
++++ b/common/sampling.cpp
+@@ -12,6 +12,7 @@
+ #include <climits>
+ #include <cmath>
+ #include <cstring>
++#include <cstdlib>
+ #include <random>
+ #include <unordered_map>
+ #include <vector>
+@@ -115,6 +116,7 @@
+     struct llama_sampler * grmr;
+     struct llama_sampler * rbudget;
+     struct llama_sampler * chain;
++    struct llama_sampler * preview;
+ 
+     ring_buffer<llama_token> prev;
+ 
+@@ -182,6 +184,31 @@
+             mirostat, mirostat_eta, mirostat_tau, adaptive_target, adaptive_decay);
+ 
+     return std::string(result);
++}
++
++static bool can_preview_greedy(const common_params_sampling & p, const llama_vocab * vocab) {
++    int32_t suppressed = 0;
++    llama_vocab_get_suppress_tokens(vocab, &suppressed);
++    if (suppressed || !p.logit_bias.empty() || p.n_probs != 0 || p.mirostat != 0 ||
++        p.temp != 0.0f || p.dynatemp_range != 0.0f || p.samplers.empty() ||
++        p.samplers.back() != COMMON_SAMPLER_TYPE_TEMPERATURE || llama_vocab_n_tokens(vocab) < 2) return false;
++    for (auto s : p.samplers) {
++        switch (s) {
++            case COMMON_SAMPLER_TYPE_TEMPERATURE: break;
++            case COMMON_SAMPLER_TYPE_TOP_K: break;
++            case COMMON_SAMPLER_TYPE_TOP_P: if (!(p.top_p > 0 && p.top_p <= 1)) return false; break;
++            case COMMON_SAMPLER_TYPE_MIN_P: if (!(p.min_p >= 0 && p.min_p <= 1)) return false; break;
++            case COMMON_SAMPLER_TYPE_TYPICAL_P: if (!(p.typ_p >= 1)) return false; break;
++            case COMMON_SAMPLER_TYPE_TOP_N_SIGMA: if (!(p.top_n_sigma < 0)) return false; break;
++            case COMMON_SAMPLER_TYPE_DRY: if (p.dry_multiplier != 0) return false; break;
++            case COMMON_SAMPLER_TYPE_XTC: if (p.xtc_probability != 0) return false; break;
++            case COMMON_SAMPLER_TYPE_PENALTIES:
++                if (p.penalty_repeat != 1 || p.penalty_freq != 0 || p.penalty_present != 0) return false;
++                break;
++            default: return false;
++        }
++    }
++    return true;
+ }
+ 
+ struct common_sampler * common_sampler_init(
+@@ -415,7 +442,17 @@
+         llama_sampler_chain_add(chain, smpl);
+     }
+ 
+-    if (grmr && params.backend_sampling) {
++    llama_sampler * preview = nullptr;
++    const char * enable_preview = std::getenv("LLAMA_WORD_GAMES_GREEDY_PREVIEW");
++    if (enable_preview && std::string(enable_preview) == "1" && grmr && !rbudget &&
++        can_preview_greedy(params, vocab)) {
++        preview = llama_sampler_chain_init(lparams);
++        llama_sampler_chain_add(preview, llama_sampler_init_greedy_preview());
++        params.backend_sampling = true;
++        LOG_INF("%s: greedy grammar preview enabled (full logits on demand)\n", __func__);
++    }
++
++    if (grmr && params.backend_sampling && !preview) {
+         LOG_WRN("%s: backend sampling is not compatible with grammar, disabling\n", __func__);
+ 
+         params.backend_sampling = false;
+@@ -432,6 +469,7 @@
+         /* .grmr    = */ grmr,
+         /* .rbudget = */ rbudget,
+         /* .chain   = */ chain,
++        /* .preview = */ preview,
+         /* .prev    = */ ring_buffer<llama_token>(std::max(32, params.n_prev)),
+         /* .cur     = */ {},
+         /* .cur_p   = */ {},
+@@ -450,6 +488,7 @@
+     llama_sampler_free(gsmpl->grmr);
+     llama_sampler_free(gsmpl->rbudget);
+     llama_sampler_free(gsmpl->chain);
++    llama_sampler_free(gsmpl->preview);
+ 
+     delete gsmpl;
+ }
+@@ -517,6 +556,7 @@
+         /* .grmr    = */ llama_sampler_clone(gsmpl->grmr),
+         /* .rbudget = */ llama_sampler_clone(gsmpl->rbudget),
+         /* .chain   = */ llama_sampler_clone(gsmpl->chain),
++        /* .preview = */ llama_sampler_clone(gsmpl->preview),
+         /* .prev    = */ gsmpl->prev,
+         /* .cur     = */ gsmpl->cur,
+         /* .cur_p   = */ gsmpl->cur_p,
+@@ -535,6 +575,8 @@
+     llama_sampler_copy(src->grmr,    dst->grmr);
+     llama_sampler_copy(src->rbudget, dst->rbudget);
+     llama_sampler_copy(src->chain,   dst->chain);
++    GGML_ASSERT((src->preview == nullptr) == (dst->preview == nullptr));
++    llama_sampler_copy(src->preview, dst->preview);
+ 
+     dst->params     = src->params;
+     dst->prev       = src->prev;
+@@ -596,14 +638,39 @@
+         return nullptr;
+     }
+ 
+-    return gsmpl->chain;
++    return gsmpl->preview ? gsmpl->preview : gsmpl->chain;
+ }
+ 
+ llama_token common_sampler_sample(struct common_sampler * gsmpl, struct llama_context * ctx, int idx, bool grammar_first) {
+-    const llama_sampling_output output = llama_get_sampling_output_ith(ctx, idx);
+-
+-    // Exclude waiting for asynchronous work and acquiring its output view.
++    float finite_sum = NAN;
++    llama_sampling_output output = gsmpl->preview ? llama_get_sampling_preview_ith(ctx, idx, &finite_sum) :
++                                                  llama_get_sampling_output_ith(ctx, idx);
+     const auto tm = gsmpl->tm();
++    if (gsmpl->preview) {
++        if (!grammar_first && std::isfinite(finite_sum) && output.sampled_logits_count == 2 &&
++            output.sampled_candidates_count == 2 && output.sampled_logits && output.sampled_candidates &&
++            std::isfinite(output.sampled_logits[0]) && std::isfinite(output.sampled_logits[1]) &&
++            output.sampled_logits[0] > output.sampled_logits[1]) {
++            const auto id = output.sampled_candidates[0];
++            llama_token_data one = {id, output.sampled_logits[0], 0.0f};
++            llama_token_data_array check = {&one, 1, -1, false};
++            if (grammar_should_apply(gsmpl)) llama_sampler_apply(gsmpl->grmr, &check);
++            if (one.logit != -INFINITY) {
++                gsmpl->cur.assign(1, one);
++                gsmpl->cur_p = {gsmpl->cur.data(), 1, 0, true};
++                return id;
++            }
++            // The CPU chain is stateless and greedy in this mode. This is the
++            // same second attempt as ordinary grammar rejection sampling.
++            grammar_first = true;
++        }
++        const auto n_vocab = output.n_vocab;
++        output = {};
++        output.n_vocab = n_vocab;
++        output.sampled_token = LLAMA_TOKEN_NULL;
++        output.logits = llama_get_raw_logits_ith(ctx, idx);
++    }
++
+ 
+     llama_token id = LLAMA_TOKEN_NULL;
+ 
