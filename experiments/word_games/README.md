@@ -189,3 +189,18 @@ vocabulary readback by 99.96%. Throughput was 48.08 versus 48.51 tok/s pooled;
 the median paired request was about 3% slower. This remains an experimental
 transfer optimization, with no production promotion. See the
 [measured report and fresh-directory reproduction commands](../../docs/08%20-%20Analysis/2026-10-31_word-games-grammar-on-demand.md).
+
+## Removing the last CPU expert banks
+
+`prepare_expert_compression.py` inventories GGUF tensors and selectively
+requantizes banks 24/25. `cpu_expert_elimination.py` compares packed38 against
+unchanged-weight all-GPU placement, reduced CPU threads, and the two compressed
+banks on the 3060. All other tensor payloads are verified unchanged.
+
+Two full passes per arm measured 49.60 tok/s for packed38, 56.26 for unchanged
+all-GPU placement, and 55.65 for selective Q2_K. The unchanged-weight placement
+reduced server CPU time per token by 70.5%; compression was unnecessary to fit.
+Receiver state checks passed, but existing summary errors remain and live bridge
+quality was not established. Qwen3-8B is temporarily unloaded for these tests
+and restored afterward. See the
+[measured report and reproduction commands](../../docs/08%20-%20Analysis/2026-10-31_word-games-cpu-expert-elimination.md).
