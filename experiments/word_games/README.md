@@ -39,6 +39,12 @@ event five of the persistent workflow, and a separate failed name-only lookup.
 It distinguishes correct host mutations and firewall rejection from model task
 success. Normal operation is not yet reliable across the tested workflow.
 
+The supplied [V4 bundle has been reviewed](../../docs/08%20-%20Analysis/2026-11-01_word-games-v4-bundle-review.md):
+its saved trajectories and checkpoint audits replay successfully, but its
+generated schema mappings/capsules are not integrated here. It requires adapting
+the disclosed view to this project's policy and increasing generation budgets
+for fresh mapping/capsule creation. The active vendor remains V2.
+
 ## Earlier Qwen2.5 target/draft experiment
 
 The earlier pair is Qwen2.5-14B-Instruct / Qwen2.5-3B-Instruct, both Q4_K_M.
