@@ -1,0 +1,81 @@
+name: word-games-model
+
+services:
+  model:
+    container_name: word-games-triton
+    image: sha256:ea2c80aa8efcf2b1578db2ab869ea1978a243b8327d5e4df9e95cabaaf74cc4f
+    pull_policy: never
+    entrypoint: /opt/tritonserver/bin/tritonserver
+    command:
+      - --model-repository=/models
+      - --backend-directory=/opt/tritonserver/backends
+      - --model-control-mode=explicit
+      - --load-model=word-games-qwen38-native
+      - --exit-timeout-secs=45
+      - --log-verbose=0
+      - --backend-config=python,stub-timeout-seconds=300
+    restart: "no"
+    stop_grace_period: 75s
+    shm_size: 1gb
+    ports:
+      - "127.0.0.1:8020:8000"
+      - "127.0.0.1:8021:8001"
+      - "127.0.0.1:8022:8002"
+    environment:
+      CUDA_VISIBLE_DEVICES: GPU-0370fdb0-6490-d871-15e5-c14a1fa671ff,GPU-7b1db3cb-ec9c-beb3-e7db-826c2543edf9,GPU-8cf440df-e8f4-2210-a2cd-29a9d00aca14
+      CUDA_CACHE_PATH: /cuda-cache
+      CUDA_CACHE_MAXSIZE: "2147483648"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids:
+                - GPU-0370fdb0-6490-d871-15e5-c14a1fa671ff
+                - GPU-7b1db3cb-ec9c-beb3-e7db-826c2543edf9
+                - GPU-8cf440df-e8f4-2210-a2cd-29a9d00aca14
+              capabilities: [gpu]
+    volumes:
+      - type: bind
+        source: ./models
+        target: /models
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ../../.pixi/word-games-sampling-v2/candidate
+        target: /llama
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ../../.pixi/word-games-triton-native/sysroot
+        target: /native-sysroot
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /data/models/Empero-Qwen3.8-35B-A3B-Distill-GGUF/Qwen3.8-35B-A3B-Q4_K_M.gguf
+        target: /model.gguf
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /usr/local/cuda/lib64
+        target: /cuda
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ../../.pixi/word-games-triton-service/runtime
+        target: /runtime
+        bind: {create_host_path: false}
+      - type: bind
+        source: ../../.pixi/word-games-cuda-cache
+        target: /cuda-cache
+        bind: {create_host_path: false}
+    healthcheck:
+      test:
+        - CMD
+        - /opt/pixi-gemma4/.pixi/envs/default/bin/python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v2/health/live', timeout=5).read()"
+      interval: 10s
+      timeout: 6s
+      start_period: 120s
+      retries: 6

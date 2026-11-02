@@ -1,0 +1,5 @@
+# These are lightweight deployment sources, not generated experiment artifacts.
+!compose.yaml
+!release.lock.json
+!validation.json
+!models/**/runtime.json
