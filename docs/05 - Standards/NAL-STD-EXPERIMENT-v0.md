@@ -8,7 +8,7 @@
 
 **Applies to:** new empirical studies executed through the Neural Architecture Lab (NAL), including training campaigns, frozen-model interventions, replications, benchmarks, and their reports
 
-**Depends on:** `../../Agentic Technique Master.md`; `../03 - Architecture/nal-local-gpu-scheduler.md`; `../08 - Analysis/2026-08-03_runner-experiment-data-modernization.md`
+**Depends on:** `../../Agentic Technique Master.md`; `../03 - Architecture/nal-local-gpu-scheduler.md`; `../08 - Analysis/structure-net/2026-08-03_runner-experiment-data-modernization.md`
 
 This draft establishes the minimum evidence contract for a result to enter the active research record. It does not retroactively certify archived studies.
 
@@ -205,7 +205,7 @@ Large arrays SHOULD be stored in NPZ/HDF5 with shape, dtype, semantics, and a li
 
 ## 6. Preregistration and amendments
 
-A confirmatory preregistration belongs in `docs/07 - Status Reports/` and MUST be dated. Its minimum sections are:
+A confirmatory preregistration belongs in `docs/07 - Status Reports/<project>/` and MUST be dated. Its minimum sections are:
 
 1. question and prediction;
 2. design and fixed controls;
@@ -221,7 +221,7 @@ After primary results are inspected, the preregistration MUST NOT be edited exce
 
 ## 7. Analysis report contract
 
-The final report belongs in `docs/08 - Analysis/`, is dated, and MUST lead with the measured verdict. It MUST include:
+The final report belongs in `docs/08 - Analysis/<project>/`, is dated, and MUST lead with the measured verdict. It MUST include:
 
 - status, date, hypothesis ID, and preregistration link;
 - one unambiguous verdict against every preregistered gate;

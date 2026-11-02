@@ -33,7 +33,7 @@ workflow at its first failed event and never repairs state using expected answer
 Receiver state accuracy, sender fidelity, actual mutation correctness and prose
 fidelity are separate measurements.
 
-The [current live functionality tracker](../../docs/08%20-%20Analysis/2026-11-01_word-games-normal-operation.md)
+The [current live functionality tracker](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-normal-operation.md)
 records 4/4 ordinary independent tasks passing, a receiver state omission at
 event five of the persistent workflow, and a separate failed name-only lookup.
 It distinguishes correct host mutations and firewall rejection from model task
@@ -45,7 +45,7 @@ Ordinary saved prompt/output pairs fit the current context; fresh mapping creati
 needs a higher output cap. Its operational mapping pipeline is not integrated,
 and replay success is not a fresh Qwen accuracy result.
 
-The supplied [V4 bundle has been reviewed](../../docs/08%20-%20Analysis/2026-11-01_word-games-v4-bundle-review.md):
+The supplied [V4 bundle has been reviewed](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-v4-bundle-review.md):
 its saved trajectories and checkpoint audits replay successfully, but its
 generated schema mappings/capsules are not integrated here. It requires adapting
 the disclosed view to this project's policy and increasing generation budgets
@@ -133,10 +133,10 @@ Each run starts and closes its own native server; this does not deploy a
 persistent production bridge. The embedded Qwen chat template is applied by the
 server. The original Phi transport remains available for historical reproduction.
 
-[Qwen protocol](../../docs/07%20-%20Status%20Reports/2026-10-31_word-games-qwen-pair-plan.md)
+[Qwen protocol](../../docs/07%20-%20Status%20Reports/word-games/2026-10-31_word-games-qwen-pair-plan.md)
 defines the new model identity, pinned releases, checks and decision order.
 
-The [measured switch result](../../docs/08%20-%20Analysis/2026-10-31_word-games-qwen-pair.md)
+The [measured switch result](../../docs/08%20-%20Analysis/word-games/2026-10-31_word-games-qwen-pair.md)
 reports 5/12 joint cases for target-only and a metaphor-validation failure with
 the draft. The pair is a research configuration, not a production promotion.
 
@@ -154,7 +154,7 @@ thinking disabled, no draft or lookup, and the existing bridge prompts. It
 supports `--stage pilot`, `full` and `live`, each with a fresh `--output`.
 Use the locked `word-games` Pixi environment from the repository root.
 
-The [measured Bonsai result](../../docs/08%20-%20Analysis/2026-10-31_word-games-bonsai-naked.md)
+The [measured Bonsai result](../../docs/08%20-%20Analysis/word-games/2026-10-31_word-games-bonsai-naked.md)
 is 24.31 output tokens/s over 36 frozen requests and 10/12 joint structured
 live cases. It uses less GPU memory than the Qwen target but is slower and adds
 unsupported approval claims to receiver summaries. It remains an exploratory
@@ -168,7 +168,7 @@ candidate; structured state correctness does not establish semantic fidelity.
 `--stage pilot`, `full` and `live` with fresh output directories and the same
 locked Pixi environment. Native logs verify the CPU expert placement.
 
-The [measured result](../../docs/08%20-%20Analysis/2026-10-31_word-games-qwen38-moe.md)
+The [measured result](../../docs/08%20-%20Analysis/word-games/2026-10-31_word-games-qwen38-moe.md)
 is 24.37 full-request output tokens/s and 37.68 decode-only tokens/s. The live
 selector reused `dock` for location and deadline, so no live case-accuracy
 percentage was measured. A separate frozen-packet diagnostic is explicitly
@@ -199,7 +199,7 @@ repository model `load` or `unload` API. The host experiment controller uses
 this project's Pixi environment; the serving worker uses the existing
 container's locked Pixi environment.
 
-[Protocol](../../docs/07%20-%20Status%20Reports/2026-10-30_word-games-phi4-firewall-plan.md)
+[Protocol](../../docs/07%20-%20Status%20Reports/word-games/2026-10-30_word-games-phi4-firewall-plan.md)
 defines the evidence gates and limitations. Raw artifacts are under
 `data/experiments/word_games/`.
 
@@ -240,7 +240,7 @@ identical authorization metadata. It never changes production capabilities or
 the receiving agent's authorized-only view. The compact-JSON flag preserves a
 failed experimental arm for reproducibility; it is not a recommended setting.
 
-[Speed protocol](../../docs/07%20-%20Status%20Reports/2026-10-31_word-games-phi4-40tps-plan.md)
+[Speed protocol](../../docs/07%20-%20Status%20Reports/word-games/2026-10-31_word-games-phi4-40tps-plan.md)
 records prospective gates and exploratory amendments.
 
 ## MoE placement and CPU tuning
@@ -254,7 +254,7 @@ fresh output directories. The resident 6 GB RTX 2060 Qwen3-8B is preserved.
 Expert-only placement reached 31.02 versus 26.17 full-request tok/s in repeated
 36-request replays. Generated answers changed and existing semantic errors
 remain; this is not deployment or accuracy approval. See
-[the measured report](../../docs/08%20-%20Analysis/2026-10-31_word-games-moe-placement.md)
+[the measured report](../../docs/08%20-%20Analysis/word-games/2026-10-31_word-games-moe-placement.md)
 and its prospective plans. Individual experts split between CPU and GPU within
 each layer are a separate, unimplemented research direction.
 
@@ -272,7 +272,7 @@ Native tests reduced sampling synchronization from six calls to one, or ten
 to one after grammar rejection. All 36 replay outputs matched exactly. Timing
 is exploratory: median per-request throughput improved 0.74%, while one slow
 control request dominates the larger aggregate difference. See the
-[implementation, measurements and reproduction commands](../../docs/08%20-%20Analysis/2026-10-31_word-games-sampling-output-once.md).
+[implementation, measurements and reproduction commands](../../docs/08%20-%20Analysis/word-games/2026-10-31_word-games-sampling-output-once.md).
 
 ## Grammar logits on demand
 
@@ -287,7 +287,7 @@ The final two full replays preserved all 72 paired outputs and reduced raw
 vocabulary readback by 99.96%. Throughput was 48.08 versus 48.51 tok/s pooled;
 the median paired request was about 3% slower. This remains an experimental
 transfer optimization, with no production promotion. See the
-[measured report and fresh-directory reproduction commands](../../docs/08%20-%20Analysis/2026-10-31_word-games-grammar-on-demand.md).
+[measured report and fresh-directory reproduction commands](../../docs/08%20-%20Analysis/word-games/2026-10-31_word-games-grammar-on-demand.md).
 
 ## Removing the last CPU expert banks
 
@@ -302,4 +302,4 @@ reduced server CPU time per token by 70.5%; compression was unnecessary to fit.
 Receiver state checks passed, but existing summary errors remain and live bridge
 quality was not established. Qwen3-8B is temporarily unloaded for these tests
 and restored afterward. See the
-[measured report and reproduction commands](../../docs/08%20-%20Analysis/2026-10-31_word-games-cpu-expert-elimination.md).
+[measured report and reproduction commands](../../docs/08%20-%20Analysis/word-games/2026-10-31_word-games-cpu-expert-elimination.md).

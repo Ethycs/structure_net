@@ -28,13 +28,13 @@ Use the draft standard for requirements. This guide gives the working sequence a
 For a new confirmatory study:
 
 1. write the question, intervention, primary gate, seed rule, and outcome meanings;
-2. save the dated preregistration in `docs/07 - Status Reports/`;
+2. save the dated preregistration in `docs/07 - Status Reports/<project>/`;
 3. implement one immutable configuration and one independently retryable `Experiment` per replicate;
 4. test the generator, objective, representation cuts, fingerprint, and joint gate;
 5. pass the tiny lifecycle, representative CUDA, and intended-concurrency shakedowns;
 6. freeze the producing implementation, record its identity, and launch into a new dated artifact root;
 7. aggregate only complete fingerprint-matched cells;
-8. write the measured report in `docs/08 - Analysis/` from `campaign_results.json`;
+8. write the measured report in `docs/08 - Analysis/<project>/` from `campaign_results.json`;
 9. register material evidence in the meta-hypothesis system and read it back.
 
 For an exploratory study, follow the same artifact and reporting steps but
@@ -49,8 +49,8 @@ label every post-outcome choice and do not present the result as preregistered.
 | authoring/run instructions | `docs/02 - Implementation/` | executable procedure |
 | runner/model contracts | `docs/03 - Architecture/` | as-built system map |
 | normative requirements | `docs/05 - Standards/` | MUST/MUST NOT contract |
-| preregistration or amendment | `docs/07 - Status Reports/` | dated pre-outcome snapshot |
-| measured result | `docs/08 - Analysis/` | verdict and evidence |
+| preregistration or amendment | `docs/07 - Status Reports/<project>/` | dated pre-outcome snapshot |
+| measured result | `docs/08 - Analysis/<project>/` | verdict and evidence |
 | raw runs | `data/experiments/<study>/<run>/` | machine-readable evidence |
 | durable synthesis | `data/meta_hypotheses/` plus storage backend | cross-study evidence record |
 
@@ -85,7 +85,7 @@ This prevents a large collection of measurements from turning into an unfalsifia
 
 ## 3. Write the preregistration
 
-Create `docs/07 - Status Reports/YYYY-MM-DD_<study>-preregistration.md` before reading primary outcomes. Include:
+Create `docs/07 - Status Reports/<project>/YYYY-MM-DD_<study>-preregistration.md` before reading primary outcomes. Include:
 
 1. stable hypothesis ID and question;
 2. control and intervention arms;
@@ -325,7 +325,7 @@ Store detailed per-seed values even when the report presents means. Include hash
 
 ## 12. Write the report from the raw aggregate
 
-Create `docs/08 - Analysis/YYYY-MM-DD_<study>.md`. Use this order:
+Create `docs/08 - Analysis/<project>/YYYY-MM-DD_<study>.md`. Use this order:
 
 ```markdown
 # <Study>

@@ -3,7 +3,7 @@
 **Status:** MIGRATION TARGET COMPLETE — 2026-08-03  
 **Applies to:** contract-driven components, NAL execution, experiment persistence, and tournament integration  
 **Depends on:** `../01 - Design/component-architecture.md`, `../02 - Implementation/component-migration-guide.md`, `../03 - Architecture/structure-net-overview.md`  
-**Completion report:** `../07 - Status Reports/2026-08-03_component-migration-complete.md`  
+**Completion report:** `../07 - Status Reports/structure-net/2026-08-03_component-migration-complete.md`  
 **Consolidates:** `integration_plan.md`, `to_integrate.md`, and `docs/09 - Archived/New Componentwise refactoring.md`
 
 ## Outcome
