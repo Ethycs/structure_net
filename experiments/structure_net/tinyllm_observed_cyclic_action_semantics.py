@@ -41,7 +41,7 @@ SOURCE_OBSERVED_RESULT_MANIFEST_SHA256 = (
     "52648e21fc8c3c47d62d588449fcc9cd1d36ac63302d836c5785eeb130f20184"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-observed-cyclic-action-semantics-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

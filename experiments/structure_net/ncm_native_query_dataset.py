@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_paper_data import ROOT,PREP,freeze,verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 from experiments.structure_net.ncm_source_readout_grade import audit_row,packet_key
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-query-neighborhood-training-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-query-neighborhood-training-plan.md")
 DEST = ROOT/"20261023_native_query_neighborhood_data_v1"
 SOURCE = ROOT/"20261022_expanded_data_v2/train_sources.json"
 CRITIQUE = ROOT/"20261023_revised_labels_main_critique_v2"

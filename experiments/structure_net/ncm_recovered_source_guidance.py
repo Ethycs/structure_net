@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_recovered_training_verified_cache as c
 
 evidence, mechanism = prior.evidence, prior.mechanism
 ROOT = prior.BASE/'20261028_recovered_source_guidance_TRAIN_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-source-guidance.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-source-guidance.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_source_guidance.py')
 CPU = prior.BASE/'20261028_recovered_source_guidance_CPU_v1.json'
 ARMS = {'baseline': (0., 'constant'), 'author_ramp_0.5': (.5, 'ramp'),

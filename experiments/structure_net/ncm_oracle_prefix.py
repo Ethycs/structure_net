@@ -12,7 +12,7 @@ from experiments.structure_net import ncm_sequential_levels as sequence
 
 prior = recovery.original
 data, controls, codec = prior.data, prior.controls, prior.codec
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-oracle-prefix-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-oracle-prefix-plan.md')
 TEST = Path('tests/structure_net/test_ncm_oracle_prefix.py')
 ANALYSIS = Path('experiments/neural_architecture_lab/ncm_oracle_prefix_results.py')
 HYPOTHESIS = 'ncm-reserved-oracle-prefix-v1'

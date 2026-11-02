@@ -259,7 +259,7 @@ def _cell_summary(
 def build_observed_cyclic_action_semantics_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/"
+        "docs/08 - Analysis/tinyllm/"
         "2026-08-10_tinyllm-observed-cyclic-action-semantics.md"
     ),
 ) -> dict[str, Any]:

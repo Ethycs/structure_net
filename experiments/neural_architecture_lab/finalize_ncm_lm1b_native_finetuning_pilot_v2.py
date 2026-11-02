@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_lm1b_native_finetuning_pilot_v2 as run
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 RESULTS = run.ROOT / "20261024_lm1b_native_finetuning_cuda_pilot_results_v2"
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-lm1b-native-finetuning-pilot-v2.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-lm1b-native-finetuning-pilot-v2.md")
 
 
 def require_generation(values, batch):

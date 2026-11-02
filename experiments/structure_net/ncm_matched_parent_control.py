@@ -14,7 +14,7 @@ from experiments.structure_net.ncm_paper_controls import producer
 from experiments.structure_net.ncm_paper_data import PREP, ROOT, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-matched-parent-control-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-matched-parent-control-plan.md")
 EXPECTED_BODY = "75cb5e87d431fa688ec1a68dc868636cf3cfbf2b421601ea56dd21848284d38c"
 
 

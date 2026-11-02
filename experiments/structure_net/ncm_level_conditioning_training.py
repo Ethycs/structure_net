@@ -19,7 +19,7 @@ from experiments.structure_net import ncm_raw_feature_lru as streaming
 lifecycle, training, native, q, ROOT = capacity.lifecycle, capacity.training, capacity.native, capacity.q, capacity.ROOT
 HYPOTHESIS = 'ncm-level-conditioning-FP16-native655-source-training-v1'
 MODULE = 'experiments.structure_net.ncm_level_conditioning_training'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-level-conditioning-native655-training-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-level-conditioning-native655-training-plan.md')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_level_conditioning_training.py')
 TEST = Path('tests/structure_net/test_ncm_level_conditioning_training.py')
 WORKFLOW = ROOT / '20261024_level_conditioning_FP16_native655_training_workflow_v1'

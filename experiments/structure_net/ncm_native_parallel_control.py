@@ -21,7 +21,7 @@ from experiments.structure_net.ncm_native_parallel import NativeConceptGenerator
 from experiments.structure_net.ncm_native_readout import NativeReadout, frozen_hash, restore_trainable, trainable_state
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-parallel-capacity-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-parallel-capacity-plan.md")
 PILOT = ROOT/"20261023_native_parallel_pilot_v1"
 CAPACITY = ROOT/"20261023_native_parallel_capacity_v1"
 

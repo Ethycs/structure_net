@@ -12,7 +12,7 @@ study,data=generated.study,generated.data
 BASELINE=pilot.ROOT
 ROOT=data.ROOT/'20261028_recovered_trained_control_readouts_v1'
 CPU=data.ROOT/'20261028_recovered_trained_controls_CPU_v1.json'
-PLAN=Path('docs/07 - Status Reports/2026-10-28_ncm-trained-control-readout-diagnostic.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-trained-control-readout-diagnostic.md')
 TEST=Path('tests/structure_net/test_ncm_recovered_trained_controls.py')
 LEVELS=(1,8,16,24,32,40,52,64,76,92,108,128)
 

@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 
 native, q, ROOT = component.native, component.q, component.ROOT
 DATA = ROOT / '20261024_expanded9936_codec_corpus_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-expanded-codec-corpus-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-expanded-codec-corpus-plan.md')
 TEST = Path('tests/structure_net/test_ncm_expanded_codec_corpus.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_expanded_codec_corpus.py')
 HYPOTHESIS = 'ncm-expanded9936-source-disjoint-codec-corpus-v1'

@@ -21,7 +21,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 from experiments.structure_net.ncm_source_readout_grade import audit_row
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-readout-recovery-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-readout-recovery-plan.md")
 QUALITY = Path("data/experiments/ncm_recipe_update/20261022_quality_v2")
 PILOT = ROOT / "20261023_native_readout_pilot_v1"
 CAPACITY = ROOT / "20261023_native_readout_capacity_v1"

@@ -10,7 +10,7 @@ import statistics
 from experiments.structure_net import tinyllm_moba_distillation as m
 from neural_architecture_lab.moba_distillation_hypothesis import MoBADistillationEvidence, store_evidence
 
-DEFAULT_REPORT = Path("docs/08 - Analysis/2026-09-09_tinyllm-moba-distillation.md")
+DEFAULT_REPORT = Path("docs/08 - Analysis/moba/2026-09-09_tinyllm-moba-distillation.md")
 
 
 def render_figure(campaign, results, report):

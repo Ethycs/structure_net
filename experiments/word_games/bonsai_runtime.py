@@ -17,7 +17,7 @@ from .qwen_runtime import REQUESTS, REQUESTS_SHA, memory
 
 MODEL = 'word-games-bonsai2-27b'
 HYPOTHESIS = 'word-games-bonsai27-naked-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-bonsai-naked-plan.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-bonsai-naked-plan.md')
 PAIRED = Path('data/experiments/word_games/20261031_qwen_baseline_live_v1')
 NO_THINK_SUFFIX = '<|im_start|>assistant\n<think>\n\n</think>\n\n'
 

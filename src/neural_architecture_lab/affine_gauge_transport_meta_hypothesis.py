@@ -51,11 +51,11 @@ EXPECTED_JOINT_PASSES = {"d6": 2, "d10": 1}
 EXPECTED_FRONT_PASSES = {"d6": 2, "d10": 2}
 RUNNER_PATH = Path("experiments/structure_net/tinyllm_affine_gauge_transport.py")
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-affine-gauge-transport-preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/2026-08-11_tinyllm-affine-gauge-transport.md"
+    "docs/08 - Analysis/tinyllm/2026-08-11_tinyllm-affine-gauge-transport.md"
 )
 
 

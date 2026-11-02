@@ -47,7 +47,7 @@ def _details(path: Path) -> list[dict[str, Any]]:
 
 def build_c2_attention_head_decomposition_meta_hypothesis(
     results_path: Path,
-    report_path: Path = Path("docs/08 - Analysis/2026-08-06_tinyllm-c2-attention-head-decomposition.md"),
+    report_path: Path = Path("docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-c2-attention-head-decomposition.md"),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)
     details = _details(results_path)

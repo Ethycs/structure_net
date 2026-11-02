@@ -273,7 +273,7 @@ def _detail_summary(detail: Mapping[str, Any]) -> dict[str, Any]:
 def build_posterior_coordinate_transport_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-07_tinyllm-posterior-coordinate-transport.md"
+        "docs/08 - Analysis/tinyllm/2026-08-07_tinyllm-posterior-coordinate-transport.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

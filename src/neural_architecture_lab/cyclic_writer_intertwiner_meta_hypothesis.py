@@ -129,7 +129,7 @@ def _details(path: Path) -> list[dict[str, Any]]:
 def build_cyclic_writer_intertwiner_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-07_tinyllm-cyclic-writer-intertwiner.md"
+        "docs/08 - Analysis/tinyllm/2026-08-07_tinyllm-cyclic-writer-intertwiner.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

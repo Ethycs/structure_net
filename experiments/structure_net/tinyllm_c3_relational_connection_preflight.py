@@ -70,7 +70,7 @@ CONTINUOUS_ORACLE_ERROR_MAXIMUM = 1e-12
 CHARACTER_MAGNITUDE_MINIMUM = 0.25
 ACTION_ERROR_MAXIMUM = 2e-12
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-preflight-"
     "preregistration.md"
 )
@@ -90,7 +90,7 @@ INTERVAL_SHA256 = (
     "b027eb55d971b87f598bd600131b33ead82463e3e73766fcdce38fdc3a5497c6"
 )
 CLOSURE_PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-full-local-gauge-closure-preregistration.md"
 )
 CLOSURE_PREREGISTRATION_SHA256 = (
@@ -110,7 +110,7 @@ CLOSURE_RESULT_SHA256 = (
     "31f7c7301c889db67e436fba4b8de1909dfbc372573681a9950b5b330f22db35"
 )
 CLOSURE_REPORT_PATH = Path(
-    "docs/08 - Analysis/2026-08-11_tinyllm-c3-full-local-gauge-closure.md"
+    "docs/08 - Analysis/tinyllm/2026-08-11_tinyllm-c3-full-local-gauge-closure.md"
 )
 CLOSURE_REPORT_SHA256 = (
     "e1a237410bd3dfb050d22aadbfdf5b68f8b19a83c2977ae483fdebdbe468718e"

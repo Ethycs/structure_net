@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 native, framed, semantics, q, ROOT = base.native, base.framed, base.semantics, base.q, base.ROOT
 HYPOTHESIS = "ncm-lm1b-source-disjoint-domain-decoder-v1"
 MODULE = "experiments.structure_net.ncm_lm1b_domain_decoder"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-domain-decoder-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-domain-decoder-plan.md")
 DATA = ROOT / "20261024_lm1b_domain_decoder_data_v1"
 PILOT = ROOT / "20261024_lm1b_domain_decoder_pilot_v1"
 TRAIN = ROOT / "20261024_lm1b_domain_decoder_train_v1"

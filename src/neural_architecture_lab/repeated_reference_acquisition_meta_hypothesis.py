@@ -263,7 +263,7 @@ def _detail_summary(detail: Mapping[str, Any]) -> dict[str, Any]:
 def build_repeated_reference_acquisition_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/"
+        "docs/08 - Analysis/tinyllm/"
         "2026-08-07_tinyllm-repeated-reference-acquisition-corrective.md"
     ),
 ) -> dict[str, Any]:

@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_repaired_judge_route as repaired
 data, previous = generated.data, generated.previous
 cache = generated.verified
 BASE = generated.study.inputs.BASE
-PLAN = Path('docs/07 - Status Reports/2026-10-29_ncm-latest-recovered-evaluation.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-29_ncm-latest-recovered-evaluation.md')
 TEST = Path('tests/structure_net/test_ncm_latest_recovered_evaluation.py')
 CPU = BASE/'20261029_latest_recovered_evaluation_CPU_v1.json'
 INHERITED = 5903

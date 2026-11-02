@@ -29,7 +29,7 @@ CLASSIFICATION_PASS = (
     "connection_invariant_function_class_contains_transport_and_task_gradient"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-function-class-"
     "preregistration.md"
 )
@@ -50,7 +50,7 @@ RELATIONAL_RESULT_SHA256 = (
     "ae0321b3c3d5b7e8c80ebbd57bfaea10c0522c4b2241082daab007a54e55984e"
 )
 RELATIONAL_REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-preflight.md"
 )
 RELATIONAL_REPORT_SHA256 = (

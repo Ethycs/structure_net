@@ -14,7 +14,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 native, q, ROOT = previous.native, previous.q, previous.ROOT
 MODULE = 'experiments.structure_net.ncm_sol_teacher_continuation'
 HYPOTHESIS = 'ncm-sol-teacher-untouched8631-firsts-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol-teacher8631-continuation-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol-teacher8631-continuation-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sol_teacher_continuation.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_sol_teacher_continuation.py')
 WORKFLOW, PREP, GENERATE = (ROOT / ('20261024_sol_teacher8631_' + n + '_v1') for n in ('workflow','prepare','candidates'))

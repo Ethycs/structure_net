@@ -5,7 +5,7 @@ from experiments.structure_net import ncm_native_label_quality as labels
 from experiments.structure_net.ncm_paper_data import ROOT, verify
 from experiments.structure_net.ncm_paper_grade import grade
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-label-diagnostic-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-label-diagnostic-plan.md")
 SOURCE = ROOT / "20261023_native_labels_pilot_v2"
 DEST = ROOT / "20261023_native_labels_diagnostic_v1"
 

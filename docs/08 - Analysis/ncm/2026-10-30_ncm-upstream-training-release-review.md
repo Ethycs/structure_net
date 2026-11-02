@@ -51,7 +51,7 @@ These statements follow the actual
 and [VQVAE forward](https://github.com/HazyResearch/ncm/blob/c70274273f489abc73832b2b98584a8483b6b203/models/vqvae.py#L91-L95).
 This is a reproducibility gap, **not evidence that our latest run accidentally
 trained only truncated reconstructions**: its codec was frozen, and the prior
-[decoder adaptation](../../experiments/structure_net/ncm_recovered_decoder_training.py)
+[decoder adaptation](../../../experiments/structure_net/ncm_recovered_decoder_training.py)
 explicitly decoded full codes with its own loss. Our older codec trainer also
 uses a custom cutoff objective. Any future codec replication must specify the
 external mixture and corruption explicitly instead of assuming YAML parity
@@ -69,7 +69,7 @@ The same issue contains a community report of tied-codebook logit-scale
 problems. Neither it nor the restart bug explains the latest local run:
 LM1B uses a shared linear output head, and frozen codebooks perform no EMA
 restarts. The old root-gradient problem is already fixed in the active
-[teacher-input builder](../../experiments/structure_net/ncm_trainable_example_batching.py).
+[teacher-input builder](../../../experiments/structure_net/ncm_trainable_example_batching.py).
 This audit establishes no new applicable defect in that training path.
 
 The comparison to our completed adaptation remains:
@@ -106,9 +106,9 @@ mixture. None of this is a demonstrated repair, and another unrestricted
 training run is not justified by the repository's present release status.
 
 Evidence is preserved in
-[the audit directory](../../data/experiments/ncm_paper_regime/20261030_upstream_training_release_review_v1/):
+[the audit directory](../../../data/experiments/ncm_paper_regime/20261030_upstream_training_release_review_v1):
 complete Git tree, commit/branch/release responses, issue snapshots and author
-comments. [Vendor parity](../../data/experiments/ncm_paper_regime/20261030_upstream_training_release_review_v1/vendor_parity.json)
+comments. [Vendor parity](../../../data/experiments/ncm_paper_regime/20261030_upstream_training_release_review_v1/vendor_parity.json)
 recomputes Git blob hashes for every released file; all 39 match.
 The manifest binds the evidence and this report by SHA-256. Verification used
 locked Pixi with CUDA disabled. No model weights were loaded.

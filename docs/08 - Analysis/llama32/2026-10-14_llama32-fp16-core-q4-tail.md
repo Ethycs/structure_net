@@ -12,8 +12,8 @@ Canonical aggregate:
 SHA-256:
 `ae9e27b4e5d213e99c9d71dc7d4530f714e6439b4913a418c37fbbe8301a3962`.
 
-The [prospective plan](../07%20-%20Status%20Reports/2026-10-14_llama32-fp16-core-q4-tail-plan.md)
-and [operator amendment](../07%20-%20Status%20Reports/2026-10-14_llama32-q4-tail-operator-amendment.md)
+The [prospective plan](../../07%20-%20Status%20Reports/llama32/2026-10-14_llama32-fp16-core-q4-tail-plan.md)
+and [operator amendment](../../07%20-%20Status%20Reports/llama32/2026-10-14_llama32-q4-tail-operator-amendment.md)
 fix the decision order. This is one already-trained Llama-3.2-3B-Instruct
 checkpoint, inherited from the
 [noise and neighborhood-distillation study](2026-10-14_llama32-noise-tensor-continuation.md),

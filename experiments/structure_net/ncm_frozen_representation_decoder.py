@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_broad_learned_codec as core
 from experiments.structure_net.ncm_sample_scaled_codec_ema import FixedVocabularySize
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-frozen-representation-decoder-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-frozen-representation-decoder-plan.md")
 PILOT = core.ROOT / "20261023_frozen_representation_decoder_pilot_v1"
 TRAIN = core.ROOT / "20261023_frozen_representation_decoder_train_v1"
 RECON = core.ROOT / "20261023_frozen_representation_decoder_reconstruction_v1"

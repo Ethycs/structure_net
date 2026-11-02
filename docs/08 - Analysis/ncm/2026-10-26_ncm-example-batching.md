@@ -14,7 +14,7 @@ aggregate is
 `data/experiments/ncm_paper_regime/20261026_example_batching_results_v1/campaign_results.json`,
 SHA256 `52aa11ce9c2312de269061627cac8117ecfa1e6df03529776f056913374cc6d6`.
 
-The [original plan](../07%20-%20Status%20Reports/2026-10-26_ncm-example-batching-plan.md)
+The [original plan](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-example-batching-plan.md)
 compared separate examples with one padded batch containing the shortest and
 longest existing TRAIN sources:197 and2273 complete source positions. Both
 executions used identical target codes and conditioning noise. All105,323,136
@@ -30,11 +30,11 @@ adapters stayed frozen, dropout was disabled for parity, and TF32 was off.
 The first two variants exceeded the5e-5 relative gradient limit and failed
 logit allclose(rtol=atol=1e-4), despite zero argmax differences. Their failed
 gates remain failed. The
-[attention-backend control](../07%20-%20Status%20Reports/2026-10-26_ncm-example-batching-math-control.md)
+[attention-backend control](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-example-batching-math-control.md)
 did not resolve the discrepancy.
 
 The subsequent
-[codec-preparation control](../07%20-%20Status%20Reports/2026-10-26_ncm-example-batching-codec-control.md)
+[codec-preparation control](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-example-batching-codec-control.md)
 measured486,789 different values in the2x640x384 conditioning tensor when the
 same frozen VQ operations ran separately versus batched. Maximum difference was
 0.0002061 and relative L2 difference2.1375e-5. Keeping that small frozen

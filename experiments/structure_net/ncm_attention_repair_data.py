@@ -17,7 +17,7 @@ from experiments.structure_net import ncm_streaming_source_features as streaming
 from experiments.structure_net.ncm_memory_data import file_hash, text_hash, write_json
 
 native, q, ROOT = core.native, checkpoint.q, core.ROOT
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-attention-repair-data-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-attention-repair-data-plan.md')
 TEST = Path('tests/structure_net/test_ncm_attention_repair_data.py')
 AUDIT = ROOT / '20261025_engineering_target_codes_replay_v1'
 CORE_CODES = ROOT / '20261025_core4949_TRAIN_target_codes_v1'

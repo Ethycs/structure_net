@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 prior, base, native, preparation, q, ROOT = decoder.prior, decoder.base, decoder.native, decoder.preparation, decoder.q, decoder.ROOT
 RUNS = {s: ROOT / ('20261025_sequential_full732_' + s + '_v1') for s in ('pilot', 'train')}
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-sequential-full732-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-sequential-full732-plan.md')
 TEST = Path('tests/structure_net/test_ncm_packed_sequential_objective.py')
 CONFIG = dict(updates=2048, accumulation=4, warmup=64, max_lr=1e-4, min_lr=1e-5,
     sampler_seed=161142, corruption_seed=162142, dropout_seed=163142,

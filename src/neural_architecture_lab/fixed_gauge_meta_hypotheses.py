@@ -149,7 +149,7 @@ def _load_details(
 def build_fixed_semantic_gauge_writer_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-fixed-semantic-gauge-writer.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-fixed-semantic-gauge-writer.md"
     ),
 ) -> dict[str, Any]:
     campaign = _load_campaign(
@@ -286,7 +286,7 @@ def build_fixed_semantic_gauge_writer_meta_hypothesis(
 def build_fixed_gauge_error_decomposition_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-fixed-gauge-error-decomposition.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-fixed-gauge-error-decomposition.md"
     ),
 ) -> dict[str, Any]:
     campaign = _load_campaign(
@@ -507,7 +507,7 @@ def _load_capacity_details(
 def build_fixed_gauge_writer_capacity_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-fixed-gauge-writer-capacity.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-fixed-gauge-writer-capacity.md"
     ),
 ) -> dict[str, Any]:
     campaign = _load_capacity_campaign(results_path)

@@ -10,7 +10,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 study=measurement.study
 DEST=study.ROOT/"20261023_broad_learned_codec_results_v1"
-REPORT=Path("docs/08 - Analysis/2026-10-23_ncm-broad-learned-codec-reconstruction.md")
+REPORT=Path("docs/08 - Analysis/ncm/2026-10-23_ncm-broad-learned-codec-reconstruction.md")
 
 
 def replay(cases,rows,tokenizer):

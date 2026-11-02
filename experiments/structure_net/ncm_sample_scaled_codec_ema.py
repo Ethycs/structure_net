@@ -8,7 +8,7 @@ import torch
 from experiments.structure_net import ncm_broad_learned_codec as core
 from experiments.structure_net.ncm_memory_data import file_hash,write_json
 
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-sample-scaled-codec-ema-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-sample-scaled-codec-ema-plan.md")
 PILOT=core.ROOT/"20261023_sample_scaled_codec_ema_pilot_v1"
 TRAIN=core.ROOT/"20261023_sample_scaled_codec_ema_train_v1"
 RECON=core.ROOT/"20261023_sample_scaled_codec_ema_reconstruction_v1"

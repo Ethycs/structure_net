@@ -398,7 +398,7 @@ def _campaign_split_summary(details: list[Mapping[str, Any]]) -> dict[str, Any]:
 def build_calibration_degradation_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-07_tinyllm-calibration-degradation-causal.md"
+        "docs/08 - Analysis/tinyllm/2026-08-07_tinyllm-calibration-degradation-causal.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

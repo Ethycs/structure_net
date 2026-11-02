@@ -8,7 +8,7 @@
 
 **Classification:** `fixed_all_frame_degree2_closes_constant_acceleration`
 
-**Preregistration:** [C3 constant-acceleration fixed-operator preflight](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-constant-acceleration-fixed-operator-preregistration.md)
+**Preregistration:** [C3 constant-acceleration fixed-operator preflight](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-constant-acceleration-fixed-operator-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_constant_acceleration_fixed_operator/20260811_preregistered/result.json`
 

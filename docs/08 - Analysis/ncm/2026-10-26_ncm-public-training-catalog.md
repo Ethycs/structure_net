@@ -9,7 +9,7 @@ outside TRAIN. No model was trained and no new task-accuracy result exists.
 The audited aggregate is
 `data/experiments/ncm_paper_regime/20261026_public_training_catalog_audit_v1/campaign_results.json`,
 SHA256 `81ceb20ac7261e81706191fc3cde5e25742c1bdcd55ace8b77b6cf1db42e1985`.
-The [prospective plan](../07%20-%20Status%20Reports/2026-10-26_ncm-public-training-catalog-plan.md)
+The [prospective plan](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-public-training-catalog-plan.md)
 fixed full-population retention, protection, deduplication and token rules
 before this preparation pass.
 

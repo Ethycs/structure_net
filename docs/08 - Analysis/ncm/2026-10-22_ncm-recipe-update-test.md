@@ -3,7 +3,7 @@
 **Updated summary task accuracy: 0/64.**
 Classification: `updated_test_accuracy_invalid`. Date: 2026-10-22.
 ID: `ncm-recipe-update-test-v1`. EXPLORATORY; one training seed.
-[Fixed follow-up](../07%20-%20Status%20Reports/2026-10-22_ncm-recipe-test-amendment.md).
+[Fixed follow-up](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-recipe-test-amendment.md).
 Aggregate: `data/experiments/ncm_recipe_update/20261022_test_v1/campaign_results.json`.
 SHA256: `04a654e1e95a24521d235b749b6e347c3c8bd4b93b4dcf48f0a01b98703e6500`.
 

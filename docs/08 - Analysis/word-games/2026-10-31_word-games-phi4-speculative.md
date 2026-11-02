@@ -13,7 +13,7 @@ The original serving endpoint remains unchanged; speculative decoding is
 available in the experimental runner but is not enabled by default.
 
 Primary artifact:
-[pilot v2 aggregate](../../data/experiments/word_games/20261031_speculative_pilot_v2/run/campaign_results.json),
+[pilot v2 aggregate](../../../data/experiments/word_games/20261031_speculative_pilot_v2/run/campaign_results.json),
 SHA-256 `67956e642b5cd3814690b459a927a59168064d14f7e81219cecdf9f3fcef42af`.
 Its scientific fingerprint is
 `87085f0ac339abb6ff0e5f686f539006dc6b731d1d436e8ac3cc10d1c80de7fb`.
@@ -103,7 +103,7 @@ allocation defect in the new adapter. Switching logits collection on after
 construction had retained only `n_batch` rows. Pilot v2 constructs the full
 context score buffer and disables score collection for baseline calls. The
 failed run and its four measurements remain separate. The
-[plan amendment](../07%20-%20Status%20Reports/2026-10-31_word-games-phi4-speculative-plan.md)
+[plan amendment](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-phi4-speculative-plan.md)
 records the defect and the added speculative warmup. Pilot v2 recorded 161.52
 seconds of warmup, excluded from the timing table. Both models fit: total card
 usage after loading was 9,822 MiB on the 3060 and 6,114 MiB on the 2060 SUPER,
@@ -124,10 +124,10 @@ pixi run --locked -e word-games python -m experiments.word_games.prepare_specula
 pixi run --locked -e word-games python -m experiments.word_games.run_speculative --inputs data/experiments/word_games/NEW_INPUTS --output data/experiments/word_games/NEW_PILOT --stage pilot
 ```
 
-Source: [drafter](../../experiments/word_games/speculative_draft.py),
-[worker](../../experiments/word_games/speculative_worker.py),
-[launcher](../../experiments/word_games/run_speculative.py).
-Raw [pilot v1](../../data/experiments/word_games/20261031_speculative_pilot_v1/),
-[pilot v2](../../data/experiments/word_games/20261031_speculative_pilot_v2/), and
-[download/input provenance](../../data/experiments/word_games/20261031_speculative_inputs_v1/)
+Source: [drafter](../../../experiments/word_games/speculative_draft.py),
+[worker](../../../experiments/word_games/speculative_worker.py),
+[launcher](../../../experiments/word_games/run_speculative.py).
+Raw [pilot v1](../../../data/experiments/word_games/20261031_speculative_pilot_v1),
+[pilot v2](../../../data/experiments/word_games/20261031_speculative_pilot_v2), and
+[download/input provenance](../../../data/experiments/word_games/20261031_speculative_inputs_v1)
 are append-only. Registry status: tested pilot, **not confirmed**.

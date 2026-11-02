@@ -11,7 +11,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 DEST = trial.core.ROOT / "20261023_frozen_representation_decoder_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-frozen-representation-decoder.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-frozen-representation-decoder.md")
 
 
 def finalize():

@@ -18,8 +18,8 @@ from experiments.structure_net.ncm_frozen_body_public_data import PUBLIC_FILE, P
 
 ROOT = clean.ROOT
 HYPOTHESIS = "ncm-clean-word-TRAIN-semantic-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-clean-word-train-semantic-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-clean-word-train-semantic.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-clean-word-train-semantic-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-clean-word-train-semantic.md")
 WORKFLOW = ROOT / "20261023_clean_word_train_semantic_workflow_v1"
 PREP = ROOT / "20261023_clean_word_train_semantic_prepare_v1"
 PILOT = ROOT / "20261023_clean_word_train_semantic_pilot_v1"

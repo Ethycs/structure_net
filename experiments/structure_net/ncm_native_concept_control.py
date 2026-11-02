@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_native_concepts import ConceptConfig, check_r
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-concept-interface-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-concept-interface-plan.md")
 SOURCE = ROOT/"20261022_expanded_data_v2/train_sources.json"
 PREP = ROOT/"20261023_native_concepts_prepare_v1"
 PILOT = ROOT/"20261023_native_concepts_pilot_v1"

@@ -10,7 +10,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 
 native, ROOT = data.native, data.ROOT
 DEST = ROOT / '20261025_engineering_TRAIN_target_codes_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-engineering-target-codes-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-engineering-target-codes-plan.md')
 
 
 def main():

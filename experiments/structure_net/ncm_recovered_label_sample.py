@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_recovered_pair_training_pool as pool
 
 ROOT = pool.BASE/'20261027_recovered_label_sample_v1'
 AUDIT = pool.BASE/'20261027_recovered_pair_training_pool_audit_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-label-sample.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-label-sample.md')
 SEED = 'recovered-label-review-20261027-v1:'
 
 

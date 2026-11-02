@@ -255,7 +255,7 @@ def test_denoiser_save_reload_lifecycle(tmp_path: Path) -> None:
 
 def test_preregistration_quarantines_post_outcome_expansion() -> None:
     prereg = Path(
-        "docs/07 - Status Reports/"
+        "docs/07 - Status Reports/tinyllm/"
         "2026-08-07_tinyllm-repeated-reference-acquisition-preregistration.md"
     ).read_text(encoding="utf-8")
     assert "SUPERSEDED FOR CONFIRMATION" in prereg

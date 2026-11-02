@@ -14,7 +14,7 @@ REPO = "Qwen/Qwen3-8B-GGUF"
 REVISION = "7c41481f57cb95916b40956ab2f0b139b296d974"
 FILENAME = "Qwen3-8B-Q6_K.gguf"
 SHA = "cb042ccd76795a8830d6be6bd4165245847cc68e41797b13bd61aed4c2cfbce6"
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-local-judge-gpu2-amendment.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-local-judge-gpu2-amendment.md")
 
 
 def main(command):

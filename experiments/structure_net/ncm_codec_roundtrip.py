@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path('data/experiments/ncm_paper_regime')
 RUNS = {s: ROOT / f'20261025_codec_roundtrip_{s}_v1' for s in ('prepare', 'pilot', 'eval')}
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-codec-roundtrip-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-codec-roundtrip-plan.md')
 TEST = Path('tests/structure_net/test_ncm_codec_roundtrip.py')
 LABELS = ROOT / '20261024_sol_teacher64_candidates_v2/labels.json'
 COMPONENTS = ROOT / '20261024_sol_teacher64_prepare_v2/cases.json'

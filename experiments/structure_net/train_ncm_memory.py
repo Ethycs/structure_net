@@ -18,7 +18,7 @@ from experiments.structure_net.ncm_llama import (
     generator_input, infer_ncm, label_ids, load_ncm, tokenizers)
 
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-memory-training-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-memory-training-plan.md")
 CODEC = BASE / "20261021_codec_v1/model.pt"
 GENERATOR = BASE / "20261021_generator_v1/model.pt"
 EXPECTED = {CODEC: "b87f7288edfc0eb1f5b9122d1139cc2e61aa2331be7d6fe53f0582993086ede2",
@@ -83,7 +83,7 @@ def provenance(args):
     paths = [Path(__file__), Path("experiments/structure_net/ncm_memory_data.py"),
              Path("experiments/structure_net/ncm_llama.py"),
              Path("experiments/structure_net/prepare_llama_cotenancy.py"), PLAN,
-             Path("docs/07 - Status Reports/2026-10-22_ncm-memory-training-lifecycle-fix.md")]
+             Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-memory-training-lifecycle-fix.md")]
     paths += sorted(VENDOR.rglob("*.py"))
     copies = args.output / "producer_source"
     copies.mkdir()

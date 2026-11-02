@@ -6,7 +6,7 @@ from experiments.structure_net import ncm_quality as q
 from experiments.structure_net import ncm_quality_evidence as e
 from experiments.neural_architecture_lab.finalize_ncm_quality import summarize,verify
 
-PLAN=Path('docs/07 - Status Reports/2026-10-21_ncm-quality-reference-diagnostic.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-quality-reference-diagnostic.md')
 
 
 def main():

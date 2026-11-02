@@ -21,10 +21,10 @@ HYPOTHESIS = 'ncm-level-conditioning-native655-source-only-DEV-v1'
 MODULE = 'experiments.structure_net.ncm_level_conditioning_development'
 AUDITOR_MODULE = 'experiments.neural_architecture_lab.finalize_ncm_level_conditioning_development'
 AUDITOR = Path('experiments/neural_architecture_lab/finalize_ncm_level_conditioning_development.py')
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-level-conditioning-development-plan.md')
-AMENDMENT = Path('docs/07 - Status Reports/2026-10-24_ncm-level-conditioning-development-lineage-amendment.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-level-conditioning-development-plan.md')
+AMENDMENT = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-level-conditioning-development-lineage-amendment.md')
 TEST = Path('tests/structure_net/test_ncm_level_conditioning_development.py')
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-level-conditioning-development.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-level-conditioning-development.md')
 PREFIX = '20261024_level_conditioning_native655_development_'
 WORKFLOW, METADATA, PILOT, OUTPUTS, PACKETS, JUDGE_PILOT, GRADE, RESULTS = (
     ROOT / (PREFIX + name + '_v1') for name in ('workflow', 'metadata', 'inference_pilot',

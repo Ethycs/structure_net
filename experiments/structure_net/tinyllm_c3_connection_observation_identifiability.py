@@ -36,7 +36,7 @@ FRESH_DATA_SEED_BASES = {
 }
 NOISE_PROBABILITIES = (1e-5, 1e-4, 1e-3, 1e-2, 5e-2)
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-connection-observation-identifiability-"
     "preregistration.md"
 )

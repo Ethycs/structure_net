@@ -20,7 +20,7 @@ from . import deploy
 from .validate import Client
 
 HYPOTHESIS_ID = 'word-games-normal-operation-v1'
-PLAN = Path('docs/07 - Status Reports/2026-11-01_word-games-normal-operation-plan.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-11-01_word-games-normal-operation-plan.md')
 INDEPENDENT = ('normal_reserve', 'changed_due', 'approved_annotation', 'cancel')
 
 

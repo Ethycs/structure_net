@@ -97,7 +97,7 @@ test partition, not the untouched LongMemEval benchmark.
 Raw requests, replies, retries, source citations, candidate mappings, producing
 source and hashes are preserved under `data/experiments/ncm_memory/20261022_accuracy_v2`.
 The first validator incorrectly rejected some conservative failure judgments as
-format errors and retried them. The [parser recovery amendment](../07%20-%20Status%20Reports/2026-10-22_ncm-memory-accuracy-parser-recovery.md)
+format errors and retried them. The [parser recovery amendment](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-memory-accuracy-parser-recovery.md)
 preserves that interrupted V1 run. V2 reuses the first usable original reply,
 including recovered failures, and ignores later redundant replies. No judge
 decision was changed. Under the corrected validator, valid low grades were not

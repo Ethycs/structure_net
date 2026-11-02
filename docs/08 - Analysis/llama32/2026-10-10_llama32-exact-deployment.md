@@ -4,7 +4,7 @@ Date: 2026-10-10. Status: completed. Profile: **EXPLORATORY**. Hypothesis `llama
 Classification: **`exact_execution_speedup_supported_no_two_for_one`**. Confirmation remains false for this one-checkpoint exploratory comparison.
 
 Aggregate `data/experiments/llama_lossless_deployment/20261010_v2/deployment/campaign_results.json`; SHA-256 `8265a6cc920d1551f811d17da2e816614aa37816de37251b01b025f12be7939c`.
-[Fixed deployment plan](../07%20-%20Status%20Reports/2026-10-10_llama32-lossless-deployment-plan.md).
+[Fixed deployment plan](../../07%20-%20Status%20Reports/llama32/2026-10-10_llama32-lossless-deployment-plan.md).
 
 CUDA graph replay speeds up some workloads of the complete unchanged 28-layer FP16 model. All measured paired outputs match bit for bit. The gain comes from reducing execution dispatch overhead; it does not establish low-rank tensor compression, a smaller residual network, fewer matrix operations, or two independent models in one model's memory budget.
 
@@ -42,7 +42,7 @@ Two unequal fixed input sequences were checked for each workload. Prefill contro
 
 The exact reference checkpoint hash is `f01cc0653ec6c9bd7026b8676864612b91b6c79d2dc4df42599cbe4cf99eb9a9`. The producer includes source snapshots, plan/fixture hashes and dependency/GPU settings. That FP16 implementation was previously compared with Hugging Face using numerical tolerances; this is not a claim of bitwise agreement across different runtimes.
 
-The first full run (`20261010_v1`) was rejected by the finalizer: its nominally different control prompts shared the same first 128 tokens. Its timing results remain diagnostics and are not pooled here. The [input-diversity amendment](../07%20-%20Status%20Reports/2026-10-10_llama32-deployment-input-amendment.md) prospectively fixed the second control to use the other sequence's tail, added a per-workload inequality assertion and regression test, and required a new pilot/full run. This report uses only corrected `20261010_v2` evidence.
+The first full run (`20261010_v1`) was rejected by the finalizer: its nominally different control prompts shared the same first 128 tokens. Its timing results remain diagnostics and are not pooled here. The [input-diversity amendment](../../07%20-%20Status%20Reports/llama32/2026-10-10_llama32-deployment-input-amendment.md) prospectively fixed the second control to use the other sequence's tail, added a per-workload inequality assertion and regression test, and required a new pilot/full run. This report uses only corrected `20261010_v2` evidence.
 
 ## Requested deployment target
 

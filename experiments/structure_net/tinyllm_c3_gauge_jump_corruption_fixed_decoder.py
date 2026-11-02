@@ -64,7 +64,7 @@ CHART_MARGIN_MINIMUM = 0.20
 STABILIZATION_DISPLACEMENT_MAXIMUM = 1e-12
 REQUIRED_SEED_PASSES = 4
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-gauge-jump-corruption-fixed-decoder-"
     "preregistration.md"
 )
@@ -79,7 +79,7 @@ PARENT_RESULT_SHA256 = (
     "d8076bd7bfc42819a17438e188300e8ea0131dcc72d9ceac0bee39ede72fcaaf"
 )
 PARENT_REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-charged-character-fixed-decoder.md"
 )
 PARENT_REPORT_SHA256 = (

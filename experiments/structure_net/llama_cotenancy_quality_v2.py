@@ -13,7 +13,7 @@ from experiments.structure_net.llama_tensorized_model import TensorizedLlama
 from experiments.structure_net.prepare_llama_cotenancy import MODEL_PATH, OUTPUT, GGUF_FILE, sha256, write_json
 from experiments.structure_net.run_llama_cotenancy import quality, aggregate_quality, BINARY, CPP
 
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-10_llama32-cotenancy-quality-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-cotenancy-quality-amendment.md")
 
 
 def fixtures(path):

@@ -10,7 +10,7 @@ import sysconfig
 
 
 PROJECT = Path(__file__).resolve().parents[2]
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-pixi-migration.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-pixi-migration.md')
 PACKAGES = {
     'torch': 'torch', 'numpy': 'numpy', 'transformers': 'transformers',
     'tokenizers': 'tokenizers', 'huggingface-hub': 'huggingface_hub',

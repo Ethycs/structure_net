@@ -17,7 +17,7 @@ from experiments.structure_net.ncm_recipe_data import PARENT, QUALITY as FAILED_
 
 TEACHER = ROOT / "20261022_teacher_v1"
 QUALITY = ROOT / "20261022_quality_v2"
-NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-teacher-target-amendment.md")
+NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-teacher-target-amendment.md")
 
 
 def verify_public(cases):

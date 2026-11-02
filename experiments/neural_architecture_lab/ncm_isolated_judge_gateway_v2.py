@@ -20,7 +20,7 @@ CLI = REPO/'.pixi/envs/default/lib/node_modules/@openai/codex/node_modules/@open
 UNIT = 'structure-net-ncm-isolated-judge-gateway-v2.service'
 ORIGIN = 'http://127.0.0.1:8092'
 MODELS = ('codex_sdk/gpt-5.6-terra', 'codex_sdk/gpt-5.6-sol')
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-isolated-judge-gateway-v2.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-isolated-judge-gateway-v2.md')
 TEST = Path('tests/structure_net/test_ncm_isolated_judge_gateway_v2.py')
 SETTINGS = {'LLM_ENDPOINT_CODEX_PERSISTENT': '0', 'LLM_ENDPOINT_CLAUDE_POOL': '0',
             'LLM_ENDPOINT_CLAUDE_POOL_PREWARM': '', 'LLM_ENDPOINT_MAX_WORKERS': '1',
@@ -77,7 +77,7 @@ def serve():
         raise ValueError('fresh supervised service required')
     with socket.socket() as sock: sock.bind(('127.0.0.1', 8092))
     files = [Path(__file__).resolve(), PLAN.resolve(), TEST.resolve(),
-             Path('docs/07 - Status Reports/2026-10-28_ncm-isolated-judge-gateway.md').resolve(),
+             Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-isolated-judge-gateway.md').resolve(),
              REPO/'pixi.toml', REPO/'pixi.lock', REPO/'pyproject.toml', *sorted((REPO/'llm_endpoint').rglob('*.py'))]
     cli = str(CLI)
     if not CLI.is_file(): raise ValueError('existing authenticated completion CLI required')

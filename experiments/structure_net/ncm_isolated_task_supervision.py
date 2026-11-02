@@ -22,7 +22,7 @@ TRAIN_ROOTS = {k:(v if k[0] == 'existing' and k[1] in ('pilot','pilot_audit') el
     data.ROOT/f'20261027_task_supervision_{k[0]}_{k[1]}_v3') for k,v in OLD_TRAIN_ROOTS.items()}
 STORAGE = Path('/data2/structure_net/ncm_task_supervision_20261027_v3')
 ROOT = data.ROOT/'20261027_isolated_task_supervision_preflight_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-isolated-task-supervision.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-isolated-task-supervision.md')
 TEST = Path('tests/structure_net/test_ncm_isolated_task_supervision.py')
 SERVICE = Path('experiments/neural_architecture_lab/ncm_isolated_task_supervision_service.py')
 CAT_FREEZE,TARGET_FREEZE,TRAIN_FREEZE = catalog.freeze,targets.freeze,training.freeze

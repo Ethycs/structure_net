@@ -11,7 +11,7 @@ import requests
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 BASE = Path("data/experiments/ncm_local_judge")
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-local-judge-gpu2-amendment.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-local-judge-gpu2-amendment.md")
 
 
 def main():

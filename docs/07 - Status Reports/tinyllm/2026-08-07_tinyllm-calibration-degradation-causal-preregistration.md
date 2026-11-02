@@ -9,7 +9,7 @@
 **Result:** The frozen confirmatory campaign completed `10/10` checkpoint
 evaluations. The analytic robust radius was `0.00` and the learned radius was
 `0.05`, below the locked `0.20` target. The measured report is
-[TinyLLM calibration-degradation causal test](../08%20-%20Analysis/2026-08-07_tinyllm-calibration-degradation-causal.md).
+[TinyLLM calibration-degradation causal test](../../08%20-%20Analysis/tinyllm/2026-08-07_tinyllm-calibration-degradation-causal.md).
 The final data snapshot is DVC root
 `ca2abd03b528233760a5f1cb23686dca.dir`, committed to lakeFS as
 `4fca75c78b6ec1f9e83c1548bb15aca79d076de909b9e0dc7547c55223bb816f`.

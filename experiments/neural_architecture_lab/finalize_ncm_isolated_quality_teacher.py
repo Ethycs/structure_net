@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, PREP, verify
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_isolated_quality_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-isolated-native-quality-teacher.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-isolated-native-quality-teacher.md")
 
 
 def replay_role(cases, role, cache, endpoint):

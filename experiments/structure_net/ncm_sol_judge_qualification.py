@@ -12,7 +12,7 @@ q = profile.q
 MODEL = 'codex_sdk/gpt-5.6-sol'
 DEST = ROOT / '20261024_budget128_judge_sol_qualification_v1'
 AUDIT = ROOT / '20261024_budget128_judge_sol_qualification_audit_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol-reviewer-amendment.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol-reviewer-amendment.md')
 TEST = Path('tests/structure_net/test_ncm_sol_judge_qualification.py')
 CANARY = ROOT / '20261024_replacement_reviewer_canaries_v1/codex_sdk_gpt-5.6-sol.response.json'
 

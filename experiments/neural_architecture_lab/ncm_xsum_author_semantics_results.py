@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_xsum_author_semantics as study
 from experiments.neural_architecture_lab.ncm_xsum_semantic_probe_results import paired
 
 data, ROOTS = study.data, study.ROOTS
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-xsum-author-semantics.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-xsum-author-semantics.md')
 
 
 def audit():

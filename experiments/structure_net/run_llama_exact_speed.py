@@ -17,9 +17,9 @@ from experiments.structure_net.run_llama_exact_deployment import (
 )
 
 HYPOTHESIS_ID = "llama32-3b-exact-speed-iteration-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-10_llama32-exact-speed-plan.md")
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-10_llama32-exact-speed-amendment.md")
-STORAGE_AMENDMENT = Path("docs/07 - Status Reports/2026-10-10_llama32-exact-speed-storage-amendment.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-exact-speed-plan.md")
+AMENDMENT = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-exact-speed-amendment.md")
+STORAGE_AMENDMENT = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-exact-speed-storage-amendment.md")
 GRID = ((128, 0), (512, 0), (128, 32))
 
 

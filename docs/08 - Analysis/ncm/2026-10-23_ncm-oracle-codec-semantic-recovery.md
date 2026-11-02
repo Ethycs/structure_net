@@ -55,4 +55,4 @@ run. It ignores 50 later duplicates. For
 but no persisted response, at most two further transport attempts were allowed.
 No earlier valid reply was rerolled, and the original 320 model-output entries
 remain exact. The cases, external packets, rubric and gates did not change.
-See the [prospective recovery amendment](../07%20-%20Status%20Reports/2026-10-23_ncm-oracle-codec-semantic-cache-recovery.md).
+See the [prospective recovery amendment](../../07%20-%20Status%20Reports/ncm/2026-10-23_ncm-oracle-codec-semantic-cache-recovery.md).

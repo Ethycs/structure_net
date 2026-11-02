@@ -29,7 +29,7 @@ reached the required 61/64 in both cohorts, so Sol was not admitted. No candidat
 was selected, the sealed final320 remained closed, and no speed test ran. The
 automated judges are not independent human annotation.
 
-The [prospective plan](../07%20-%20Status%20Reports/2026-10-25_ncm-onpolicy-residual-plan.md)
+The [prospective plan](../../07%20-%20Status%20Reports/ncm/2026-10-25_ncm-onpolicy-residual-plan.md)
 compared two continuations from the same completed
 [broader-generator checkpoint](2026-10-25_ncm-broad-generator.md). Both arms
 trained on their own current source-only generated histories, mixed equally
@@ -68,7 +68,7 @@ On the same 16 fixed controls, original-target training recovered 509/1,133
 active word IDs and residual-target training recovered 413/1,133. Shuffling
 sources reduced these to 75/1,133 and 82/1,133 respectively. This supports source
 dependence on those TRAIN cases, not held-out competence. The retained
-[matched examples](../../data/experiments/ncm_paper_regime/20261025_onpolicy_matched_fixed_examples_v1/examples.json)
+[matched examples](../../../data/experiments/ncm_paper_regime/20261025_onpolicy_matched_fixed_examples_v1/examples.json)
 show both arms still emitting repeated fragments, damaged names and incorrect
 numbers. Inspection used the same first two controls and fixed longest source,
 without selecting favorable examples or assigning new judgments.
@@ -94,7 +94,7 @@ One evaluation launch failed before model loading, inference or judge requests.
 The sibling-cache guard constructed keys before installing the existing
 128-token rubric. Offline replay reproduced rejection of all 128 new control
 keys under the default rubric and acceptance of all 128 after installation.
-The [execution amendment](../07%20-%20Status%20Reports/2026-10-25_ncm-onpolicy-residual-evaluation-recovery.md)
+The [execution amendment](../../07%20-%20Status%20Reports/ncm/2026-10-25_ncm-onpolicy-residual-evaluation-recovery.md)
 uses separate recovery wrappers and fresh residual DEV roots, retaining the
 original guard and all completed control files. Twenty-two focused tests and
 the full 4,051-first preflight passed. The failed launch, diagnosis and actual

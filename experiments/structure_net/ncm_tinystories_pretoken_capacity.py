@@ -11,8 +11,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 native, q = training.native, training.q
 ROOT = native.ROOT / "20261024_tinystories_pretoken_capacity_v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-tinystories-pretoken-capacity-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-tinystories-pretoken-capacity.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-tinystories-pretoken-capacity-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-tinystories-pretoken-capacity.md")
 TEST = Path("tests/structure_net/test_ncm_tinystories_pretoken_capacity.py")
 VENDOR_CONFIG = native.vendor.VENDOR / "config/eval/tinystories.yaml"
 VENDOR_BPE = native.vendor.VENDOR / "tokenization/bpe_tokenizer.py"

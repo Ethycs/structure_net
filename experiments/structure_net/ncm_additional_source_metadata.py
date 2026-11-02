@@ -17,7 +17,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 development, base, q, ROOT = pinned.development, pinned.base, pinned.q, sources.ROOT
 HYPOTHESIS = 'ncm-additional10000-source-tokenization-v1'
 MODULE = 'experiments.structure_net.ncm_additional_source_metadata'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-additional-source-metadata-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-additional-source-metadata-plan.md')
 TEST = Path('tests/structure_net/test_ncm_additional_source_metadata.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_additional_source_metadata.py')
 WORKFLOW = ROOT / '20261024_additional10000_source_metadata_workflow_v1'

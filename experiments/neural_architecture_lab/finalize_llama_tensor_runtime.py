@@ -67,7 +67,7 @@ def finalize(args):
     selection = json.loads(args.selection.read_text())
     if selection["selected_arm"] != chosen or selection["reviews_sha256"] != sha256(args.development_reviews):
         raise ValueError("selection provenance mismatch")
-    paths = [PLAN, Path("docs/07 - Status Reports/2026-10-14_llama32-tensor-runtime-warmup-amendment.md"),
+    paths = [PLAN, Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-tensor-runtime-warmup-amendment.md"),
              FIXTURES, args.development_reviews, args.development / "rows.json", args.development / "producer.json",
              args.development / "result.json", args.selection, args.pilot / "result.json", args.pilot / "producer.json"]
     pilot = json.loads((args.pilot / "result.json").read_text())

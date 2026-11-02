@@ -8,7 +8,7 @@ from experiments.structure_net import ncm_evidence_teacher_pilot_v2 as recovery
 original, q, ROOT = recovery.original, recovery.q, recovery.ROOT
 HYPOTHESIS = 'ncm-evidence-first-fresh64-teacher-generation-v3'
 MODULE = 'experiments.structure_net.ncm_evidence_teacher_pilot_v3'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-evidence-teacher-pilot-v3-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-evidence-teacher-pilot-v3-plan.md')
 TEST = Path('tests/structure_net/test_ncm_evidence_teacher_pilot_v3.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_evidence_teacher_pilot_v3.py')
 WORKFLOW = ROOT / '20261024_evidence_teacher64_workflow_v3'

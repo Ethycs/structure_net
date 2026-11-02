@@ -10,7 +10,7 @@ from experiments.structure_net.ncm_llama import GPT2
 from experiments.structure_net.ncm_memory_data import file_hash, text_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, DATA as ORIGINAL_DATA, freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-learned-codec-corpus-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-learned-codec-corpus-plan.md")
 DEST = ROOT / "20261023_learned_codec_corpus_v1"
 
 

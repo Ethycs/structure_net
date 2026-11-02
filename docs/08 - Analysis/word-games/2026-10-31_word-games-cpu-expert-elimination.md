@@ -21,7 +21,7 @@ to one after moving the experts gave no measurable additional benefit.
 
 ## Design and completed attempts
 
-The [prospective plan](../07%20-%20Status%20Reports/2026-10-31_word-games-cpu-expert-elimination-plan.md)
+The [prospective plan](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-cpu-expert-elimination-plan.md)
 fixed four arms, a three-request pilot per arm, and two full 36-request replays.
 All four pilots and eight full passes completed: **300 timed requests**, zero
 failed or excluded cells, no retries. Warmups are separate and excluded.

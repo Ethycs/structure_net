@@ -48,7 +48,7 @@ INCLUSION_ERROR_MAXIMUM = 1e-10
 CHART_MARGIN_MINIMUM = corruption.CHART_MARGIN_MINIMUM
 REQUIRED_SEED_PASSES = 4
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-hidden-order-corruption-fixed-estimator-"
     "preregistration.md"
 )

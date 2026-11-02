@@ -45,12 +45,12 @@ RUNNER_PATH = Path(
     "tinyllm_c3_hidden_order_corruption_fixed_estimator.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-hidden-order-corruption-fixed-estimator-"
     "preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-hidden-order-corruption-fixed-estimator.md"
 )
 SPEED_RUNNER_PATH = Path(

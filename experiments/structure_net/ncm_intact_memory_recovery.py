@@ -6,7 +6,7 @@ from experiments.structure_net.ncm_intact_memory_identity import IdentityMemoryC
 from experiments.structure_net.ncm_memory_data import file_hash
 from experiments.structure_net.ncm_paper_data import ROOT
 
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-23_ncm-intact-memory-identity-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-intact-memory-identity-amendment.md")
 BASE_FREEZE = pilot.freeze
 EXTRA = [Path(__file__), Path("experiments/structure_net/ncm_intact_memory_identity.py"),
     Path("experiments/structure_net/ncm_intact_memory.py"), pilot.PLAN, AMENDMENT]

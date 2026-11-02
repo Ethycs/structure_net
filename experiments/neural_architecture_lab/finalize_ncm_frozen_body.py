@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_llama import GPT2
 
 CALIBRATION = Path("data/experiments/ncm_memory/20261022_accuracy_v2")
 ARMS = ("hybrid", "native", "parent")
-SEED_NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-frozen-body-seed-clarification.md")
+SEED_NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-frozen-body-seed-clarification.md")
 
 
 def grade(args):

@@ -12,7 +12,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 
 DEST = ROOT / "20261023_native_query_and_label_controls_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-native-query-and-label-controls.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-native-query-and-label-controls.md")
 
 
 def completed(name):

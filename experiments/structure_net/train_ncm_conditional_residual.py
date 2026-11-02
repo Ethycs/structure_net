@@ -24,8 +24,8 @@ from experiments.structure_net.ncm_training_recipe import cumulative_latent, hie
 from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_memory import save
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-conditional-residual-learning-plan.md")
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-22_ncm-conditional-residual-mild-amendment.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-conditional-residual-learning-plan.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-conditional-residual-mild-amendment.md")
 CAPACITY = ROOT / "20261022_noise_capacity_measure_v1"
 STOP = ROOT / "20261022_residual_learning_stop_v1/result.json"
 CHECKPOINT = ROOT / "20261022_full_train_v1/step5120.pt"

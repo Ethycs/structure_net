@@ -8,7 +8,7 @@ from experiments.structure_net import audit_ncm_broad_generator as training_audi
 from experiments.structure_net import ncm_broad_generator_development as development
 
 RESULTS = study.runtime.ROOT / '20261025_broad_generator_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-broad-generator.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-broad-generator.md')
 HYPOTHESIS = study.HYPOTHESIS_ID
 ROOTS = development.ROOTS
 

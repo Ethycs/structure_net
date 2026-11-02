@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_example_batching_probe as original
 
 FAILED = original.ROOT
 ROOT = original.broad.runtime.ROOT/'20261026_example_batching_math_probe_v2'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-example-batching-math-control.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-example-batching-math-control.md')
 
 
 @dataclass(frozen=True)

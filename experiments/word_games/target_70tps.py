@@ -17,9 +17,9 @@ from .qwen38_moe_runtime import validate_metadata
 from .qwen_runtime import REQUESTS, REQUESTS_SHA, memory
 
 HYPOTHESIS = 'word-games-70tps-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-70tps-plan.md')
-FOLLOWUP_PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-70tps-followup.md')
-BATCH_MTP_PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-70tps-batching-mtp.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-70tps-plan.md')
+FOLLOWUP_PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-70tps-followup.md')
+BATCH_MTP_PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-70tps-batching-mtp.md')
 FIRST_STAGE = Path('data/experiments/word_games/20261031_70tps_replay_v1/campaign_results.json')
 SECOND_STAGE = Path('data/experiments/word_games/20261031_70tps_followup_v1/campaign_results.json')
 CPU_COMMAND, CPU_VERIFY = cpu.command, cpu.verify

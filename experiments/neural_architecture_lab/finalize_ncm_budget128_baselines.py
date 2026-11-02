@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, verify
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_budget128_baselines_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-budget128-fixed-baselines.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-budget128-fixed-baselines.md")
 
 
 def replay(condition, role, outputs, endpoint, cache, pilot_cache):

@@ -14,8 +14,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = worker.study.data.ROOT / "20261023_source_hierarchy_bootstrap_results_terminal_v2"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-source-hierarchy-bootstrap.md")
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-hierarchy-bootstrap-finalization-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-source-hierarchy-bootstrap.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-hierarchy-bootstrap-finalization-plan.md")
 LEVELS = (16, 24, 40, 56, 80, 104, 128, 160, 192)
 CLASSIFICATION = "source_hierarchy_bootstrap_completed_word_training_and_task_quality_unproven"
 

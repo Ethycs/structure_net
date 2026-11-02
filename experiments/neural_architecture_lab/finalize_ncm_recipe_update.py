@@ -60,7 +60,7 @@ def grade(args):
         Path("experiments/structure_net/ncm_memory_accuracy.py"),
         Path("experiments/structure_net/ncm_memory_accuracy_v2.py"),
         Path("experiments/structure_net/ncm_recipe_teacher.py"),
-        Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-teacher-target-amendment.md")]
+        Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-teacher-target-amendment.md")]
     inputs = [args.root / n for n in ("result.json", "producer.json", "selection.json",
                                       "legacy_outputs.json", "updated_outputs.json")]
     inputs += [QUALITY / "result.json", QUALITY / "selected.json"]

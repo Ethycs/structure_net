@@ -21,7 +21,7 @@ SCHEMA_VERSION = "nal.tinyllm-c3-relational-connection-readout-audit.v1"
 HYPOTHESIS_ID = "tinyllm-c3-relational-connection-readout-audit-v1"
 EVIDENCE_ROLE = "post_outcome_corrective_artifact_only_readout_audit"
 REGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-readout-audit-registration.md"
 )
 REGISTRATION_SHA256 = (

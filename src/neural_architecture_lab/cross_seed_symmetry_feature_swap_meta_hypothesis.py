@@ -144,7 +144,7 @@ def _details(path: Path) -> list[dict[str, Any]]:
 def build_cross_seed_symmetry_feature_swap_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-cross-seed-symmetry-feature-swap.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-cross-seed-symmetry-feature-swap.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

@@ -23,8 +23,8 @@ from experiments.structure_net.llama_summary_throughput import make_fixture
 
 SCHEMA_VERSION = "nal.llama-neighbourhood-tensorization.v1"
 HYPOTHESIS_ID = "llama32-3b-neighbourhood-tensorization-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-13_llama32-neighbourhood-tensorization-plan.md")
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-13_llama32-neighbourhood-tensorization-stability-amendment.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-13_llama32-neighbourhood-tensorization-plan.md")
+AMENDMENT = Path("docs/07 - Status Reports/llama32/2026-10-13_llama32-neighbourhood-tensorization-stability-amendment.md")
 MANIFEST = Path("data/models/Llama-3.2-3B-cotenancy/manifest.json")
 PROJECTIONS = ("gate_proj", "up_proj", "down_proj")
 

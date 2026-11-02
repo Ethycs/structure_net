@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 
 ROOT = data.ROOT
 MODULE = "experiments.structure_net.ncm_additional_teacher_pilot"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-additional-teacher-pilot-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-additional-teacher-pilot-plan.md")
 TEST = Path("tests/structure_net/test_ncm_additional_teacher_pilot.py")
 PREP = ROOT / "20261024_additional64_teacher_prepare_v1"
 PILOT = ROOT / "20261024_additional64_teacher_systems_pilot_v1"

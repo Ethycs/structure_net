@@ -21,8 +21,8 @@ from experiments.structure_net import ncm_packed_feature_store as store
 data, original = metadata.data, prior.original
 ROOTS = {s: data.ROOT/f'20261026_public_feature_store_{s}_v2' for s in ('pilot', 'full')}
 STORAGE = Path('/data2/structure_net/ncm_public_features_20261026_v2')
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-feature-store-plan.md')
-AMENDMENT = Path('docs/07 - Status Reports/2026-10-26_ncm-public-feature-store-progress-recovery.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-feature-store-plan.md')
+AMENDMENT = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-feature-store-progress-recovery.md')
 TESTS = [Path('tests/structure_net/test_ncm_packed_feature_store.py'),
          Path('tests/structure_net/test_ncm_public_feature_store.py')]
 HYPOTHESIS = 'ncm-public-feature-store-v1'

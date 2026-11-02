@@ -19,7 +19,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, DATA as ORIGINAL_DATA, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-quality-teacher-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-quality-teacher-plan.md")
 DEST = ROOT / "20261023_isolated_quality_data_v1"
 CACHE_PILOT = ROOT / "20261023_isolated_quality_cache_pilot_v1"
 CACHE = ROOT / "20261023_isolated_quality_cache_v1"

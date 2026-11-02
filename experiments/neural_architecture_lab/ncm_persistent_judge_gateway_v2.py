@@ -6,7 +6,7 @@ from pathlib import Path
 from experiments.neural_architecture_lab import ncm_persistent_judge_gateway as previous
 
 base = previous.base
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-judge-sqlite-isolation.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-judge-sqlite-isolation.md')
 TEST = Path('tests/structure_net/test_ncm_persistent_judge_gateway_v2.py')
 CPU = base.BASE/'20261028_persistent_SQLite_gateway_CPU_v1.json'
 WARMUP = base.BASE/'20261028_persistent_gateway_sqlite_config_diagnostic_v1'

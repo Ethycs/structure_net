@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_source_tree_checkpoint_pilot as lifecy
 
 data, codec_source = targets.data, targets.codec_source
 ROOT = data.ROOT/'20261027_recovered_label_codec_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-label-codec.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-label-codec.md')
 LIMIT = 3_500_000_000
 
 

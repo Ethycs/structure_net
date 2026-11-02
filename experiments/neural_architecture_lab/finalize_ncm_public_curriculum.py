@@ -14,7 +14,7 @@ from experiments.neural_architecture_lab import audit_ncm_public_training as aud
 from experiments.neural_architecture_lab.finalize_ncm_broad_generator import classify
 
 study, data, pipeline = development.study, development.data, development.study.pipeline
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-milestone-reporting-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-milestone-reporting-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_milestone_reporting.py')
 REGISTRAR = Path('experiments/neural_architecture_lab/register_ncm_public_curriculum.py')
 PREFIX = data.ROOT/'20261026_public_training_prefix64_audit_v1'
@@ -29,7 +29,7 @@ def roots(epoch):
 
 def report_path(epoch):
     roots(epoch)
-    return Path(f'docs/08 - Analysis/2026-10-26_ncm-public-epoch{epoch}.md')
+    return Path(f'docs/08 - Analysis/ncm/2026-10-26_ncm-public-epoch{epoch}.md')
 
 
 def receipt(root, names=('producer.json', 'result.json'), *, failed=False):

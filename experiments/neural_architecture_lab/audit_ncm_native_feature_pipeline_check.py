@@ -7,7 +7,7 @@ import torch
 from experiments.structure_net import ncm_native_feature_pipeline_check as run
 
 DEST = run.ROOT / 'audit'
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-native-feature-pipeline-check.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-native-feature-pipeline-check.md')
 
 
 def main():

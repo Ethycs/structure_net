@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 
 ROOT = Path("data/experiments/ncm_recipe_update")
 INPUTS = ROOT / "20261022_inputs_v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-update-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-update-plan.md")
 EXPECTED = {"passages.pickle": "39b820f0a71ddd6ad178b2700eeae6d035729053b1b2f115d3a92810c6ebf4f8",
             "reference_summaries.pickle": "db624e065b6685dfea25db9106752e837f06f26b799763593759efd150fe554a"}
 
@@ -81,7 +81,7 @@ def run(args):
     source = [Path(__file__), PLAN, Path("experiments/structure_net/ncm_training_recipe.py"),
               Path("experiments/structure_net/ncm_llama.py"),
               Path("experiments/structure_net/ncm_memory_data.py"),
-              Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-control-windowing-fix.md")]
+              Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-control-windowing-fix.md")]
     source += sorted(VENDOR.rglob("*.py"))
     source += sorted((ROOT / "dependencies/rouge_score").glob("*.py"))
     source += [ROOT / "dependencies/nltk/stem/porter.py"]

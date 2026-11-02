@@ -271,7 +271,7 @@ def _detail_summary(detail: Mapping[str, Any]) -> dict[str, float]:
 def build_calibrated_frontend_causal_closure_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/"
+        "docs/08 - Analysis/tinyllm/"
         "2026-08-10_tinyllm-calibrated-frontend-causal-closure.md"
     ),
 ) -> dict[str, Any]:

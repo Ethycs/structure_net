@@ -31,7 +31,7 @@ SCHEMA_VERSION = "nal.tinyllm-joint-full-interface.v1"
 HYPOTHESIS_ID = "tinyllm-joint-full-interface-physical-typing-v1"
 EVIDENCE_ROLE = "prospective_full_interface_physical_typing"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-joint-full-interface-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

@@ -19,8 +19,8 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 ROOT = clean.ROOT
 HYPOTHESIS = "ncm-continuous-codec-target-fidelity-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-continuous-codec-target-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-continuous-codec-target.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-continuous-codec-target-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-continuous-codec-target.md")
 WORKFLOW = ROOT / "20261023_continuous_codec_target_workflow_v1"
 PILOT = ROOT / "20261023_continuous_codec_target_pilot_v1"
 MEASURE = ROOT / "20261023_continuous_codec_target_measure_v1"

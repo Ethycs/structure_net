@@ -10,7 +10,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 DEST = final.ROOT / "20261023_sealed_final_results_v1"
 WORKFLOW = final.ROOT / "20261023_sealed_final_workflow_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-sealed-final-quality.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-sealed-final-quality.md")
 
 
 def replay_judgments(outputs):

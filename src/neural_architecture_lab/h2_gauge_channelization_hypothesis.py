@@ -15,7 +15,7 @@ REGISTERED_AT = datetime(2026, 8, 30, tzinfo=timezone.utc)
 HYPOTHESIS_ID = "tinyllm-h2-gauge-channelization-v1"
 PARENT_HYPOTHESIS_ID = "tinyllm-causal-h2-attention-v1"
 PREREGISTRATION = (
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-30_tinyllm-h2-gauge-channelization-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

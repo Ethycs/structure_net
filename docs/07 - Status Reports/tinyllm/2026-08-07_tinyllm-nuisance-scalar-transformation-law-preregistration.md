@@ -13,7 +13,7 @@ writer coordinates. The locked identity-only repair is documented in
 scientific targets, thresholds, and classifications are unchanged.
 
 **Measured report:**
-[`2026-08-07_tinyllm-nuisance-scalar-transformation-law.md`](../08%20-%20Analysis/2026-08-07_tinyllm-nuisance-scalar-transformation-law.md)
+[`2026-08-07_tinyllm-nuisance-scalar-transformation-law.md`](../../08%20-%20Analysis/tinyllm/2026-08-07_tinyllm-nuisance-scalar-transformation-law.md)
 
 ## Decision question
 

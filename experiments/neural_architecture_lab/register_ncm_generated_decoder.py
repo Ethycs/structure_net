@@ -15,7 +15,7 @@ if not hasattr(np, 'NaN'):
 
 ROOT = Path('data/experiments/ncm_paper_regime/20261025_generated_code_decoder_results_v1')
 CAMPAIGN = ROOT / 'campaign_results.json'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-generated-code-decoder.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-generated-code-decoder.md')
 HYPOTHESIS = 'ncm-generated-code-decoder-v1'
 
 

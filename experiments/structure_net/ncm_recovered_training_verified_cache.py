@@ -5,7 +5,7 @@ from pathlib import Path
 from experiments.structure_net import ncm_recovered_paraphrase_training as study
 
 OriginalProofs = study.inputs.Proofs
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-training-validation-cache.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-training-validation-cache.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_training_verified_cache.py')
 CPU = study.inputs.BASE/'20261028_recovered_training_verified_cache_CPU_v1.json'
 POLICY = {'identity': 'process-local-stat-guarded-hash-reuse-v1',

@@ -25,7 +25,7 @@ SCHEMA_VERSION = "nal.tinyllm-bias-component-causal-decomposition.v1"
 HYPOTHESIS_ID = "tinyllm-bias-component-causal-decomposition-v1"
 EVIDENCE_ROLE = "preregistered_frozen_bias_component_intervention"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-bias-component-causal-decomposition-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

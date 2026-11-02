@@ -16,7 +16,7 @@ from .normal_operation import evaluate, context_for, expected_state
 from .validate import Client
 from . import deploy
 
-PLAN = Path('docs/07 - Status Reports/2026-11-01_word-games-normal-operation-followup.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-11-01_word-games-normal-operation-followup.md')
 
 
 def fixtures():

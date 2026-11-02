@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_paper_data as paper
 base, latest = scoped.base, scoped.latest
 ROOT = latest.BASE/'20261029_latest_semantic_worker_v3'
 RUNTIME = Path('/tmp/structure-net-ncm-latest-semantic-20261029-v3')
-PLAN = Path('docs/07 - Status Reports/2026-10-29_ncm-legacy-verifier-cache.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-29_ncm-legacy-verifier-cache.md')
 TEST = Path('tests/structure_net/test_ncm_latest_semantic_worker_v3.py')
 CPU = latest.BASE/'20261029_latest_semantic_worker_v3_CPU_v1.json'
 

@@ -14,7 +14,7 @@ from experiments.structure_net.ncm_memory_data import file_hash,write_json
 
 study=trial.base.study
 DEST=study.data.ROOT/"20261023_word_final_root_capacity_budget1024_results_v1"
-REPORT=Path("docs/08 - Analysis/2026-10-23_ncm-source-root-budget1024.md")
+REPORT=Path("docs/08 - Analysis/ncm/2026-10-23_ncm-source-root-budget1024.md")
 
 
 def finalize():

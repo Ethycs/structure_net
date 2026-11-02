@@ -8,7 +8,7 @@
 
 **Classification:** `c3_positive_control_task_failure`
 
-**Preregistration:** [observable C3 d6](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-temporal-quotient-d6-preregistration.md)
+**Preregistration:** [observable C3 d6](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-temporal-quotient-d6-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_temporal_quotient/20260811_d6_preregistered/campaign_results.json`
 

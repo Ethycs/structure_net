@@ -3,7 +3,7 @@ from pathlib import Path
 
 MODEL = "word-games-qwen2.5-14b"
 HYPOTHESIS = "word-games-qwen25-pair-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-31_word-games-qwen-pair-plan.md")
+PLAN = Path("docs/07 - Status Reports/word-games/2026-10-31_word-games-qwen-pair-plan.md")
 MODEL_ROOT = Path("/home/rabbit/models")
 PAIRS = {
     "target": {

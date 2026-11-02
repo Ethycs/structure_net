@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_paper_data import ROOT
 
 HYPOTHESIS = "ncm-paper-noisy-pairs-v1"
 DESTINATION = ROOT / "20261022_noisy_quality_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-paper-regime-task-accuracy.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-paper-regime-task-accuracy.md")
 
 
 def finalize():

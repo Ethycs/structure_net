@@ -8,8 +8,8 @@ The optimization ran; its loss is an inadequate measure of the requested task.
 Date: 2026-10-22. ID: `ncm-frozen-body-diagnosis-v1`. Conformance: EXPLORATORY,
 post-hoc, one reused training seed. Classification:
 `exploratory_code_generation_failure_diagnosed`.
-[Plan](../07%20-%20Status%20Reports/2026-10-22_ncm-training-diagnosis-plan.md),
-[pilot correction](../07%20-%20Status%20Reports/2026-10-22_ncm-diagnosis-cache-amendment.md).
+[Plan](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-training-diagnosis-plan.md),
+[pilot correction](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-diagnosis-cache-amendment.md).
 No weights were trained or changed and no new LLM grades were requested.
 
 Aggregate: `data/experiments/ncm_frozen_body/20261022_diagnosis_v1/campaign_results.json`.

@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_public_batch4_lifecycle as original
 
 FAILED = original.ROOT
 ROOT = original.data.ROOT/'20261026_public_batch4_lifecycle_deterministic_v2'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-batch4-determinism.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-batch4-determinism.md')
 TEST = Path('tests/structure_net/test_ncm_public_batch4_deterministic.py')
 
 

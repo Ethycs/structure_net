@@ -7,7 +7,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 run = audit.run
 DEST = run.ROOT / '20261025_level_conditioning_oracle_prefix_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-oracle-prefix-diagnostic.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-oracle-prefix-diagnostic.md')
 
 
 def main():

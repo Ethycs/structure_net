@@ -12,7 +12,7 @@ from experiments.structure_net import ncm_recovered_label_codec as prior
 
 data = prior.data
 ROOT = data.ROOT/'20261027_recovered_released_codec_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-released-codec.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-released-codec.md')
 EXPECTED = '9aace450a49a7dfb44ba1eb00a19974a50d67062ad9f2202a6a2361ea4344e32'
 
 

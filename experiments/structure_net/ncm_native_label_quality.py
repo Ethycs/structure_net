@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 from experiments.structure_net.ncm_frozen_body_public_data import PUBLIC_FILE
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-readout-recovery-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-readout-recovery-plan.md")
 PREP = ROOT / "20261023_native_labels_prepare_v1"
 PILOT = ROOT / "20261023_native_labels_pilot_v1"
 GENERATE = ROOT / "20261023_native_labels_generate_v1"

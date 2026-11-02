@@ -18,7 +18,7 @@ from experiments.structure_net import qwen_moba_prefix as q
 from experiments.structure_net import moba_head_benchmark as b
 from experiments.structure_net import run_qwen_moba_feasibility as base
 
-PROTOCOL = Path("docs/07 - Status Reports/2026-09-09_qwen8b-moba-idle-latency.md")
+PROTOCOL = Path("docs/07 - Status Reports/moba/2026-09-09_qwen8b-moba-idle-latency.md")
 SETTING = q.MoBASetting(1024, 2, "all")
 VARIANTS = {"full_mlp2048": (False, 32, 2048), "full_mlpwhole": (False, 32, 0),
             "moba_heads4_mlp2048": (True, 4, 2048), "moba_heads32_mlp2048": (True, 32, 2048),

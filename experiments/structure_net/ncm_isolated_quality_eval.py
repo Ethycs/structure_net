@@ -19,7 +19,7 @@ from experiments.structure_net.ncm_native_word_neighborhood import special_polic
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-23_ncm-quality-evaluation-runtime-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-quality-evaluation-runtime-amendment.md")
 PILOT = ROOT / "20261023_isolated_quality_inference_pilot_v1"
 OUTPUTS = ROOT / "20261023_isolated_quality_outputs_v1"
 GRADE = ROOT / "20261023_isolated_quality_grade_v1"

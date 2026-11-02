@@ -27,7 +27,7 @@ EVIDENCE_ROLE = (
     "preregistered_pre_model_numerical_corrective_bias_reference_intervention"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-bias-reference-recentering-v2-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

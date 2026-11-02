@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_recovered_label_sample as sample
 from experiments.structure_net import ncm_public_training_catalog as catalog
 
 ROOT = pool.BASE/'20261027_recovered_codec_corpus_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-codec-corpus.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-codec-corpus.md')
 MAX_RSS = 4_000_000_000
 
 

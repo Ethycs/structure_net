@@ -20,7 +20,7 @@ from experiments.structure_net import moba_sparse_kernel as custom
 
 UPSTREAM = Path("data/experiments/moba_paper/upstream")
 UPSTREAM_COMMIT = "b5d58363311d3ca946f1ec444182727c15e338b5"
-PROTOCOL = Path("docs/07 - Status Reports/2026-09-09_moba-attention-application-protocol.md")
+PROTOCOL = Path("docs/07 - Status Reports/moba/2026-09-09_moba-attention-application-protocol.md")
 
 
 def sha256(path):

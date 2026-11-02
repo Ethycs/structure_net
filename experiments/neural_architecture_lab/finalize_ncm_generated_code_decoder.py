@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_generated_code_decoder as study
 from experiments.structure_net import ncm_generated_decoder_development as development
 
 RESULTS = study.ROOT / '20261025_generated_code_decoder_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-generated-code-decoder.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-generated-code-decoder.md')
 HYPOTHESIS = study.HYPOTHESIS
 ROOTS = development.ROOTS
 

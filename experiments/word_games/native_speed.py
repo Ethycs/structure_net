@@ -19,7 +19,7 @@ GPU = "GPU-0370fdb0-6490-d871-15e5-c14a1fa671ff"
 WEIGHTS = Path("/home/rabbit/models/Phi-4-GGUF/phi-4-Q4_K_M.gguf")
 WEIGHTS_SHA = "009aba717c09d4a35890c7d35eb59d54e1dba884c7c526e7197d9c13ab5911d9"
 BINARY = Path(".pixi/word-games-native-b11960/llama-b11960")
-PLAN = Path("docs/07 - Status Reports/2026-10-31_word-games-phi4-40tps-plan.md")
+PLAN = Path("docs/07 - Status Reports/word-games/2026-10-31_word-games-phi4-40tps-plan.md")
 PILOT = ["metaphor", "cases/normal_reserve/sender/turn_01", "cases/cancel/receiver"]
 IMAGE = "sha256:24cbda07ad69c186ebaa9927292448d82e705d0d5d68c68e6c0f8eab420b64dd"
 

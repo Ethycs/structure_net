@@ -13,7 +13,7 @@ from experiments.structure_net import ncm_indexed_jsonl as indexed
 data = catalog.data
 HYPOTHESIS = 'ncm-public-source-metadata-v1'
 ROOTS = {stage: data.ROOT/f'20261026_public_source_metadata_{stage}_v1' for stage in ('pilot', 'full')}
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-source-metadata-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-source-metadata-plan.md')
 TESTS = [Path('tests/structure_net/test_ncm_indexed_jsonl.py'),
          Path('tests/structure_net/test_ncm_public_source_metadata.py')]
 BOUNDARIES = {'model_training': False, 'body_loaded': False, 'features_computed': False,

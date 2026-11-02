@@ -14,8 +14,8 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 DEST = run.ROOT / "20261024_clean_source_partition_failure_results_v1"
 WORKFLOW = run.ROOT / "20261024_clean_source_partition_failure_workflow_v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-clean-source-failure-audit-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-clean-whole-turn-source-availability.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-clean-source-failure-audit-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-clean-whole-turn-source-availability.md")
 MODULE = "experiments.neural_architecture_lab.finalize_ncm_clean_source_partition_failure"
 LOG = run.ROOT / "20261023_clean_source_partitions_workflow_v1.worker.log"
 

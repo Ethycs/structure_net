@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 native, head, q, ROOT = training.native, training.head, training.q, training.ROOT
 HYPOTHESIS = "ncm-lm1b-word-gradient-lifecycle-v1"
 DEST = ROOT / "20261024_lm1b_word_gradient_cuda_pilot_v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-word-gradient-pilot-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-word-gradient-pilot-plan.md")
 TEST = Path("tests/structure_net/test_ncm_lm1b_word_gradient.py")
 BASE_SHA = "bb239a482db67d67d2d7f410588fada7b6782c42474eb9e8d1dffdd8bb7d1490"
 BASE_ATTENTION = "38af3e583bde80a09981556860a282e7133cb8d20a7c1f9faffdd15f31c6307d"

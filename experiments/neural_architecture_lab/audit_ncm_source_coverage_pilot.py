@@ -12,7 +12,7 @@ from experiments.structure_net import ncm_source_coverage_pilot as pilot
 
 data=pilot.data
 ROOT=data.ROOT/'20261027_source_coverage_pilot_audit_v1'
-REPORT=Path('docs/08 - Analysis/2026-10-27_ncm-source-coverage-pilot.md')
+REPORT=Path('docs/08 - Analysis/ncm/2026-10-27_ncm-source-coverage-pilot.md')
 
 
 def audit():

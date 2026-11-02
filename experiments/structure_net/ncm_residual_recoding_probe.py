@@ -8,7 +8,7 @@ import torch
 
 from experiments.structure_net import ncm_broad_generator as study
 
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-residual-recoding-probe-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-residual-recoding-probe-plan.md')
 TEST = Path('tests/structure_net/test_ncm_residual_recoding_probe.py')
 PREFIX_LEVELS = (0, 2, 3, 4, 6, 9, 11, 12)
 ROOTS = {s: study.runtime.ROOT / ('20261025_residual_recoding_probe_' + s + '_v2')

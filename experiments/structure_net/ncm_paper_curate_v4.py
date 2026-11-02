@@ -10,9 +10,9 @@ from experiments.structure_net.ncm_paper_data import ROOT, TEACHER, freeze, veri
 from experiments.structure_net.ncm_paper_grade import grade
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-paper-recovery-v2-plan.md")
-RESOURCE_NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-curation-concurrency-amendment.md")
-RECOVERY_NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-curation-provider-recovery.md")
+NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-paper-recovery-v2-plan.md")
+RESOURCE_NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-curation-concurrency-amendment.md")
+RECOVERY_NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-curation-provider-recovery.md")
 OLD = ROOT / "20261022_teacher_audit_v1"
 PARTIAL = ROOT / "20261022_curated_v2"
 SECOND_PARTIAL = ROOT / "20261022_curated_v3"

@@ -6,7 +6,7 @@ from pathlib import Path
 from experiments.structure_net import ncm_oracle_prefix as study
 
 data,ROOT = study.data,study.ROOTS['results']
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-oracle-prefix.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-oracle-prefix.md')
 
 
 def report():

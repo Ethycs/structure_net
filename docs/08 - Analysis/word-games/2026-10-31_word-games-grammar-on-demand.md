@@ -143,8 +143,8 @@ native logs, GPU telemetry, responses and transfer counters are preserved.
 | Final build | `data/experiments/word_games/20261031_grammar_build_v5/result.json` | `0ab39a595c3cf239ffb11c77bb12609091dd229193ee831786bce87f702a199c` |
 | Final native checks | `data/experiments/word_games/20261031_grammar_native_v6/result.json` | `1daeb2cba9523fb0a150f3f30c84fd42fa01704a6ccbc97e238f94e75315142b` |
 
-See the [original plan](../07%20-%20Status%20Reports/2026-10-31_word-games-grammar-on-demand-plan.md),
-[implementation amendment](../07%20-%20Status%20Reports/2026-10-31_word-games-grammar-reduction-amendment.md),
+See the [original plan](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-grammar-on-demand-plan.md),
+[implementation amendment](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-grammar-reduction-amendment.md),
 and [patch 1 build prerequisites](2026-10-31_word-games-sampling-output-once.md).
 From the repository root, with that verified patch 1 build available, use fresh
 paths for every command:

@@ -41,7 +41,7 @@ not semantic accuracy. No change of precision rescues the original failed gate.
 The implementation adapts the paper's tokenizer-first, frozen-codec,
 unpaired-then-conditional staging. It adds a frozen Llama source bridge and
 corrects left-padded context placement for NCM. The numerical configuration and
-boundaries are in the [plan](../07%20-%20Status%20Reports/2026-10-22_ncm-paper-regime-plan.md)
+boundaries are in the [plan](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-paper-regime-plan.md)
 and its training addendum. Source/tests were frozen in commits ce5142e and
 4791fc4; raw producers also retain source copies and hashes. The released
 checkpoint's nine-level schedule is retained despite the paper table listing
@@ -49,7 +49,7 @@ eight. The authors' XSum result is not a promise of95% task accuracy here.
 [Paper](https://arxiv.org/html/2610.14162v1).
 
 The v1 study is closed at its failed controls. The user's95% objective remains
-active in a separately declared [v2 study](../07%20-%20Status%20Reports/2026-10-22_ncm-paper-recovery-v2-plan.md):
+active in a separately declared [v2 study](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-paper-recovery-v2-plan.md):
 train the actual codec encoder/EMA books/resampling/decoder with nested dropout,
 and screen the paired labels before conditional training. No v2 quality result
 is included in this aggregate. The final256sources remain sealed. There is no

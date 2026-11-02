@@ -20,7 +20,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 SCHEMA_VERSION = 'nal.ncm-broad-generator.v1'
 HYPOTHESIS_ID = 'ncm-broad-generator-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-broad-generator-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-broad-generator-plan.md')
 TEST = Path('tests/structure_net/test_ncm_broad_generator.py')
 RUNS = {s: runtime.ROOT / ('20261025_broad_generator_' + s + '_v1')
         for s in ('prepare', 'pilot', 'train')}

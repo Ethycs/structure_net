@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_recipe_teacher import verify_public
 MODEL = "ncm-qwen3-8b-q6k"
 URL = "http://127.0.0.1:18081/v1/chat/completions"
 BASE = Path("data/experiments/ncm_local_judge")
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-local-judge-recovery-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-local-judge-recovery-plan.md")
 
 
 def request(packet, destination):

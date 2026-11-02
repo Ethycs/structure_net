@@ -11,7 +11,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 study=trial.study
 DEST=study.data.ROOT/"20261023_word_final_root_capacity_results_v1"
-REPORT=Path("docs/08 - Analysis/2026-10-23_ncm-source-root-capacity.md")
+REPORT=Path("docs/08 - Analysis/ncm/2026-10-23_ncm-source-root-capacity.md")
 
 
 def recount(rows,measurement):

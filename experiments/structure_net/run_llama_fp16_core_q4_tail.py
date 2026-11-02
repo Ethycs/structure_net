@@ -21,7 +21,7 @@ from experiments.structure_net.prepare_llama_cotenancy import MODEL_PATH,sha256,
 
 BASE=Path("data/experiments/llama_fp16_core_q4_tail")
 TUNING=BASE/"20261014_operator_tuning_v2/result.json"
-AMENDMENT=Path("docs/07 - Status Reports/2026-10-14_llama32-q4-tail-operator-amendment.md")
+AMENDMENT=Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-q4-tail-operator-amendment.md")
 
 
 def fixtures(output):

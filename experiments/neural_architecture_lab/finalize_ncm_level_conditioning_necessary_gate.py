@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_level_conditioning_numeric as run
 HYPOTHESIS = 'ncm-level-conditioning-native655-necessary-quality-failure-v1'
 DEST = run.ROOT / '20261025_level_conditioning_necessary_quality_results_v1'
 AUDIT = run.ROOT / '20261024_level_conditioning_numeric_audit_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-level-conditioning-necessary-quality-failure.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-level-conditioning-necessary-quality-failure.md')
 
 
 def bounds(outputs):

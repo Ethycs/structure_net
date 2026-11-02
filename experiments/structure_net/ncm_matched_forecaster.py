@@ -19,7 +19,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_native_label_quality import dependencies
 
 ROOT = clean.ROOT
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-matched-forecaster-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-matched-forecaster-plan.md")
 HYPOTHESIS = "ncm-matched-population-forecaster-v1"
 PILOT = ROOT / "20261023_matched_forecaster_pilot_v1"
 FIT_PILOT = ROOT / "20261023_matched_forecaster_fit_pilot_v1"
@@ -27,7 +27,7 @@ TRAIN = ROOT / "20261023_matched_forecaster_train_v1"
 FIT = ROOT / "20261023_matched_forecaster_fit_v1"
 WORKFLOW = ROOT / "20261023_matched_forecaster_workflow_v1"
 RESULTS = ROOT / "20261023_matched_forecaster_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-matched-forecaster.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-matched-forecaster.md")
 MODULE = "experiments.structure_net.ncm_matched_forecaster"
 FINALIZER_MODULE = "experiments.neural_architecture_lab.finalize_ncm_matched_forecaster"
 FINALIZER_FILE = Path("experiments/neural_architecture_lab/finalize_ncm_matched_forecaster.py")

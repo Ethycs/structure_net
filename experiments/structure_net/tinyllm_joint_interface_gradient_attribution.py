@@ -33,7 +33,7 @@ SCHEMA_VERSION = "nal.tinyllm-joint-interface-gradient-attribution.v2"
 HYPOTHESIS_ID = "tinyllm-joint-interface-gradient-attribution-v2"
 EVIDENCE_ROLE = "registered_post_outcome_no_training_gradient_attribution"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-joint-interface-gradient-attribution-v2-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

@@ -8,7 +8,7 @@ Date: 2026-10-22. ID: `ncm-recipe-update-v1`. Conformance: EXPLORATORY, one seed
 Classification: `recipe_update_training_positive_control_failed`.
 Aggregate: `data/experiments/ncm_recipe_update/20261022_training_v1/campaign_results.json`.
 SHA256: `03b4bb30a584c1df7b35e2ac3210be9cec4d9787d6d1b52690f204e1a3d69903`.
-[Plan](../07%20-%20Status%20Reports/2026-10-22_ncm-recipe-update-plan.md).
+[Plan](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-recipe-update-plan.md).
 
 The update adds actual cumulative-latent cutoffs for decoder adaptation,
 conditioning-code corruption with clean generator targets, equal per-level code
@@ -23,14 +23,14 @@ The original released NCM passes the fixed 128-case XSum control: ROUGE-L
 decoder settings produced these outputs. This is a small original-domain sanity
 check, not the full 11,334-example paper evaluation or semantic task accuracy.
 The local codec scorer initially rejected long references; the
-[windowing correction](../07%20-%20Status%20Reports/2026-10-22_ncm-recipe-control-windowing-fix.md)
+[windowing correction](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-recipe-control-windowing-fix.md)
 preserves that failure and reuses unchanged original outputs with SHA receipts.
 All reference tokens are covered in 48-token windows without truncation.
 
 The original saved-target audit accepted only 5/128 candidates, with one invalid
 judgment. That failed audit is preserved and those snippets were not used for
 the quality-training run. The
-[teacher-target amendment](../07%20-%20Status%20Reports/2026-10-22_ncm-recipe-teacher-target-amendment.md)
+[teacher-target amendment](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-recipe-teacher-target-amendment.md)
 then fixed the first 64 public training passages and generated one greedy local
 Llama3B summary each, requesting approximately 24 words to fit the codec. No
 quality-based generation retry or prompt tuning occurred. Of

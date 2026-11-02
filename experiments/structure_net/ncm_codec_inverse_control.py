@@ -19,7 +19,7 @@ from experiments.structure_net.ncm_unseen_codec_control import CODEC, MEASURE, N
 from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_memory import save
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-codec-inverse-control-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-codec-inverse-control-plan.md")
 PILOT = ROOT / "20261022_codec_inverse_pilot_v1"
 MEASUREMENT = ROOT / "20261022_codec_inverse_measure_v1"
 MODES = ("neural", "blind_inverse_4", "oracle_statistics", "unquantized_oracle")

@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_sol_teacher_continuation as run
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 DEST = run.ROOT / '20261025_sol_teacher144_partial_inventory_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-teacher-outage-inventory-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-teacher-outage-inventory-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sol_teacher144_partial.py')
 
 

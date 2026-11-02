@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_frozen_body_public_data import PUBLIC_FILE, P
 
 q = teacher.old.run.q
 first = teacher.old.first
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-oracle-codec-semantic-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-oracle-codec-semantic-plan.md")
 PREP = ROOT / "20261023_oracle_codec_semantic_prepare_v1"
 PILOT = ROOT / "20261023_oracle_codec_semantic_pilot_v1"
 GRADE = ROOT / "20261023_oracle_codec_semantic_grade_v1"

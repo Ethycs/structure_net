@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_latest_generation_recovery as recovery
 latest = base.latest
 ROOT = latest.BASE/'20261029_latest_semantic_worker_v2'
 RUNTIME = Path('/tmp/structure-net-ncm-latest-semantic-20261029-v2')
-PLAN = Path('docs/07 - Status Reports/2026-10-29_ncm-scoped-semantic-worker.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-29_ncm-scoped-semantic-worker.md')
 TEST = Path('tests/structure_net/test_ncm_latest_semantic_worker_v2.py')
 CPU = latest.BASE/'20261029_latest_semantic_worker_v2_CPU_v1.json'
 ORIGINAL_RUN = base.run_request

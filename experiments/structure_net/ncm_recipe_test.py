@@ -22,7 +22,7 @@ from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 HYPOTHESIS = "ncm-recipe-update-test-v1"
 TRAINING = ROOT / "20261022_training_v1"
 TEST = ROOT / "20261022_test_v1"
-NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-test-amendment.md")
+NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-test-amendment.md")
 ARMS = ("legacy", "updated", "parent")
 
 

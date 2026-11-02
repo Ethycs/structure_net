@@ -15,12 +15,12 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 q = labels.prior.q
 base = labels.prior.data
 ROOT = base.ROOT
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-targeted-label-recovery-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-targeted-label-recovery-plan.md")
 HYPOTHESIS = "ncm-targeted-training-label-revisions-v1"
 PREP = ROOT / "20261023_targeted_label_sources_v1"
 WORKFLOW = ROOT / "20261023_targeted_label_workflow_v1"
 ARCHIVE = ROOT / "20261023_targeted_label_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-targeted-training-label-revisions.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-targeted-training-label-revisions.md")
 BASELINE = ROOT / "20261023_reviewed_draft_data_v1"
 AVAILABILITY = ROOT / "20261023_judge_gateway_completion_probe_v2/result.json"
 ABORT = ROOT / "20261023_additional_revision_transport_abort_v1"

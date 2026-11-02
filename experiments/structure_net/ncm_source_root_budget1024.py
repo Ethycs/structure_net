@@ -6,7 +6,7 @@ from pathlib import Path
 from experiments.structure_net import ncm_source_root_capacity as base
 from experiments.structure_net.ncm_memory_data import file_hash,write_json
 
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-source-root-budget1024-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-source-root-budget1024-plan.md")
 HYPOTHESIS="ncm-source-root-capacity-budget1024-v1"
 PARENT=base.study.data.ROOT/"20261023_word_final_root_capacity_results_v1"
 TRAIN=base.study.data.ROOT/"20261023_word_final_root_capacity_budget1024_train_v1"

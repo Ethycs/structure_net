@@ -13,7 +13,7 @@ previous, q = transport.previous, transport.q
 BASE = previous.ROOT
 ROOTS = {(role, stage): BASE/f'20261028_isolated_judge_{role}_{stage}_v1'
          for role in transport.MODELS for stage in ('qualification', 'audit')}
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-isolated-judge-qualification.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-isolated-judge-qualification.md')
 TEST = Path('tests/structure_net/test_ncm_isolated_judge_transport.py')
 CPU = BASE/'20261028_isolated_judge_transport_CPU_v1.json'
 HISTORY = BASE/'20261026_public_curriculum_epoch4_DEV_grade_v1/judgment_cache.json'

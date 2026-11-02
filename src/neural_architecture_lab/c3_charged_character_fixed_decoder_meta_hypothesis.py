@@ -51,16 +51,16 @@ RUNNER_PATH = Path(
     "tinyllm_c3_charged_character_fixed_decoder_corrective.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-charged-character-fixed-decoder-"
     "corrective-preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-charged-character-fixed-decoder.md"
 )
 INVALID_PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-charged-character-fixed-decoder-"
     "preregistration.md"
 )

@@ -7,7 +7,7 @@ import sys
 from experiments.structure_net import ncm_teacher1024_continuation as prior
 
 data,base,original = prior.data,prior.base,prior.original
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-teacher1024-writer-recovery.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-teacher1024-writer-recovery.md')
 TEST = Path('tests/structure_net/test_ncm_teacher1024_writer_recovery.py')
 SERVICE = Path('experiments/neural_architecture_lab/ncm_teacher1024_writer_recovery_service.py')
 FAILURE = prior.ROOTS['prepare']

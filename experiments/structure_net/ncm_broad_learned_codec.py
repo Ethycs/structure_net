@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_frozen_body import module_hash
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-broad-learned-codec-reconstruction-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-broad-learned-codec-reconstruction-plan.md")
 PILOT = ROOT / "20261023_broad_learned_codec_pilot_v1"
 TRAIN = ROOT / "20261023_broad_learned_codec_train_v1"
 RECON = ROOT / "20261023_broad_learned_codec_reconstruction_v1"

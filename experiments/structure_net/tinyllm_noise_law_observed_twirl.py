@@ -54,7 +54,7 @@ SOURCE_CALIBRATED_RUNNER_SHA256 = (
     "73e152b9b6c7ab51ad08e6a80786c32a71566f9d4fb410ff2cf3df53761faf77"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-noise-law-observed-twirl-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

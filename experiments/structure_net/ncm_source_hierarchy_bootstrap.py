@@ -14,7 +14,7 @@ from experiments.structure_net.ncm_memory_data import file_hash,write_json
 
 ROOT_TRAIN=study.data.ROOT/"20261023_word_final_root_capacity_budget1024_train_v1"
 ROOT_RESULTS=study.data.ROOT/"20261023_word_final_root_capacity_budget1024_results_v1"
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-source-hierarchy-bootstrap-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-source-hierarchy-bootstrap-plan.md")
 HYPOTHESIS="ncm-source-hierarchy-bootstrap-v1"
 PILOT=study.data.ROOT/"20261023_source_hierarchy_bootstrap_pilot_v1"
 TRAIN=study.data.ROOT/"20261023_source_hierarchy_bootstrap_train_v1"

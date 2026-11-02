@@ -8,7 +8,7 @@
 
 **Classification:** `fixed_robust_estimator_closes_single_frame_corruption`
 
-**Preregistration:** [C3 single-frame corruption fixed-estimator preflight](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-single-frame-corruption-fixed-estimator-preregistration.md)
+**Preregistration:** [C3 single-frame corruption fixed-estimator preflight](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-single-frame-corruption-fixed-estimator-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_single_frame_corruption_fixed_estimator/20260811_preregistered/result.json`
 

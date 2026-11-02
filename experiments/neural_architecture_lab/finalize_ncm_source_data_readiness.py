@@ -13,7 +13,7 @@ ROOT, q, native = metadata.ROOT, metadata.q, metadata.native
 META_AUDIT = ROOT / '20261024_additional10000_source_metadata_audit_v1'
 STORE_AUDIT = ROOT / '20261024_lossless_FP32_feature_storage_audit_v1'
 RESULTS = ROOT / '20261024_source_data_readiness_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-source-data-readiness.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-source-data-readiness.md')
 
 
 def finalize():

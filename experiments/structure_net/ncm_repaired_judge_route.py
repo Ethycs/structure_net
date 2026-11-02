@@ -9,7 +9,7 @@ from experiments.neural_architecture_lab import ncm_persistent_judge_gateway_v2 
 from experiments.structure_net import ncm_isolated_judge_qualification as qualification
 
 base = gateway.base
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-repaired-judge-route.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-repaired-judge-route.md')
 TEST = Path('tests/structure_net/test_ncm_repaired_judge_route.py')
 CPU = base.BASE/'20261028_repaired_judge_route_CPU_v1.json'
 OLD_SERVICE = gateway.SERVICE

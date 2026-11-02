@@ -12,7 +12,7 @@
 **Corrective readout classification:**
 `posthoc_public_scale_readout_reaches_four_of_five_one_wrong_winding_remains`
 
-**Preregistration:** [matched acquisition protocol](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-relational-connection-acquisition-preregistration.md)
+**Preregistration:** [matched acquisition protocol](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-relational-connection-acquisition-preregistration.md)
 
 **Primary artifact:**
 `data/experiments/tinyllm_c3_relational_connection_acquisition/20260811_preregistered/campaign_results.json`

@@ -8,9 +8,9 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 from experiments.structure_net.ncm_native_label_quality import dependencies
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-input-range-audit-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-input-range-audit-plan.md")
 DEST = ROOT / "20261023_application_input_range_audit_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-input-range-audit.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-input-range-audit.md")
 
 
 def lengths(values):

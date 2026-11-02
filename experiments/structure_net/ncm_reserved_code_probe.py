@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_shared_summary_source_guard as guard
 from experiments.structure_net import ncm_shared_summary_inventory as inventory
 
 data, study = controls.data, controls.study
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-reserved-code-probe-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-reserved-code-probe-plan.md')
 TEST = Path('tests/structure_net/test_ncm_reserved_code_probe.py')
 HYPOTHESIS = 'ncm-public-epoch2-reserved-code-probe-v1'
 SCHEMA = 'nal.ncm-reserved-code-probe.v1'

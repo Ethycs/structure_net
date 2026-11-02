@@ -54,7 +54,7 @@ ORACLE_ACCURACY_SLACK_MAXIMUM = base.ORACLE_ACCURACY_SLACK_MAXIMUM
 ORACLE_CROSS_ENTROPY_SLACK_MAXIMUM = base.ORACLE_CROSS_ENTROPY_SLACK_MAXIMUM
 REQUIRED_SEED_PASSES = base.REQUIRED_SEED_PASSES
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-switching-corruption-fixed-decoder-"
     "corrective-preregistration.md"
 )

@@ -14,7 +14,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
 ROOT = Path("data/experiments/ncm_paper_regime")
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-paper-regime-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-paper-regime-plan.md")
 PARENT = Path("data/experiments/ncm_frozen_body/20261022_train_v1")
 DATA = Path("data/experiments/ncm_memory/20261022_data_v1")
 PREP = ROOT / "20261022_data_v1"

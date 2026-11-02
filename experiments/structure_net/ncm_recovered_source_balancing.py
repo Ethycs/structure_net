@@ -13,7 +13,7 @@ from experiments.structure_net import ncm_recovered_paraphrase_catalog as catalo
 
 pool = catalog.pool
 ROOT = pool.BASE/'20261028_recovered_source_balancing_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-source-balancing.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-source-balancing.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_source_balancing.py')
 BINDINGS = pool.BASE/'20261027_isolated_task_supervision_preflight_v1/bindings.json'
 

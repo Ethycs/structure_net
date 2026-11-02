@@ -49,7 +49,7 @@ SOURCE_ATLAS_SHA256 = (
     "da6dad8c00738e5fc364de45b970245fa0667731aeedbcb462b85aa94bf1c3d6"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-task-relative-activation-barycenter-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

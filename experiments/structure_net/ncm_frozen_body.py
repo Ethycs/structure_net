@@ -24,7 +24,7 @@ from experiments.structure_net.prepare_llama_cotenancy import MODEL_PATH
 from experiments.structure_net.train_ncm_memory import rows, save, word_unigram_f1
 
 HYPOTHESIS = "ncm-frozen-llama-body-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-frozen-body-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-frozen-body-plan.md")
 DATA = Path("data/experiments/ncm_memory/20261022_data_v1")
 PRIOR = Path("data/experiments/ncm_memory/20261022_training_v1")
 CODEC, GENERATOR = PRIOR / "codec.pt", PRIOR / "generator.pt"

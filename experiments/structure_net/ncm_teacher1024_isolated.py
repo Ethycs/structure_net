@@ -15,7 +15,7 @@ from experiments.structure_net import ncm_teacher1024_writer_recovery as recover
 prior,original,data,base = recovery.prior,recovery.original,recovery.data,recovery.base
 teacher = original.teacher
 OLD_REPLAY = original.replay
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-teacher1024-isolated.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-teacher1024-isolated.md')
 TEST = Path('tests/structure_net/test_ncm_teacher1024_isolated.py')
 SERVICE = Path('experiments/neural_architecture_lab/ncm_teacher1024_isolated_service.py')
 ROOTS = {s:data.ROOT/f'20261027_teacher1024_{s}_v5' for s in ('prepare','pilot','pilot_audit','generate','audit')}

@@ -37,7 +37,7 @@ ARMS = ("learned_true", "learned_target_shuffled")
 SEEDS = (7, 17, 29, 41, 53)
 REGIMES = ("composition", "extrapolation")
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-sensor-only-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

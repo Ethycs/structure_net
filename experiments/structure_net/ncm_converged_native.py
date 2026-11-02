@@ -22,7 +22,7 @@ from experiments.structure_net.ncm_native_word_neighborhood import initial_state
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-converged-development-quality-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-converged-development-quality-plan.md")
 PILOT = ROOT / "20261023_converged_native_pilot_v1"
 OUTPUTS = ROOT / "20261023_converged_native_outputs_v1"
 GRADE = ROOT / "20261023_converged_native_grade_v1"

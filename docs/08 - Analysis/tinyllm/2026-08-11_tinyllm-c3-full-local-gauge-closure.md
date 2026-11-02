@@ -8,7 +8,7 @@
 
 **Classification:** `pointwise_cubic_quotient_closes_full_local_c3_gauge`
 
-**Preregistration:** [full local-gauge closure](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-full-local-gauge-closure-preregistration.md)
+**Preregistration:** [full local-gauge closure](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-full-local-gauge-closure-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_full_local_gauge_closure/20260811_artifact_audit/result.json`
 

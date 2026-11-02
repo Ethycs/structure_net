@@ -8,7 +8,7 @@ target-only remains the default. No production endpoint was replaced.
 
 Aggregate: `data/experiments/word_games/20261031_qwen_pair_analysis_v1/campaign_results.json`.
 SHA256: `f0a2eb745bb5ef1db714ec93c7d7ac7aed16347a2a078ced8f030941b3e13f1b`.
-[Prospective protocol](../07%20-%20Status%20Reports/2026-10-31_word-games-qwen-pair-plan.md).
+[Prospective protocol](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-qwen-pair-plan.md).
 
 ## Model and runtime
 

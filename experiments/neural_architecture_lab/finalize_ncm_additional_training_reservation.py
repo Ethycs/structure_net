@@ -8,7 +8,7 @@ from experiments.structure_net import ncm_additional_training_reservation as run
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 RESULTS = run.ROOT / "20261024_additional10000_training_reservation_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-additional-training-reservation.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-additional-training-reservation.md")
 
 
 def finalize():

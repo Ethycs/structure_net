@@ -8,7 +8,7 @@ from experiments.structure_net import ncm_wide_source_labels as wide
 from experiments.structure_net.ncm_memory_data import file_hash,text_hash,write_json
 
 prior=availability.prior
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-additional-whole-summary-label-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-additional-whole-summary-label-plan.md")
 PREP=prior.data.ROOT/"20261023_additional_whole_labels_sources_v1"
 CANONICAL=prior.GRADE
 QUALIFIED=prior.data.ROOT/"20261023_word_final_results_v1"

@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_xsum_semantic_probe as probe
 
 data, study, previous = original.data, original.study, original.previous
 roots, STAGES = original.roots, original.STAGES
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-public-probe-lineage.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-public-probe-lineage.md')
 TEST = Path('tests/structure_net/test_ncm_public_probe_lineage.py')
 PREFLIGHT = data.ROOT/'20261027_public_curriculum_probe_lineage_preflight_v1'
 OLD_PREFLIGHT, OLD_PLAN, OLD_TEST = original.PREFLIGHT, original.PLAN, original.TEST

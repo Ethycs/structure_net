@@ -19,8 +19,8 @@ from experiments.structure_net.ncm_native_label_quality import dependencies
 
 ROOT = clean.ROOT
 HYPOTHESIS = "ncm-clean-word-dropout-fit-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-clean-word-dropout-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-clean-word-dropout.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-clean-word-dropout-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-clean-word-dropout.md")
 WORKFLOW = ROOT / "20261023_clean_word_dropout_workflow_v1"
 RESULTS = ROOT / "20261023_clean_word_dropout_results_v1"
 MODULE = "experiments.structure_net.ncm_clean_word_dropout"

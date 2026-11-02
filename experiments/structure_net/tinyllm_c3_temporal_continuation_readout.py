@@ -38,7 +38,7 @@ SOURCE_ROOT = Path(
     "20260811_d6_preregistered"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-continuation-readout-"
     "preregistration.md"
 )

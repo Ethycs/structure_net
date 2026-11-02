@@ -21,7 +21,7 @@ SCHEMA_VERSION = "nal.tinyllm-c3-temporal-quotient-preflight.v1"
 HYPOTHESIS_ID = "tinyllm-c3-temporal-quotient-preflight-v1"
 EVIDENCE_ROLE = "no_training_observable_group_generator_preflight"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-quotient-preflight.md"
 )
 PREREGISTRATION_SHA256 = (

@@ -43,7 +43,7 @@ CAPACITY_RESULT_SHA256 = (
     "6a01db25ebc2ed15d202884c39f16db685d5218647b0bb209e2e5a737696a383"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-sensor-mechanism-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

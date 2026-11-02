@@ -9,7 +9,7 @@ from experiments.neural_architecture_lab import audit_ncm_additional_source_feat
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = run.ROOT / '20261024_additional10000_source_features_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-additional-source-features.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-additional-source-features.md')
 
 
 def finalize():

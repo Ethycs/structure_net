@@ -12,7 +12,7 @@ from experiments.structure_net import ncm_public_training as study
 
 data, pipeline, curriculum = study.data, study.pipeline, study.curriculum
 LEVELS = (1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128)
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-result-verification-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-result-verification-plan.md')
 TEST = Path('tests/structure_net/test_audit_ncm_public_training.py')
 PILOT = data.ROOT/'20261026_public_training_auditor_pilot_v1'
 

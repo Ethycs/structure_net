@@ -21,8 +21,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 clean = teacher.prior.clean
 ROOT = clean.ROOT
 HYPOTHESIS = "ncm-dense-latent-source-word-fit-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-dense-word-fit-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-dense-word-fit.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-dense-word-fit-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-dense-word-fit.md")
 WORKFLOW = ROOT / "20261023_dense_word_fit_workflow_v1"
 PILOT = ROOT / "20261023_dense_word_fit_pilot_v1"
 TRAIN = ROOT / "20261023_dense_word_fit_train_v1"

@@ -8,7 +8,7 @@
 
 **Classification:** `affine_identity_character_carries_learned_solution`
 
-**Preregistration:** [C3 temporal sensor mechanism decomposition](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-temporal-sensor-mechanism-preregistration.md)
+**Preregistration:** [C3 temporal sensor mechanism decomposition](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-temporal-sensor-mechanism-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_temporal_sensor_mechanism/20260811_preregistered/campaign_results.json`
 

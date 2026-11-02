@@ -12,7 +12,7 @@ UNIT = 'structure-net-ncm-public-epoch1-attempt2.service'
 SUPERVISION = study.STORAGE.parent/'supervision/epoch1_attempt2'
 TRAINING = study.root_for(1, 2)
 ROOT = data.ROOT/'20261026_public_epoch1_attempt2_service_terminal_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-durable-supervision.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-durable-supervision.md')
 TEST = Path('tests/structure_net/test_ncm_public_service_terminal.py')
 PROPERTIES = ('ActiveState', 'SubState', 'Result', 'MainPID', 'ExecMainPID',
               'ExecMainCode', 'ExecMainStatus', 'NRestarts', 'InvocationID', 'FragmentPath')

@@ -25,7 +25,7 @@ from structure_net.components.models.tinyllm_model import TinyLLMConfig, TinyLLM
 
 SCHEMA_VERSION = "nal.tinyllm-moba-distillation.v1"
 HYPOTHESIS_ID = "tinyllm-moba-distillation-v1"
-PREREGISTRATION = "docs/07 - Status Reports/2026-09-09_tinyllm-moba-distillation-preregistration.md"
+PREREGISTRATION = "docs/07 - Status Reports/moba/2026-09-09_tinyllm-moba-distillation-preregistration.md"
 CHECKPOINT = "data/experiments/tinyllm_babylm_pretrain/20260812_d8_seed7/checkpoint_step12000.pt"
 CHECKPOINT_SHA256 = "5a7491b4231c30feaaabda7babf0a831dd4d72fbb4e7f3e757114cadf098df09"
 TOKEN_CACHE = "data/corpora/babylm_10M_bpe16k.tokens.npy"

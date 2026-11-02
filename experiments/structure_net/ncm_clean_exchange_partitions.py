@@ -16,8 +16,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 
 ROOT = prior.ROOT
 HYPOTHESIS = "ncm-clean-exchange-source-partitions-v2"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-clean-exchange-partitions-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-clean-exchange-partitions.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-clean-exchange-partitions-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-clean-exchange-partitions.md")
 WORKFLOW = ROOT / "20261024_clean_exchange_partitions_workflow_v2"
 PILOT = ROOT / "20261024_clean_exchange_partitions_pilot_v2"
 DEST = ROOT / "20261024_clean_exchange_partitions_v2"

@@ -11,8 +11,8 @@ Study `ncm-public-source-metadata-v1` is classified
 `all_public_full_source_metadata_replayed`. Its authoritative audited result
 is `data/experiments/ncm_paper_regime/20261026_public_source_metadata_full_audit_v1/result.json`,
 SHA-256 `a2cc0cdd45d7d7d3967e68f98bbb71ab03df7f2d2b5fa7c3218ae7af67a382b4`.
-The [preparation plan](../07%20-%20Status%20Reports/2026-10-26_ncm-public-source-metadata-plan.md)
-and [audit plan](../07%20-%20Status%20Reports/2026-10-26_ncm-public-source-metadata-audit-plan.md)
+The [preparation plan](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-public-source-metadata-plan.md)
+and [audit plan](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-public-source-metadata-audit-plan.md)
 were fixed before their respective executions.
 
 | Measured quantity | Result |

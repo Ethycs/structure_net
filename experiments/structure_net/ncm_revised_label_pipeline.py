@@ -14,7 +14,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 from experiments.structure_net.ncm_frozen_body import MODEL_PATH
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-revised-label-pipeline-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-revised-label-pipeline-plan.md")
 SYSTEM = """Summarize each independent passage in one coherent paragraph, preferably
 40-70 words and at most128 tokens. Preserve its main point and useful essential
 facts. Attribute suggestions, claims and requests accurately. Preserve material

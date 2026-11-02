@@ -13,7 +13,7 @@ from .check_qwen_tokenizers import gguf_metadata
 from .qwen38_moe_runtime import validate_metadata
 from experiments.neural_architecture_lab.run_word_games_packed_experts import packed_command, packed_verify
 
-PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-grammar-on-demand-plan.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-grammar-on-demand-plan.md')
 HYPOTHESIS = 'word-games-grammar-on-demand-v1'
 EXTRA_PLANS = ()
 

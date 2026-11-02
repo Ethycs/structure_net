@@ -56,7 +56,7 @@ respectively. The prototype supports512GPT2source tokens and48target tokens,
 which does not cover the full application range. Known teacher-label noise
 (30/32audit) and one-seed training-fit limitations remain disclosed.
 
-A separate [full-data continuation](../07%20-%20Status%20Reports/2026-10-22_ncm-full-curriculum-plan.md)
+A separate [full-data continuation](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-full-curriculum-plan.md)
 has passed its GPU lifecycle pilot and is running. It must earn its own64-case
 development accuracy under both qualified judges. No result from that run is
 included here. The user's95% complete-summary objective remains open.

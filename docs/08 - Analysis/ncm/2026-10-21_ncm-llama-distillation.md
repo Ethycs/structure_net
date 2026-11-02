@@ -22,9 +22,9 @@ Graph-follow-up aggregate:
 SHA-256:
 `25adaeb82268035de2243ef37f64af2133dac937da29d2d39dab97845e9bac3f`.
 
-The [model plan](../07%20-%20Status%20Reports/2026-10-21_ncm-llama-distillation-plan.md)
+The [model plan](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-llama-distillation-plan.md)
 preceded adaptation outcomes. The separate
-[graph plan](../07%20-%20Status%20Reports/2026-10-21_ncm-graph-runtime-plan.md)
+[graph plan](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-graph-runtime-plan.md)
 records what was known from the model study before graph results. The graph
 result does not retroactively pass the eager model study's speed gate.
 
@@ -150,9 +150,9 @@ The separately scoped graph follow-up preserves weights and the nine-level
 schedule. Capture first failed on CPU-to-CUDA scalar allocations, then on
 PyTorch2.4's native categorical sampler. Both failed systems roots and complete
 logs remain immutable. The
-[scalar amendment](../07%20-%20Status%20Reports/2026-10-21_ncm-graph-capture-amendment.md)
+[scalar amendment](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-graph-capture-amendment.md)
 replaces only two scalar allocations with equivalent GPU fills. The
-[sampler amendment](../07%20-%20Status%20Reports/2026-10-21_ncm-graph-sampler-amendment.md)
+[sampler amendment](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-graph-sampler-amendment.md)
 implements the same fixed top_k1 law via GPU inverse CDF, including uniform ties.
 This preserves prediction probabilities, not a promise of identical RNG streams
 on every hypothetical tie. It adds no optimizer update. The pinned official

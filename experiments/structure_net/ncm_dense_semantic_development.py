@@ -20,8 +20,8 @@ from experiments.structure_net.ncm_device_geometry import set_source_frame
 
 ROOT = training.ROOT
 HYPOTHESIS = "ncm-dense-source-semantic-development-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-dense-semantic-development-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-dense-semantic-development.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-dense-semantic-development-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-dense-semantic-development.md")
 WORKFLOW = ROOT / "20261023_dense_semantic_dev_workflow_v1"
 PILOT = ROOT / "20261023_dense_semantic_dev_inference_pilot_v1"
 OUTPUTS = ROOT / "20261023_dense_semantic_dev_outputs_v1"

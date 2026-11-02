@@ -13,7 +13,7 @@ from experiments.structure_net import ncm_source_tree as tree
 
 reference, task, data = common.reference, common.task, common.data
 ROOT = data.ROOT/'20261027_source_tree_checkpoint_pilot_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-source-tree-checkpoint-pilot.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-source-tree-checkpoint-pilot.md')
 QUALIFICATION = data.ROOT/'20261027_source_tree_CPU_qualification_v2/result.json'
 HYPOTHESIS = 'ncm-source-tree-checkpoint-pilot-v1'
 LIMIT = 3_500_000_000

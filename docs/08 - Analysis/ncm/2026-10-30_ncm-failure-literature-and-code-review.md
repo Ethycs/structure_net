@@ -62,7 +62,7 @@ codebook. The reason for changing bases was legitimate output-range coverage;
 the change also replaced an already conditional summarizer with a model whose
 new conditioning behavior had to be learned.
 
-The current [source adapter implementation](../../experiments/structure_net/ncm_lm1b_source_attention.py)
+The current [source adapter implementation](../../../experiments/structure_net/ncm_lm1b_source_attention.py)
 reads frozen 3,072-wide Llama features only after generator blocks 8, 10 and 11
 (zero-based). The prefix remains unchanged. This gives the source three late
 entry points into a pretrained unconditional generator. It is an architectural

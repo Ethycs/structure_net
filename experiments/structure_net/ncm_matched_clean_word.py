@@ -17,7 +17,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_native_label_quality import dependencies
 
 ROOT = recovery.ROOT
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-matched-clean-word-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-matched-clean-word-plan.md")
 HYPOTHESIS = "ncm-matched-population-clean-word-v1"
 PILOT = ROOT / "20261023_matched_clean_word_pilot_v1"
 FIT_PILOT = ROOT / "20261023_matched_clean_word_fit_pilot_v1"
@@ -25,7 +25,7 @@ TRAIN = ROOT / "20261023_matched_clean_word_train_v1"
 FIT = ROOT / "20261023_matched_clean_word_fit_v1"
 WORKFLOW = ROOT / "20261023_matched_clean_word_workflow_v1"
 RESULTS = ROOT / "20261023_matched_clean_word_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-matched-clean-word.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-matched-clean-word.md")
 MODULE = "experiments.structure_net.ncm_matched_clean_word"
 FINALIZER_MODULE = "experiments.neural_architecture_lab.finalize_ncm_matched_clean_word"
 FINALIZER_FILE = Path("experiments/neural_architecture_lab/finalize_ncm_matched_clean_word.py")

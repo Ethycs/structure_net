@@ -17,7 +17,7 @@ from experiments.structure_net.ncm_native_word_neighborhood import (
 )
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-word-mechanism-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-word-mechanism-plan.md")
 PILOT = ROOT / "20261023_native_word_mechanism_pilot_v1"
 DEST = ROOT / "20261023_native_word_mechanism_v1"
 ARMS = {"A": (False, False), "B": (True, False), "C": (False, True), "D": (True, True)}

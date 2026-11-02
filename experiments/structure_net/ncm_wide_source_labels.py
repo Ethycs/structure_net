@@ -17,7 +17,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-wide-vetted-label-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-wide-vetted-label-plan.md")
 SYSTEM = teacher.SYSTEM + ("\nPrefer40-60words. Revision critiques include exact stored and native token counts "
     "and128-token ceilings. Shorten any over-cap draft in the single revision while preserving "
     "the main point and every material qualification. Review every draft once, including passing drafts.")

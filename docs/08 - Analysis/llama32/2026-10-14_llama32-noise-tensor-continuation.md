@@ -15,7 +15,7 @@ application accuracy and the user's 2x deployment-speed goal remain unproven.
 
 Aggregate: `data/experiments/llama_neighbourhood_continuation/20261014_registered_v1/campaign_results.json`.
 SHA-256: `f4215b2c3a453320ec91835f7110966b1db45668699fa940e2d019fecc6b9abd`.
-The [prospective plan](../07%20-%20Status%20Reports/2026-10-14_llama32-noise-tensor-continuation-plan.md)
+The [prospective plan](../../07%20-%20Status%20Reports/llama32/2026-10-14_llama32-noise-tensor-continuation-plan.md)
 and frozen producer snapshots define the comparison. The failed
 [parent experiment](2026-10-14_llama32-neighbourhood-tensorization.md) remains
 unchanged; this follow-up does not reclassify it.

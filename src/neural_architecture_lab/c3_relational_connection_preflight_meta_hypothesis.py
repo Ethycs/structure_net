@@ -35,11 +35,11 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_c3_relational_connection_preflight.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-preflight-preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-preflight.md"
 )
 SEEDS = (1213, 1231, 1277, 1301, 1321)

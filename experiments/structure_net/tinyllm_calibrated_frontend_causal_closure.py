@@ -38,7 +38,7 @@ SOURCE_RESULT_MANIFEST_SHA256 = (
     "34bf25feb896abc9b9e06386b474fc6795c94566a23cd97a06795435fba64d68"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-calibrated-frontend-causal-closure-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

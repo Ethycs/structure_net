@@ -36,15 +36,15 @@ TOKEN_STREAM_SHA256 = (
 )
 
 A5_PREREGISTRATION = (
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-30_tinyllm-ttno-cut-localization-parity-preregistration.md"
 )
 A6_PREREGISTRATION = (
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-30_tinyllm-hss-shared-basis-nesting-preregistration.md"
 )
 A7_PREREGISTRATION = (
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-30_tinyllm-causal-h2-attention-preregistration.md"
 )
 A5_PREREGISTRATION_SHA256 = (

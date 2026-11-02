@@ -19,8 +19,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 
 PARENT = Path("data/experiments/ncm_frozen_body/20261022_train_v1")
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-training-diagnosis-plan.md")
-PILOT_FIX = Path("docs/07 - Status Reports/2026-10-22_ncm-diagnosis-cache-amendment.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-training-diagnosis-plan.md")
+PILOT_FIX = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-diagnosis-cache-amendment.md")
 CAMPAIGN_SHA = "b514e093a892cd2dd4cdf46cdd018d900d41371fa5b233f623c6764b98e406b3"
 HYPOTHESIS = "ncm-frozen-body-diagnosis-v1"
 

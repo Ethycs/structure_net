@@ -38,7 +38,7 @@ def main():
     common.setup()
     common.HYPOTHESIS_ID=HYPOTHESIS_ID
     extra=[Path(__file__),PROTOCOL,FIXTURES,Path("experiments/structure_net/llama_lossless_residual.py"),
-           Path("experiments/structure_net/run_llama_lossless.py"),Path("docs/07 - Status Reports/2026-10-10_llama32-lossless-timing-amendment.md")]
+           Path("experiments/structure_net/run_llama_lossless.py"),Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-lossless-timing-amendment.md")]
     producing=common.producer(args.output,"counterbalanced_full_model_timing",extra,
                               {"checkpoint":str(args.checkpoint),"checkpoint_sha256":sha256(args.checkpoint),"factors_sha256":sha256(FACTORS),"samples":5,"replicas":1})
     payload=torch.load(args.checkpoint,map_location="cpu",weights_only=False,mmap=True)

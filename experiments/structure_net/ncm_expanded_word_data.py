@@ -13,7 +13,7 @@ from experiments.structure_net import ncm_broad_learned_codec as released
 from experiments.structure_net.ncm_blockwise_codec import BlockwiseCodec
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-expanded-word-data-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-expanded-word-data-plan.md")
 DEST = base.ROOT / "20261023_expanded_word_training_data_v1"
 PILOT = base.ROOT / "20261023_expanded_word_target_encoding_pilot_v1"
 

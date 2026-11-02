@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_memory_data import file_hash,write_json
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST=study.data.ROOT/"20261023_word_final_results_v1"
-REPORT=Path("docs/08 - Analysis/2026-10-23_ncm-word-final-frozen-parent.md")
+REPORT=Path("docs/08 - Analysis/ncm/2026-10-23_ncm-word-final-frozen-parent.md")
 
 
 def replay_training():

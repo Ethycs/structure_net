@@ -10,7 +10,7 @@
 
 **Evidence role:** `prospective_artifact_only_c3_continuation_readout_decomposition`
 
-**Depends on:** [observable C3 d6 result](../08%20-%20Analysis/2026-08-11_tinyllm-c3-temporal-quotient-d6.md)
+**Depends on:** [observable C3 d6 result](../../08%20-%20Analysis/tinyllm/2026-08-11_tinyllm-c3-temporal-quotient-d6.md)
 
 ## Question and prediction
 

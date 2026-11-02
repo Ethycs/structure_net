@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_xsum_render_parity as study
 
 data, ROOT = study.data, study.ROOT
 HYPOTHESIS = 'ncm-xsum-render-parity-v1'
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-xsum-render-parity.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-xsum-render-parity.md')
 
 
 def report():

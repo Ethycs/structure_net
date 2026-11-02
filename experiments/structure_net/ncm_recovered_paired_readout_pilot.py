@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_lm1b_native_development as rendering
 data = task.data
 ROOT = data.ROOT/'20261028_recovered_paired_readout_pilot_v1'
 CPU = data.ROOT/'20261028_recovered_paired_readout_CPU_v1.json'
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-paired-readout-qualification.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-paired-readout-qualification.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_paired_readout.py')
 LIMIT = 4_900_000_000
 

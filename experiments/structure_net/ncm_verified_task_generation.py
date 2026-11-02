@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_recovered_review_lineage as lineage
 from experiments.structure_net import ncm_recovered_training_verified_cache as cache
 
 data, task = lineage.data, lineage.task
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-generation-validation-cache.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-generation-validation-cache.md')
 TEST = Path('tests/structure_net/test_ncm_verified_task_generation.py')
 CPU = data.ROOT/'20261028_verified_task_generation_CPU_v1.json'
 POLICY = {**cache.POLICY, 'scope': 'future source-only DEV generation input verification'}

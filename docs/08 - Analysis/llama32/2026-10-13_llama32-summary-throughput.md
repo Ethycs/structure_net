@@ -4,7 +4,7 @@ Date: 2026-10-13. Hypothesis `llama32-3b-summary-throughput-v1`. Profile: EXPLOR
 Classification: **`twofold_fp16_speedup_with_proxy_quality_supported`**; confirmation remains false.
 
 Aggregate: `data/experiments/llama_summary_throughput/20261013_primary/campaign_results.json`, SHA-256 `36b125ba0e59f51e82a595edd111e2d2bea28da9d2268b451cedace99833d77b`.
-[Prospective plan](../07%20-%20Status%20Reports/2026-10-13_llama32-summary-throughput-plan.md) · [Frozen selection](../07%20-%20Status%20Reports/2026-10-13_llama32-summary-selection.md).
+[Prospective plan](../../07%20-%20Status%20Reports/llama32/2026-10-13_llama32-summary-throughput-plan.md) · [Frozen selection](../../07%20-%20Status%20Reports/llama32/2026-10-13_llama32-summary-selection.md).
 
 The selected existing Q4_K_M checkpoint with target-verified prompt lookup (eight-token drafts) achieved **81.77 output tokens/s**, versus **34.13** for optimized FP16 ordinary decoding: **2.396x**. Mean model-request latency fell from **2.458 to 1.057 seconds (2.327x)**. Against the already quantized Q4 ordinary decoder, the gain is **1.398x**, not twofold. All arms run the complete 28-layer Llama 3.2 3B Instruct model on the same RTX 3060, physical GPU 0.
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from experiments.neural_architecture_lab.finalize_ncm_example_batching import DEST, HYPOTHESIS, file_hash, read
 
-REPORT = Path('docs/08 - Analysis/2026-10-26_ncm-example-batching.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-26_ncm-example-batching.md')
 CAMPAIGN = DEST/'campaign_results.json'
 
 

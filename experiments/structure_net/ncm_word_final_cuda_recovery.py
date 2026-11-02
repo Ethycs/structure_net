@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_memory_data import file_hash,write_json
 PILOT=base.data.ROOT/"20261023_word_final_train_pilot_cuda_v2"
 TRAIN=base.data.ROOT/"20261023_word_final_train_cuda_v2"
 FAILED=base.PILOT
-AMENDMENT=Path("docs/07 - Status Reports/2026-10-23_ncm-word-final-cuda-recovery.md")
+AMENDMENT=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-word-final-cuda-recovery.md")
 _producing=base.producing
 
 

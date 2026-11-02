@@ -8,7 +8,7 @@
 
 **Classification:** `connection_invariant_function_class_contains_transport_and_task_gradient`
 
-**Preregistration:** [connection function-class preflight](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-relational-connection-function-class-preregistration.md)
+**Preregistration:** [connection function-class preflight](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-relational-connection-function-class-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_relational_connection_function_class/20260811_preregistered/result.json`
 

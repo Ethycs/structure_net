@@ -12,8 +12,8 @@ from experiments.structure_net.llama_cuda_graph import bitwise_tree
 from experiments.structure_net.prepare_llama_cotenancy import sha256, write_json
 from neural_architecture_lab.llama_exact_speed_hypothesis import ExactSpeedEvidence, ExactBlasEvidence, SpeedCell, CANDIDATES, BLAS_CANDIDATES, GRID
 
-REPORT = Path("docs/08 - Analysis/2026-10-10_llama32-exact-speed.md")
-BLAS_REPORT = Path("docs/08 - Analysis/2026-10-10_llama32-exact-blas.md")
+REPORT = Path("docs/08 - Analysis/llama32/2026-10-10_llama32-exact-speed.md")
+BLAS_REPORT = Path("docs/08 - Analysis/llama32/2026-10-10_llama32-exact-blas.md")
 
 
 def read_controls(row):

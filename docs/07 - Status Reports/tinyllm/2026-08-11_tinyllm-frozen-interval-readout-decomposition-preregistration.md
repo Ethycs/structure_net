@@ -8,7 +8,7 @@
 
 **Evidence role:** `prospective_frozen_backbone_closed_form_interface_fit`
 
-**Depends on:** [calibrated architecture-family replication](../08%20-%20Analysis/2026-08-10_tinyllm-calibrated-architecture-replication.md); [frozen scalar-interface decomposition](../08%20-%20Analysis/2026-08-11_tinyllm-frozen-scalar-interface-decomposition.md); [frozen scalar-domain extension](../08%20-%20Analysis/2026-08-11_tinyllm-frozen-scalar-domain-extension.md); [frozen cyclic answer projection](../08%20-%20Analysis/2026-08-11_tinyllm-frozen-cyclic-answer-projection.md)
+**Depends on:** [calibrated architecture-family replication](../../08%20-%20Analysis/tinyllm/2026-08-10_tinyllm-calibrated-architecture-replication.md); [frozen scalar-interface decomposition](../../08%20-%20Analysis/tinyllm/2026-08-11_tinyllm-frozen-scalar-interface-decomposition.md); [frozen scalar-domain extension](../../08%20-%20Analysis/tinyllm/2026-08-11_tinyllm-frozen-scalar-domain-extension.md); [frozen cyclic answer projection](../../08%20-%20Analysis/tinyllm/2026-08-11_tinyllm-frozen-cyclic-answer-projection.md)
 
 ## Question and prediction
 

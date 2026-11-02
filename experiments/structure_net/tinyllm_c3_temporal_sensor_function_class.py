@@ -26,7 +26,7 @@ CLASSIFICATION_PASS = (
     "existing_c3_sensor_contains_analytic_carrier_and_task_gradient"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-sensor-function-class-"
     "preregistration.md"
 )

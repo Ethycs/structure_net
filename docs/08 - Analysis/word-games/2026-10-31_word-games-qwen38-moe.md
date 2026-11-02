@@ -12,7 +12,7 @@ roles. **No live workflow accuracy percentage was measured.**
 
 Aggregate: `data/experiments/word_games/20261031_qwen38_analysis_v1/campaign_results.json`.
 SHA256: `c2ce2af11ded623c274fa25059d8fbe1a5589c19e5ce805b43bf163f401a60c7`.
-The [prospective protocol](../07%20-%20Status%20Reports/2026-10-31_word-games-qwen38-moe-plan.md)
+The [prospective protocol](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-qwen38-moe-plan.md)
 records configuration, sequence and stop rules.
 
 ## Exact model and configuration

@@ -10,7 +10,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, PREP, DATA, freeze, v
 from experiments.structure_net.ncm_frozen_body_public_data import PUBLIC_FILE, PUBLIC_SHA256
 from experiments.structure_net.ncm_expanded_pairs import public_index, matches_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-wide-source-pool-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-wide-source-pool-plan.md")
 AUDIT = ROOT / "20261023_application_source_availability_v1"
 POOL = ROOT / "20261023_application_source_pool_v1"
 BINS = ((512, 767), (768, 1023), (1024, 1535), (1536, 2048))

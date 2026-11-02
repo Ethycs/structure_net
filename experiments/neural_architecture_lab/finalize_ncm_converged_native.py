@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, PREP, verify
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_converged_native_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-converged-native-development-quality.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-converged-native-development-quality.md")
 SPLIT_AUDIT = ROOT / "20261023_converged_native_split_audit_v1.json"
 SCORE_REPLAY = ROOT / "20261023_converged_native_score_replay_v1.json"
 

@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_unseen_codec_control import MEASURE, NOVEL, S
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261022_broad_decoder_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-broad-decoder-transfer.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-broad-decoder-transfer.md")
 
 
 def coverage():

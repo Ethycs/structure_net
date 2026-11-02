@@ -8,7 +8,7 @@
 
 **Classification:** `fixed_multistep_group_operator_dominates_last_step`
 
-**Preregistration:** [C3 temporal fixed-operator ceiling](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-temporal-fixed-operator-ceiling-preregistration.md)
+**Preregistration:** [C3 temporal fixed-operator ceiling](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-temporal-fixed-operator-ceiling-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_temporal_fixed_operator_ceiling/20260811_preregistered/result.json`
 

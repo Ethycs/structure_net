@@ -17,8 +17,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 ROOT = prior.ROOT
 HYPOTHESIS = "ncm-decoder-latent-convergence-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-decoder-latent-convergence-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-decoder-latent-convergence.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-decoder-latent-convergence-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-decoder-latent-convergence.md")
 WORKFLOW = ROOT / "20261023_decoder_latent_convergence_workflow_v1"
 PILOT = ROOT / "20261023_decoder_latent_convergence_pilot_v1"
 MEASURE = ROOT / "20261023_decoder_latent_convergence_measure_v1"

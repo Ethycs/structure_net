@@ -128,5 +128,5 @@ that process completes.
   rank-based neural gas and local time-series prediction.
 - [ECMWF ensemble uncertainty](https://www.ecmwf.int/en/research/modelling-and-prediction/quantifying-forecast-uncertainty)
   and [Mandel's EnKF tutorial](https://arxiv.org/abs/0901.3725).
-- Local [training-weather calibration](../08%20-%20Analysis/2026-10-05_training-weather.md)
+- Local [training-weather calibration](../../08%20-%20Analysis/training-weather/2026-10-05_training-weather.md)
   supplies the numerical forecasting and A₂ checks, not evidence for TinyLLM.

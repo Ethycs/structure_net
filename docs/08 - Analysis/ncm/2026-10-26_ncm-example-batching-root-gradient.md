@@ -40,5 +40,5 @@ and the existing 4.9 GB allocation bound. That GPU run has not started; it
 waits for the live RTX2060 codec-target preparation to finish.
 
 No new task-quality or application-throughput result is established by this
-repair. The [dated amendment](../07%20-%20Status%20Reports/2026-10-26_ncm-public-batch4-root-gradient-repair.md)
+repair. The [dated amendment](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-public-batch4-root-gradient-repair.md)
 preserves the original comparison and states the corrected qualification.

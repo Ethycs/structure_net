@@ -10,7 +10,7 @@ from experiments.structure_net.ncm_paper_data import ROOT
 
 HYPOTHESIS = "ncm-paper-regime-recovery-v1"
 DESTINATION = ROOT / "20261022_stopped_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-paper-regime-control-failures.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-paper-regime-control-failures.md")
 
 
 def finalize():
@@ -28,8 +28,8 @@ def finalize():
     for name in ("20261022_unpaired_v1", "20261022_native_v1", "20261022_hybrid_v1"):
         if (ROOT / name).exists():
             raise ValueError("unexpected full adaptation artifacts")
-    artifacts = [Path(__file__), Path("docs/07 - Status Reports/2026-10-22_ncm-paper-regime-plan.md"),
-        Path("docs/07 - Status Reports/2026-10-22_ncm-codec-precision-diagnostic.md")]
+    artifacts = [Path(__file__), Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-paper-regime-plan.md"),
+        Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-codec-precision-diagnostic.md")]
     for name in names.values():
         artifacts.extend(path for path in (ROOT / name).rglob("*.json") if "producer_source" not in path.parts)
     DESTINATION.mkdir(parents=True)

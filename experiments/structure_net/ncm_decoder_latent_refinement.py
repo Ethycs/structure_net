@@ -21,8 +21,8 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 clean = continuous.clean
 ROOT = clean.ROOT
 HYPOTHESIS = "ncm-decoder-latent-refinement-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-decoder-latent-refinement-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-decoder-latent-refinement.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-decoder-latent-refinement-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-decoder-latent-refinement.md")
 WORKFLOW = ROOT / "20261023_decoder_latent_refinement_workflow_v1"
 PILOT = ROOT / "20261023_decoder_latent_refinement_pilot_v1"
 MEASURE = ROOT / "20261023_decoder_latent_refinement_measure_v1"

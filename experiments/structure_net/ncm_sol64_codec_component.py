@@ -17,7 +17,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 native, q, ROOT = text_control.native, text_control.q, text_control.ROOT
 HYPOTHESIS = 'ncm-sol64-frozen-codec-component-v1'
 MODULE = 'experiments.structure_net.ncm_sol64_codec_component'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol64-codec-component-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol64-codec-component-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sol64_codec_component.py')
 WORKFLOW, PREP, PILOT, OUTPUTS = (ROOT / ('20261024_sol64_codec_component_' + n + '_v1')
     for n in ('workflow', 'prepare', 'pilot', 'outputs'))

@@ -42,12 +42,12 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_c3_temporal_fixed_operator_ceiling.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-fixed-operator-ceiling-"
     "preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/2026-08-11_tinyllm-c3-temporal-fixed-operator-ceiling.md"
+    "docs/08 - Analysis/tinyllm/2026-08-11_tinyllm-c3-temporal-fixed-operator-ceiling.md"
 )
 GENERATOR_PATH = Path(
     "experiments/structure_net/tinyllm_c3_temporal_quotient_preflight.py"

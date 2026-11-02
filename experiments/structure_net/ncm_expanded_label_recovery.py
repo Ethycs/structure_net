@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-expanded-label-recovery-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-expanded-label-recovery-plan.md")
 PARENT = ROOT / "20261022_expanded_teacher_v2"
 SOURCES = ROOT / "20261022_expanded_data_v2/train_sources.json"
 RECOVERY = ROOT / "20261022_expanded_label_recovery_v1"

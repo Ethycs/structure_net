@@ -8,7 +8,7 @@
 
 **Hypothesis:** `tinyllm-c3-temporal-quotient-training-v1`
 
-**Depends on:** [training design](2026-08-11_tinyllm-c3-temporal-quotient-training-design.md); [passed Stage 0](../08%20-%20Analysis/2026-08-11_tinyllm-c3-temporal-quotient-stage0.md)
+**Depends on:** [training design](2026-08-11_tinyllm-c3-temporal-quotient-training-design.md); [passed Stage 0](../../08%20-%20Analysis/tinyllm/2026-08-11_tinyllm-c3-temporal-quotient-stage0.md)
 
 ## Question and prediction
 

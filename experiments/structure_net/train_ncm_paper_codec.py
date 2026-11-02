@@ -21,7 +21,7 @@ from experiments.structure_net.ncm_training_recipe import cumulative_latent, sam
 from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_memory import save
 
-NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-paper-recovery-v2-plan.md")
+NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-paper-recovery-v2-plan.md")
 
 
 @dataclass(frozen=True)

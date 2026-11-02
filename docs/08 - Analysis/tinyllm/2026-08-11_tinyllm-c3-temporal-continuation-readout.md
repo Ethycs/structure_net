@@ -8,7 +8,7 @@
 
 **Classification:** `analytic_sensor_valid_frozen_continuation_not_affinely_typed`
 
-**Preregistration:** [C3 temporal continuation/readout](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-temporal-continuation-readout-preregistration.md)
+**Preregistration:** [C3 temporal continuation/readout](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-temporal-continuation-readout-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_temporal_continuation_readout/20260811_d6_preregistered/campaign_results.json`
 

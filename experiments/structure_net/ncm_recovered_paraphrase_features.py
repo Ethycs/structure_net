@@ -11,7 +11,7 @@ data = engine.data
 HYPOTHESIS = 'ncm-recovered-role-aware-source-features-v1'
 ROOTS = {s:pool.BASE/f'20261028_recovered_paraphrase_features_{s}_v1' for s in ('pilot','full')}
 STORAGE = Path('/data2/structure_net/ncm_recovered_paraphrase_20261028_v1/features')
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-paraphrase-features.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-paraphrase-features.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_paraphrase_features.py')
 
 

@@ -15,8 +15,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = study.ROOT / "20261023_generated_history_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-generated-history-word.md")
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-generated-history-audit-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-generated-history-word.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-generated-history-audit-plan.md")
 
 
 def replay_training(rows, histories, trace, state):

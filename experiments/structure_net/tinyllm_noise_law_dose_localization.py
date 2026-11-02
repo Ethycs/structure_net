@@ -27,7 +27,7 @@ EVIDENCE_ROLE = (
     "preregistered_post_outcome_corrective_frozen_dose_localization"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-noise-law-dose-localization-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

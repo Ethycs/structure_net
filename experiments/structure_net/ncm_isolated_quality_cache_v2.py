@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_native_readout import frozen_hash
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, verify
 
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-23_ncm-quality-cache-validation-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-quality-cache-validation-amendment.md")
 PILOT = ROOT / "20261023_isolated_quality_cache_pilot_v2"
 CACHE = ROOT / "20261023_isolated_quality_cache_v2"
 

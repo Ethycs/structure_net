@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 native, ROOT = inventory.native, inventory.ROOT
 JOIN = ROOT / '20261025_core_target_cached_source_join_v1'
 DEST = ROOT / '20261025_core_cached_target_admission_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-core-cached-target-admission-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-core-cached-target-admission-plan.md')
 TEST = Path('tests/structure_net/test_ncm_core_cached_target_admission.py')
 
 

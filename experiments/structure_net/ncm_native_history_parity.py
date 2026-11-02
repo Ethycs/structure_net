@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 native, q, ROOT = checkpoint.native, checkpoint.q, checkpoint.ROOT
 DEST = ROOT / '20261024_native655_history_path_parity_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-native-history-parity-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-native-history-parity-plan.md')
 TEST = Path('tests/structure_net/test_ncm_native_history_parity.py')
 HYPOTHESIS = 'ncm-native655-history-path-parity-v1'
 

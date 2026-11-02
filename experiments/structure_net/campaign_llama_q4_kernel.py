@@ -22,9 +22,9 @@ from experiments.structure_net.tune_llama_q4_tail import measure
 
 HYPOTHESIS_ID="llama32-3b-q4-kernel-runtime-v1"
 SCHEMA_VERSION="nal.llama-q4-kernel.v1"
-PLAN=Path("docs/07 - Status Reports/2026-10-14_llama32-q4-kernel-plan.md")
-AMENDMENT=Path("docs/07 - Status Reports/2026-10-14_llama32-q4-kernel-layout-amendment.md")
-EPILOGUE_AMENDMENT=Path("docs/07 - Status Reports/2026-10-14_llama32-q4-kernel-epilogue-amendment.md")
+PLAN=Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-q4-kernel-plan.md")
+AMENDMENT=Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-q4-kernel-layout-amendment.md")
+EPILOGUE_AMENDMENT=Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-q4-kernel-epilogue-amendment.md")
 BASE=Path("data/experiments/llama_q4_kernel")
 PACKED=Path("data/experiments/llama_fp16_core_q4_tail/20261014_core64_checkpoint_v1")
 MODEL_SHA="8937d83adfa9c77e065f1c4918bea90a20ee9e1695ffc281561646e0f949a8ff"

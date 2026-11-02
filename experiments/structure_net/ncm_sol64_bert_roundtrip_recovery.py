@@ -7,11 +7,11 @@ from experiments.structure_net import ncm_sol64_bert_roundtrip as base
 MODULE = 'experiments.structure_net.ncm_sol64_bert_roundtrip_recovery'
 AUDITOR_MODULE = 'experiments.neural_architecture_lab.finalize_ncm_sol64_bert_roundtrip_recovery'
 AUDITOR = Path('experiments/neural_architecture_lab/finalize_ncm_sol64_bert_roundtrip_recovery.py')
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol64-bert-roundtrip-recovery.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol64-bert-roundtrip-recovery.md')
 TEST = Path('tests/structure_net/test_ncm_sol64_bert_roundtrip_recovery.py')
 WORKFLOW, PREP, PILOT, GRADE, RESULTS = (base.ROOT / ('20261024_sol64_bert_roundtrip_' + n + '_v2')
     for n in ('workflow', 'prepare', 'pilot', 'grade', 'results'))
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-sol64-bert-roundtrip-recovered.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-sol64-bert-roundtrip-recovered.md')
 OLD_WORKFLOW, OLD_PREP, OLD_PILOT = base.WORKFLOW, base.PREP, base.PILOT
 OLD_PLAN, OLD_TEST, OLD_AUDITOR = base.PLAN, base.TEST, base.AUDITOR
 _producing, _prepare = base.producing, base.prepare

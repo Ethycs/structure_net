@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_latest_recovered_evaluation as latest
 
 BASE = latest.BASE
 FAILED = BASE/'20261029_latest_recovered_DEV_inference_pilot_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-29_ncm-latest-generation-publication-recovery.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-29_ncm-latest-generation-publication-recovery.md')
 TEST = Path('tests/structure_net/test_ncm_latest_generation_recovery.py')
 CPU = BASE/'20261029_latest_generation_recovery_CPU_v1.json'
 ROOTS = {stage: root if stage == 'preflight' else root.with_name(root.name.removesuffix('_v1')+'_v2')

@@ -14,7 +14,7 @@ from experiments.structure_net.ncm_lm1b_decoder_repair import same
 capacity, lifecycle, native = previous.capacity, previous.lifecycle, previous.native
 q, ROOT = previous.q, previous.ROOT
 DEST = ROOT / '20261024_level_conditioning_FP16_GPU2_pilot_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-level-conditioning-cuda-pilot.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-level-conditioning-cuda-pilot.md')
 TESTS = [Path('tests/structure_net/test_ncm_level_conditioning_objective.py'),
     Path('tests/structure_net/test_ncm_level_conditioning_corruption.py'),
     Path('tests/structure_net/test_ncm_level_conditioning_cuda_pilot.py')]

@@ -74,7 +74,7 @@ ORACLE_CROSS_ENTROPY_SLACK_MAXIMUM = (
 )
 REQUIRED_SEED_PASSES = 4
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-switching-corruption-fixed-decoder-"
     "preregistration.md"
 )

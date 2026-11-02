@@ -9,7 +9,7 @@ classifies the run as `DEV_semantic_quality_failed`. Its descriptive Wilson
 Aggregate: `data/experiments/ncm_paper_regime/20261025_broad_generator_results_v1/campaign_results.json`.
 SHA-256: `2c0241923d497be9d92589fe4845d3e7013f7754e0d3588cf4c2094be4b77299`.
 
-The [fixed plan](../07%20-%20Status%20Reports/2026-10-25_ncm-broad-generator-plan.md)
+The [fixed plan](../../07%20-%20Status%20Reports/ncm/2026-10-25_ncm-broad-generator-plan.md)
 trained the existing generator and its source-attention modules on all 1,376
 admitted complete-summary teacher pairs. It preserved the codec and word/source
 attention exactly. This returned to the earlier generator parent, rather than
@@ -77,7 +77,7 @@ distinct codes. Error accumulation after early levels is a plausible mechanism,
 but these measurements do not prove that correcting it alone will solve unseen
 summarization. Generalization and factual decoding remain separate concerns.
 
-An independently specified [residual-recoding diagnostic](../07%20-%20Status%20Reports/2026-10-25_ncm-residual-recoding-probe-plan.md)
+An independently specified [residual-recoding diagnostic](../../07%20-%20Status%20Reports/ncm/2026-10-25_ncm-residual-recoding-probe-plan.md)
 tests whether the frozen later codebooks can correct an imperfect generated
 prefix by recomputing residual targets. That diagnostic deliberately uses
 TRAIN reference summaries and cannot count as source-only task accuracy.

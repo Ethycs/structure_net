@@ -13,7 +13,7 @@ from experiments.structure_net.prepare_llama_cotenancy import sha256, write_json
 from neural_architecture_lab.llama_lossless_residual_hypothesis import LosslessResidualEvidence
 from experiments.structure_net.llama_lossless_residual import bits
 
-REPORT = Path("docs/08 - Analysis/2026-10-10_llama32-lossless-residual.md")
+REPORT = Path("docs/08 - Analysis/llama32/2026-10-10_llama32-lossless-residual.md")
 
 
 def aggregate(root,timing_path):

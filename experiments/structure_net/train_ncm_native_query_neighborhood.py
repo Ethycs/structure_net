@@ -29,7 +29,7 @@ PILOT = ROOT/"20261023_native_query_neighborhood_pilot_v1"
 TRAIN = ROOT/"20261023_native_query_neighborhood_train_v1"
 OUTPUTS = ROOT/"20261023_native_query_neighborhood_outputs_v1"
 GRADE = ROOT/"20261023_native_query_neighborhood_grade_v1"
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-23_ncm-native-word-neighborhood-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-word-neighborhood-amendment.md")
 
 
 @dataclass(frozen=True)

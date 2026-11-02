@@ -5,7 +5,7 @@
 **Conformance:** NAL-STD-EXPERIMENT `PREREGISTERED`, training campaign with frozen generator contracts  
 **Hypothesis:** `tinyllm-temporal-language-identifiability-v1`  
 **Planned schema:** `nal.tinyllm-temporal-language-identifiability.v1`  
-**Design:** [temporal-phase language task](../01%20-%20Design/temporal-phase-language-task.md)
+**Design:** [temporal-phase language task](../../01%20-%20Design/tinyllm/temporal-phase-language-task.md)
 
 ## Provenance boundary
 

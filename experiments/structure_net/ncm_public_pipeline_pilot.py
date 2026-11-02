@@ -19,7 +19,7 @@ from experiments.structure_net import ncm_public_curriculum as curriculum
 data, broad, parent = bundle.data, lifecycle.broad, lifecycle.parent
 ROOT = data.ROOT/'20261026_public_pipeline_pilot_v1'
 CHECKPOINTS = Path('/data2/structure_net/ncm_public_curriculum_20261026_v1/pilot')
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-curriculum-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-curriculum-plan.md')
 TESTS = [Path('tests/structure_net')/name for name in (
     'test_ncm_public_curriculum.py', 'test_ncm_public_training_engine.py',
     'test_ncm_public_pipeline_pilot.py', 'test_ncm_public_training.py')]

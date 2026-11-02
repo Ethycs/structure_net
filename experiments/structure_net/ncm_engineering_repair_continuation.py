@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_memory_data import file_hash,write_json
 
 ROOT,q,native=original.ROOT,original.q,original.native
 PARENT=original.RUNS['capacity']
-PLAN=Path('docs/07 - Status Reports/2026-10-25_ncm-repair-continuation-plan.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-repair-continuation-plan.md')
 TEST=Path('tests/structure_net/test_ncm_engineering_repair_continuation.py')
 RUNS={m:ROOT/('20261025_engineering_repair16_continuation_'+m+'_v1') for m in ('pilot','capacity')}
 START_SHA='c7d96bbd906ec74031f5ba105a953246d57377d955de84f3087f5e2c41b41a6c'

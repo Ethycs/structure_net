@@ -16,7 +16,7 @@ from experiments.structure_net import ncm_recovered_pair_training_pool as pool
 ROOT = pool.BASE/'20261028_recovered_paraphrase_catalog_v1'
 SAMPLE = pool.BASE/'20261027_recovered_label_sample_v1'
 AUDIT = pool.BASE/'20261027_recovered_pair_training_pool_audit_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-paraphrase-catalog.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-paraphrase-catalog.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_paraphrase_catalog.py')
 SCHEMA = 'nal.ncm-recovered-paraphrase-catalog.v1'
 MAX_RSS = 4_000_000_000

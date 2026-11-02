@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path('data/experiments/ncm_paper_regime/20261025_onpolicy_residual_results_v1')
 CAMPAIGN = ROOT/'campaign_results.json'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-onpolicy-residual.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-onpolicy-residual.md')
 HYPOTHESIS = 'ncm-onpolicy-residual-v1'
 ARMS = ('fixed_targets','residual_targets')
 

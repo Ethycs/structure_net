@@ -25,7 +25,7 @@ from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_decoder_polish import frozen_hash
 from experiments.structure_net.train_ncm_memory import save
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-broad-decoder-transfer-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-broad-decoder-transfer-plan.md")
 SOURCES = ROOT / "20261022_expanded_data_v2"
 DATA = ROOT / "20261022_broad_decoder_data_v1"
 PILOT = ROOT / "20261022_broad_decoder_pilot_v1"

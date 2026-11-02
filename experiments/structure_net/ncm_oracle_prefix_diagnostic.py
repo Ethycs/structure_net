@@ -12,7 +12,7 @@ from experiments.structure_net import ncm_sol64_grounded_oracle as component
 native, q, ROOT = checkpoint.native, checkpoint.q, checkpoint.ROOT
 HYPOTHESIS = 'ncm-level-conditioning-oracle-prefix-diagnostic-v1'
 DEST = ROOT / '20261025_level_conditioning_oracle_prefix_diagnostic_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-oracle-prefix-diagnostic-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-oracle-prefix-diagnostic-plan.md')
 TEST = Path('tests/structure_net/test_ncm_oracle_prefix_diagnostic.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_oracle_prefix_diagnostic.py')
 FORCED_LEVELS = (0, 1, 3, 6, 12)

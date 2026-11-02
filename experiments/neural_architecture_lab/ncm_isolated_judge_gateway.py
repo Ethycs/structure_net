@@ -20,7 +20,7 @@ CLI = REPO/'.pixi/envs/default/lib/node_modules/@openai/codex/node_modules/@open
 UNIT = 'structure-net-ncm-isolated-judge-gateway-v1.service'
 ORIGIN = 'http://127.0.0.1:8092'
 MODELS = ('codex_sdk/gpt-5.6-terra', 'codex_sdk/gpt-5.6-sol')
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-isolated-judge-gateway.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-isolated-judge-gateway.md')
 TEST = Path('tests/structure_net/test_ncm_isolated_judge_gateway.py')
 SETTINGS = {'LLM_ENDPOINT_CODEX_PERSISTENT': '0', 'LLM_ENDPOINT_CLAUDE_POOL': '0',
             'LLM_ENDPOINT_CLAUDE_POOL_PREWARM': '', 'LLM_ENDPOINT_MAX_WORKERS': '1',

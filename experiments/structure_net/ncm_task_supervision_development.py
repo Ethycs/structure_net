@@ -17,7 +17,7 @@ from experiments.structure_net import ncm_public_development as public_sources
 from experiments.neural_architecture_lab import finalize_ncm_public_curriculum as public_results
 
 data, base = study.data, study.base
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-task-supervision-evaluation.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-task-supervision-evaluation.md')
 TEST = Path('tests/structure_net/test_ncm_task_supervision_development.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_task_supervision_development.py')
 PREFLIGHT = data.ROOT/'20261027_task_supervision_DEV_preflight_v1'

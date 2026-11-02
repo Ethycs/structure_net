@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_native_label_quality import dependencies
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-neighborhood-first-judgment-amendment.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-neighborhood-first-judgment-amendment.md")
 GRADE = ROOT / "20261023_native_query_neighborhood_grade_v2"
 BASE = ROOT / "20261023_budget128_baselines_grading_v1"
 CAMPAIGN = ROOT / "20261023_budget128_baselines_results_v1/campaign_results.json"

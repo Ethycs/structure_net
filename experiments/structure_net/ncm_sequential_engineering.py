@@ -15,7 +15,7 @@ from experiments.structure_net import ncm_sequential_levels as mechanism
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 ROOT, native, q, preparation = base.ROOT, base.native, base.q, base.preparation
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sequential-levels-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sequential-levels-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sequential_levels.py')
 RUNS = {m: ROOT / ('20261024_sequential_engineering16_' + m + '_v1') for m in ('pilot','capacity')}
 CONFIG = dict(updates=512, accumulation=2, warmup=32, max_lr=1e-4, min_lr=1e-5,

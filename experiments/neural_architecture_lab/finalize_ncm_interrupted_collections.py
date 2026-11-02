@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 ROOT, q = semantics.run.ROOT, semantics.run.q
 DEST = ROOT / '20261025_interrupted_collection_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-interrupted-collections.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-interrupted-collections.md')
 HYPOTHESES = ('ncm-grounded-semantic-transport-stop-v1', 'ncm-sol-teacher144-outage-firsts-v1')
 
 

@@ -13,11 +13,11 @@ from experiments.structure_net import ncm_memory_accuracy_v2 as q
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-released-xsum-control-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-released-xsum-control-plan.md")
 REVISION = "6580ba41a4b0a976dde876fbe84d25327617b0e6"
 DATA = ROOT / "20261022_released_xsum_data_v1"
 NAMES = ("passages.pickle", "reference_summaries.pickle")
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-22_ncm-released-xsum-runtime-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-released-xsum-runtime-amendment.md")
 
 
 class PrimitiveUnpickler(pickle.Unpickler):

@@ -12,7 +12,7 @@ from .prepare_qwen38_moe import WEIGHTS, SHA256
 from .qwen38_moe_runtime import validate_metadata
 from .qwen_runtime import REQUESTS, REQUESTS_SHA
 
-PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-70tps-free-gpus.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-70tps-free-gpus.md')
 PREVIOUS = Path('data/experiments/word_games/20261031_70tps_batch_mtp_v1/campaign_results.json')
 C = target.Config
 CONFIGS = {c.name: c for c in (

@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, verify
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_native_word_mechanism_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-word-mechanism-and-upstream-actions.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-word-mechanism-and-upstream-actions.md")
 
 
 def finalize():

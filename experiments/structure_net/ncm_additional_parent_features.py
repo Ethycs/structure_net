@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_word_final_data as base
 from experiments.structure_net import ncm_additional_whole_labels as labels
 from experiments.structure_net.ncm_memory_data import file_hash,write_json
 
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-additional-parent-features-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-additional-parent-features-plan.md")
 ORIGINAL_DATA=base.DATA
 DATA=base.ROOT/"20261023_additional_parent_data_v1"
 PILOT=base.ROOT/"20261023_additional_parent_pilot_v1"

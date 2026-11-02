@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 native, q, ROOT = numeric.native, numeric.q, numeric.ROOT
 HYPOTHESIS = 'ncm-sol64-source-grounded-oracle-decoder-v1'
 MODULE = 'experiments.structure_net.ncm_sol64_grounded_oracle'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol64-grounded-oracle-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol64-grounded-oracle-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sol64_grounded_oracle.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_sol64_grounded_oracle.py')
 CHECKPOINT_SHA = '49a661bfe52fa677cbf3262a58616bf1b469064ae45c4606a693baf1999b2f90'

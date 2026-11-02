@@ -21,7 +21,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 ROOT, q = native.ROOT, native.q
 HYPOTHESIS = "ncm-lm1b-frozen-book-decoder-repair-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-decoder-repair-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-decoder-repair-plan.md")
 MODULE = "experiments.structure_net.ncm_lm1b_decoder_repair"
 INPUTS = ROOT / "20261024_lm1b_decoder_training_inputs_v1"
 DATA = ROOT / "20261024_lm1b_decoder_repair_data_v1"

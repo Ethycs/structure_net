@@ -8,7 +8,7 @@ from experiments.neural_architecture_lab.audit_ncm_evidence_teacher_pilot import
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST=run.ROOT/'20261024_sol_teacher8631_raw_audit_v1'
-REPORT=Path('docs/08 - Analysis/2026-10-24_ncm-sol-teacher8631-continuation.md')
+REPORT=Path('docs/08 - Analysis/ncm/2026-10-24_ncm-sol-teacher8631-continuation.md')
 
 
 def main():

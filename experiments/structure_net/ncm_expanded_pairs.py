@@ -15,8 +15,8 @@ from experiments.structure_net.ncm_paper_data import DATA, PREP, ROOT, SYSTEM, f
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 from experiments.structure_net.train_ncm_memory import rows
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-expanded-pairs-plan.md")
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-22_ncm-expanded-public-filter-amendment.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-expanded-pairs-plan.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-expanded-public-filter-amendment.md")
 PREPARED = ROOT / "20261022_expanded_data_v2"
 TEACHER = ROOT / "20261022_expanded_teacher_v2"
 HYPOTHESIS = "ncm-expanded-public-pairs-v1"

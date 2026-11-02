@@ -22,7 +22,7 @@ from experiments.structure_net.ncm_memory_data import file_hash,write_json
 native,q,ROOT=head.concepts.release,head.concepts.release.q,head.ROOT
 HYPOTHESIS="ncm-lm1b-full690-source-grounded-neighborhood-v1"
 MODULE="experiments.structure_net.ncm_lm1b_grounded_training"
-PLAN=Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-grounded-training-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-grounded-training-plan.md")
 WORKFLOW=ROOT/"20261024_lm1b_grounded_training_workflow_v1"
 DATA=ROOT/"20261024_lm1b_grounded_training_data_v1"
 CACHE_PILOT=ROOT/"20261024_lm1b_grounded_training_cache_pilot_v1"

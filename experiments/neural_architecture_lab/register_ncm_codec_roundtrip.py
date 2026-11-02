@@ -10,7 +10,7 @@ if not hasattr(np, 'NaN'):
 
 ROOT = Path('data/experiments/ncm_paper_regime/20261025_codec_roundtrip_results_v1')
 CAMPAIGN = ROOT/'campaign_results.json'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-codec-roundtrip.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-codec-roundtrip.md')
 ID = 'ncm-summary-codec-roundtrip-v1'
 
 

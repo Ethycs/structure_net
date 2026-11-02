@@ -16,7 +16,7 @@ from experiments.structure_net import ncm_lm1b_native_capacity as capacity
 lifecycle, training, native, q, ROOT = capacity.lifecycle, capacity.training, capacity.native, capacity.q, capacity.ROOT
 HYPOTHESIS = 'ncm-lm1b-native655-source-training-v1'
 MODULE = 'experiments.structure_net.ncm_lm1b_native_source_training'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-lm1b-native-source-training-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-native-source-training-plan.md')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_lm1b_native_source_training.py')
 TEST = Path('tests/structure_net/test_ncm_lm1b_native_source_training.py')
 WORKFLOW = ROOT / '20261024_lm1b_native655_training_workflow_v1'

@@ -8,7 +8,7 @@
 
 **Classification:** `observed_edge_connection_identifies_nonpointwise_c3_relation`
 
-**Preregistration:** [relational connection preflight](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-relational-connection-preflight-preregistration.md)
+**Preregistration:** [relational connection preflight](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-relational-connection-preflight-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_relational_connection_preflight/20260811_preregistered/result.json`
 

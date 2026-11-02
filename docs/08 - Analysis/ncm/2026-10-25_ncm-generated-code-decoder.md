@@ -8,7 +8,7 @@ task-quality goal; lower training loss did not establish semantic improvement.
 Hypothesis `ncm-generated-code-decoder-v1`; classification
 `DEV_semantic_quality_failed`. This is one exploratory training seed and remains
 underpowered for architecture-level claims. The
-[prospective plan](../07%20-%20Status%20Reports/2026-10-25_ncm-generated-code-decoder-plan.md)
+[prospective plan](../../07%20-%20Status%20Reports/ncm/2026-10-25_ncm-generated-code-decoder-plan.md)
 fixed the update budget, inputs, frozen modules and unchanged evaluation gates.
 
 | Held-out cohort | Valid judgments | Complete-summary passes | Readable outputs |
@@ -78,7 +78,7 @@ is better motivated than declaring codec capacity to be the sole remaining fault
 There is no matched extra-oracle-training arm, so this before/after comparison
 also cannot isolate conditioning on generated errors from additional training.
 
-The searchable [data viewer](../../data/experiments/ncm_paper_regime/20261025_generated_code_decoder_data_review_v1/index.html)
+The searchable [data viewer](../../../data/experiments/ncm_paper_regime/20261025_generated_code_decoder_data_review_v1/index.html)
 contains all 732 TRAIN and 128 DEV sources, predictions and available judgment
 reasons. Its HTML JSON payload, JSONL export, source hashes and JavaScript syntax
 were independently checked; earlier viewers remain intact.

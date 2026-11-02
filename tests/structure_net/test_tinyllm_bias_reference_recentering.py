@@ -162,7 +162,7 @@ def test_aggregate_uses_registered_population_and_control_thresholds() -> None:
 
 def test_preregistration_exists_at_declared_path() -> None:
     path = Path(
-        "docs/07 - Status Reports/"
+        "docs/07 - Status Reports/tinyllm/"
         "2026-08-10_tinyllm-bias-reference-recentering-v2-preregistration.md"
     )
     assert path.is_file()

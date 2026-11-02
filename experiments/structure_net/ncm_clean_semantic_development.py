@@ -18,8 +18,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 reference, legacy_eval, legacy_audit = old.reference, old.legacy_eval, old.legacy_audit
 ROOT = word.ROOT
 HYPOTHESIS = "ncm-clean-full690-semantic-development-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-clean-semantic-development-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-clean-semantic-development.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-clean-semantic-development-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-clean-semantic-development.md")
 WORKFLOW = ROOT / "20261024_clean_semantic_dev_workflow_v1"
 SOURCES = ROOT / "20261024_clean_semantic_dev_sources_v1"
 PILOT = ROOT / "20261024_clean_semantic_dev_inference_pilot_v1"

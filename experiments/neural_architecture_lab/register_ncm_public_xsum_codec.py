@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path('data/experiments/ncm_paper_regime/20261026_public_xsum_codec_results_v2')
 CAMPAIGN = ROOT/'campaign_results.json'
-REPORT = Path('docs/08 - Analysis/2026-10-26_ncm-public-xsum-codec.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-26_ncm-public-xsum-codec.md')
 HYPOTHESIS = 'ncm-public-xsum-codec-v1'
 
 

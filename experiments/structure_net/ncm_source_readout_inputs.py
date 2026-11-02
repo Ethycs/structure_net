@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_paper_data import ROOT
 REVISION = "5617a9f61b028005a4858fdac845db406aefb181"
 CACHE = Path("/home/rabbit/.cache/huggingface/hub/models--BAAI--bge-m3/snapshots") / REVISION
 DEST = ROOT / "20261023_source_readout_model_v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-source-grounded-readout-feasibility-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-source-grounded-readout-feasibility-plan.md")
 
 
 def model():

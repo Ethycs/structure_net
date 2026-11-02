@@ -92,7 +92,7 @@ def _cell_metrics(detail: Mapping[str, Any]) -> dict[str, float]:
 def build_calibrated_frontend_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-calibrated-identifiability-causal.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-calibrated-identifiability-causal.md"
     ),
 ) -> dict[str, Any]:
     campaign = _read_campaign(results_path)
@@ -273,7 +273,7 @@ def store_calibrated_frontend_meta_hypothesis(
     output_path: Path,
     *,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-calibrated-identifiability-causal.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-calibrated-identifiability-causal.md"
     ),
     chromadb_path: Path | None = None,
     queue_dir: Path = Path("data/experiment_queue"),

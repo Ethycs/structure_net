@@ -8,7 +8,7 @@ from experiments.structure_net import ncm_memory_accuracy_v2 as q
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-revised-label-capacity-amendment.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-revised-label-capacity-amendment.md")
 BASE_ROOT, BASE_PRODUCING, BASE_REQUEST = old.root, old.producing, old.request
 
 

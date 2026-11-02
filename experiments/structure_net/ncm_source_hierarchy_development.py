@@ -16,7 +16,7 @@ from experiments.structure_net import ncm_task_supervision_development as previo
 from experiments.structure_net import ncm_recovered_review_lineage as history
 
 data, base = study.data, study.task.base
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-source-hierarchy-evaluation.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-source-hierarchy-evaluation.md')
 TEST = Path('tests/structure_net/test_ncm_source_hierarchy_development.py')
 QUALIFICATION = data.ROOT/'20261027_source_hierarchy_DEV_CPU_v1.json'
 COHORTS = previous.COHORTS

@@ -26,7 +26,7 @@ SCHEMA_VERSION = "nal.tinyllm-noisy-bias-pilot-acquisition.v1"
 HYPOTHESIS_ID = "tinyllm-noisy-bias-pilot-acquisition-v1"
 EVIDENCE_ROLE = "preregistered_frozen_reused_draw_bias_pilot_titration"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-noisy-bias-pilot-acquisition-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

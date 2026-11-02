@@ -8,7 +8,7 @@ from experiments.neural_architecture_lab.finalize_ncm_broad_generator import cla
 
 study = development.study
 RESULTS = study.broad.runtime.ROOT/'20261025_onpolicy_residual_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-onpolicy-residual.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-onpolicy-residual.md')
 
 
 def paired_passes(fixed, residual):

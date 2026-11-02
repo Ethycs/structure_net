@@ -21,8 +21,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 ROOT = old.ROOT
 HYPOTHESIS = "ncm-dense-matched-forecaster-v2"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-dense-matched-forecaster-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-dense-matched-forecaster.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-dense-matched-forecaster-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-dense-matched-forecaster.md")
 WORKFLOW = ROOT / "20261024_dense_matched_forecaster_workflow_v2"
 PILOT = ROOT / "20261024_dense_matched_forecaster_pilot_v2"
 FIT_PILOT = ROOT / "20261024_dense_matched_forecaster_fit_pilot_v2"

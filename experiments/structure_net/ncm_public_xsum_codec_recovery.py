@@ -2,7 +2,7 @@
 from experiments.structure_net.ncm_public_xsum_codec import *
 from experiments.structure_net import ncm_public_xsum_codec as original
 
-AMENDMENT = Path('docs/07 - Status Reports/2026-10-26_ncm-public-xsum-codec-recovery.md')
+AMENDMENT = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-xsum-codec-recovery.md')
 RECOVERY_TEST = Path('tests/structure_net/test_ncm_public_xsum_codec_recovery.py')
 INCIDENT = prior.ROOT/'20261026_public_xsum_codec_pilot_launch_failure_v1'
 RUNS = {**original.RUNS, **{s: prior.ROOT/f'20261026_public_xsum_codec_{s}_v2' for s in ('pilot', 'eval', 'results')}}

@@ -3,7 +3,7 @@
 **Hybrid summary task accuracy: 0/64 = 0.00%.**
 The parent body and codec remained unchanged; the attached NCM module trained.
 
-Protocol: [fixed design](../07%20-%20Status%20Reports/2026-10-22_ncm-frozen-body-plan.md).
+Protocol: [fixed design](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-frozen-body-plan.md).
 
 Date: 2026-10-22. Hypothesis: `ncm-frozen-llama-body-v1`. One seed, exploratory.
 Classification: `frozen_body_training_succeeded_quality_below_95`.
@@ -23,7 +23,7 @@ the same initialized generator/codec, 2,048 eligible training pairs, minibatches
 512 updates and optimizer schedule, with its ordinary prompt representation.
 The parent baseline uses greedy generation from the same rendered prompt.
 Adapter initialization seed is 42, dropout 52 and minibatches 2042. The dated
-[seed clarification](../07%20-%20Status%20Reports/2026-10-22_ncm-frozen-body-seed-clarification.md)
+[seed clarification](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-frozen-body-seed-clarification.md)
 records the already-frozen implementation's derived dropout seed; no run changed.
 The new training producer omitted explicit GPT-2 tokenizer hashes. Before
 grading, finalization checked every cached file against the immutable prior

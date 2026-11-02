@@ -17,7 +17,7 @@ from experiments.structure_net.prepare_llama_cotenancy import MODEL_PATH, sha256
 
 HYPOTHESIS_ID = "llama32-3b-tensor-runtime-v1"
 SCHEMA_VERSION = "nal.llama-tensor-runtime.v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-14_llama32-tensor-runtime-plan.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-tensor-runtime-plan.md")
 CHECKPOINT = Path("data/experiments/llama_neighbourhood_continuation/20261014_noise_global_v2")
 ARMS = ("reference", "eager", "graph", "graph_lookup8")
 

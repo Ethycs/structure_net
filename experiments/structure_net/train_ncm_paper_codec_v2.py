@@ -21,7 +21,7 @@ from experiments.structure_net.ncm_training_recipe import cumulative_latent, sam
 from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_memory import save
 
-NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-paper-recovery-v2-plan.md")
+NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-paper-recovery-v2-plan.md")
 
 
 @dataclass(frozen=True)
@@ -74,7 +74,7 @@ def run(args):
          "dropout_seed": 52, "sampler_seed": 2042, "augmentation_seed": 3042,
          "pilot_cutoffs": [1, 9] if pilot else None})
     p["hypothesis_id"] = "ncm-paper-regime-recovery-v2"
-    for source in (Path(__file__), NOTE, Path("docs/07 - Status Reports/2026-10-22_ncm-codec-straight-through-fix.md"),
+    for source in (Path(__file__), NOTE, Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-codec-straight-through-fix.md"),
                    Path("experiments/structure_net/ncm_codec_training_v2.py")):
         p["source_hashes"][str(source)] = file_hash(source)
         (args.output / "producer_source" / ("codec_training_"+source.name)).write_bytes(source.read_bytes())

@@ -18,7 +18,7 @@ base, native, preparation, q, ROOT = prior.base, prior.native, prior.preparation
 PARENT = prior.RUNS['capacity']
 PARENT_SHA = 'd27af43e7bb8f8a80d81e2c19c51e12ddb8bcc08154dd0540303862ecd81f841'
 MODEL_SHA = 'ad2f1eb8de12b8abfc34ac228aa3b452a09a6cd78cdaf48eb3222163b8dcbb7f'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-sequential-decoder-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-sequential-decoder-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sequential_decoder.py')
 RUNS = {s: ROOT / ('20261025_sequential_decoder_' + s + '_v1') for s in ('pilot', 'capacity', 'train')}
 CONFIG = dict(accumulation=4, max_lr=1e-4, min_lr=1e-5, sampler_seed=151142,

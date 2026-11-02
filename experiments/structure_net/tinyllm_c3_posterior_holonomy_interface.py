@@ -26,7 +26,7 @@ EVIDENCE_ROLE = "preregistered_deterministic_soft_holonomy_interface_audit"
 CLASSIFICATION_PASS = "posterior_holonomy_moment_exact_soft_interface"
 CLASSIFICATION_FAIL = "posterior_holonomy_interface_claim_failed"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-posterior-holonomy-interface-"
     "preregistration.md"
 )

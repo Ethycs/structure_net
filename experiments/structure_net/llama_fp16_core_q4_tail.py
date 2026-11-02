@@ -20,7 +20,7 @@ from experiments.structure_net.prepare_llama_cotenancy import MODEL_PATH, sha256
 
 HYPOTHESIS_ID = "llama32-3b-fp16-core-q4-tail-v1"
 SCHEMA_VERSION = "nal.llama-fp16-core-q4-tail.v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-14_llama32-fp16-core-q4-tail-plan.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-fp16-core-q4-tail-plan.md")
 
 
 @dataclass(frozen=True)

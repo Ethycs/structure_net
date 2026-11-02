@@ -7,7 +7,7 @@ from pathlib import Path
 from experiments.structure_net import ncm_teacher1024_recovery as old
 
 data,base,original = old.data,old.base,old.original
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-teacher1024-timeout-continuation.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-teacher1024-timeout-continuation.md')
 TEST = Path('tests/structure_net/test_ncm_teacher1024_continuation.py')
 SERVICE = Path('experiments/neural_architecture_lab/ncm_teacher1024_continuation_service.py')
 FAILED = old.ROOTS['generate']

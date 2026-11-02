@@ -17,7 +17,7 @@ from experiments.structure_net import ncm_recovered_codec_codes as prepared
 from experiments.structure_net import ncm_lm1b_decoder_repair as old
 
 data, runtime = prepared.data, prepared.runtime
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-decoder-training.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-decoder-training.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_decoder_training.py')
 QUALIFICATION = data.ROOT/'20261027_recovered_decoder_CPU_v1.json'
 ROOTS = {s: data.ROOT/f'20261027_recovered_decoder_{s}_v1' for s in ('pilot', 'train')}

@@ -46,7 +46,7 @@ TASK_GATES = {
     "extrapolation_coverage_minimum": 12,
 }
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-fixed-operator-ceiling-"
     "preregistration.md"
 )

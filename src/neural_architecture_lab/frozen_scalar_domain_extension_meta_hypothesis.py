@@ -53,11 +53,11 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_frozen_scalar_domain_extension.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-frozen-scalar-domain-extension-preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/2026-08-11_tinyllm-frozen-scalar-domain-extension.md"
+    "docs/08 - Analysis/tinyllm/2026-08-11_tinyllm-frozen-scalar-domain-extension.md"
 )
 
 

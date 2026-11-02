@@ -37,7 +37,7 @@ ARMS = ("raw", "analytic", "learned_c3")
 STRUCTURED_ARMS = ("analytic", "learned_c3")
 REGIMES = ("composition", "extrapolation")
 STAGE0_REGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-quotient-stage0-registration.md"
 )
 STAGE0_REGISTRATION_SHA256 = (

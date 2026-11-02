@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_native_readout import frozen_hash, restore_tr
 from experiments.structure_net.ncm_native_word_neighborhood import initial_state, native_word_logits, predicted_concepts, special_policy
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-paired-word-control-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-paired-word-control-plan.md")
 PILOT = ROOT / "20261023_paired_word_control_pilot_v1"
 TRAIN = ROOT / "20261023_paired_word_control_train_v1"
 

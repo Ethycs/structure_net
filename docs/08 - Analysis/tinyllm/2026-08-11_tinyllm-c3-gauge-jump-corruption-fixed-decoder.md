@@ -8,7 +8,7 @@
 
 **Classification:** `recoverable_time_varying_gauge_exceeds_fixed_connection_decoder`
 
-**Preregistration:** [hidden gauge-jump fixed decoder](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-gauge-jump-corruption-fixed-decoder-preregistration.md)
+**Preregistration:** [hidden gauge-jump fixed decoder](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-gauge-jump-corruption-fixed-decoder-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_gauge_jump_corruption_fixed_decoder/20260811_preregistered/result.json`
 

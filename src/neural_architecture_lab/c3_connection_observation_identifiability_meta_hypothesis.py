@@ -28,7 +28,7 @@ RUNNER_PATH = Path(
 )
 RUNNER_SHA256 = "a7ecb704dad4f472d57ee94dbda432a632ee9d5a4657dcbfb49307e5beedb819"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-connection-observation-identifiability-"
     "preregistration.md"
 )
@@ -36,7 +36,7 @@ PREREGISTRATION_SHA256 = (
     "e2c3a75b50403bfcdf86d89db8b3fdb144ac6b324a89221de326023ec003b938"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-connection-observation-identifiability.md"
 )
 REPORT_SHA256 = "93b8fd6a6fb945725a72ecd12ced58f9bb0c1ffdf92109e56b646b76376c53eb"

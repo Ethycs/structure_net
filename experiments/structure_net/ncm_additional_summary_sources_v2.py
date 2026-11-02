@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_additional_summary_sources as old
 from experiments.structure_net.ncm_memory_data import file_hash,text_hash,write_json
 
 prior=old.prior
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-additional-training-source-audit-v2.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-additional-training-source-audit-v2.md")
 DEST=prior.data.ROOT/"20261023_additional_summary_source_availability_v2"
 
 

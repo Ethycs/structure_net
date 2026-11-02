@@ -133,8 +133,8 @@ directly from it while model prose is evaluated separately. Those changes were
 not made in this test; the failures remain reproducible evidence.
 
 Both plans were fixed before their respective inference runs:
-[main plan](../07%20-%20Status%20Reports/2026-11-01_word-games-normal-operation-plan.md)
-and [follow-up](../07%20-%20Status%20Reports/2026-11-01_word-games-normal-operation-followup.md).
+[main plan](../../07%20-%20Status%20Reports/word-games/2026-11-01_word-games-normal-operation-plan.md)
+and [follow-up](../../07%20-%20Status%20Reports/word-games/2026-11-01_word-games-normal-operation-followup.md).
 Source, model configuration, expectations, requests, outputs, private receipts,
 receiver packets and before/after state are retained under:
 

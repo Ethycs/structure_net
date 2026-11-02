@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_recovered_pair_training_pool import Component
 ROOT = union.BASE/'20261028_combined_prepared_source_guard_v1'
 READBACK = union.BASE/'20261028_combined_prepared_pair_inventory_readback_v1'
 RECOVERED_HELD = union.BASE/'20261027_recovered_label_sample_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-combined-source-guard.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-combined-source-guard.md')
 TEST = Path('tests/structure_net/test_ncm_combined_source_guard.py')
 CPU = union.BASE/'20261028_combined_source_guard_CPU_v1.json'
 RULE = 'normalized equality or >=32 distinct common word5grams and >=80percent shorter containment'

@@ -8,8 +8,8 @@ from experiments.neural_architecture_lab.audit_ncm_evidence_teacher_pilot import
 DEST = run.ROOT / '20261024_teacher10000_partial_firsts_inventory_v1'
 INTERRUPT = run.ROOT / '20261024_teacher10000_quota_interruption_v1'
 JOURNAL = run.ROOT / '20261024_evidence_teacher10000_followthrough_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-evidence-teacher-quota-interruption.md')
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-teacher-quota-interruption.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-evidence-teacher-quota-interruption.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-teacher-quota-interruption.md')
 TEST = Path('tests/structure_net/test_ncm_partial_teacher_inventory.py')
 
 

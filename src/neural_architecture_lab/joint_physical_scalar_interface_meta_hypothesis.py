@@ -58,11 +58,11 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_joint_physical_scalar_interface.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-joint-physical-scalar-interface-preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/2026-08-11_tinyllm-joint-physical-scalar-interface.md"
+    "docs/08 - Analysis/tinyllm/2026-08-11_tinyllm-joint-physical-scalar-interface.md"
 )
 
 

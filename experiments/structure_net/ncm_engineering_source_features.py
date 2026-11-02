@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 native, ROOT = metadata.native, metadata.ROOT
 MODULE = 'experiments.structure_net.ncm_engineering_source_features'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-engineering-source-features-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-engineering-source-features-plan.md')
 WORKFLOW, PILOT, CACHE = [ROOT / ('20261025_engineering_source_features_' + name + '_v1')
     for name in ('workflow', 'pilot', 'cache')]
 

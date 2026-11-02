@@ -6,7 +6,7 @@ Primary joint gate: **0/5** adaptation seeds; confirmation: **false**.
 
 Artifact: `data/experiments/tinyllm_moba_distillation/20260909_registered/campaign_results.json`. SHA-256: `abcb16c37bc37ffc62afe8f1060075944f86225ae9af38fc82acd8c47f86f6d6`.
 
-[Preregistration](../07%20-%20Status%20Reports/2026-09-09_tinyllm-moba-distillation-preregistration.md)
+[Preregistration](../../07%20-%20Status%20Reports/moba/2026-09-09_tinyllm-moba-distillation-preregistration.md)
 
 ## Measured comparison
 

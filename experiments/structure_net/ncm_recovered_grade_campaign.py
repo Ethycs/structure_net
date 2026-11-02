@@ -7,7 +7,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT
 from experiments.structure_net.ncm_paper_grade import grade
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-recovered-judge-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recovered-judge-plan.md")
 
 
 def main(role):

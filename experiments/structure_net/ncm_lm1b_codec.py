@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 ROOT = vendor.ROOT
 HYPOTHESIS = "ncm-lm1b-native-codec-compatibility-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-native-codec-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-native-codec-plan.md")
 MODULE = "experiments.structure_net.ncm_lm1b_codec"
 RELEASE = ROOT / "20261024_lm1b_native_release_v1"
 INVENTORY = ROOT / "20261024_long_context_release_inventory_v1"

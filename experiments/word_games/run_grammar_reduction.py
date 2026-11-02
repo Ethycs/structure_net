@@ -12,5 +12,5 @@ if __name__ == '__main__':
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--port',type=int,default=18088)
     replay.HYPOTHESIS='word-games-grammar-on-demand-v2'
-    replay.EXTRA_PLANS=(Path('docs/07 - Status Reports/2026-10-31_word-games-grammar-reduction-amendment.md'),)
+    replay.EXTRA_PLANS=(Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-grammar-reduction-amendment.md'),)
     replay.run(parser.parse_args())

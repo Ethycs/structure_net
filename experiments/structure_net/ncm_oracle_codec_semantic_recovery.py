@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_oracle_codec_semantic as study
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-oracle-codec-semantic-cache-recovery.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-oracle-codec-semantic-cache-recovery.md")
 PREP = study.ROOT / "20261023_oracle_codec_semantic_recovery_prepare_v1"
 PILOT = study.ROOT / "20261023_oracle_codec_semantic_recovery_pilot_v1"
 GRADE = study.ROOT / "20261023_oracle_codec_semantic_recovery_grade_v1"

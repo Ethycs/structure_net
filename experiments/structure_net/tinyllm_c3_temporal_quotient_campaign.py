@@ -30,7 +30,7 @@ SCHEMA_VERSION = "nal.tinyllm-c3-temporal-quotient-d6.v1"
 HYPOTHESIS_ID = stage0.HYPOTHESIS_ID
 EVIDENCE_ROLE = "prospective_c3_temporal_quotient_d6"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-quotient-d6-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

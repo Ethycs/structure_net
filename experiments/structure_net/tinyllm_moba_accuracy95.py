@@ -22,7 +22,7 @@ from experiments.structure_net import tinyllm_moba_distillation as base
 
 SCHEMA_VERSION = "nal.tinyllm-moba-accuracy95.v1"
 HYPOTHESIS_ID = "tinyllm-moba-accuracy95-v1"
-PROTOCOL = Path("docs/07 - Status Reports/2026-09-09_tinyllm-moba-accuracy95-optimization.md")
+PROTOCOL = Path("docs/07 - Status Reports/moba/2026-09-09_tinyllm-moba-accuracy95-optimization.md")
 PARENT = Path("data/experiments/tinyllm_moba_distillation/20260909_registered")
 PARENT_SHA = "abcb16c37bc37ffc62afe8f1060075944f86225ae9af38fc82acd8c47f86f6d6"
 BASE_SHA = "3c863504bc4898863ca2a8e8ff1b1e16230a59dd3061f495c19a53366c91f792"

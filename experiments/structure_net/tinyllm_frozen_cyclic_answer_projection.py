@@ -37,7 +37,7 @@ INTERFACE_DIAGNOSTICS_SHA256 = (
     "3bfbf496e1cb85d79548849b533b4139c0737e7079a53e4e5bb2f974de7f9476"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-frozen-cyclic-answer-projection-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

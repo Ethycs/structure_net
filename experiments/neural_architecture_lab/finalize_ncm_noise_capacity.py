@@ -12,9 +12,9 @@ CAPACITY = ROOT / "20261022_noise_capacity_measure_v1"
 PILOT = ROOT / "20261022_residual_learning_pilot_v1"
 STOP = ROOT / "20261022_residual_learning_stop_v1/result.json"
 DEST = ROOT / "20261022_noise_capacity_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-conditioning-noise-capacity.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-conditioning-noise-capacity.md")
 RUNNER = Path("experiments/structure_net/train_ncm_conditional_residual.py")
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-22_ncm-conditional-residual-mild-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-conditional-residual-mild-amendment.md")
 
 
 def verify_old_pilot():

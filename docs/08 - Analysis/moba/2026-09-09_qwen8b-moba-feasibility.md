@@ -95,7 +95,7 @@ Next evidence needed for an application decision: an uncontended GPU run using t
 
 ## Reproduction and provenance
 
-Use the isolated `data/experiments/moba_paper/environment/bin/python` (PyTorch 2.4.1+cu121, FlashAttention 2.6.3) with `LD_LIBRARY_PATH=` and repository `PYTHONPATH`. The [reproduction guide](../02%20-%20Implementation/qwen-moba-feasibility-reproduction.md) includes environment and pinned-weight setup. Model, tokenizer, source corpus, token windows, producer sources and source snapshots are identified in each `producer.json`. Raw completed directories are immutable; rerun into a new output root.
+Use the isolated `data/experiments/moba_paper/environment/bin/python` (PyTorch 2.4.1+cu121, FlashAttention 2.6.3) with `LD_LIBRARY_PATH=` and repository `PYTHONPATH`. The [reproduction guide](../../02%20-%20Implementation/moba/qwen-moba-feasibility-reproduction.md) includes environment and pinned-weight setup. Model, tokenizer, source corpus, token windows, producer sources and source snapshots are identified in each `producer.json`. Raw completed directories are immutable; rerun into a new output root.
 
 ```bash
 env CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=0 LD_LIBRARY_PATH= \

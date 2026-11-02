@@ -14,7 +14,7 @@ from experiments.structure_net.run_llama_cotenancy import quality, aggregate_qua
 from structure_net.components.layers import model_major_tensor as tensor
 
 HYPOTHESIS_ID = "llama32-3b-lossless-residual-cotenancy-v1"
-PROTOCOL = Path("docs/07 - Status Reports/2026-10-10_llama32-lossless-residual-preregistration.md")
+PROTOCOL = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-lossless-residual-preregistration.md")
 FIXTURES = common.ROOT/"inputs_v2/fixtures.json"
 FACTORS = common.ROOT/"20261010_campaign_v2/svd2_r215_conversion/checkpoint/model.pt"
 ORIGINAL = common.ROOT/"20261010_control_v1/model.pt"

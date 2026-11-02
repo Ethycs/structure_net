@@ -19,14 +19,14 @@ from experiments.structure_net.ncm_frozen_body_public_data import PUBLIC_FILE,PU
 from experiments.structure_net.ncm_prefix_geometry import source_frame
 from experiments.structure_net.ncm_blockwise_codec import to_level_major
 
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-word-final-frozen-parent-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-word-final-frozen-parent-plan.md")
 DATA=ROOT/"20261023_word_final_data_v1"
 PILOT=ROOT/"20261023_word_final_feature_pilot_v1"
 FEATURES=ROOT/"20261023_word_final_features_v1"
 ORACLE=ROOT/"20261023_frozen_representation_decoder_reconstruction_v1"
 HYPOTHESIS="ncm-word-final-frozen-parent-v1"
 LONG=ROOT/"20261023_word_final_long_diagnostic_v1"
-AMENDMENT=Path("docs/07 - Status Reports/2026-10-23_ncm-word-final-diagnostic-expansion.md")
+AMENDMENT=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-word-final-diagnostic-expansion.md")
 
 
 def overlaps(query_offsets,native_offsets,start):

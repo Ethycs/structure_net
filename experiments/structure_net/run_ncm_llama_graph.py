@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_llama_graph import GraphRuntime
 
 BASE=Path('data/experiments/ncm_llama_graph')
 HYPOTHESIS_ID='llama32-3b-ncm-graph-runtime-v1'
-PLAN=Path('docs/07 - Status Reports/2026-10-21_ncm-graph-runtime-plan.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-graph-runtime-plan.md')
 MODEL=PARENT/'20261021_generator_v1/model.pt'
 CODEC=PARENT/'20261021_codec_v1/model.pt'
 MODEL_SHA='ff7133b2de50bc1f66ef1e490fec4c723e0fc5a5c1957107209e923b198c3e3c'
@@ -34,8 +34,8 @@ def freeze(args):
     sources=[Path(__file__),Path('experiments/structure_net/ncm_llama_graph.py'),
         Path('experiments/structure_net/ncm_capture_generate.py'),
         Path('experiments/structure_net/ncm_capture_LICENSE'),
-        Path('docs/07 - Status Reports/2026-10-21_ncm-graph-capture-amendment.md'),
-        Path('docs/07 - Status Reports/2026-10-21_ncm-graph-sampler-amendment.md'),
+        Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-graph-capture-amendment.md'),
+        Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-graph-sampler-amendment.md'),
         Path('experiments/structure_net/ncm_llama.py'),PLAN]+sorted(VENDOR.rglob('*.py'))
     for i,p in enumerate(sources):shutil.copyfile(p,copies/f'{i:03d}_{p.name}')
     inputs=[FIXTURES,MODEL,CODEC]

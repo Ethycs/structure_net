@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_native_history_parity as run
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = run.ROOT / '20261024_native655_history_path_parity_audit_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-native-history-parity.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-native-history-parity.md')
 LEVELS = (1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128)
 
 

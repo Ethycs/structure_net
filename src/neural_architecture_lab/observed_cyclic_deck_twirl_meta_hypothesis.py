@@ -287,7 +287,7 @@ def _detail_summary(detail: Mapping[str, Any]) -> dict[str, float]:
 def build_observed_cyclic_deck_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-10_tinyllm-observed-cyclic-deck-twirl.md"
+        "docs/08 - Analysis/tinyllm/2026-08-10_tinyllm-observed-cyclic-deck-twirl.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

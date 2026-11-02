@@ -49,7 +49,7 @@ class GaugeChannelizationConfig:
         "20260830_registered/campaign_results.json"
     )
     preregistration: str = (
-        "docs/07 - Status Reports/"
+        "docs/07 - Status Reports/tinyllm/"
         "2026-08-30_tinyllm-h2-gauge-channelization-preregistration.md"
     )
     validation_tokens: int = 262_144

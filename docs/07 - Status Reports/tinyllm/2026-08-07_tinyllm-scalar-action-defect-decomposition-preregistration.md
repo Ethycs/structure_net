@@ -7,7 +7,7 @@
 **Schema:** `nal.tinyllm-c2-scalar-action-defect-decomposition.v1`
 
 **Measured report:**
-[`2026-08-07_tinyllm-scalar-action-defect-decomposition.md`](../08%20-%20Analysis/2026-08-07_tinyllm-scalar-action-defect-decomposition.md)
+[`2026-08-07_tinyllm-scalar-action-defect-decomposition.md`](../../08%20-%20Analysis/tinyllm/2026-08-07_tinyllm-scalar-action-defect-decomposition.md)
 
 ## Decision question
 

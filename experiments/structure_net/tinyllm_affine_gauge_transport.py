@@ -30,7 +30,7 @@ SCHEMA_VERSION = "nal.tinyllm-affine-gauge-transport.v1"
 HYPOTHESIS_ID = "tinyllm-affine-gauge-transport-v1"
 EVIDENCE_ROLE = "registered_post_outcome_artifact_only_gauge_audit"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-affine-gauge-transport-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

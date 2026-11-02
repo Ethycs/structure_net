@@ -17,9 +17,9 @@ HYPOTHESIS = 'ncm-sol64-source-grounded-oracle-semantic-v1'
 MODULE = 'experiments.structure_net.ncm_sol64_grounded_oracle_semantics'
 AUDITOR_MODULE = 'experiments.neural_architecture_lab.finalize_ncm_sol64_grounded_oracle_semantics'
 AUDITOR = Path('experiments/neural_architecture_lab/finalize_ncm_sol64_grounded_oracle_semantics.py')
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol64-grounded-oracle-semantics-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol64-grounded-oracle-semantics-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sol64_grounded_oracle_semantics.py')
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-sol64-grounded-oracle-semantics.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-sol64-grounded-oracle-semantics.md')
 WORKFLOW, PREP, PILOT, GRADE, RESULTS = (ROOT / ('20261024_sol64_grounded_oracle_semantics_' + n + '_v1')
     for n in ('workflow', 'prepare', 'pilot', 'grade', 'results'))
 NUMERIC_AUDIT = ROOT / '20261024_sol64_grounded_oracle_audit_v1'

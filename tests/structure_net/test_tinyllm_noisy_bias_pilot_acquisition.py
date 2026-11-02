@@ -183,7 +183,7 @@ def test_aggregate_finds_smallest_reliable_count() -> None:
 
 def test_preregistration_is_frozen() -> None:
     path = Path(
-        "docs/07 - Status Reports/"
+        "docs/07 - Status Reports/tinyllm/"
         "2026-08-10_tinyllm-noisy-bias-pilot-acquisition-preregistration.md"
     )
     assert _sha256(path) == PREREGISTRATION_SHA256

@@ -4,7 +4,7 @@ Date: 2026-10-10. Profile: EXPLORATORY. One checkpoint/device; confirmation rema
 Classification: **`no_exact_candidate`**.
 
 Aggregate `data/experiments/llama_exact_blas/20261010_v1/blas/campaign_results.json`; SHA-256 `5482034aaae033226cd9b084c8688b92578e6ec646fbed877d8d1ee54b101fa2`.
-[Prospective plan](../07%20-%20Status%20Reports/2026-10-10_llama32-exact-blas-plan.md).
+[Prospective plan](../../07%20-%20Status%20Reports/llama32/2026-10-10_llama32-exact-blas-plan.md).
 
 This follow-up prefers cuBLASLt for original dense projections using PyTorch's installed backend API, with batched GEMM or 2D GEMM. The control explicitly uses cuBLAS. This is a library preference that can fall back for unsupported operations; it does not establish which kernel algorithm the library selected. Backend state is restored after every projection, including on exceptions.
 

@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_source_readout_grade import DEST as GRADING, 
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_source_readout_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-source-grounded-readout.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-source-grounded-readout.md")
 
 
 def passed_gate(value):

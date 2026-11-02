@@ -57,7 +57,7 @@ ORACLE_ACCURACY_SLACK_MAXIMUM = base.ORACLE_ACCURACY_SLACK_MAXIMUM
 ORACLE_CROSS_ENTROPY_SLACK_MAXIMUM = base.ORACLE_CROSS_ENTROPY_SLACK_MAXIMUM
 REQUIRED_SEED_PASSES = base.REQUIRED_SEED_PASSES
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-charged-character-fixed-decoder-"
     "preregistration.md"
 )
@@ -72,7 +72,7 @@ PARENT_RESULT_SHA256 = (
     "20d40a54ce42a904766cab9eb533f6e2baccff79f75a2703e6bd57ff9638675b"
 )
 PARENT_REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-switching-corruption-fixed-decoder.md"
 )
 PARENT_REPORT_SHA256 = (

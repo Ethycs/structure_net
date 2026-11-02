@@ -8,7 +8,7 @@
 
 **Classification:** `both_fixed_connection_scores_close_fresh_scope`
 
-**Preregistration:** [joint typed score](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-gauge-jump-joint-typed-score-preregistration.md)
+**Preregistration:** [joint typed score](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-gauge-jump-joint-typed-score-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_gauge_jump_joint_typed_score/20260811_preregistered/result.json`
 
@@ -176,4 +176,4 @@ DVC root checksum `52be9186ed44f5c631491cec02a20800` and a `666,418`-byte
 directory manifest.
 
 The final meta-hypothesis-inclusive DVC root and subsequent clean lakeFS commit
-are recorded separately in the [evidence backup receipt](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-gauge-jump-evidence-backup.md), avoiding a self-referential report-hash/data-root cycle.
+are recorded separately in the [evidence backup receipt](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-gauge-jump-evidence-backup.md), avoiding a self-referential report-hash/data-root cycle.

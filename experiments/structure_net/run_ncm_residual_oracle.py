@@ -19,7 +19,7 @@ from experiments.structure_net.ncm_training_recipe import cumulative_latent
 from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_memory import save
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-residual-oracle-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-residual-oracle-plan.md")
 CODEC = ROOT / "20261022_decoder_train_v1/model.pt"
 DATA = ROOT / "20261022_teacher_v1/train.json"
 ARMS = ("clean", "one_replay", "one_repair", "all_replay", "all_repair")

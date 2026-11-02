@@ -19,9 +19,9 @@ HYPOTHESIS = 'ncm-sol64-native-text-roundtrip-semantic-v1'
 MODULE = 'experiments.structure_net.ncm_sol64_bert_roundtrip'
 AUDITOR_MODULE = 'experiments.neural_architecture_lab.finalize_ncm_sol64_bert_roundtrip'
 AUDITOR = Path('experiments/neural_architecture_lab/finalize_ncm_sol64_bert_roundtrip.py')
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol64-bert-roundtrip-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol64-bert-roundtrip-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sol64_bert_roundtrip.py')
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-sol64-bert-roundtrip.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-sol64-bert-roundtrip.md')
 WORKFLOW, PREP, PILOT, GRADE, RESULTS = (ROOT / ('20261024_sol64_bert_roundtrip_' + n + '_v1')
     for n in ('workflow', 'prepare', 'pilot', 'grade', 'results'))
 

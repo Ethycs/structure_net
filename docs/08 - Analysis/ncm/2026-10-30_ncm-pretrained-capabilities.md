@@ -79,7 +79,7 @@ These are qualitative observations, not a numerical language-accuracy grade.
 The sample canvases contain multiple CLS-delimited fragments; the concern is
 also broken grammar within fragments, not merely topic changes between them.
 All 16 unselected full canvases are preserved in
-[the sample file](../../data/experiments/ncm_pretrained_capability/20261030_native_v1/readback/lm1b_samples.txt).
+[the sample file](../../../data/experiments/ncm_pretrained_capability/20261030_native_v1/readback/lm1b_samples.txt).
 
 There is also an author CLI display issue: all 16 generated canvases begin with
 CLS101, which the display helper also treats as EOS. Its first-EOS truncation
@@ -107,9 +107,9 @@ unconditional generator will acquire both the interface and summary quality
 through further updates. The pretraining mismatch is a supported contributor,
 not proof that it is the sole cause or that a task-matched model will reach 95%.
 
-**Reproducibility:** the [plan](../07%20-%20Status%20Reports/2026-10-30_ncm-pretrained-capability-plan.md)
+**Reproducibility:** the [plan](../../07%20-%20Status%20Reports/ncm/2026-10-30_ncm-pretrained-capability-plan.md)
 fixed the new tests before outputs. The
-[runner](../../experiments/structure_net/ncm_pretrained_capability.py) executes
+[runner](../../../experiments/structure_net/ncm_pretrained_capability.py) executes
 the pinned authors' inference script with strict weight loading; it changes
 only checkpoint deserialization safety, local BERT-tokenizer lookup and raw
 code capture. Model revision `d342ce8aaea58830eef3b8ad473664673e41f692`;
@@ -120,10 +120,10 @@ Execution used locked Pixi, physical RTX3060 GPU0, FP32 with TF32 off, Sudoku
 batch32 and LM1B batch8. Two-board Sudoku pilots and the eight-sample LM1B pilot
 matched their full-run outputs exactly. Eight scorer tests passed. All jobs
 exited successfully. The
-[CPU readback](../../experiments/structure_net/ncm_pretrained_capability_readback.py)
+[CPU readback](../../../experiments/structure_net/ncm_pretrained_capability_readback.py)
 verified source bindings, author outputs and Sudoku scores.
 No comparative speed claim, application final-test measurement or 95%
 application success is made. Adaptation training and the stopped grading stay
 stopped. Artifacts and results:
-[readback summary](../../data/experiments/ncm_pretrained_capability/20261030_native_v1/readback/summary.json),
-[tool exits](../../data/experiments/ncm_pretrained_capability/20261030_native_v1/actual_tool_exits.json).
+[readback summary](../../../data/experiments/ncm_pretrained_capability/20261030_native_v1/readback/summary.json),
+[tool exits](../../../data/experiments/ncm_pretrained_capability/20261030_native_v1/actual_tool_exits.json).

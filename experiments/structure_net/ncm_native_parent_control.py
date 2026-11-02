@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_paper_controls import producer
 from experiments.structure_net.ncm_paper_data import PREP, ROOT, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-parent-competence-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-parent-competence-plan.md")
 PILOT = ROOT / "20261023_native_parent_pilot_v1"
 CONTROL = ROOT / "20261023_native_parent_control_v1"
 GRADING = ROOT / "20261023_native_parent_grading_v1"

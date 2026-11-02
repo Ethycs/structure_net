@@ -45,7 +45,7 @@ SOURCE_DECK_IMPLEMENTATION_SHA256 = (
     "9a15ceaf735555cdd0aa843247e7f142e7585632ecd98f2a2c73b60a341c3a48"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-observed-cyclic-deck-twirl-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

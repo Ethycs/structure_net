@@ -20,7 +20,7 @@ from experiments.structure_net.ncm_native_readout import NativeReadout, restore_
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-readout-transfer-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-readout-transfer-plan.md")
 PILOT = ROOT/"20261023_native_readout_transfer_pilot_v1"
 OUTPUTS = ROOT/"20261023_native_readout_transfer_outputs_v1"
 JUDGE_PILOT = ROOT/"20261023_native_readout_transfer_judge_pilot_v1"

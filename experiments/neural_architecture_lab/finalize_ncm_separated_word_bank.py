@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, verify
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_separated_word_bank_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-separated-word-bank-identity.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-separated-word-bank-identity.md")
 
 
 def finalize():

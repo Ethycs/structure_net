@@ -8,7 +8,7 @@
 
 **Classification:** `fresh_corrective_confirms_common_robust_nested_law_closure`
 
-**Preregistration:** [C3 hidden-order corruption corrective](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-hidden-order-corruption-corrective-preregistration.md)
+**Preregistration:** [C3 hidden-order corruption corrective](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-hidden-order-corruption-corrective-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_hidden_order_corruption_corrective/20260811_preregistered/result.json`
 

@@ -17,9 +17,9 @@ HYPOTHESIS = 'ncm-sol64-frozen-codec-semantic-v1'
 MODULE = 'experiments.structure_net.ncm_sol64_codec_semantics'
 AUDITOR_MODULE = 'experiments.neural_architecture_lab.finalize_ncm_sol64_codec_semantics'
 AUDITOR = Path('experiments/neural_architecture_lab/finalize_ncm_sol64_codec_semantics.py')
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol64-codec-semantics-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol64-codec-semantics-plan.md')
 TEST = Path('tests/structure_net/test_ncm_sol64_codec_semantics.py')
-REPORT = Path('docs/08 - Analysis/2026-10-24_ncm-sol64-codec-semantics.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-24_ncm-sol64-codec-semantics.md')
 WORKFLOW, PREP, PILOT, GRADE, RESULTS = (ROOT / ('20261024_sol64_codec_semantics_' + n + '_v1')
     for n in ('workflow', 'prepare', 'pilot', 'grade', 'results'))
 NUMERIC_AUDIT = ROOT / '20261024_sol64_codec_component_audit_v1'

@@ -6,7 +6,7 @@ from pathlib import Path
 from experiments.structure_net import ncm_pixi as runtime
 
 RESULTS = runtime.ROOT / '20261025_sequential_full732_pixi_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-pixi-full732.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-pixi-full732.md')
 HYPOTHESIS = 'ncm-sequential-full732-pixi-DEV-v1'
 ROOTS = {s: runtime.ROOT / ('20261025_sequential_full732_pixi_DEV_' + s + '_v1')
          for s in ('inference_pilot', 'outputs', 'judge_pilot', 'grade')}

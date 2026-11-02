@@ -8,7 +8,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT
 
 DESTINATION = ROOT / "20261022_competence_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-training-competence.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-training-competence.md")
 STUDIES = {"ncm-coarse-curriculum-v1": "20261022_coarse_train_v1",
            "ncm-decoder-polish-v1": "20261022_decoder_train_v1"}
 

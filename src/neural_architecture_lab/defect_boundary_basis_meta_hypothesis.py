@@ -75,7 +75,7 @@ def _details(path: Path) -> list[dict[str, Any]]:
 
 def build_defect_boundary_basis_meta_hypothesis(
     results_path: Path,
-    report_path: Path = Path("docs/08 - Analysis/2026-08-06_tinyllm-defect-boundary-basis.md"),
+    report_path: Path = Path("docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-defect-boundary-basis.md"),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)
     details = _details(results_path)

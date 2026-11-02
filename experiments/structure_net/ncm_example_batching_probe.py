@@ -16,7 +16,7 @@ from experiments.structure_net import ncm_onpolicy_residual_training as parent
 broad = parent.broad
 HYPOTHESIS = 'ncm-example-batching-v1'
 ROOT = broad.runtime.ROOT/'20261026_example_batching_probe_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-example-batching-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-example-batching-plan.md')
 TEST = Path('tests/structure_net/test_ncm_example_batching.py')
 
 

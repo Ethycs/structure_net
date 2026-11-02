@@ -43,7 +43,7 @@ def concept_result():
             for ids,width in zip(values,(4,8,16,32,64))):
             raise ValueError("native concept assignment coverage differs")
     dest = ROOT/"20261023_native_concepts_results_v1"
-    report = Path("docs/08 - Analysis/2026-10-23_ncm-native-concept-interface.md")
+    report = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-native-concept-interface.md")
     if dest.exists() or report.exists(): raise ValueError("fresh native concept finalization required")
     dest.mkdir()
     aggregate = {"schema":"nal.ncm-native-concepts.v1","classification":"native_residual_representation_invariants_passed",
@@ -118,7 +118,7 @@ def readout_result():
     if passed!=(result["status"]=="capacity_gate_passed"):
         raise ValueError("capacity decision differs")
     dest = ROOT/"20261023_native_readout_results_v1"
-    report = Path("docs/08 - Analysis/2026-10-23_ncm-native-readout-capacity.md")
+    report = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-native-readout-capacity.md")
     if dest.exists() or report.exists(): raise ValueError("fresh readout capacity finalization required")
     dest.mkdir()
     aggregate = {"schema":"nal.ncm-native-readout-capacity.v1","classification":result["status"],"result":result,
@@ -169,7 +169,7 @@ remain append-only. Registry confirmed=false, task_accuracy_measured=false.
 
 def register(kind):
     dest = ROOT/("20261023_native_concepts_results_v1" if kind=="concepts" else "20261023_native_readout_results_v1")
-    report = Path("docs/08 - Analysis")/("2026-10-23_ncm-native-concept-interface.md" if kind=="concepts" else "2026-10-23_ncm-native-readout-capacity.md")
+    report = Path("docs/08 - Analysis/ncm")/("2026-10-23_ncm-native-concept-interface.md" if kind=="concepts" else "2026-10-23_ncm-native-readout-capacity.md")
     hypothesis = "ncm-native-concept-interface-v1" if kind=="concepts" else "ncm-native-readout-capacity-v1"
     result = q.read(dest/"campaign_results.json")
     register_records(dest/"campaign_results.json",report,dest,{hypothesis:{

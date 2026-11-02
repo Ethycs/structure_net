@@ -29,7 +29,7 @@ REGIMES = posterior.REGIMES
 DATASET_SEEDS = posterior.DATASET_SEEDS
 FINAL_CUT = posterior.FINAL_CUT
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-final-query-jensen-decomposition-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

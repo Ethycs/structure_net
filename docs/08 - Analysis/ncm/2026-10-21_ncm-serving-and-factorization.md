@@ -31,10 +31,10 @@ the model to534MB, but its repaired model passes only28/64 development source
 reviews, so it is not promoted or installed as the default.
 
 The prospective records are the
-[replica plan](../07%20-%20Status%20Reports/2026-10-21_ncm-replicas-plan.md),
-[factorization plan](../07%20-%20Status%20Reports/2026-10-21_ncm-factorization-plan.md),
-[original batching plan](../07%20-%20Status%20Reports/2026-10-21_ncm-batching-plan.md),
-and [host-I/O correction plan](../07%20-%20Status%20Reports/2026-10-21_ncm-host-io-plan.md).
+[replica plan](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-replicas-plan.md),
+[factorization plan](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-factorization-plan.md),
+[original batching plan](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-batching-plan.md),
+and [host-I/O correction plan](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-host-io-plan.md).
 The last plan records the known failed factorization field checks, completed
 replica timings and diagnosed vocabulary lookup before corrected timings.
 

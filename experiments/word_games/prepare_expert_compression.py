@@ -21,7 +21,7 @@ TYPES = {0: ('f32', 1, 4), 1: ('f16', 1, 2), 8: ('q8_0', 32, 34),
          12: ('q4_k', 256, 144), 13: ('q5_k', 256, 176),
          14: ('q6_k', 256, 210), 15: ('q8_k', 256, 292), 30: ('bf16', 1, 2)}
 SELECTED = {f'blk.{i}.ffn_{part}_exps.weight' for i in (24, 25) for part in ('down', 'gate', 'up')}
-PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-cpu-expert-elimination-plan.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-cpu-expert-elimination-plan.md')
 
 
 def tensor_table(path):

@@ -12,7 +12,7 @@ from experiments.structure_net import ncm_public_training_stream as streaming
 
 data, catalog = feature.data, target.catalog
 ROOT = data.ROOT/'20261026_public_training_bundle_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-training-bundle-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-training-bundle-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_training_bundle.py')
 HYPOTHESIS = 'ncm-public-training-bundle-v1'
 BODY_SHA = feature.original.base.EXPECTED_BODY

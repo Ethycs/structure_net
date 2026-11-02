@@ -15,8 +15,8 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 ROOT = study.ROOT
 HYPOTHESIS = "ncm-dense-semantic-source-overlap-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-dense-source-overlap-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-dense-semantic-source-overlap.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-dense-source-overlap-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-dense-semantic-source-overlap.md")
 DEST = ROOT / "20261023_dense_semantic_source_overlap_v1"
 WORKFLOW = ROOT / "20261023_dense_semantic_source_overlap_workflow_v1"
 CASES = ROOT / "20261023_reviewed_draft_data_v1/cases.json"

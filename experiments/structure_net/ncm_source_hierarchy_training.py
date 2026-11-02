@@ -19,7 +19,7 @@ data,pipeline,engine,broad = task.data,task.pipeline,task.engine,task.broad
 CONFIG = replace(task.CONFIG,physical_GPU=1)
 ARMS = mechanism.ARMS
 HYPOTHESIS = 'ncm-source-hierarchy-task-comparison-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-source-hierarchy-comparison.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-source-hierarchy-comparison.md')
 TEST = Path('tests/structure_net/test_ncm_source_hierarchy_mechanism.py')
 AUDIT_TEST = Path('tests/structure_net/test_ncm_source_hierarchy_training.py')
 QUALIFICATION = data.ROOT/'20261027_source_hierarchy_CPU_v1.json'

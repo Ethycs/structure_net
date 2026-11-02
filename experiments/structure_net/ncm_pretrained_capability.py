@@ -16,7 +16,7 @@ VENDOR = Path("data/experiments/ncm_llama/vendor/ncm-20261021")
 DEPS = Path("data/experiments/ncm_llama/dependencies")
 LM1B = Path("data/experiments/ncm_paper_regime/20261024_lm1b_native_release_v1/files/lm1b")
 BERT = Path("data/experiments/ncm_paper_regime/20261024_long_context_release_inventory_v1/bert-tokenizer")
-PLAN = Path("docs/07 - Status Reports/2026-10-30_ncm-pretrained-capability-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-30_ncm-pretrained-capability-plan.md")
 REVISIONS = {"models": "d342ce8aaea58830eef3b8ad473664673e41f692",
              "datasets": "6580ba41a4b0a976dde876fbe84d25327617b0e6"}
 

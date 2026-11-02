@@ -5,7 +5,7 @@ teacher firsts from 1,376 source components**, with all cached source features
 verified. No student training or new accuracy measurement ran in this preparation.
 The latest complete-summary DEV result remains 0/128; the 95% goal is unmet.
 
-The [prospective preparation plan](../07%20-%20Status%20Reports/2026-10-25_ncm-broad-teacher-catalog-plan.md)
+The [prospective preparation plan](../../07%20-%20Status%20Reports/ncm/2026-10-25_ncm-broad-teacher-catalog-plan.md)
 consolidated three completed inventories: 1,117 + 188 + 144 observations. All
 1,449 firsts were accounted for. The 73 original invalid attempts remain
 preserved and excluded; none was retried or replaced. All 1,376 valid fitting

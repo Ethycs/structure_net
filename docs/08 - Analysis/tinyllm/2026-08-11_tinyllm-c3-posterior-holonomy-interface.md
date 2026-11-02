@@ -10,7 +10,7 @@
 
 **Classification:** `posterior_holonomy_moment_exact_soft_interface`
 
-**Preregistration:** [posterior-holonomy interface protocol](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-posterior-holonomy-interface-preregistration.md)
+**Preregistration:** [posterior-holonomy interface protocol](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-posterior-holonomy-interface-preregistration.md)
 
 **Primary artifact:**
 `data/experiments/tinyllm_c3_posterior_holonomy_interface/20260811_preregistered/result.json`

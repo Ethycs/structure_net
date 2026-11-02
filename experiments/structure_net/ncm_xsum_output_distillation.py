@@ -16,7 +16,7 @@ from experiments.structure_net import ncm_xsum_prefix_bridge as base
 data = base.data
 HYPOTHESIS = 'ncm-xsum-output-distillation-v1'
 SCHEMA = 'nal.ncm-xsum-output-distillation.v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-xsum-output-distillation-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-xsum-output-distillation-plan.md')
 TEST = Path('tests/structure_net/test_ncm_xsum_output_distillation.py')
 ANALYSIS = Path('experiments/neural_architecture_lab/ncm_xsum_output_distillation_results.py')
 ROOTS = {s: data.ROOT/f'20261027_xsum_output_distill_{s}_v1' for s in

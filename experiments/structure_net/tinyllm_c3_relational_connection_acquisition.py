@@ -40,7 +40,7 @@ ARMS = (
 SEEDS = (1453, 1471, 1483, 1531, 1543)
 REGIMES = ("composition", "extrapolation")
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-acquisition-"
     "preregistration.md"
 )

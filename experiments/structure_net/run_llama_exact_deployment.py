@@ -13,11 +13,11 @@ from experiments.structure_net.llama_tensorized_model import TensorizedLlama, ge
 from experiments.structure_net.prepare_llama_cotenancy import sha256, write_json
 
 HYPOTHESIS_ID = "llama32-3b-lossless-deployment-efficiency-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-10_llama32-lossless-deployment-plan.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-lossless-deployment-plan.md")
 ORIGINAL = common.ROOT / "20261010_control_v1/model.pt"
 ORIGINAL_SHA256 = "f01cc0653ec6c9bd7026b8676864612b91b6c79d2dc4df42599cbe4cf99eb9a9"
 FIXTURES = common.ROOT / "inputs_v2/fixtures.json"
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-10_llama32-deployment-input-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-deployment-input-amendment.md")
 
 
 def benchmark_pair(rows, length):

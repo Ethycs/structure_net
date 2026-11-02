@@ -37,7 +37,7 @@ SOURCE_CLOSURE_RESULT_MANIFEST_SHA256 = (
     "baed34a16dca206536b2e9cd221fd9f7556f4c063f85ee857352522e770844f4"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-observed-deck-twirl-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

@@ -18,7 +18,7 @@ PARENT = runtime.RUNS['train']
 PARENT_SHA = '37d8d70f14d81a63ecd63ca6b9a3f5bf1ac9301d866af1135e24404224e795ad'
 MODEL_SHA = '9eb6e2c41a3a4e496c588a2ec0666c4cbad6f93ba0fc16c6c88b0ea2df2d339b'
 HYPOTHESIS = 'ncm-generated-code-decoder-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-generated-code-decoder-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-generated-code-decoder-plan.md')
 RUNS = {s: ROOT / ('20261025_generated_code_decoder_' + s + '_v1') for s in ('pilot', 'train')}
 CONFIG = dict(updates=1024, accumulation=4, sampler_seed=171142, dropout_seed=172142,
     max_lr=1e-4, min_lr=1e-5, warmup=32, betas=[.9,.95], eps=1e-8,

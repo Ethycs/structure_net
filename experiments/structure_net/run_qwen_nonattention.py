@@ -21,7 +21,7 @@ from experiments.structure_net import qwen_nonattention_fast as fast
 from experiments.structure_net import qwen_nonattention_pilot as pilot
 from experiments.structure_net import qwen_moba_idle_latency as idle
 
-PROTOCOL = Path("docs/07 - Status Reports/2026-09-09_qwen8b-nonattention-acceleration.md")
+PROTOCOL = Path("docs/07 - Status Reports/moba/2026-09-09_qwen8b-nonattention-acceleration.md")
 SETTING = q.MoBASetting(1024, 2, "all")
 HYPOTHESIS = "qwen3-8b-prefix6-nonattention-acceleration-v1"
 

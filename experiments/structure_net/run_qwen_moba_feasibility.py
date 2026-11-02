@@ -20,7 +20,7 @@ from tokenizers import Tokenizer
 from experiments.structure_net import qwen_moba_prefix as q
 from experiments.structure_net import moba_head_benchmark as bench
 
-PROTOCOL=Path("docs/07 - Status Reports/2026-09-09_qwen8b-moba-feasibility.md")
+PROTOCOL=Path("docs/07 - Status Reports/moba/2026-09-09_qwen8b-moba-feasibility.md")
 INPUT_ROOT=Path("data/experiments/qwen_moba_prefix/inputs_v2")
 SOURCES={name:Path("data/corpora/babylm_10M")/(name+".txt") for name in ("wikipedia","bnc_spoken")}
 SEEDS=(7,17,29,41,53)

@@ -47,7 +47,7 @@ SOURCE_PREREGISTRATION_SHA256 = (
     "36c1a8c35823fda3076b6a73648facd7fc18513c3c969bfa297ca9c0b34c4c77"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-frozen-scalar-interface-decomposition-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

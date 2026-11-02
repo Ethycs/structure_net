@@ -11,7 +11,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 RESULTS=run.ROOT/"20261024_lm1b_grounded_cuda_pilot_results_v1"
-REPORT=Path("docs/08 - Analysis/2026-10-24_ncm-lm1b-grounded-cuda-pilot.md")
+REPORT=Path("docs/08 - Analysis/ncm/2026-10-24_ncm-lm1b-grounded-cuda-pilot.md")
 
 
 def tensor_elements(value):

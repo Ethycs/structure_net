@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_public_development as original
 
 study, data, previous = original.study, original.data, original.previous
 STAGES, roots = original.STAGES, original.roots
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-evaluation-lineage.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-evaluation-lineage.md')
 TEST = Path('tests/structure_net/test_ncm_public_development_lineage.py')
 PREFLIGHT = data.ROOT/'20261026_public_curriculum_lineage_preflight_v2'
 DEPTH_RESULTS = data.ROOT/'20261026_ncm_depth_results_v1'

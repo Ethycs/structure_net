@@ -12,7 +12,7 @@ import torch
 from experiments.structure_net import ncm_broad_generator as broad
 from experiments.structure_net import ncm_onpolicy_residual as objective
 
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-onpolicy-residual-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-onpolicy-residual-plan.md')
 TESTS = (Path('tests/structure_net/test_ncm_onpolicy_residual.py'),
          Path('tests/structure_net/test_ncm_onpolicy_residual_training.py'))
 SCHEMA = 'nal.ncm-onpolicy-residual.v1'

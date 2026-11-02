@@ -8,7 +8,7 @@ from experiments.structure_net.ncm_memory_data import file_hash,text_hash,write_
 from experiments.structure_net.ncm_paper_data import ROOT,PREP,DATA,freeze,verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-word-final-diagnostic-expansion.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-word-final-diagnostic-expansion.md")
 DEST=ROOT/"20261023_word_final_long_diagnostic_v1"
 FAILED=ROOT/"20261023_word_final_preflight_count_failure_v1"
 

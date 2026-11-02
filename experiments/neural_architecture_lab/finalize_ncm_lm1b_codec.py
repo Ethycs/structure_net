@@ -12,7 +12,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 def locations(use_framing):
     r = framed if use_framing else original
     stem = "20261024_lm1b_framed_codec" if use_framing else "20261024_lm1b_codec"
-    return r, original.ROOT / (stem + "_results_v1"), Path("docs/08 - Analysis/2026-10-24_ncm-" + stem[9:].replace("_", "-") + ".md")
+    return r, original.ROOT / (stem + "_results_v1"), Path("docs/08 - Analysis/ncm/2026-10-24_ncm-" + stem[9:].replace("_", "-") + ".md")
 
 
 def finalize(use_framing=False):

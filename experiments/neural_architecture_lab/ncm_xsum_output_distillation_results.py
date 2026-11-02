@@ -11,7 +11,7 @@ from experiments.structure_net import ncm_xsum_output_distillation as study
 from experiments.neural_architecture_lab.ncm_xsum_prefix_bridge_results import integers
 
 data, ROOTS = study.data, study.ROOTS
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-xsum-output-distillation.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-xsum-output-distillation.md')
 
 
 def counts(rows):

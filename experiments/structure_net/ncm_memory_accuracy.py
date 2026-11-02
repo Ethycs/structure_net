@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 HYPOTHESIS = "ncm-memory-task-accuracy-v1"
 TRAINING = Path("data/experiments/ncm_memory/20261022_training_v1")
 DISCOVERY = Path("data/experiments/ncm_memory/20261022_accuracy_discovery_v1/calibration_sources.json")
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-memory-task-accuracy-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-memory-task-accuracy-plan.md")
 JUDGES = {"primary": "claude_code/claude-sonnet-4-6", "secondary": "codex_sdk/gpt-5.6-terra"}
 MODELS = ("original_ncm", "trained_ncm", "saved_summary")
 RUBRIC = '''Evaluate anonymous short summaries independently against source_lines only.

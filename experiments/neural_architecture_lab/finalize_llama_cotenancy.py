@@ -12,7 +12,7 @@ from experiments.structure_net.run_llama_cotenancy import aggregate_quality, pro
 from experiments.structure_net.llama_cotenancy_data import score
 from neural_architecture_lab.llama_cotenancy_hypothesis import LlamaCotenancyEvidence
 
-REPORT = Path("docs/08 - Analysis/2026-10-10_llama32-tensorized-cotenancy.md")
+REPORT = Path("docs/08 - Analysis/llama32/2026-10-10_llama32-tensorized-cotenancy.md")
 
 
 def read(path):

@@ -11,7 +11,7 @@ from experiments.structure_net import ncm_decode_policy as decoding
 
 data = probe.data
 ROOT = data.ROOT/'20261027_xsum_render_parity_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-xsum-render-parity.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-xsum-render-parity.md')
 AUTHOR = Path('data/experiments/ncm_llama/vendor/ncm-20261021/scripts/eval_shard.py')
 AUTHOR_TOKENIZER = AUTHOR.parent.parent/'tokenization/hf_tokenizer.py'
 

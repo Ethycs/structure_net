@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_public_training_probe as probe
 
 data, DEST, HYPOTHESIS = probe.data, probe.ROOTS['results'], probe.HYPOTHESIS
 CAMPAIGN = DEST/'campaign_results.json'
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-public-training-probe.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-public-training-probe.md')
 
 
 def record_for(result):

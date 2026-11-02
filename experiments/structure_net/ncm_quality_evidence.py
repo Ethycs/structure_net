@@ -12,7 +12,7 @@ from experiments.neural_architecture_lab.finalize_ncm_quality import verify,summ
 from neural_architecture_lab.ncm_quality_hypothesis import classification
 
 BASE=q.BASE.parent/'20261021_judge_v3'
-PLAN=Path('docs/07 - Status Reports/2026-10-21_ncm-independent-quality-amendment-v3.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-independent-quality-amendment-v3.md')
 RUBRIC='''You independently grade two anonymous short dialogue summaries. Do not use tools,
 files, outside knowledge or network. Only source_turns are factual authority; references guide
 salience but can be imperfect. Score each candidate independently; both can pass or fail.

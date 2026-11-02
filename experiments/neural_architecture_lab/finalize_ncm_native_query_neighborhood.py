@@ -11,7 +11,7 @@ from experiments.neural_architecture_lab import finalize_ncm_budget128_baselines
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_native_query_neighborhood_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-native-query-neighborhood-failure.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-native-query-neighborhood-failure.md")
 
 
 def finalize():

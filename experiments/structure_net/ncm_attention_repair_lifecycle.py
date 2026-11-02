@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 native, q, ROOT = original.native, original.q, original.ROOT
 HYPOTHESIS = 'ncm-source-attention-code-repair-lifecycle-v1'
 DEST = ROOT / '20261025_attention_code_repair_lifecycle_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-attention-code-repair-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-attention-code-repair-plan.md')
 TEST = Path('tests/structure_net/test_ncm_attention_code_repair.py')
 SEED = 130142
 

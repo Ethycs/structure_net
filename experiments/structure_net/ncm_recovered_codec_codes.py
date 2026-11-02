@@ -18,7 +18,7 @@ from experiments.structure_net import ncm_recovered_released_codec as release
 data = runtime.data
 ROOT = data.ROOT/'20261027_recovered_codec_codes_v1'
 STORAGE = Path('/data2/structure_net/ncm_recovered_codec_20261027_v1/codes')
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-codec-codes.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-codec-codes.md')
 BATCH, LIMIT = 8, 3_500_000_000
 
 

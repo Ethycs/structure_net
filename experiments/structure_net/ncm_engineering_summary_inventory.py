@@ -13,7 +13,7 @@ native, ROOT = old.native, old.ROOT
 DATA = Path('data/experiments/ncm_memory/20261025_broad_handoff_v1')
 SHARD = DATA / 'handoff'
 DEST = ROOT / '20261025_engineering_summary_inventory_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-engineering-shard-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-engineering-shard-plan.md')
 TEST = Path('tests/structure_net/test_ncm_engineering_summary_inventory.py')
 SEED = 'ncm-engineering-components-20261025-v1'
 

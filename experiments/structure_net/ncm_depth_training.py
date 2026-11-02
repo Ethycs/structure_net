@@ -17,7 +17,7 @@ from experiments.structure_net import ncm_example_batching as batching
 from experiments.structure_net import ncm_trainable_example_batching as serial
 
 broad = parent.broad
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-depth-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-depth-plan.md')
 TEST = Path('tests/structure_net/test_ncm_depth.py')
 ROOTS = {(d, s): broad.runtime.ROOT/f'20261026_ncm_depth_{d}_{s}_v1'
          for d in (12, 24) for s in ('pilot', 'train')}

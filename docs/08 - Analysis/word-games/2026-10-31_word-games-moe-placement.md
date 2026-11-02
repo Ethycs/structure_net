@@ -18,7 +18,7 @@ wording difference does not itself prove a quality regression. Manual inspection
 nevertheless found unsupported approval claims and annotation-summary omissions;
 this run does not establish high task accuracy or readiness to deploy the bridge.
 
-[Prospective protocol](../07%20-%20Status%20Reports/2026-10-31_word-games-moe-placement-plan.md).
+[Prospective protocol](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-moe-placement-plan.md).
 This uses the existing **Empero Qwen3.8-35B-A3B distillation**, not PrismML
 weights. The parent model's live metaphor failure and unsupported approval
 summaries are not repaired or reclassified by a hardware timing study.
@@ -70,7 +70,7 @@ in `20261031_moe_placement_review_v1/`; the aggregate checks their raw hashes.
 
 ## Expert-only follow-up and memory
 
-The [prospective follow-up amendment](../07%20-%20Status%20Reports/2026-10-31_word-games-moe-experts-only-amendment.md)
+The [prospective follow-up amendment](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-moe-experts-only-amendment.md)
 was written after observing the first whole-block full pass. Its pilot took
 9.85 seconds against 11.45 for the same three requests in the fresh controls,
 passing the fixed 5% advancement threshold. Both full passes then ran.

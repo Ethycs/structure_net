@@ -43,7 +43,7 @@ SOURCE_RUNNER_SHA256 = source.RUNNER_SHA256 if hasattr(source, "RUNNER_SHA256") 
     "0228836047e99c8af865e377e8cae329ddb56c70a4de22207087b8d10f2da128"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-frozen-scalar-domain-extension-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

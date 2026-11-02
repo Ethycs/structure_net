@@ -15,11 +15,11 @@ from experiments.structure_net.prepare_llama_cotenancy import sha256, write_json
 HYPOTHESIS_ID = "llama32-3b-tensorized-cotenancy-v1"
 SCHEMA_VERSION = "nal.llama-cotenancy.v1"
 ROOT = Path("data/experiments/llama_tensorized_cotenancy")
-PROTOCOL = Path("docs/07 - Status Reports/2026-10-10_llama32-tensorized-cotenancy-preregistration.md")
+PROTOCOL = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-tensorized-cotenancy-preregistration.md")
 SOURCES = [Path("src/structure_net/components/layers/model_major_tensor.py"),
            *[Path("experiments/structure_net") / name for name in (
                "llama_tensorized_model.py", "llama_cotenancy_data.py", "llama_cotenancy_common.py", "prepare_llama_cotenancy.py")], PROTOCOL,
-           Path("docs/07 - Status Reports/2026-10-10_llama32-cotenancy-runtime-amendment.md")]
+           Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-cotenancy-runtime-amendment.md")]
 
 
 def gpu_state():

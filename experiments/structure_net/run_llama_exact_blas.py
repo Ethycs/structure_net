@@ -17,7 +17,7 @@ from experiments.structure_net.run_llama_exact_speed import (
 )
 
 HYPOTHESIS_ID = "llama32-3b-exact-blas-iteration-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-10_llama32-exact-blas-plan.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-exact-blas-plan.md")
 
 
 @torch.inference_mode()

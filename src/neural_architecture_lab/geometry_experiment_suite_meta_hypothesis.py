@@ -309,7 +309,7 @@ def build_suite_records(
     certificate_path: Path,
     kernel_path: Path,
 ) -> list[dict[str, Any]]:
-    report_root = Path("docs/08 - Analysis")
+    report_root = Path("docs/08 - Analysis/tinyllm")
     return [
         build_relative_carrier_record(relative_path, report_root / "2026-08-06_tinyllm-relative-carrier-factorization.md"),
         build_degree_ladder_record(ladder_path, report_root / "2026-08-06_tinyllm-degree-k-ladder.md"),

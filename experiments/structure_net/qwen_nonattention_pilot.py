@@ -19,7 +19,7 @@ from experiments.structure_net import moba_head_benchmark as b
 from experiments.structure_net import run_qwen_moba_feasibility as base
 from experiments.structure_net.qwen_moba_idle_latency import gpu_state, uncontended
 
-PROTOCOL = Path("docs/07 - Status Reports/2026-09-09_qwen8b-nonattention-acceleration.md")
+PROTOCOL = Path("docs/07 - Status Reports/moba/2026-09-09_qwen8b-nonattention-acceleration.md")
 
 
 class PackedMLP(nn.Module):

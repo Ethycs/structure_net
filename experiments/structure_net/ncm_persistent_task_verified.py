@@ -5,7 +5,7 @@ from experiments.structure_net import ncm_persistent_task_development as route
 from experiments.structure_net import ncm_recovered_training_verified_cache as cache
 
 data=route.consumer.task.data
-PLAN=Path('docs/07 - Status Reports/2026-10-28_ncm-semantic-validation-cache.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-semantic-validation-cache.md')
 TEST=Path('tests/structure_net/test_ncm_persistent_task_verified.py')
 CPU=data.ROOT/'20261028_persistent_task_verified_CPU_v1.json'
 POLICY={**cache.POLICY,'scope':'shared NCM artifact SHA256 helper in this evaluation process'}

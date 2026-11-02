@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_public_pair_fit_probe as study
 
 data = study.data
 ROOT = data.ROOT/'20261027_public_pair_fit_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-public-pair-fit.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-public-pair-fit.md')
 
 
 def record_for(value):

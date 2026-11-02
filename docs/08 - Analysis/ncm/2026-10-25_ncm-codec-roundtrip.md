@@ -6,7 +6,7 @@ parent codec alone on reserved summaries. This is not 99.29% complete-summary
 task accuracy. The latest decoder with source attention reconstructed only
 3/64 summaries exactly despite being supplied correct target codes.
 
-The [fixed plan](../07%20-%20Status%20Reports/2026-10-25_ncm-codec-roundtrip-plan.md)
+The [fixed plan](../../07%20-%20Status%20Reports/ncm/2026-10-25_ncm-codec-roundtrip-plan.md)
 compared five configurations on all 64 reserved Sol teacher/component summaries
 plus the existing 16 engineering TRAIN controls. No examples were selected by
 individual judgment outcome. Identity checks found no overlap with either the
@@ -84,9 +84,9 @@ An independent auditor replayed all 400 case metrics, code identities, target
 bindings, tokenizer renderings, aggregate denominators and artifact hashes.
 No training, new judge requests, sealed final-test access, or speed test ran.
 
-Readable [side-by-side reconstructions](../../data/experiments/ncm_paper_regime/20261025_codec_roundtrip_results_v1/review.html)
+Readable [side-by-side reconstructions](../../../data/experiments/ncm_paper_regime/20261025_codec_roundtrip_results_v1/review.html)
 include every reference, original source, and all five outputs. The prior
-[architecture radar](../../data/experiments/ncm_paper_regime/20261025_component_radar_v3/component_radar.png)
+[architecture radar](../../../data/experiments/ncm_paper_regime/20261025_component_radar_v3/component_radar.png)
 separates component diagnostics from complete-summary quality; this new codec
 comparison is additional evidence, not a replacement of its historical scores.
 

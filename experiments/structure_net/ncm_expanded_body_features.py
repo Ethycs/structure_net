@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_paper_data import PARENT, PREP, ROOT, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 from experiments.structure_net.train_ncm_memory import save
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-expanded-body-features-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-expanded-body-features-plan.md")
 PREPARED = ROOT / "20261022_expanded_data_v2"
 EXPECTED_BODY = "75cb5e87d431fa688ec1a68dc868636cf3cfbf2b421601ea56dd21848284d38c"
 

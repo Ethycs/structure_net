@@ -12,12 +12,12 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_native_label_quality import dependencies
 
 ROOT = recovery.ROOT
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-reviewed-draft-audit-recovery-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-reviewed-draft-audit-recovery-plan.md")
 OLD = recovery.FINAL_WORKFLOW
 NOMINAL_ARCHIVE = ROOT / "20261023_reviewed_draft_history_results_v1"
 DEST = ROOT / "20261023_reviewed_draft_history_results_terminal_v2"
 WORKFLOW = ROOT / "20261023_reviewed_draft_history_audit_recovery_workflow_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-reviewed-draft-history-word-audit-recovery.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-reviewed-draft-history-word-audit-recovery.md")
 MODULE = "experiments.structure_net.ncm_reviewed_draft_audit_recovery"
 
 

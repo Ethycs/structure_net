@@ -14,7 +14,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 AUDIT = ROOT / "20261022_expanded_recovery_audit_v1"
 PILOT = ROOT / "20261022_expanded_recovery_audit_pilot_v1"
 DEST = ROOT / "20261023_expanded_label_quality_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-expanded-label-quality.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-expanded-label-quality.md")
 
 
 def finalize():

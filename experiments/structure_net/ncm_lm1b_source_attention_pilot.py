@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 native = attention.release
 q, ROOT = native.q, native.ROOT
 DEST = ROOT / "20261024_lm1b_source_attention_cuda_pilot_v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-source-attention-cuda-pilot.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-source-attention-cuda-pilot.md")
 HYPOTHESIS = "ncm-lm1b-source-attention-native-CUDA-lifecycle-v1"
 CASES = native.CASES
 MANIFEST = ROOT / "20261023_reviewed_draft_data_v1/manifest.json"

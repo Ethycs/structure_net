@@ -38,7 +38,7 @@ def main():
             for name, phase in (("fp16", "a"), ("q4", "a"), ("q4", "b"), ("fp16", "b"))]
     sources = [Path(__file__), Path("experiments/neural_architecture_lab/finalize_llama_summary_throughput.py"),
                Path("experiments/neural_architecture_lab/analyze_llama_summary_throughput.py"),
-               Path("docs/07 - Status Reports/2026-10-13_llama32-summary-selection.md")]
+               Path("docs/07 - Status Reports/llama32/2026-10-13_llama32-summary-selection.md")]
     snapshot = args.output / "orchestrator_source"
     snapshot.mkdir()
     for path in sources:

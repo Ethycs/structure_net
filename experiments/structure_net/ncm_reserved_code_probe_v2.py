@@ -4,7 +4,7 @@ from pathlib import Path
 
 from experiments.structure_net import ncm_reserved_code_probe as original
 
-AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-reserved-code-probe-input-recovery.md')
+AMENDMENT = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-reserved-code-probe-input-recovery.md')
 TEST = Path('tests/structure_net/test_ncm_reserved_code_probe_v2.py')
 FAILED = original.ROOTS['pilot']
 MISSING = original.study.pipeline.bundle.catalog.INSPECTION_AUDIT/'campaign_results.json'

@@ -17,7 +17,7 @@ from experiments.structure_net.ncm_llama_graph import GraphRuntime, unpack_outpu
 from experiments.structure_net.run_ncm_llama_graph import MODEL, CODEC, MODEL_SHA, CODEC_SHA
 
 BASE = Path('data/experiments/ncm_replicas')
-PLAN = Path('docs/07 - Status Reports/2026-10-21_ncm-replicas-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-replicas-plan.md')
 HYPOTHESIS_ID = 'llama32-3b-ncm-replicas-v1'
 SCHEMA_VERSION = 'nal.ncm-replicas.v1'
 ORDER = (1, 9, 2, 8, 4, 7)

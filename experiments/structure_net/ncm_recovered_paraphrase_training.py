@@ -17,7 +17,7 @@ from experiments.structure_net import ncm_task_supervision_training as task
 
 CONFIG = schedule.CONFIG
 data, pipeline, engine, broad = task.data, task.pipeline, task.engine, task.broad
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-paraphrase-training-preregistration.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-paraphrase-training-preregistration.md')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_recovered_paraphrase_training.py')
 TESTS = [Path('tests/structure_net')/n for n in ('test_ncm_recovered_training_schedule.py',
     'test_ncm_recovered_training_inputs.py', 'test_ncm_recovered_training_stream.py',

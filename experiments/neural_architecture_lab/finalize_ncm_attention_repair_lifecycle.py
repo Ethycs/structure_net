@@ -7,7 +7,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 
 run = audit.run
 DEST = run.ROOT / '20261025_attention_code_repair_lifecycle_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-attention-code-repair-lifecycle.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-attention-code-repair-lifecycle.md')
 
 
 def main():

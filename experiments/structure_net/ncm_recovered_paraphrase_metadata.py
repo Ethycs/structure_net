@@ -11,7 +11,7 @@ from experiments.structure_net import ncm_recovered_paraphrase_catalog as catalo
 
 pool = catalog.pool
 ROOTS = {s: pool.BASE/f'20261028_recovered_paraphrase_metadata_{s}_v1' for s in ('pilot', 'full')}
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-paraphrase-metadata.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-paraphrase-metadata.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_paraphrase_metadata.py')
 SOURCE_FIELDS = {'id','source_id','group_id','source_component','source_sha256','source',
     'source_cl100k_tokens','source_truncated','split','original_role','original_created_at','spans'}

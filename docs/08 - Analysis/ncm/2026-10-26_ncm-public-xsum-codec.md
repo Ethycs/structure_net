@@ -10,7 +10,7 @@ at **0/128 semantic passes** for each of its two models.
 
 Exploratory study `ncm-public-xsum-codec-v1` is complete and classified
 `repaired_public_TRAIN_codec_reconstruction_gate_failed`. Its
-[prospective plan](../07%20-%20Status%20Reports/2026-10-26_ncm-public-xsum-codec-plan.md)
+[prospective plan](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-public-xsum-codec-plan.md)
 fixed the sample, comparison and gate before reconstruction outputs. The
 replayed aggregate is
 `data/experiments/ncm_paper_regime/20261026_public_xsum_codec_results_v2/campaign_results.json`.
@@ -68,14 +68,14 @@ as well as a quotation-mark substitution. One reference's “dozens” became
 also penalizes harmless punctuation changes. Neither token agreement nor exact
 matching substitutes for the unchanged complete-summary semantic endpoint.
 All public mismatches and paired counts are retained in
-[the descriptive error review](../../data/experiments/ncm_paper_regime/20261026_public_xsum_codec_error_review_v1/errors.json).
+[the descriptive error review](../../../data/experiments/ncm_paper_regime/20261026_public_xsum_codec_error_review_v1/errors.json).
 No new semantic judgments were assigned in that review.
 
 The first pilot launch failed before encoder/decoder inference because the
 standalone extractor used `codec.` instead of the checkpoint's
 `concepts.codec.` prefix. A CPU diagnostic verified all 136 keys and the original
 repaired-codec tensor hash. The
-[execution amendment](../07%20-%20Status%20Reports/2026-10-26_ncm-public-xsum-codec-recovery.md)
+[execution amendment](../../07%20-%20Status%20Reports/ncm/2026-10-26_ncm-public-xsum-codec-recovery.md)
 preserves that failure and uses fresh execution roots with the unchanged sample,
 checkpoints and metrics. The corrected pilot repeated its outputs exactly and
 matched every saved raw code and word ID on all 16 prior TRAIN controls per arm.

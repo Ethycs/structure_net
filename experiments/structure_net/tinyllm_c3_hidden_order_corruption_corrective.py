@@ -57,7 +57,7 @@ PARETO_ACCURACY_DELTA_MINIMUM = -0.005
 PARETO_CROSS_ENTROPY_DELTA_MAXIMUM = -0.10
 REQUIRED_SEED_PASSES = 4
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-hidden-order-corruption-corrective-"
     "preregistration.md"
 )

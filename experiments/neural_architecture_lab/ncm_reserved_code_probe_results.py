@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_reserved_code_probe as study
 
 data = study.data
 ROOT = study.ROOTS['results']
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-reserved-code-probe.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-reserved-code-probe.md')
 
 
 def report():

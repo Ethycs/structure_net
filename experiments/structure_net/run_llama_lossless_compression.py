@@ -22,7 +22,7 @@ ROOT = Path("data/experiments/llama_tensorized_cotenancy")
 ORIGINAL = ROOT / "20261010_control_v1/model.pt"
 FACTORS = ROOT / "20261010_campaign_v2/svd2_r215_conversion/checkpoint/model.pt"
 PARENT = ROOT / "20261010_lossless_v1/campaign_results.json"
-PLAN = Path("docs/07 - Status Reports/2026-10-10_llama32-lossless-compression-plan.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-10_llama32-lossless-compression-plan.md")
 EXPECTED = {str(ORIGINAL): "f01cc0653ec6c9bd7026b8676864612b91b6c79d2dc4df42599cbe4cf99eb9a9",
             str(FACTORS): "71e621f4021a9ee89a282576a65512857b61f509ec3605eed54d365919c92d6d",
             str(PARENT): "4be53fe363bdd889919260583776e89a56f614e606a6a0581efdf2741800331a"}

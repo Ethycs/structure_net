@@ -14,7 +14,7 @@ ORIGINAL = study.root_for(1, 1)
 CHECKPOINT = study.STORAGE/'epoch1_attempt1/step_000256.pt'
 CHECKPOINT_SHA = '1d8708a72ab9f304edf22bbfa8b3cf3bfbb26e3692f55e7afae817426be97a97'
 IDENTITY = 'c88bd6ec0cf97c1721d95ffa6409aece98954ae86681aba0513405ee3752293f'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-interruption-recovery.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-interruption-recovery.md')
 TEST = Path('tests/structure_net/test_ncm_public_interruption_recovery.py')
 
 

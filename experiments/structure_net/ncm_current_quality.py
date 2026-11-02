@@ -8,7 +8,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import PREP, ROOT, verify
 from experiments.structure_net.ncm_paper_grade import grade
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-current-quality-execution.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-current-quality-execution.md")
 TEACHER = ROOT / "20261022_expanded_teacher_v2"
 PILOT = ROOT / "20261022_combined_primary_pilot_v1"
 ARMS = {

@@ -72,7 +72,7 @@ def _seed_primary_pass(detail: Mapping[str, Any]) -> bool:
 def build_c2_fusion_radius_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-c2-fusion-radius.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-c2-fusion-radius.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

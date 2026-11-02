@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_source_tree_padding as memory
 data = original.data
 ROOT = data.ROOT/'20261027_source_tree_training_lifecycle_v3'
 QUALIFICATION = data.ROOT/'20261027_source_tree_padding_CPU_v1.json'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-source-tree-padding.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-source-tree-padding.md')
 TEST = Path('tests/structure_net/test_ncm_source_tree_padding.py')
 
 

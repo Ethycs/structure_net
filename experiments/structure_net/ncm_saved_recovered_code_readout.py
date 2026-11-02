@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_pixi
 BASE = examples.BASE
 ROOT = BASE/'20261028_saved_recovered_codes_new_readout_v1'
 CODE_ROOT = BASE/'20261028_recovered_paraphrase_codes_full_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-saved-recovered-code-readout.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-saved-recovered-code-readout.md')
 TEST = Path('tests/structure_net/test_ncm_saved_recovered_code_readout.py')
 CPU = BASE/'20261028_saved_recovered_code_readout_CPU_v1.json'
 CHECKPOINT_SHA = '7bc8beea1357c15f344903720f1207086591f0223b2e9ec81690c1af468f789b'

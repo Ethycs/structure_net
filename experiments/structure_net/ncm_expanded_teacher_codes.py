@@ -15,7 +15,7 @@ from experiments.structure_net import ncm_public_batch4_deterministic as determi
 data, base, codec_source = catalog.data, catalog.base, previous.codec_source
 HYPOTHESIS = 'ncm-expanded-reviewed-targets-v1'
 SCHEMA = 'nal.ncm-expanded-reviewed-targets.v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-expanded-teacher-codes-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-expanded-teacher-codes-plan.md')
 TEST = Path('tests/structure_net/test_ncm_expanded_teacher_codes.py')
 ROOTS = {s:data.ROOT/f'20261027_expanded_teacher_codes_{s}_v1'
          for s in ('pilot','full','pilot_audit','full_audit')}

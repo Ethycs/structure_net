@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, verify
 from experiments.structure_net.ncm_released_xsum_control import DATA, NAMES, read_pickle
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-released-xsum-benchmark-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-released-xsum-benchmark-plan.md")
 EXTRAS = ROOT / "released_benchmark_dependencies_v1"
 PILOT = ROOT / "20261022_released_xsum_benchmark_pilot_v1"
 FULL = ROOT / "20261022_released_xsum_benchmark_full_v1"

@@ -13,7 +13,7 @@ from experiments.structure_net import ncm_additional_source_features as original
 
 data = preparation.data
 ROOT = data.ROOT/'20261026_public_feature_pilot_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-feature-pilot-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-feature-pilot-plan.md')
 HYPOTHESIS = 'ncm-public-original-body-feature-pilot-v1'
 
 

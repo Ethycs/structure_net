@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_recovered_label_review as review
 from experiments.structure_net import ncm_public_author_lineage as author
 
 data, task = review.data, review.history
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-review-lineage.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-review-lineage.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_review_lineage.py')
 PREFLIGHT = data.ROOT/'20261027_recovered_review_lineage_preflight_v1'
 INSTALLED = False

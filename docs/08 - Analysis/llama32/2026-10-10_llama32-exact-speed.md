@@ -4,7 +4,7 @@ Date: 2026-10-10. Profile: EXPLORATORY.
 Classification: **`no_qualifying_exact_speedup`**. One checkpoint and device; confirmation remains false.
 
 Aggregate: `data/experiments/llama_exact_speed/20261010_v3/speed/campaign_results.json`, SHA-256 `6e8ba2182553beaf9f9eeb489b1c496a3cbc99edb643a0a7cbcdb0671b5517ff`.
-[Prospective plan](../07%20-%20Status%20Reports/2026-10-10_llama32-exact-speed-plan.md).
+[Prospective plan](../../07%20-%20Status%20Reports/llama32/2026-10-10_llama32-exact-speed-plan.md).
 
 This iteration compares five projection implementations against the already optimized CUDA graph baseline. Every arm uses the full 28-layer original FP16 model on GPU 0 (RTX 3060), with unchanged attention, MLPs and parameters. `mm` uses single-model 2D GEMM, `packed_bmm` combines Q/K/V and gate/up output rows, and `packed_mm` does both. `parallel2` and `parallel3` overlap independent, unchanged projections using two or three CUDA streams.
 
@@ -45,7 +45,7 @@ The original checkpoint SHA-256 is `f01cc0653ec6c9bd7026b8676864612b91b6c79d2dc4
 
 Capture/packing cost is excluded from steady-state timings and requires reuse to amortize. Graphs have fixed prompt and generation lengths. Each candidate/workload pair is released before the next. GPU process/memory snapshots passed the contention check; this does not measure transient external kernel activity. No concurrent experiment or heavy audit was scheduled during timing.
 
-All fifteen primary cells reached a terminal result: 9 exact measurements and 6 numerical rejections. No retried or pooled primary cells. Pilots v1 and v2 stopped on out-of-memory failures at packed prefill 512, after observing packed-projection bit mismatches. The [first amendment](../07%20-%20Status%20Reports/2026-10-10_llama32-exact-speed-amendment.md) reduced audit buffer lifetime and added scheduling candidates. The [storage amendment](../07%20-%20Status%20Reports/2026-10-10_llama32-exact-speed-storage-amendment.md) shares packed buffers with the reference and anchors all comparisons to saved pre-packing outputs. Both preceded primary timing. Failed pilots are preserved; corrected pilot v3 contains systems evidence only. This report uses primary v3 only.
+All fifteen primary cells reached a terminal result: 9 exact measurements and 6 numerical rejections. No retried or pooled primary cells. Pilots v1 and v2 stopped on out-of-memory failures at packed prefill 512, after observing packed-projection bit mismatches. The [first amendment](../../07%20-%20Status%20Reports/llama32/2026-10-10_llama32-exact-speed-amendment.md) reduced audit buffer lifetime and added scheduling candidates. The [storage amendment](../../07%20-%20Status%20Reports/llama32/2026-10-10_llama32-exact-speed-storage-amendment.md) shares packed buffers with the reference and anchors all comparisons to saved pre-packing outputs. Both preceded primary timing. Failed pilots are preserved; corrected pilot v3 contains systems evidence only. This report uses primary v3 only.
 
 No training, tensor rank reduction, weight compression or application-accuracy improvement is claimed. Exactness is established on the tested inputs, not proved over every possible input/kernel dispatch. The prior 95% application target remains unmeasured. Two independent models within one model's storage/latency budget remain unsupported.
 

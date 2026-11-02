@@ -17,8 +17,8 @@ from experiments.structure_net import ncm_public_feature_store as public
 
 parent, broad, data = probe.parent, probe.broad, public.data
 ROOT = data.ROOT/'20261026_public_batch4_lifecycle_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-batch4-lifecycle-plan.md')
-AMENDMENT = Path('docs/07 - Status Reports/2026-10-26_ncm-public-batch4-root-gradient-repair.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-batch4-lifecycle-plan.md')
+AMENDMENT = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-batch4-root-gradient-repair.md')
 TEST = Path('tests/structure_net/test_ncm_public_batch4_lifecycle.py')
 
 

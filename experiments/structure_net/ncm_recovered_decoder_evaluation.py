@@ -18,7 +18,7 @@ from experiments.structure_net import ncm_recovered_label_codec_audit as raw_aud
 
 data,runtime = study.data,study.runtime
 BASELINE = runtime.ROOT
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-decoder-evaluation.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-decoder-evaluation.md')
 ROOTS = {s:data.ROOT/f'20261027_recovered_decoder_{s}_v1' for s in ('first_epoch_audit','audit','evaluate','replay')}
 
 

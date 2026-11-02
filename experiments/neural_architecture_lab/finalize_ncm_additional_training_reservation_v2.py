@@ -8,7 +8,7 @@ from experiments.structure_net import ncm_additional_training_reservation as run
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 RESULTS = run.ROOT / "20261024_additional10000_training_reservation_results_v2"
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-additional-training-reservation-v2.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-additional-training-reservation-v2.md")
 
 
 def finalize():
@@ -49,7 +49,7 @@ def finalize():
         for path in root.rglob("*.json"):
             artifacts[str(path)] = run.file_hash(path)
     artifacts[str(Path(__file__))] = run.file_hash(__file__)
-    amendment = Path("docs/07 - Status Reports/2026-10-24_ncm-additional-training-reservation-audit-amendment.md")
+    amendment = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-additional-training-reservation-audit-amendment.md")
     artifacts[str(amendment)] = run.file_hash(amendment)
     failure = run.ROOT / "20261024_additional10000_training_reservation_audit_attempt_v1/actual_tool_terminal_receipt.json"
     artifacts[str(failure)] = run.file_hash(failure)

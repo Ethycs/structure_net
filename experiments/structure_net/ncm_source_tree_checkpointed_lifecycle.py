@@ -10,7 +10,7 @@ data = original.data
 FAILED = original.ROOT
 ROOT = data.ROOT/'20261027_source_tree_training_lifecycle_v2'
 QUALIFICATION = data.ROOT/'20261027_source_tree_checkpointing_CPU_v1.json'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-source-tree-checkpointing.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-source-tree-checkpointing.md')
 TEST = Path('tests/structure_net/test_ncm_source_tree_checkpointing.py')
 
 

@@ -10,7 +10,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, verify
 from experiments.structure_net import ncm_source_readout as readout
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-23_ncm-readout-first-judgment-amendment.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-readout-first-judgment-amendment.md")
 DEST = ROOT / "20261023_source_readout_grading_v2"
 PILOT = ROOT / "20261023_source_readout_judge_pilot_v1"
 

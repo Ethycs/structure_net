@@ -16,7 +16,7 @@ from experiments.structure_net import ncm_xsum_semantic_probe as protocol
 data, base, q = protocol.data, protocol.base, protocol.q
 first, qualified = protocol.first, protocol.qualified
 ROOTS = {s: data.ROOT/f'20261027_recovered_label_review_{s}_v1' for s in ('prepare', 'pilot', 'grade', 'audit')}
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-recovered-label-review.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-recovered-label-review.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_label_review.py')
 HYPOTHESIS = 'ncm-recovered-saved-label-review-v1'
 PILOT_INDICES = (0, 1, 64, 65)

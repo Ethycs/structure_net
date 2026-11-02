@@ -4,7 +4,7 @@ from pathlib import Path
 
 from experiments.structure_net import ncm_sequential_full_training_v2 as training
 
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-sequential-disk-streaming-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-sequential-disk-streaming-plan.md')
 CACHE_BYTES = 256 * 1024**2
 RUNS = {stage:training.ROOT / ('20261025_sequential_full732_disk_' + stage + '_v1')
     for stage in ('pilot','train')}

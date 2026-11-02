@@ -6,7 +6,7 @@ from pathlib import Path
 from experiments.structure_net import ncm_xsum_semantic_probe as study
 
 data, ROOTS = study.data, study.ROOTS
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-xsum-semantic-probe.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-xsum-semantic-probe.md')
 
 
 def paired(a, b):

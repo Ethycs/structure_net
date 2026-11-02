@@ -142,8 +142,8 @@ explains the grammar/backend-sampling incompatibility. Different numerical
 batch paths are a plausible contributor to changed greedy answers, but this
 study did not capture logits to establish that cause.
 
-Use the commands in [the runner README](../../experiments/word_games/README.md)
-and the [protocol](../07%20-%20Status%20Reports/2026-10-31_word-games-phi4-40tps-plan.md).
+Use the commands in [the runner README](../../../experiments/word_games/README.md)
+and the [protocol](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-phi4-40tps-plan.md).
 All code executes from the repository root through Pixi; native dependencies
 live under `.pixi/` or in the pinned container, with evidence under data.
 The `20261031_native_*` roots are append-only. Full replay roots are

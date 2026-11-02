@@ -44,7 +44,7 @@ SECOND_ACTION_SEED_BASES = {
 ACTION_ERROR_MAXIMUM = 2e-12
 REQUIRED_SEED_PASSES = 4
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-full-local-gauge-closure-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (
@@ -59,7 +59,7 @@ SOURCE_RESULT_SHA256 = (
     "f52ce2103a07086a7118975d69f49b7cbeca01ac0ca7c5a15fd6d2a96fbc51fa"
 )
 SOURCE_REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-gauge-jump-joint-typed-score.md"
 )
 SOURCE_REPORT_SHA256 = (

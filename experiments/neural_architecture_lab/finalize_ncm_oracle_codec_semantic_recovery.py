@@ -9,7 +9,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 DEST = recovery.study.ROOT / "20261023_oracle_codec_semantic_recovery_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-oracle-codec-semantic-recovery.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-oracle-codec-semantic-recovery.md")
 
 
 def configure():

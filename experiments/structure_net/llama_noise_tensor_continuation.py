@@ -25,8 +25,8 @@ BASE = Path("data/experiments/llama_neighbourhood_tensorization")
 FIXTURES = BASE / "20261013_fixtures_v1.json"
 CACHE = BASE / "20261013_cache_v1/cache.json"
 PARENT = BASE / "20261013_training_v4/training.json"
-PLAN = Path("docs/07 - Status Reports/2026-10-14_llama32-noise-tensor-continuation-plan.md")
-RESEARCH = Path("docs/08 - Analysis/2026-10-14_embedded-neighbourhood-distillation-research.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-noise-tensor-continuation-plan.md")
+RESEARCH = Path("docs/08 - Analysis/llama32/2026-10-14_embedded-neighbourhood-distillation-research.md")
 
 
 @dataclass(frozen=True)

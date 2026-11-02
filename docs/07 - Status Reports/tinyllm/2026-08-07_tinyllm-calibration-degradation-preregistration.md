@@ -12,7 +12,7 @@ breakpoints in both arms: analytic `[1, 2]` and learned `[0.5, 1]`. Campaign
 SHA-256 is
 `87a556e61db4a584b9cd423af9cb9d663f3f0225757a31a69a7158788137ef86`.
 The result and its endpoint boundary are reported in the
-[calibration-degradation analysis](../08%20-%20Analysis/2026-08-07_tinyllm-calibration-degradation.md)
+[calibration-degradation analysis](../../08%20-%20Analysis/tinyllm/2026-08-07_tinyllm-calibration-degradation.md)
 and stored under meta hypothesis `tinyllm-calibration-noise-breakpoint-v1`.
 The methods below remain the original preregistration. Later task-inclusive
 campaigns do not invalidate this result; they show that its probe-defined

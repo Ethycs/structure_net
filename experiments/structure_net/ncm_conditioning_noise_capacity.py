@@ -18,7 +18,7 @@ from experiments.structure_net.ncm_residual_oracle import nearest_distinct
 from experiments.structure_net.ncm_training_recipe import cumulative_latent
 from experiments.structure_net.train_ncm_memory import save
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-conditioning-noise-capacity-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-conditioning-noise-capacity-plan.md")
 CODEC = ROOT / "20261022_decoder_train_v1/model.pt"
 DATA = ROOT / "20261022_teacher_v1/train.json"
 MODES = ("clean", "root_only", "all_levels", "mild_fine")

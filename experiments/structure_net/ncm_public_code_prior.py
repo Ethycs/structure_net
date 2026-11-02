@@ -13,9 +13,9 @@ from experiments.structure_net import ncm_public_pair_fit_probe as probe
 
 data, bundle = probe.data, probe.bundle
 ROOTS = {s:data.ROOT/f'20261027_public_code_prior_{s}_v1' for s in ('pilot','run','audit','results')}
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-public-code-prior.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-public-code-prior.md')
 TEST = Path('tests/structure_net/test_ncm_public_code_prior.py')
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-public-code-prior.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-public-code-prior.md')
 QUALIFICATION = data.ROOT/'20261027_public_code_prior_CPU_qualification_v1.json'
 HYPOTHESIS = 'ncm-public-code-prior-v1'
 LEVELS = probe.reference.LEVELS

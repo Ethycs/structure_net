@@ -11,7 +11,7 @@ import resource
 ROOT=Path('data/experiments/ncm_paper_regime')
 DEST=ROOT/'20261025_broad_teacher_catalog_v1'
 AUDIT=ROOT/'20261025_broad_teacher_feature_audit_v1'
-PLAN=Path('docs/07 - Status Reports/2026-10-25_ncm-broad-teacher-catalog-plan.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-broad-teacher-catalog-plan.md')
 TEST=Path('tests/structure_net/test_ncm_broad_teacher_catalog.py')
 INVENTORIES=(
  ('20261024_teacher10000_partial_firsts_inventory_v1',1117,'ebbeb4bf90c1c1f7ac7ef36358bc221d82dfafe9f3c43d3c6c1a853d21f47bfd'),

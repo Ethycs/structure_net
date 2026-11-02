@@ -8,7 +8,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, verify
 
 DEST = ROOT / "20261022_decoding_residual_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-decoding-and-residual-capacity.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-decoding-and-residual-capacity.md")
 STUDIES = {
     "ncm-decoding-policy-v1": {
         "name": "Matched NCM decoding policies",
@@ -40,7 +40,7 @@ def finalize():
         raise ValueError("oracle invariants differ")
     paths = [Path(__file__), ROOT / "20261022_decode_output_manifest_v1.json",
              ROOT / "20261022_decode_quality_secondary_v1.json",
-             Path("docs/07 - Status Reports/2026-10-22_ncm-decoding-ordered-gates-amendment.md")]
+             Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-decoding-ordered-gates-amendment.md")]
     for spec in STUDIES.values():
         for name in spec["runs"]:
             root = ROOT / name

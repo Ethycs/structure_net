@@ -87,7 +87,7 @@ def run(args):
     if len(inputs) != 36:
         raise ValueError("complete frozen request set required")
     source_paths = [Path(__file__), Path(__file__).with_name("speculative_draft.py"), Path(__file__).with_name("common.py"),
-                    Path("docs/07 - Status Reports/2026-10-31_word-games-phi4-speculative-plan.md")]
+                    Path("docs/07 - Status Reports/word-games/2026-10-31_word-games-phi4-speculative-plan.md")]
     bindings = {str(p): sha(p) for p in source_paths}
     config = {"hypothesis_id": "word-games-phi4-mini-speculation-v1", "stage": args.stage,
         "draft_length": args.length, "requests_sha256": sha(args.requests), "source_hashes": bindings,

@@ -16,7 +16,7 @@ from experiments.neural_architecture_lab import audit_ncm_engineering_source_fea
 from experiments.structure_net.ncm_memory_data import file_hash, text_hash, write_json
 
 native, q, ROOT = preparation.native, preparation.q, preparation.ROOT
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-engineering-attention-repair-training-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-engineering-attention-repair-training-plan.md')
 TEST = Path('tests/structure_net/test_ncm_engineering_attention_repair.py')
 DATA = ROOT / '20261025_engineering_attention_repair732_data_v1'
 RUNS = {mode: ROOT / ('20261025_engineering_attention_repair732_' + mode + '_v1') for mode in ('pilot', 'capacity', 'train')}

@@ -22,7 +22,7 @@ RELATED_C2_RESULTS = Path(
     "data/experiments/tinyllm_c2_fusion_radius/20260806_d6_preregistered/campaign_results.json"
 )
 RELATED_C2_REPORT = Path(
-    "docs/08 - Analysis/2026-08-06_tinyllm-c2-fusion-radius.md"
+    "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-c2-fusion-radius.md"
 )
 
 
@@ -94,7 +94,7 @@ def _related_c2(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
 def build_orbit_radius_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-orbit-radius-titration.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-orbit-radius-titration.md"
     ),
     related_c2_path: Path = RELATED_C2_RESULTS,
 ) -> dict[str, Any]:

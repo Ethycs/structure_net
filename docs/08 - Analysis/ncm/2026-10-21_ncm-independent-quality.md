@@ -27,9 +27,9 @@ The separate assessment preserves the raw grade and qualifies its interpretation
 SHA256: `6eae3a3eb1d96e194bb3983489144b1131cbea05e6bcb3cce08eec4823332d7b`.
 It records `judge_qualified_for_accuracy:false` and `production_accuracy:null`.
 
-The [original plan](../07%20-%20Status%20Reports/2026-10-21_ncm-independent-quality-preregistration.md),
-[judge amendment](../07%20-%20Status%20Reports/2026-10-21_ncm-independent-quality-amendment-v2.md),
-and [citation recovery](../07%20-%20Status%20Reports/2026-10-21_ncm-independent-quality-amendment-v3.md)
+The [original plan](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-independent-quality-preregistration.md),
+[judge amendment](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-independent-quality-amendment-v2.md),
+and [citation recovery](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-independent-quality-amendment-v3.md)
 preserve the original rules and failed attempts.
 
 ## Measured grade
@@ -187,7 +187,7 @@ estimate. That is an overly literal reading of an observer's summary. Similarly,
 reasons to avoid interpreting the strict Llama rate as human accuracy. They do
 not explain the NCM's unrelated projects, fabricated deadlines and incoherence.
 
-The [human-reference diagnostic](../07%20-%20Status%20Reports/2026-10-21_ncm-quality-reference-diagnostic.md)
+The [human-reference diagnostic](../../07%20-%20Status%20Reports/ncm/2026-10-21_ncm-quality-reference-diagnostic.md)
 scored two references from each of 20 independently hash-selected primary
 sources. All 20 pairs completed without retry and were reconstructed from their
 native replies and exact source citations:

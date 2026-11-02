@@ -9,7 +9,7 @@ import statistics
 from experiments.neural_architecture_lab.audit_qwen_moba_feasibility import sha256, strict_read
 from neural_architecture_lab.qwen_moba_idle_latency_hypothesis import IdleLatencyEvidence
 
-REPORT = Path("docs/08 - Analysis/2026-09-09_qwen8b-moba-idle-latency.md")
+REPORT = Path("docs/08 - Analysis/moba/2026-09-09_qwen8b-moba-idle-latency.md")
 
 
 def save(path, data):
@@ -85,7 +85,7 @@ def main():
               "All 10 execution/context cells completed. Source snapshots and fingerprints, exact input window, model hashes, paired samples, memory usage and GPU process state are retained. The real-prefix graph check passed; weight hashes match before/after. Scheduling variants retain mean head/output cosine similarity above 0.9999 against their corresponding chunked execution. This checks scheduling equivalence, not application accuracy or exact numerical identity.", "",
               "Only the already-used Wikipedia validation window was timed. This is not another ten-window quality confirmation. No weights were trained and no 95% application-accuracy claim follows. The earlier readout-preservation result remains separate from this latency correction.", "", "## Provenance", "",
               f"- Campaign: `{args.campaign}`", f"- SHA-256: `{sha256(args.campaign)}`", f"- Producer fingerprint: `{producer['fingerprint']}`",
-              "- Entry point: `experiments/structure_net/qwen_moba_idle_latency.py`", "- Protocol: `docs/07 - Status Reports/2026-09-09_qwen8b-moba-idle-latency.md`",
+              "- Entry point: `experiments/structure_net/qwen_moba_idle_latency.py`", "- Protocol: `docs/07 - Status Reports/moba/2026-09-09_qwen8b-moba-idle-latency.md`",
               "- Two focused contention/profiling tests passed; the existing prefix numerical controls are reused.", "", "Earlier startup telemetry (preserved evidence):", "", "```json", json.dumps(prior, indent=2), "```", ""]
     report = "\n".join(lines)
     if REPORT.exists() and REPORT.read_text() != report:

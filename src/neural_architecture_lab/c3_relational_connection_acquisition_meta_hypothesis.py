@@ -42,7 +42,7 @@ PRIMARY_RUNNER_SHA256 = (
     "cf425970a3424a32e410492ea79d7d17fd579a83cea78bacea9b8a58674116f0"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-acquisition-"
     "preregistration.md"
 )
@@ -63,14 +63,14 @@ AUDIT_RUNNER_SHA256 = (
     "0c08b9ccd1062fa173e45769ebaa0396614ff81eee327486f3936b657fffa75a"
 )
 AUDIT_REGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-readout-audit-registration.md"
 )
 AUDIT_REGISTRATION_SHA256 = (
     "17d76393374a7898943fe9044ea8019281b2bceab693a372c2af6f14c458cf9d"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-relational-connection-acquisition.md"
 )
 REPORT_SHA256 = "411ff9b6d3fbdde9e002c8d99f7f7320cb6f1ee09bf0bc8ca2107c7292f0f64d"

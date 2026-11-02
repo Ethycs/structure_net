@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_native_label_quality as labels
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-budget128-evaluation-amendment.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-budget128-evaluation-amendment.md")
 OLD_CALIBRATION = Path("data/experiments/ncm_memory/20261022_accuracy_v2")
 OLD_PHRASE = "brief approximately 32-word budget."
 NEW_PHRASE = ("summary budget of at most128 stored tokens. There is no32-word target. "

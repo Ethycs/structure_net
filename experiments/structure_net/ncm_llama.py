@@ -20,7 +20,7 @@ VENDOR = BASE / "vendor/ncm-20261021"
 DEPENDENCIES = BASE / "dependencies"
 INITIAL = BASE / "inputs/hazy-xsum-d342ce8/xsum"
 GPT2 = Path("/home/rabbit/.cache/huggingface/hub/models--gpt2/snapshots/607a30d783dfa663caf39e06633721c8d4cfcd7e")
-PLAN = Path("docs/07 - Status Reports/2026-10-21_ncm-llama-distillation-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-21_ncm-llama-distillation-plan.md")
 FIXTURES = BASE / "20261021_fixtures_v1/examples.json"
 LABELS = BASE / "20261021_teacher_v1/labels.json"
 

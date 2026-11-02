@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, TEACHER, verify
 from experiments.structure_net.ncm_training_recipe import cumulative_latent
 from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 
-NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-codec-precision-diagnostic.md")
+NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-codec-precision-diagnostic.md")
 
 
 def main():

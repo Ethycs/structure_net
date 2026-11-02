@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 native, q, ROOT, data, lineage = base.native, base.q, base.ROOT, base.data, base.lineage
 MODELS = base.MODELS
 MODULE = 'experiments.structure_net.ncm_sol_evidence_teacher_recovery'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-sol-teacher-writer-recovery.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-sol-teacher-writer-recovery.md')
 TEST = Path('tests/structure_net/test_ncm_sol_evidence_teacher_recovery.py')
 FAILED_WORKFLOW, FAILED_PREP, FAILED_PILOT = base.WORKFLOW, base.PREP, base.PILOT
 ORIGINAL_PLAN = base.PLAN

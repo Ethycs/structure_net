@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_recovered_paraphrase_catalog as catalo
 pool = catalog.pool
 ROOTS = {s:pool.BASE/f'20261028_recovered_paraphrase_codes_{s}_v1' for s in ('pilot','full')}
 STORAGE = Path('/data2/structure_net/ncm_recovered_paraphrase_20261028_v1/codes')
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-paraphrase-codes.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-paraphrase-codes.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_paraphrase_codes.py')
 EXPECTED = '9aace450a49a7dfb44ba1eb00a19974a50d67062ad9f2202a6a2361ea4344e32'
 LIMIT = 3_500_000_000

@@ -12,7 +12,7 @@ from experiments.structure_net import ncm_word_final_generation_gap as gap
 from experiments.structure_net.ncm_memory_data import file_hash,write_json
 
 study=gap.study
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-source-root-capacity-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-source-root-capacity-plan.md")
 HYPOTHESIS="ncm-word-final-source-root-capacity-v1"
 PILOT=study.data.ROOT/"20261023_word_final_root_capacity_pilot_v1"
 TRAIN=study.data.ROOT/"20261023_word_final_root_capacity_train_v1"

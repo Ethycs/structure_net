@@ -5,7 +5,7 @@ from pathlib import Path
 from .free_gpu_70tps import run
 from .target_70tps import Config
 
-PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-70tps-mtp-checkpoints.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-70tps-mtp-checkpoints.md')
 PREVIOUS = Path('data/experiments/word_games/20261031_70tps_free_gpus_v1/campaign_results.json')
 SOURCE = Path('.pixi/word-games-sampling-v2/source/tools/server/server-context.cpp')
 CONFIGS = {'control': Config('control', True, 1024, True, batch=2048,

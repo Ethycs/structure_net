@@ -8,7 +8,7 @@
 
 **Classification:** `recoverable_switching_exceeds_fixed_change_point_decoder`
 
-**Preregistrations:** [original switching preflight](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-switching-corruption-fixed-decoder-preregistration.md); [fresh numerical corrective](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-switching-corruption-fixed-decoder-corrective-preregistration.md)
+**Preregistrations:** [original switching preflight](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-switching-corruption-fixed-decoder-preregistration.md); [fresh numerical corrective](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-switching-corruption-fixed-decoder-corrective-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_switching_corruption_fixed_decoder_corrective/20260811_preregistered/result.json`
 

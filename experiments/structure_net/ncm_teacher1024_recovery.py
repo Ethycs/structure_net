@@ -8,7 +8,7 @@ from experiments.structure_net import ncm_teacher1024 as original
 
 catalog, data, base, previous = original.catalog, original.data, original.base, original.previous
 configure, sources, pilot_ids, finish = original.configure, original.sources, original.pilot_ids, original.finish
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-teacher1024-split-recovery.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-teacher1024-split-recovery.md')
 TEST = Path('tests/structure_net/test_ncm_teacher1024_recovery.py')
 SERVICE = Path('experiments/neural_architecture_lab/ncm_teacher1024_recovery_service.py')
 FAILURE = data.ROOT/'20261027_teacher1024_prepare_v1_failure'

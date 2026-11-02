@@ -12,7 +12,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 from experiments.structure_net.ncm_native_label_quality import dependencies
 
 ROOT = recovery.ROOT
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-reviewed-word-train-diagnostic-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-reviewed-word-train-diagnostic-plan.md")
 HYPOTHESIS = "ncm-reviewed-word-train-mechanism-v1"
 PILOT = ROOT / "20261023_reviewed_word_train_diagnostic_pilot_v1"
 DEST = ROOT / "20261023_reviewed_word_train_diagnostic_v1"

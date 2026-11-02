@@ -26,7 +26,7 @@ import experiments.structure_net.tinyllm_repeated_reference_acquisition as acqui
 SCHEMA_VERSION = "nal.tinyllm-acquisition-draw-stability.v1"
 HYPOTHESIS_ID = "tinyllm-acquisition-draw-stability-v1"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-acquisition-draw-stability-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

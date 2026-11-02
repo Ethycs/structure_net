@@ -91,7 +91,7 @@ def _campaign(path: Path) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
         "fitted_decoders": 0,
     }
     preregistration = Path(
-        "docs/07 - Status Reports/"
+        "docs/07 - Status Reports/tinyllm/"
         "2026-08-10_tinyllm-task-relative-activation-barycenter-preregistration.md"
     )
     runner = Path(
@@ -245,7 +245,7 @@ def _summary(detail: Mapping[str, Any]) -> dict[str, float]:
 def build_task_relative_activation_barycenter_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/"
+        "docs/08 - Analysis/tinyllm/"
         "2026-08-10_tinyllm-task-relative-activation-barycenter.md"
     ),
 ) -> dict[str, Any]:

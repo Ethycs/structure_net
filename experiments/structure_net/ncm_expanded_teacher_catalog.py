@@ -14,7 +14,7 @@ from experiments.structure_net.ncm_streaming_source_features import FeatureCache
 data, base = collection.data, collection.base
 HYPOTHESIS = 'ncm-expanded-reviewed-catalog-v1'
 SCHEMA = 'nal.ncm-expanded-reviewed-catalog.v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-expanded-teacher-catalog-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-expanded-teacher-catalog-plan.md')
 TEST = Path('tests/structure_net/test_ncm_expanded_teacher_catalog.py')
 ROOTS = {s:data.ROOT/f'20261027_expanded_teacher_catalog_{s}_v1' for s in ('pilot','prepare','audit')}
 OLD_CASES_SHA = 'cd3d2a8a1fe0d398d1ca951e0df382d05c47cefe4d07892107b23d6e1c7e5914'

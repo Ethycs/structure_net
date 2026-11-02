@@ -11,7 +11,7 @@
 **Classification:**
 `total_holonomy_minimal_known_noise_analytic_no_training_scope`
 
-**Preregistration:** [connection-observation identifiability protocol](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-connection-observation-identifiability-preregistration.md)
+**Preregistration:** [connection-observation identifiability protocol](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-connection-observation-identifiability-preregistration.md)
 
 **Primary artifact:**
 `data/experiments/tinyllm_c3_connection_observation_identifiability/20260811_preregistered/result.json`

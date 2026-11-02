@@ -10,7 +10,7 @@ from experiments.structure_net.ncm_recipe_teacher import verify_public
 from experiments.structure_net.ncm_recipe_test import TEST, ARMS, register as register_test
 
 ROOT = TEST.parent / "20261022_test_recovery_v1"
-NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-candidate-recovery.md")
+NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-candidate-recovery.md")
 HYPOTHESIS = "ncm-recipe-update-test-candidate-recovery-v1"
 
 

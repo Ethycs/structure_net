@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-budget128-fixed-baseline-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-budget128-fixed-baseline-plan.md")
 PILOT = ROOT / "20261023_budget128_baselines_pilot_v1"
 GRADING = ROOT / "20261023_budget128_baselines_grading_v1"
 BASELINES = {

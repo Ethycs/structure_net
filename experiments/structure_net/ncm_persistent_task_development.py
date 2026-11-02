@@ -5,7 +5,7 @@ from experiments.structure_net import ncm_persistent_judge_qualification_v2 as q
 from experiments.structure_net import ncm_isolated_task_development as consumer
 
 CPU=qualification.original.BASE/'20261028_persistent_task_evaluation_CPU_v1.json'
-PLAN=Path('docs/07 - Status Reports/2026-10-28_ncm-persistent-task-evaluation.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-persistent-task-evaluation.md')
 
 
 def install():

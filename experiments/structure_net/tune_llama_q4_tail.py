@@ -10,7 +10,7 @@ import torch
 from experiments.structure_net.llama_fp16_core_q4_tail import quantize,dequantize,packed_linear,seal
 from experiments.structure_net.prepare_llama_cotenancy import write_json
 
-AMENDMENT=Path("docs/07 - Status Reports/2026-10-14_llama32-q4-tail-operator-amendment.md")
+AMENDMENT=Path("docs/07 - Status Reports/llama32/2026-10-14_llama32-q4-tail-operator-amendment.md")
 DECODE=[(16,bn,64,split,4,2) for bn in (32,64) for split in (1,4,8)]
 PREFILL=[(32,64,64,1,4,2),(64,64,64,1,4,3),(64,128,64,1,4,3),
          (128,64,64,1,4,3),(128,128,32,1,8,3)]

@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_source_split_integrity as integrity
 native, ROOT = inventory.native, inventory.ROOT
 HYPOTHESIS = 'ncm-shared-summary-open-source-guard-v1'
 DEST = ROOT / '20261025_shared_summary_open_source_guard_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-shared-summary-source-guard-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-shared-summary-source-guard-plan.md')
 TEST = Path('tests/structure_net/test_ncm_shared_summary_source_guard.py')
 
 

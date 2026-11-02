@@ -6,7 +6,7 @@ from pathlib import Path
 from experiments.neural_architecture_lab import ncm_isolated_judge_gateway_v2 as base
 from experiments.neural_architecture_lab import ncm_persistent_judge_launcher as launcher
 
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-persistent-judge-mcp-isolation.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-persistent-judge-mcp-isolation.md')
 TEST = Path('tests/structure_net/test_ncm_persistent_judge_gateway.py')
 CPU = base.BASE/'20261028_persistent_no_MCP_gateway_CPU_v1.json'
 WRAPPER_CPU = base.BASE/'20261028_judge_CLI_without_MCP_CPU_v1.json'

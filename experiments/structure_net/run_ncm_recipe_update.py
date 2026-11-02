@@ -62,8 +62,8 @@ def freeze(args, cases):
         if file_hash(path) != campaign["artifacts"][str(path)]:
             raise ValueError("saved hybrid or frozen features changed")
     sources = [Path(__file__), PLAN,
-        Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-public-target-clarification.md"),
-        Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-teacher-target-amendment.md")]
+        Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-public-target-clarification.md"),
+        Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-teacher-target-amendment.md")]
     sources += [Path("experiments/structure_net") / n for n in
         ("ncm_training_recipe.py", "ncm_recipe_control.py", "ncm_recipe_data.py", "ncm_recipe_teacher.py", "ncm_llama.py",
          "ncm_frozen_body.py", "ncm_memory_data.py", "ncm_vocabulary.py", "train_ncm_memory.py")]

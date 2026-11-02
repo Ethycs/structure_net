@@ -62,7 +62,7 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_final_query_semantic_kernel.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-final-query-semantic-kernel-preregistration.md"
 )
 POSTERIOR_RUNNER_PATH = Path(
@@ -414,7 +414,7 @@ def _summary(campaign: Mapping[str, Any]) -> dict[str, float]:
 def build_final_query_semantic_kernel_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-10_tinyllm-final-query-semantic-kernel.md"
+        "docs/08 - Analysis/tinyllm/2026-08-10_tinyllm-final-query-semantic-kernel.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

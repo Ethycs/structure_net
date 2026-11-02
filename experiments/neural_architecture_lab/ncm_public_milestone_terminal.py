@@ -9,7 +9,7 @@ from experiments.neural_architecture_lab import ncm_public_service_terminal as f
 
 study, data = first.study, first.data
 TEST = Path('tests/structure_net/test_ncm_public_milestone_terminal.py')
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-curriculum-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-curriculum-plan.md')
 REPO = Path(__file__).resolve().parents[2]
 ENVIRONMENT = {'CUDA_DEVICE_ORDER': 'PCI_BUS_ID', 'CUDA_VISIBLE_DEVICES': '1',
                'CUBLAS_WORKSPACE_CONFIG': ':4096:8', 'OMP_NUM_THREADS': '2', 'MKL_NUM_THREADS': '2'}

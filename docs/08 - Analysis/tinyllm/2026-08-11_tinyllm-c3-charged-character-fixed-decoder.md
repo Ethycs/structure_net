@@ -8,7 +8,7 @@
 
 **Classification:** `exact_charged_character_corrective_closes_invariant_quantization_gap`
 
-**Preregistrations:** [original charged-character study](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-charged-character-fixed-decoder-preregistration.md); [exact-arithmetic corrective](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-charged-character-fixed-decoder-corrective-preregistration.md)
+**Preregistrations:** [original charged-character study](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-charged-character-fixed-decoder-preregistration.md); [exact-arithmetic corrective](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-charged-character-fixed-decoder-corrective-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_charged_character_fixed_decoder_corrective/20260811_preregistered/result.json`
 

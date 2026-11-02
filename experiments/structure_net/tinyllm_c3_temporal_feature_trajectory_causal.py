@@ -39,7 +39,7 @@ PRIMARY_RESULT_PATH = Path(
     "20260811_d6_preregistered/result.json"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-feature-trajectory-causal-"
     "preregistration.md"
 )

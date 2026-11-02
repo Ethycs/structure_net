@@ -63,12 +63,12 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_c3_temporal_continuation_readout.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-continuation-readout-"
     "preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-temporal-continuation-readout.md"
 )
 

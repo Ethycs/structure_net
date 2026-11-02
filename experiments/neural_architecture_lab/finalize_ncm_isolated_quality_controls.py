@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_paper_data import ROOT
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_isolated_quality_controls_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-isolated-quality-pretraining-controls.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-isolated-quality-pretraining-controls.md")
 FAILED = ROOT / "20261023_isolated_quality_cache_pilot_v1"
 
 

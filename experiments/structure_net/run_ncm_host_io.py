@@ -17,7 +17,7 @@ from experiments.structure_net.run_ncm_batching import BatchRuntime
 from experiments.structure_net.run_ncm_llama_graph import MODEL,CODEC,MODEL_SHA,CODEC_SHA
 
 BASE=Path('data/experiments/ncm_host_io')
-PLAN=Path('docs/07 - Status Reports/2026-10-21_ncm-host-io-plan.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-host-io-plan.md')
 HYPOTHESIS_ID='llama32-3b-ncm-host-io-v1'
 
 

@@ -12,7 +12,7 @@ from experiments.structure_net.run_ncm_llama_graph import MODEL,CODEC
 BASE=Path('data/experiments/ncm_factorization')
 HYPOTHESIS_ID='llama32-3b-ncm-factorization-v1'
 SCHEMA_VERSION='nal.ncm-factorization.v1'
-PLAN=Path('docs/07 - Status Reports/2026-10-21_ncm-factorization-plan.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-factorization-plan.md')
 RANK=256
 NAMES=('c_fc','c_proj')
 

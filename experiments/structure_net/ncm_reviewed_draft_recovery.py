@@ -49,7 +49,7 @@ def configure():
         setattr(evaluation, attribute, ROOT / f"20261023_reviewed_draft_history_{suffix}_v1")
     word_workflow.DEST = WORD_WORKFLOW
     development.DEST = ROOT / "20261023_reviewed_draft_history_results_v1"
-    development.REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-reviewed-draft-history-word.md")
+    development.REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-reviewed-draft-history-word.md")
     development.PLAN = PLAN
     final.HYPOTHESIS = "ncm-reviewed-draft-history-final-quality-v1"
     final.PLAN = PLAN
@@ -60,7 +60,7 @@ def configure():
     final_workflow.DEST = FINAL_WORKFLOW
     final_audit.DEST = ROOT / "20261023_reviewed_draft_final_results_v1"
     final_audit.WORKFLOW = FINAL_WORKFLOW
-    final_audit.REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-reviewed-draft-final-quality.md")
+    final_audit.REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-reviewed-draft-final-quality.md")
     original_study_producing = study.producing
     original_final_base = final._base_producing
 

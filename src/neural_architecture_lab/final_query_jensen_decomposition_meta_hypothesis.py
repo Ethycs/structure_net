@@ -62,7 +62,7 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_final_query_jensen_decomposition.py"
 )
 REGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-final-query-jensen-decomposition-preregistration.md"
 )
 POSTERIOR_RUNNER_PATH = Path(
@@ -318,7 +318,7 @@ def _summary(campaign: Mapping[str, Any]) -> dict[str, float]:
 def build_final_query_jensen_decomposition_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/"
+        "docs/08 - Analysis/tinyllm/"
         "2026-08-10_tinyllm-final-query-jensen-decomposition.md"
     ),
 ) -> dict[str, Any]:

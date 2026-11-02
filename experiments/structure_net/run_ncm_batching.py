@@ -17,7 +17,7 @@ from experiments.structure_net.run_ncm_llama_graph import MODEL,CODEC,MODEL_SHA,
 from experiments.structure_net.run_ncm_replicas import REFERENCE,summarize,waves
 
 BASE=Path('data/experiments/ncm_batching')
-PLAN=Path('docs/07 - Status Reports/2026-10-21_ncm-batching-plan.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-batching-plan.md')
 HYPOTHESIS_ID='llama32-3b-ncm-batching-v1'
 
 

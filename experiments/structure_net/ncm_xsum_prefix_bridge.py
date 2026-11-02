@@ -24,10 +24,10 @@ HYPOTHESIS = 'ncm-xsum-prefix-bridge-v1'
 SCHEMA = 'nal.ncm-xsum-prefix-bridge.v2'
 ROOTS = {s: data.ROOT/f'20261027_xsum_prefix_bridge_{s}_v2'
          for s in ('prepare', 'pilot', 'train', 'evaluate', 'audit', 'results')}
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-xsum-prefix-bridge-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-xsum-prefix-bridge-plan.md')
 TEST = Path('tests/structure_net/test_ncm_xsum_prefix_bridge.py')
 AUDITOR = Path('experiments/neural_architecture_lab/ncm_xsum_prefix_bridge_results.py')
-RECOVERY = Path('docs/07 - Status Reports/2026-10-27_ncm-xsum-prefix-bridge-greedy-recovery.md')
+RECOVERY = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-xsum-prefix-bridge-greedy-recovery.md')
 FAILED_PILOT = data.ROOT/'20261027_xsum_prefix_bridge_pilot_v1'
 ORIGINAL_PREPARE = data.ROOT/'20261027_xsum_prefix_bridge_prepare_v1'
 ORIGINAL_CASES_SHA = '04cfc18fdaca0aea88bff865a17860815f75799deab9f85981f4f8e7507ede09'

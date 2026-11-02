@@ -10,7 +10,7 @@ from experiments.structure_net.llama_cuda_graph import bitwise_tree
 from experiments.structure_net.prepare_llama_cotenancy import sha256, write_json
 from neural_architecture_lab.llama_exact_deployment_hypothesis import ExactDeploymentEvidence
 
-REPORT = Path("docs/08 - Analysis/2026-10-10_llama32-exact-deployment.md")
+REPORT = Path("docs/08 - Analysis/llama32/2026-10-10_llama32-exact-deployment.md")
 
 
 def validate_workloads(c, root):

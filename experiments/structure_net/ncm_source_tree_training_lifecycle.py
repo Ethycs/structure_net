@@ -18,7 +18,7 @@ pipeline, engine, broad = task.pipeline, task.engine, task.broad
 CONFIG = replace(task.CONFIG, physical_GPU=1)
 ROOT = data.ROOT/'20261027_source_tree_training_lifecycle_v1'
 STORAGE = Path('/data2/structure_net/ncm_source_tree_20261027_v1/lifecycle')
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-source-tree-training-lifecycle.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-source-tree-training-lifecycle.md')
 HYPOTHESIS = 'ncm-source-tree-training-lifecycle-v1'
 
 

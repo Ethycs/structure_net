@@ -7,7 +7,7 @@
 **Schema:** `nal.tinyllm-c2-scalar-groupoid-defect.v1`
 
 **Measured report:**
-[`2026-08-07_tinyllm-scalar-groupoid-defect.md`](../08%20-%20Analysis/2026-08-07_tinyllm-scalar-groupoid-defect.md)
+[`2026-08-07_tinyllm-scalar-groupoid-defect.md`](../../08%20-%20Analysis/tinyllm/2026-08-07_tinyllm-scalar-groupoid-defect.md)
 
 ## Decision question
 

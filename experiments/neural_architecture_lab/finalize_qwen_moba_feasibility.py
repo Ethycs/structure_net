@@ -12,7 +12,7 @@ from experiments.neural_architecture_lab.audit_qwen_moba_feasibility import audi
 from neural_architecture_lab.qwen_moba_feasibility_hypothesis import QwenMoBAEvidence, store_evidence
 
 ROOT = Path("data/experiments/qwen_moba_prefix")
-REPORT = Path("docs/08 - Analysis/2026-09-09_qwen8b-moba-feasibility.md")
+REPORT = Path("docs/08 - Analysis/moba/2026-09-09_qwen8b-moba-feasibility.md")
 
 
 def save(path, value):

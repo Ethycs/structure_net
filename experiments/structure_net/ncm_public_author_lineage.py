@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_xsum_author_semantics as author
 
 data, study, probe = parent.data, parent.study, parent.probe
 roots, STAGES = parent.roots, parent.STAGES
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-public-author-lineage.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-public-author-lineage.md')
 TEST = Path('tests/structure_net/test_ncm_public_author_lineage.py')
 PREFLIGHT = data.ROOT/'20261027_public_curriculum_author_lineage_preflight_v1'
 INSTALLED = False

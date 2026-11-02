@@ -13,8 +13,8 @@ import sys
 import time
 
 BASE = Path('data/experiments/ncm_quality/20261021_judge_v2')
-ORIGINAL_PLAN = Path('docs/07 - Status Reports/2026-10-21_ncm-independent-quality-preregistration.md')
-PLAN = Path('docs/07 - Status Reports/2026-10-21_ncm-independent-quality-amendment-v2.md')
+ORIGINAL_PLAN = Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-independent-quality-preregistration.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-21_ncm-independent-quality-amendment-v2.md')
 DATA = Path('data/experiments/ncm_quality/20261021_data_v1')
 DISCOVERY = Path('data/experiments/ncm_quality/20261021_discovery_v1')
 GENERATOR = Path('data/experiments/ncm_llama/20261021_generator_v1/model.pt')

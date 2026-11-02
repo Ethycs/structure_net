@@ -103,8 +103,8 @@ containers retain their prior stopped state and unchanged configurations.
 
 ## Integrity and reproduction
 
-The [plan](../07%20-%20Status%20Reports/2026-11-01_word-games-schema-prefill-plan.md)
-and [lifecycle amendment](../07%20-%20Status%20Reports/2026-11-01_word-games-schema-prefill-lifecycle-amendment.md)
+The [plan](../../07%20-%20Status%20Reports/word-games/2026-11-01_word-games-schema-prefill-plan.md)
+and [lifecycle amendment](../../07%20-%20Status%20Reports/word-games/2026-11-01_word-games-schema-prefill-lifecycle-amendment.md)
 preceded the full replay. Source, inputs, weights identity, native binary hashes,
 runtime manifests, responses and per-load cache receipts were preserved.
 Repetitions measure one model/corpus; they are not independent unseen datasets.

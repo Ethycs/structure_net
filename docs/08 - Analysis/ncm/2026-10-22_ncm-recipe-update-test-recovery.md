@@ -5,7 +5,7 @@ The 95% point target is not met. Date: 2026-10-22. EXPLORATORY, one seed.
 ID: `ncm-recipe-update-test-candidate-recovery-v1`. Classification: `candidate_recovery_updated_below_95`.
 Aggregate: `data/experiments/ncm_recipe_update/20261022_test_recovery_v1/campaign_results.json`.
 SHA256: `03af3f7b3e256c27c6e61ac717bbdae8e93cf17031ae10e4b939c3b139567eb2`.
-[Recovery protocol](../07%20-%20Status%20Reports/2026-10-22_ncm-recipe-candidate-recovery.md).
+[Recovery protocol](../../07%20-%20Status%20Reports/ncm/2026-10-22_ncm-recipe-candidate-recovery.md).
 
 | Model | Passing / valid candidate judgments | Missing |
 | --- | ---: | ---: |

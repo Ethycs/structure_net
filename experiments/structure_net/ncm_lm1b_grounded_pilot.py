@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 native, q, ROOT = old.native, old.q, old.ROOT
 DEST = ROOT / "20261024_lm1b_grounded_cuda_pilot_v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-grounded-cuda-pilot.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-grounded-cuda-pilot.md")
 HYPOTHESIS = "ncm-lm1b-dual-source-attention-BF16-lifecycle-v1"
 FRAMED = ROOT / "20261024_lm1b_framed_codec_data_v1/cases.json"
 

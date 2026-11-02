@@ -11,7 +11,7 @@ from experiments.neural_architecture_lab.audit_ncm_codec_roundtrip import read, 
 BASE = Path('data/experiments/ncm_paper_regime')
 RUN = BASE/'20261028_recovered_decoder_readout_eval_v1'
 DEST = BASE/'20261028_recovered_decoder_readout_replay_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-decoder-readout.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-decoder-readout.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_decoder_readout_audit.py')
 ARMS = ('parent_codec_only', 'parent_with_source', 'new_codec_only', 'new_with_source')
 

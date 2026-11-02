@@ -10,7 +10,7 @@ PUBLIC = BASE/'20261026_public_training_catalog_v1'
 RECOVERED = BASE/'20261028_recovered_paraphrase_catalog_v1'
 ANCHORS = BASE/'20261027_expanded_teacher_catalog_prepare_v3'
 TEST = Path('tests/structure_net/test_ncm_combined_pair_inventory.py')
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-combined-prepared-pair-inventory.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-combined-prepared-pair-inventory.md')
 CPU = BASE/'20261028_combined_pair_inventory_CPU_v1.json'
 
 

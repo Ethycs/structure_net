@@ -18,8 +18,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, DATA, freeze, verify
 
 HYPOTHESIS = "ncm-clean-full-size-source-partitions-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-clean-source-partitions-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-clean-source-partitions.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-clean-source-partitions-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-clean-source-partitions.md")
 WORKFLOW = ROOT / "20261023_clean_source_partitions_workflow_v1"
 PILOT = ROOT / "20261023_clean_source_partitions_pilot_v1"
 DEST = ROOT / "20261023_clean_source_partitions_v1"

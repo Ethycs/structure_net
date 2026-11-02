@@ -6,7 +6,7 @@ from experiments.structure_net import ncm_onpolicy_development as original
 from experiments.structure_net import ncm_sol_judgment_lineage as qualified
 
 study, STAGES = original.study, original.STAGES
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-onpolicy-residual-evaluation-recovery.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-onpolicy-residual-evaluation-recovery.md')
 TEST = Path('tests/structure_net/test_ncm_onpolicy_development_recovery.py')
 INCIDENT = study.broad.runtime.ROOT/'20261025_onpolicy_residual_DEV_launch_failure_v1'
 ROOTS = {**original.ROOTS, 'residual_targets': {

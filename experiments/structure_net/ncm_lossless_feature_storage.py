@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 
 native, training, q, ROOT = capacity.native, capacity.training, capacity.q, capacity.ROOT
 HYPOTHESIS = 'ncm-lossless-FP32-source-feature-storage-control-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-lossless-feature-storage-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-lossless-feature-storage-plan.md')
 TEST = Path('tests/structure_net/test_ncm_fp32_feature_codec.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_lossless_feature_storage.py')
 DEST = ROOT / '20261024_lossless_FP32_feature_storage_control_v1'

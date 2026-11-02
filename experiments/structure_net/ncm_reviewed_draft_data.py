@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_expanded_word_data as previous
 labels = previous.labels
 base = previous.base
 q = labels.prior.q
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-reviewed-draft-recovery-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-reviewed-draft-recovery-plan.md")
 PILOT = base.ROOT / "20261023_reviewed_draft_pilot_v1"
 DEST = base.ROOT / "20261023_reviewed_draft_data_v1"
 ABORT = base.ROOT / "20261023_additional_revision_transport_abort_v1"

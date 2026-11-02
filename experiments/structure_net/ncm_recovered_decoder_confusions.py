@@ -10,7 +10,7 @@ from experiments.structure_net import ncm_recovered_decoder_evaluation as evalua
 study, data = evaluation.study, evaluation.data
 INCIDENT = data.ROOT/'20261028_recovered_decoder_confusion_codes_v1'
 ROOT = data.ROOT/'20261028_recovered_decoder_confusion_codes_v2'
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-codec-confusion-codes.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-codec-confusion-codes.md')
 
 
 def run():

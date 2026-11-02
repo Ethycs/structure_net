@@ -14,7 +14,7 @@ ORIGINAL = worker.PILOT
 PILOT = ROOT / "20261023_source_hierarchy_bootstrap_pilot_terminal_v2"
 TRAIN = ROOT / "20261023_source_hierarchy_bootstrap_train_terminal_v2"
 WORKFLOW = ROOT / "20261023_source_hierarchy_bootstrap_workflow_v2"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-hierarchy-terminal-recovery-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-hierarchy-terminal-recovery-plan.md")
 
 
 def configure():

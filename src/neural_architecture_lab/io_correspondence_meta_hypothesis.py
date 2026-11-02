@@ -94,7 +94,7 @@ def _cell_metrics(detail: Mapping[str, Any]) -> dict[str, float]:
 def build_io_correspondence_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-io-correspondence.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-io-correspondence.md"
     ),
 ) -> dict[str, Any]:
     campaign = _read_campaign(results_path)
@@ -259,7 +259,7 @@ def store_io_correspondence_meta_hypothesis(
     output_path: Path,
     *,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-io-correspondence.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-io-correspondence.md"
     ),
     chromadb_path: Path | None = None,
     queue_dir: Path = Path("data/experiment_queue"),

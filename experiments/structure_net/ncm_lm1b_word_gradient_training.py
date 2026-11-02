@@ -18,7 +18,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 native, q, ROOT = engine.native, engine.q, engine.ROOT
 HYPOTHESIS = "ncm-lm1b-full690-word-gradient-neighborhood-v1"
 MODULE = "experiments.structure_net.ncm_lm1b_word_gradient_training"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-word-gradient-training-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-word-gradient-training-plan.md")
 TEST = Path("tests/structure_net/test_ncm_lm1b_word_gradient_training.py")
 WORKFLOW = ROOT / "20261024_lm1b_word_gradient_training_workflow_v1"
 PILOT = ROOT / "20261024_lm1b_word_gradient_training_pilot_v1"

@@ -17,7 +17,7 @@ HYPOTHESIS = 'ncm-shared-summary-native128-inventory-v1'
 DATA = Path('data/experiments/ncm_memory/20261022_data_v1')
 DEST = ROOT / '20261025_shared_summary_native128_inventory_v1'
 COMPONENT = ROOT / '20261024_sol_teacher64_prepare_v2/cases.json'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-shared-corpus-inventory-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-shared-corpus-inventory-plan.md')
 TEST = Path('tests/structure_net/test_ncm_shared_summary_inventory.py')
 
 

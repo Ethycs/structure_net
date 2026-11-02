@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 training, native, q, ROOT = checkpoint.training, checkpoint.native, checkpoint.q, checkpoint.ROOT
 MODULE = 'experiments.structure_net.ncm_level_conditioning_numeric'
 HYPOTHESIS = 'ncm-level-conditioning-fixed128-source-only-inference-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-level-conditioning-numeric-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-level-conditioning-numeric-plan.md')
 TEST = Path('tests/structure_net/test_ncm_level_conditioning_numeric.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_level_conditioning_numeric.py')
 WORKFLOW, PREP, PILOT, OUTPUTS = (ROOT/('20261024_level_conditioning_numeric_'+n+'_v1') for n in ('workflow','prepare','pilot','outputs'))

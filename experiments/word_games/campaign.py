@@ -13,7 +13,7 @@ from .scenarios import cases, setup
 from .transport import Phi4, TransportFailure, MODEL
 from .metaphor import select
 
-PLAN = Path("docs/07 - Status Reports/2026-10-30_word-games-phi4-firewall-plan.md")
+PLAN = Path("docs/07 - Status Reports/word-games/2026-10-30_word-games-phi4-firewall-plan.md")
 
 
 def deterministic_checks(metaphor):

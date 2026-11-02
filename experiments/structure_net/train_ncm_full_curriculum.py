@@ -26,7 +26,7 @@ from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_memory import save
 from experiments.structure_net.train_ncm_decoder_polish import frozen_hash
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-full-curriculum-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-full-curriculum-plan.md")
 ORIGINAL_CODEC = ROOT / "20261022_codec_training_v2/model.pt"
 CODEC = ROOT / "20261022_decoder_train_v1/model.pt"
 GENERATOR = ROOT / "20261022_noisy_native_v1/model.pt"

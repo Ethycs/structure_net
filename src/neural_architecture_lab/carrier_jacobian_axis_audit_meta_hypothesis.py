@@ -155,7 +155,7 @@ def _details(path: Path) -> list[dict[str, Any]]:
 def build_carrier_jacobian_axis_audit_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-06_tinyllm-carrier-jacobian-axis-audit.md"
+        "docs/08 - Analysis/tinyllm/2026-08-06_tinyllm-carrier-jacobian-axis-audit.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

@@ -16,7 +16,7 @@ from experiments.structure_net import ncm_public_xsum_codec_recovery as codec_so
 
 data = catalog.data
 ROOTS = {s: data.ROOT/f'20261026_public_code_targets_{s}_v1' for s in ('pilot', 'full')}
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-code-targets-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-code-targets-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_code_targets.py')
 HYPOTHESIS = 'ncm-public-code-targets-v1'
 BOUNDARIES = {'model_training': False, 'new_judge_requests': 0, 'task_accuracy': None,

@@ -21,7 +21,7 @@ SMALL='GPU-8cf440df-e8f4-2210-a2cd-29a9d00aca14'
 TRITON='http://127.0.0.1:8000'
 SERVICE='qwen3-8b-gguf'
 HYPOTHESIS_ID='word-games-three-gpu-experts-v1'
-PLAN=Path('docs/07 - Status Reports/2026-10-31_word-games-three-gpu-experts-plan.md')
+PLAN=Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-three-gpu-experts-plan.md')
 
 
 def command(extra,port,name):
@@ -153,7 +153,7 @@ def run(args):
     if WEIGHTS.stat().st_size!=SIZE or sha(WEIGHTS)!=SHA256 or sha(REQUESTS)!=REQUESTS_SHA:raise ValueError('identity mismatch')
     metadata=gguf_metadata(WEIGHTS);validate_metadata(metadata)
     sources=sorted(p for p in PACKAGE.rglob('*') if p.is_file() and '__pycache__' not in str(p))
-    sources += [PLAN,Path('docs/07 - Status Reports/2026-10-31_word-games-three-gpu-release-amendment.md'),
+    sources += [PLAN,Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-three-gpu-release-amendment.md'),
                 Path('pyproject.toml'),Path('pixi.lock')]
     bindings={str(p):sha(p) for p in sources}
     producer={'hypothesis_id':HYPOTHESIS_ID,'source_hashes':bindings,'weights_sha256':SHA256,'requests_sha256':REQUESTS_SHA,

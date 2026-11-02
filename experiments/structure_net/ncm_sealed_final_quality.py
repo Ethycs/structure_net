@@ -15,7 +15,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 q = study.q
 ROOT = study.ROOT
 HYPOTHESIS = "ncm-generated-history-final-quality-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-sealed-final-quality-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-sealed-final-quality-plan.md")
 DATA = ROOT / "20261023_sealed_final_data_v1"
 FEATURE_PILOT = ROOT / "20261023_sealed_final_feature_pilot_v1"
 FEATURES = ROOT / "20261023_sealed_final_features_v1"

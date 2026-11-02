@@ -10,7 +10,7 @@
 
 **Evidence role:** `registered_post_outcome_artifact_only_feature_trajectory_causal`
 
-**Preregistration:** [C3 temporal feature-trajectory causal diagnostic](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-temporal-feature-trajectory-causal-preregistration.md)
+**Preregistration:** [C3 temporal feature-trajectory causal diagnostic](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-temporal-feature-trajectory-causal-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_temporal_feature_trajectory_causal/20260811_d6_preregistered/result.json`
 

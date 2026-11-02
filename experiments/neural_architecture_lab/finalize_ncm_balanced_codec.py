@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_vocabulary_balanced_codec import DATA, PILOT,
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261022_balanced_codec_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-vocabulary-balanced-codec.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-vocabulary-balanced-codec.md")
 
 
 def finalize():

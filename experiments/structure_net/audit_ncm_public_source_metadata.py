@@ -15,7 +15,7 @@ from experiments.structure_net import ncm_public_source_metadata as producer
 
 data, catalog = producer.data, producer.catalog
 ROOTS = {s: data.ROOT/f'20261026_public_source_metadata_{s}_audit_v1' for s in producer.ROOTS}
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-source-metadata-audit-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-source-metadata-audit-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_source_metadata_audit.py')
 SOURCE_FIELDS = ('id', 'source_id', 'group_id', 'source_component', 'source_sha256', 'source',
                  'spans', 'split', 'source_cl100k_tokens', 'source_truncated', 'public_provenance')

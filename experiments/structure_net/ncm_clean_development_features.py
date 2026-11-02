@@ -18,8 +18,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 
 ROOT = base.ROOT
 HYPOTHESIS = "ncm-clean-development-frozen-features-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-clean-development-features-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-clean-development-features.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-clean-development-features-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-clean-development-features.md")
 WORKFLOW = ROOT / "20261024_clean_development_features_workflow_v1"
 METADATA_PILOT = ROOT / "20261024_clean_development_tokenizer_pilot_v1"
 DATA = ROOT / "20261024_clean_development_metadata_v1"

@@ -7,7 +7,7 @@ import torch
 from experiments.structure_net import ncm_word_final_eval as study
 from experiments.structure_net.ncm_memory_data import file_hash,text_hash,write_json
 
-PLAN=Path("docs/07 - Status Reports/2026-10-23_ncm-word-final-generation-gap-plan.md")
+PLAN=Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-word-final-generation-gap-plan.md")
 DEST=study.data.ROOT/"20261023_word_final_generation_gap_v1"
 
 

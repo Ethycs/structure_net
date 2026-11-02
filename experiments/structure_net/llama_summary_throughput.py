@@ -17,7 +17,7 @@ SCHEMA_VERSION = "nal.llama-summary-throughput.v1"
 ROOT = Path("data/experiments/llama_summary_throughput")
 VENDOR = Path("data/experiments/llama_tensorized_cotenancy/llama.cpp")
 BINARY = ROOT / "20261013_tools/summary_runner"
-PLAN = Path("docs/07 - Status Reports/2026-10-13_llama32-summary-throughput-plan.md")
+PLAN = Path("docs/07 - Status Reports/llama32/2026-10-13_llama32-summary-throughput-plan.md")
 CPP = Path(__file__).with_suffix(".cpp")
 
 
@@ -156,8 +156,8 @@ def run(args):
              Path("experiments/structure_net/prepare_llama_cotenancy.py"),
              Path("experiments/structure_net/prepare_llama_summary_prompt_v2.py"),
              Path("experiments/structure_net/prepare_llama_summary_prompt_v3.py"),
-             Path("docs/07 - Status Reports/2026-10-13_llama32-summary-quality-amendment.md"),
-             Path("docs/07 - Status Reports/2026-10-13_llama32-summary-cardinality-amendment.md")]
+             Path("docs/07 - Status Reports/llama32/2026-10-13_llama32-summary-quality-amendment.md"),
+             Path("docs/07 - Status Reports/llama32/2026-10-13_llama32-summary-cardinality-amendment.md")]
     paths += [VENDOR / "build/bin" / name for name in ("libllama.so.0.6.0", "libggml.so.0.26.0", "libggml-base.so.0.26.0",
                                                         "libggml-cpu.so.0.26.0", "libggml-cuda.so.0.26.0")]
     config = {"hypothesis_id": HYPOTHESIS_ID, "schema": SCHEMA_VERSION,

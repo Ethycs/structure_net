@@ -10,7 +10,7 @@ import torch
 from experiments.structure_net import ncm_xsum_prefix_bridge as study
 
 data, ROOTS, HYPOTHESIS, CONFIG = study.data, study.ROOTS, study.HYPOTHESIS, study.CONFIG
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-xsum-prefix-bridge.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-xsum-prefix-bridge.md')
 
 
 def integers(values, count, vocabulary):

@@ -16,13 +16,13 @@ from experiments.structure_net import ncm_public_training as study
 data, broad = study.data, study.pipeline.broad
 SCHEMA = 'nal.ncm-public-training-probe.v4'
 HYPOTHESIS = 'ncm-public-epoch2-training-probe-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-public-training-probe-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_training_probe.py')
-AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-receipt-recovery.md')
+AMENDMENT = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-public-training-probe-receipt-recovery.md')
 INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_launch_failure_v1'
-INPUT_AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-input-recovery.md')
+INPUT_AMENDMENT = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-public-training-probe-input-recovery.md')
 INPUT_INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_launch_failure_v2'
-OUTPUT_AMENDMENT = Path('docs/07 - Status Reports/2026-10-27_ncm-public-training-probe-output-recovery.md')
+OUTPUT_AMENDMENT = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-public-training-probe-output-recovery.md')
 OUTPUT_INCIDENT = data.ROOT/'20261027_public_epoch2_TRAIN_probe_pilot_v3'
 BROAD_RESULTS = data.ROOT/'20261025_broad_generator_results_v1'
 LEGACY_AUDIT = data.ROOT/'20261025_broad_generator_train_audit_v1'
@@ -369,7 +369,7 @@ def audit():
 
 def report():
     source, root = ROOTS['audit'], ROOTS['results']
-    document = Path('docs/08 - Analysis/2026-10-27_ncm-public-training-probe.md')
+    document = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-public-training-probe.md')
     if root.exists() or document.exists():
         raise ValueError('fresh report required')
     receipt(source, ('result.json',)); value = data.completed(source); data.verify(value['artifacts'])

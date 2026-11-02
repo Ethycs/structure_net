@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_task_supervision_development as dev
 
 data = dev.data
 ROOT = data.ROOT/'20261027_task_supervision_results_v1'
-REPORT = Path('docs/08 - Analysis/2026-10-27_ncm-task-supervision.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-27_ncm-task-supervision.md')
 TEST = Path('tests/structure_net/test_ncm_task_supervision_results.py')
 
 

@@ -50,7 +50,7 @@ SHUFFLE_SEED_BASES = {"composition": 1_095_107, "extrapolation": 1_097_107}
 PILOT_SEED = 1117
 REQUIRED_SEED_PASSES = 4
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-gauge-jump-joint-typed-score-"
     "preregistration.md"
 )
@@ -66,7 +66,7 @@ PRIOR_RESULT_SHA256 = (
     "16f98f5c3cbf09fedfc18f12eca24a5fe69da46411d587c48c5d9072c912aca7"
 )
 PRIOR_REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-gauge-jump-corruption-fixed-decoder.md"
 )
 PRIOR_REPORT_SHA256 = (

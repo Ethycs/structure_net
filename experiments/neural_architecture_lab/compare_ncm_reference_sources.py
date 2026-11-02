@@ -12,7 +12,7 @@ import sys
 
 ROOT = Path("data/experiments/ncm_paper_regime")
 AUDIT = ROOT / "20261023_repository_training_audit_v2"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-reference-repository-comparison.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-reference-repository-comparison.md")
 
 
 def read(path):
@@ -71,7 +71,7 @@ def main():
              Path("experiments/structure_net/train_ncm_native_query_neighborhood.py"),
              Path("experiments/structure_net/ncm_paired_word_control.py"),
              Path("experiments/structure_net/ncm_isolated_quality_train.py"),
-             Path("docs/07 - Status Reports/2026-10-23_ncm-quality-teacher-plan.md")]
+             Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-quality-teacher-plan.md")]
     inputs = [original / "outputs.json", original / "result.json", converged]
     inputs += [p for p in AUDIT.rglob("*") if p.is_file()]
     result = {

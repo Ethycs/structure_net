@@ -11,7 +11,7 @@ from experiments.structure_net import ncm_additional_source_features as features
 metadata, development, q = features.metadata, features.development, features.q
 base, native = features.base, features.native
 ROOT = features.ROOT / '20261024_native655_feature_pipeline_check_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-native-feature-pipeline-check.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-native-feature-pipeline-check.md')
 TEST = Path('tests/structure_net/test_ncm_native_feature_pipeline_check.py')
 FIELDS = ('id', 'source_id', 'group_id', 'source_sha256', 'source', 'spans', 'split', 'source_cl100k_tokens')
 

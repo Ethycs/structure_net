@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 base, native, q, ROOT = training.corpus.component, training.native, training.q, training.ROOT
 MODULE = 'experiments.structure_net.ncm_expanded_codec_component'
 HYPOTHESIS = 'ncm-expanded-codec-fixed64-oracle-numeric-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-24_ncm-expanded-codec-component-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-24_ncm-expanded-codec-component-plan.md')
 TEST = Path('tests/structure_net/test_ncm_expanded_codec_component.py')
 AUDITOR = Path('experiments/neural_architecture_lab/audit_ncm_expanded_codec_component.py')
 TRAIN_AUDIT = ROOT/'20261024_expanded9936_codec_training_audit_v1'

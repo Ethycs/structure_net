@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_native_parent_control import native_inputs
 from experiments.structure_net.ncm_paper_data import ROOT, PREP, freeze, verify
 from experiments.structure_net.ncm_recipe_teacher import verify_public
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-intact-language-control-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-intact-language-control-plan.md")
 INPUTS = ROOT/"20261023_intact_decoder_inputs_v1"
 VERIFIED = INPUTS/"verified"
 MODEL = VERIFIED/"model"

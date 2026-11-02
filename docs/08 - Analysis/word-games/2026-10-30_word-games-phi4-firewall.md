@@ -31,7 +31,7 @@ uses the existing container's locked Pixi environment, with only the RTX 3060
 visible. The actual checkpoint hash is
 `009aba717c09d4a35890c7d35eb59d54e1dba884c7c526e7197d9c13ab5911d9`.
 Model identity and deployment sources are recorded in the
-[runtime receipt](../../data/experiments/word_games/20261030_phi4_runtime_v1/identity.json).
+[runtime receipt](../../../data/experiments/word_games/20261030_phi4_runtime_v1/identity.json).
 The model was unloaded after testing; the other serving endpoints were not changed.
 
 The metaphor-selection call receives only public task relationships, before
@@ -82,7 +82,7 @@ The primary agent reviewed all twelve summaries qualitatively. Eleven are
 consistent with the actual packet; the cancellation has the inconsistency
 above. This was **not an independent or blinded semantic judge**, and the
 campaign's machine metric remains structural. The
-[qualitative review](../../data/experiments/word_games/20261030_phi4_full_v2/qualitative_review.json)
+[qualitative review](../../../data/experiments/word_games/20261030_phi4_full_v2/qualitative_review.json)
 records the texts and joint-case calculation separately.
 
 The full run used 36 local model calls, including metaphor selection:
@@ -96,7 +96,7 @@ The initial two-case pilot returned transactions without the required outer
 `kind=final` wrapper: sender and expected-outcome scores were 0/2. Both
 receivers correctly described the unchanged state, which did not make the
 requested tasks succeed. That pilot is preserved. The
-[protocol amendment](../07%20-%20Status%20Reports/2026-10-30_word-games-phi4-firewall-plan.md)
+[protocol amendment](../../07%20-%20Status%20Reports/word-games/2026-10-30_word-games-phi4-firewall-plan.md)
 clarified nesting while keeping the parser, tasks, policy and metrics fixed.
 Pilot v2 then passed 2/2 across all three checks. The full run used that version;
 its two pilot scenarios are not unseen examples. All three runs selected the
@@ -144,12 +144,12 @@ Score faithful task completion and semantic disclosure separately; include
 negative controls and an independent semantic reviewer. Preserve this run's
 two failures as development examples and use unseen cases for evaluation.
 
-Source and commands: [WORD_GAMES](../../experiments/word_games/README.md).
+Source and commands: [WORD_GAMES](../../../experiments/word_games/README.md).
 Primary evidence:
-[campaign](../../data/experiments/word_games/20261030_phi4_full_v2/campaign_results.json),
-[raw calls and snapshots](../../data/experiments/word_games/20261030_phi4_full_v2/),
-[readback audit](../../data/experiments/word_games/20261030_phi4_full_v2/readback_audit.json),
-[compatibility result](../../data/experiments/word_games/20261030_regression_v1/result.json).
+[campaign](../../../data/experiments/word_games/20261030_phi4_full_v2/campaign_results.json),
+[raw calls and snapshots](../../../data/experiments/word_games/20261030_phi4_full_v2),
+[readback audit](../../../data/experiments/word_games/20261030_phi4_full_v2/readback_audit.json),
+[compatibility result](../../../data/experiments/word_games/20261030_regression_v1/result.json).
 Full-run scientific fingerprint:
 `5c5564563695bd31867a69d5146611d3b534b8e10ff6757e5488411c8ca7fb23`.
 Registration is conservative: tested, exploratory, **not confirmed**.

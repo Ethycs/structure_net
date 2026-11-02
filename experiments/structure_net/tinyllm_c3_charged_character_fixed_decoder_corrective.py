@@ -39,7 +39,7 @@ FRAME_SEED_BASES = {"composition": 1_029_107, "extrapolation": 1_031_107}
 SHUFFLE_SEED_BASES = {"composition": 1_033_107, "extrapolation": 1_035_107}
 PILOT_SEED = 1009
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-charged-character-fixed-decoder-"
     "corrective-preregistration.md"
 )

@@ -16,7 +16,7 @@ from experiments.structure_net.ncm_native_query_cache import NativeQueryBackbone
 from experiments.structure_net.ncm_native_readout import frozen_hash, restore_trainable, trainable_state
 from experiments.structure_net.ncm_paper_data import ROOT, freeze, verify
 
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-native-query-memory-recovery.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-query-memory-recovery.md")
 DEST = ROOT / "20261023_native_query_cache_pilot_v2"
 PRIOR = ROOT / "20261023_native_query_cache_pilot_v1"
 
@@ -31,7 +31,7 @@ def main():
     cases, audits = accepted.selected_cases()
     cases = cases[:4]
     paths = [Path(__file__), PLAN, Path("experiments/structure_net/ncm_native_query_cache_pilot.py"),
-        Path("docs/07 - Status Reports/2026-10-23_ncm-native-query-cache-plan.md"), Path("experiments/structure_net/ncm_native_query_cache.py"),
+        Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-native-query-cache-plan.md"), Path("experiments/structure_net/ncm_native_query_cache.py"),
         Path("experiments/structure_net/ncm_native_readout.py"), Path(accepted.__file__),
         Path("experiments/structure_net/ncm_native_parent_control.py")]
     inputs = [PRIOR/n for n in ("producer.json", "oracle_control.json", "failure.json", "worker_terminal_receipt.json")]+audits+[accepted.QUALITY/n for n in ("selected.json", "result.json", "producer.json")]

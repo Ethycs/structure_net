@@ -15,7 +15,7 @@ from experiments.structure_net import ncm_task_supervision_training as task
 
 data=reference.data
 ROOT=data.ROOT/'20261027_source_coverage_pilot_v1'
-PLAN=Path('docs/07 - Status Reports/2026-10-27_ncm-source-coverage-pilot.md')
+PLAN=Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-source-coverage-pilot.md')
 TEST=Path('tests/structure_net/test_ncm_source_coverage.py')
 QUALIFICATION=data.ROOT/'20261027_source_coverage_CPU_qualification_v1.json'
 HYPOTHESIS='ncm-source-coverage-pilot-v1'

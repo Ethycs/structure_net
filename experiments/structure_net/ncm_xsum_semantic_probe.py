@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_source_readout_grade as first
 data, base, q = parent.data, parent.base, qualified.q
 HYPOTHESIS = 'ncm-xsum-semantic-probe-v1'
 SCHEMA = 'nal.ncm-xsum-semantic-probe.v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-xsum-semantic-probe-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-xsum-semantic-probe-plan.md')
 TEST = Path('tests/structure_net/test_ncm_xsum_semantic_probe.py')
 ANALYSIS = Path('experiments/neural_architecture_lab/ncm_xsum_semantic_probe_results.py')
 ROOTS = {s: data.ROOT/f'20261027_xsum_semantic_probe_{s}_v1' for s in ('prepare', 'pilot', 'grade', 'audit', 'results')}

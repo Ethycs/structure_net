@@ -31,7 +31,7 @@ SCHEMA_VERSION = "nal.tinyllm-joint-interface-block-clipping.v1"
 HYPOTHESIS_ID = "tinyllm-joint-interface-block-clipping-v1"
 EVIDENCE_ROLE = "prospective_frozen_backbone_parameter_block_clipping"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-joint-interface-block-clipping-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

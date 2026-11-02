@@ -8,7 +8,7 @@ from experiments.structure_net import audit_ncm_public_source_metadata as audit
 data, DEST = audit.data, audit.ROOTS['full']
 HYPOTHESIS = audit.producer.HYPOTHESIS
 CAMPAIGN = DEST/'result.json'
-REPORT = Path('docs/08 - Analysis/2026-10-26_ncm-public-source-metadata.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-26_ncm-public-source-metadata.md')
 
 
 def record_for(value):

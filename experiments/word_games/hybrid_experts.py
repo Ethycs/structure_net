@@ -20,7 +20,7 @@ from .prepare_hybrid_runtime import ROOT, SOURCE
 
 HYPOTHESIS_ID='word-games-hybrid-experts-v1'
 SCHEMA='word-games.hybrid-experts.v1'
-PLAN=Path('docs/07 - Status Reports/2026-10-31_word-games-hybrid-experts-plan.md')
+PLAN=Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-hybrid-experts-plan.md')
 RUNTIME=ROOT/'runtime'
 ARMS=('control','experts8','pins0','pins64','pins80')
 

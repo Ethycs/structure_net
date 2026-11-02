@@ -42,12 +42,12 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_c3_constant_acceleration_fixed_operator.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-constant-acceleration-fixed-operator-"
     "preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-constant-acceleration-fixed-operator.md"
 )
 GENERATOR_PATH = Path(

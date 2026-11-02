@@ -12,7 +12,7 @@ Aggregate: `data/experiments/ncm_paper_regime/20261025_residual_recoding_probe_r
 SHA-256: `10fef7e4c2185765ef6bcd0a34ba4e0b337920779246f4f6e3ce92dfbd5d0644`.
 Classification: `oracle_residual_recoding_capacity_measured`.
 
-The [prospective plan](../07%20-%20Status%20Reports/2026-10-25_ncm-residual-recoding-probe-plan.md)
+The [prospective plan](../../07%20-%20Status%20Reports/ncm/2026-10-25_ncm-residual-recoding-probe-plan.md)
 compared the original clean suffix codes with a suffix re-quantized against the
 remaining reference latent after subtracting an actual generated prefix.
 All model tensors stayed fixed. Both arms received the same prefix; both used

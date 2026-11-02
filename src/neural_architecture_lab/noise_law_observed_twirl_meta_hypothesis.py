@@ -75,7 +75,7 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_noise_law_observed_twirl.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-noise-law-observed-twirl-preregistration.md"
 )
 SOURCE_OBSERVED_CAMPAIGN_PATH = Path(
@@ -476,7 +476,7 @@ def _detail_summary(detail: Mapping[str, Any]) -> dict[str, float]:
 def build_noise_law_observed_twirl_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-10_tinyllm-noise-law-observed-twirl.md"
+        "docs/08 - Analysis/tinyllm/2026-08-10_tinyllm-noise-law-observed-twirl.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

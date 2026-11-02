@@ -9,7 +9,7 @@ from pathlib import Path
 
 from experiments.structure_net import ncm_public_xsum_codec_recovery as probe
 
-REPORT = Path('docs/08 - Analysis/2026-10-26_ncm-public-xsum-codec.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-26_ncm-public-xsum-codec.md')
 REGISTRAR = Path('experiments/neural_architecture_lab/register_ncm_public_xsum_codec.py')
 
 

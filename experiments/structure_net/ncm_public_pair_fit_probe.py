@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_public_training_probe as reference
 data, broad, study = reference.data, reference.broad, reference.study
 bundle = study.pipeline.bundle
 ROOTS = {s:data.ROOT/f'20261027_public_pair_fit_{s}_v1' for s in ('pilot','run','audit')}
-PLAN = Path('docs/07 - Status Reports/2026-10-27_ncm-public-pair-fit-probe.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-27_ncm-public-pair-fit-probe.md')
 TEST = Path('tests/structure_net/test_ncm_public_pair_fit_probe.py')
 HYPOTHESIS = 'ncm-public-pair-fit-probe-v1'
 LIMIT = 3_500_000_000

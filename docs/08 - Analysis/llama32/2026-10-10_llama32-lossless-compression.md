@@ -5,7 +5,7 @@ Status: closed partial after a runtime fault and user redirection to deployment.
 Classification: **`original_archive_verified_factor_stage_failed`**. The planned full component census did not complete.
 
 Aggregate `data/experiments/llama_lossless_compression/20261010_v1/campaign_results.json`; SHA-256 `ed89d143f6625f7e14946337a95d68360c7225b28d90a8f60fbe8e382851f045`.
-[Original plan](../07%20-%20Status%20Reports/2026-10-10_llama32-lossless-compression-plan.md).
+[Original plan](../../07%20-%20Status%20Reports/llama32/2026-10-10_llama32-lossless-compression-plan.md).
 
 The complete original model compressed from **6.425 GB** of tensors to **4.588 GB**, a **28.60%** storage reduction. All 197 matrices and 57 normalization vectors decoded bit for bit after persistence. The archive includes model metadata and can be decoded without the original checkpoint. The tied embedding/output matrix is stored once.
 
@@ -28,7 +28,7 @@ The screen in `screen.json` remains exploratory evidence only. The original lowe
 
 Input hashes were verified against the previous exact-residual study. Producing source and plan copies are retained under `producer_source/`. Finalization verified the original archive manifest/payload hashes and frozen source fingerprint. The archive preserves original accuracy; the earlier 10/12 validation result and unmeasured 95% application target remain unchanged.
 
-The user clarified that success means resident GPU memory and execution speed. The next study is [the exact deployment experiment](../07%20-%20Status%20Reports/2026-10-10_llama32-lossless-deployment-plan.md), with no archival-only result counted as deployment success.
+The user clarified that success means resident GPU memory and execution speed. The next study is [the exact deployment experiment](../../07%20-%20Status%20Reports/llama32/2026-10-10_llama32-lossless-deployment-plan.md), with no archival-only result counted as deployment success.
 
 Decode the verified archive with:
 

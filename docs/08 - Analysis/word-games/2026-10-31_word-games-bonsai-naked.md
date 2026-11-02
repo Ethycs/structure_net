@@ -9,7 +9,7 @@ or 95% task-accuracy result.
 
 Aggregate: `data/experiments/word_games/20261031_bonsai_analysis_v1/campaign_results.json`.
 SHA256: `36e66862e643be4beed9c028b2b2472b88bb9c7938dd149fca8e81fcb30ea612`.
-The [prospective protocol](../07%20-%20Status%20Reports/2026-10-31_word-games-bonsai-naked-plan.md)
+The [prospective protocol](../../07%20-%20Status%20Reports/word-games/2026-10-31_word-games-bonsai-naked-plan.md)
 fixes the sequence, settings and interpretation.
 
 ## Configuration and integrity

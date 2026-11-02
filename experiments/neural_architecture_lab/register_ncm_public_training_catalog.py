@@ -7,7 +7,7 @@ from experiments.structure_net import ncm_public_training_catalog as catalog
 
 data, DEST, HYPOTHESIS = catalog.data, catalog.AUDIT, catalog.HYPOTHESIS
 CAMPAIGN = DEST/'campaign_results.json'
-REPORT = Path('docs/08 - Analysis/2026-10-26_ncm-public-training-catalog.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-26_ncm-public-training-catalog.md')
 
 
 def record_for(result):

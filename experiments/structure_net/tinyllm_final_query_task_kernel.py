@@ -32,7 +32,7 @@ RANDOM_PROJECTOR_SEEDS = {
     "outside_range": 851_021,
 }
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-final-query-task-kernel-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

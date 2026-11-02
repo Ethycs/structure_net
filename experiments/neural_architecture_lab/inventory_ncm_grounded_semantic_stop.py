@@ -9,7 +9,7 @@ from experiments.structure_net import ncm_sol64_grounded_oracle_semantics as run
 from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 DEST = run.ROOT / '20261025_grounded_semantic_stop_inventory_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-grounded-semantic-stop-inventory-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-grounded-semantic-stop-inventory-plan.md')
 TEST = Path('tests/neural_architecture_lab/test_ncm_grounded_semantic_stop_inventory.py')
 STOP = run.ROOT / '20261024_grounded_semantic_transport_stop_v1'
 HISTORICAL = run.lineage.historical

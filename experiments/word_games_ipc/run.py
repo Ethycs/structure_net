@@ -14,7 +14,7 @@ from experiments.word_games.qwen_pair import PAIRS, directory, entrypoint
 from experiments.word_games.qwen_runtime import CHECK, DRAFT_GPU, REQUESTS, REQUESTS_SHA, memory
 from .transport import DraftSession, UnixHTTP, accepted_prefix
 
-PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-qwen-ipc-plan.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-qwen-ipc-plan.md')
 
 
 def command(role, gpu, socket_dir, cache, name):

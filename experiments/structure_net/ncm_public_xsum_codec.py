@@ -14,7 +14,7 @@ from experiments.structure_net import ncm_public_xsum_data as public
 from experiments.structure_net.ncm_public_xsum_data_v2 import EXPORT, INSPECT
 
 HYPOTHESIS = 'ncm-public-xsum-codec-v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-26_ncm-public-xsum-codec-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-26_ncm-public-xsum-codec-plan.md')
 TEST = Path('tests/structure_net/test_ncm_public_xsum_codec.py')
 RUNS = {s: prior.ROOT/f'20261026_public_xsum_codec_{s}_v1' for s in ('prepare', 'pilot', 'eval', 'results')}
 ARMS = ('released', 'repaired')

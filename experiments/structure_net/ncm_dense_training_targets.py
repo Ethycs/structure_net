@@ -24,8 +24,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 prior = upstream.prior
 ROOT = prior.ROOT
 HYPOTHESIS = "ncm-dense-full-TRAIN-targets-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-23_ncm-dense-training-targets-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-dense-training-targets.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-23_ncm-dense-training-targets-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-dense-training-targets.md")
 WORKFLOW = ROOT / "20261023_dense_training_targets_workflow_v1"
 PILOT = ROOT / "20261023_dense_training_targets_pilot_v1"
 TARGETS = ROOT / "20261023_dense_training_targets_measure_v1"

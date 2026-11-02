@@ -11,7 +11,7 @@ from experiments.structure_net import ncm_memory_accuracy as original
 from experiments.structure_net.ncm_memory_accuracy import *
 
 PRIOR = Path("data/experiments/ncm_memory/20261022_accuracy_v1")
-AMENDMENT = Path("docs/07 - Status Reports/2026-10-22_ncm-memory-accuracy-parser-recovery.md")
+AMENDMENT = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-memory-accuracy-parser-recovery.md")
 _strict_parse = original.parse
 _freeze = original.freeze
 _execute = original.execute

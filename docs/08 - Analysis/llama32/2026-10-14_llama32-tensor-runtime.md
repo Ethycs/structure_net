@@ -3,8 +3,8 @@
 **Status:** completed exploratory systems study, 2026-10-14.  
 **Hypothesis:** `llama32-3b-tensor-runtime-v1`.  
 **Classification:** `prototype_speed_recovered_native_target_unmet`.  
-**Design:** [prospective plan](../07%20-%20Status%20Reports/2026-10-14_llama32-tensor-runtime-plan.md)
-and [native warmup amendment](../07%20-%20Status%20Reports/2026-10-14_llama32-tensor-runtime-warmup-amendment.md).  
+**Design:** [prospective plan](../../07%20-%20Status%20Reports/llama32/2026-10-14_llama32-tensor-runtime-plan.md)
+and [native warmup amendment](../../07%20-%20Status%20Reports/llama32/2026-10-14_llama32-tensor-runtime-warmup-amendment.md).  
 **Aggregate:** `data/experiments/llama_tensor_runtime/20261014_registered_v1/campaign_results.json`.  
 **SHA-256:** `cb9ec87769f9179368a6c248eb9e29778524d1f63aa2191c93b41795eea14397`.
 

@@ -47,12 +47,12 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_c3_gauge_jump_joint_typed_score.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-gauge-jump-joint-typed-score-"
     "preregistration.md"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-gauge-jump-joint-typed-score.md"
 )
 PRIOR_RESULT_PATH = Path(
@@ -64,12 +64,12 @@ PRIOR_RUNNER_PATH = Path(
     "tinyllm_c3_gauge_jump_corruption_fixed_decoder.py"
 )
 PRIOR_PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-gauge-jump-corruption-fixed-decoder-"
     "preregistration.md"
 )
 PRIOR_REPORT_PATH = Path(
-    "docs/08 - Analysis/"
+    "docs/08 - Analysis/tinyllm/"
     "2026-08-11_tinyllm-c3-gauge-jump-corruption-fixed-decoder.md"
 )
 SEEDS = (773, 821, 1003, 1031, 1039)

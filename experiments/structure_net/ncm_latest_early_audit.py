@@ -9,7 +9,7 @@ import time
 from experiments.structure_net import ncm_latest_generation_recovery as recovery
 
 latest = recovery.latest
-PLAN = Path('docs/07 - Status Reports/2026-10-29_ncm-overlapped-independent-audits.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-29_ncm-overlapped-independent-audits.md')
 TEST = Path('tests/structure_net/test_ncm_latest_early_audit.py')
 CPU = latest.BASE/'20261029_latest_early_audit_CPU_v1.json'
 MEASURED = {}

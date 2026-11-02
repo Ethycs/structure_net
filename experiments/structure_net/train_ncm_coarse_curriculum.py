@@ -24,7 +24,7 @@ from experiments.structure_net.ncm_training_recipe import Recipe, cumulative_lat
 from experiments.structure_net.ncm_vocabulary import CachedVocabulary
 from experiments.structure_net.train_ncm_memory import save
 
-PLAN = Path("docs/07 - Status Reports/2026-10-22_ncm-coarse-curriculum-plan.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-coarse-curriculum-plan.md")
 CODEC = ROOT / "20261022_codec_training_v2/model.pt"
 GENERATOR = ROOT / "20261022_noisy_native_v1/model.pt"
 TEACHER = ROOT / "20261022_teacher_v1/train.json"

@@ -8,7 +8,7 @@
 
 **Classification:** `task_only_sensor_acquisition_supported`
 
-**Preregistration:** [C3 temporal sensor-only campaign](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-temporal-sensor-only-preregistration.md)
+**Preregistration:** [C3 temporal sensor-only campaign](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-temporal-sensor-only-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_temporal_sensor_only/20260811_preregistered/campaign_results.json`
 

@@ -30,7 +30,7 @@ from neural_architecture_lab.runners import AsyncExperimentRunner
 SCHEMA_VERSION = "nal.tinyllm-calibrated-architecture-replication.v1"
 HYPOTHESIS_ID = preflight.HYPOTHESIS_ID
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-calibrated-architecture-replication-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (

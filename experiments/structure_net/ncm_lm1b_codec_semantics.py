@@ -16,8 +16,8 @@ from experiments.structure_net.ncm_memory_data import file_hash, write_json
 
 ROOT, q = native.ROOT, native.q
 HYPOTHESIS = "ncm-lm1b-CLS-padding-semantic-control-v1"
-PLAN = Path("docs/07 - Status Reports/2026-10-24_ncm-lm1b-padding-semantics-plan.md")
-REPORT = Path("docs/08 - Analysis/2026-10-24_ncm-lm1b-padding-semantics.md")
+PLAN = Path("docs/07 - Status Reports/ncm/2026-10-24_ncm-lm1b-padding-semantics-plan.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-24_ncm-lm1b-padding-semantics.md")
 MODULE = "experiments.structure_net.ncm_lm1b_codec_semantics"
 AUDITOR = "experiments.neural_architecture_lab.finalize_ncm_lm1b_codec_semantics"
 AUDITOR_FILE = Path("experiments/neural_architecture_lab/finalize_ncm_lm1b_codec_semantics.py")

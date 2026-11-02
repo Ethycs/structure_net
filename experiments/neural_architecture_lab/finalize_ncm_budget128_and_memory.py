@@ -11,7 +11,7 @@ from experiments.structure_net.ncm_source_readout_grade import audit_row
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_budget128_and_memory_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-budget128-and-intact-memory.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-budget128-and-intact-memory.md")
 
 
 def finalize():

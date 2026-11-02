@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_paper_data import PARENT, ROOT, verify
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261022_generalization_diagnosis_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-generalization-diagnosis.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-generalization-diagnosis.md")
 RUNS = ("20261022_current_ncm_grade_secondary_v1", "20261022_current_parent_grade_secondary_v1",
         "20261022_body_ablation_measure_v1", "20261022_released_xsum_control_v2")
 

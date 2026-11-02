@@ -14,7 +14,7 @@ from experiments.word_games.qwen_runtime import REQUESTS,REQUESTS_SHA,memory
 from experiments.word_games.check_qwen_tokenizers import gguf_metadata
 from experiments.word_games.qwen38_moe_runtime import validate_metadata
 
-PLAN=Path('docs/07 - Status Reports/2026-10-31_word-games-packed-experts-amendment.md')
+PLAN=Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-packed-experts-amendment.md')
 GROUPS={'CUDA0':list(range(18,23)), 'CUDA1':list(range(8))+[23],
         'CUDA2':list(range(8,18)), 'CPU':[24,25]}
 ORIGINAL_COMMAND=base.command

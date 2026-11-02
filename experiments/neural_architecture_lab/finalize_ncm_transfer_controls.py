@@ -11,7 +11,7 @@ from experiments.neural_architecture_lab.ncm_result_registry import register_rec
 CODEC = ROOT / "20261022_unseen_codec_measure_v1"
 REPAIR = ROOT / "20261022_residual_learning_train_v2"
 DEST = ROOT / "20261022_transfer_controls_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-22_ncm-unseen-codec-and-repair.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-22_ncm-unseen-codec-and-repair.md")
 
 
 def finalize():

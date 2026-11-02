@@ -27,14 +27,14 @@ RUNNER_PATH = Path(
 )
 RUNNER_SHA256 = "8556317b17637e784eae0746335bcb4de6cbafb8fa0285508b003e37bef7708c"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-c3-posterior-holonomy-interface-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (
     "c95670b166b7ba1368b2241e0a17ea73c84bd07ec51d232b71ee09e0a5321e02"
 )
 REPORT_PATH = Path(
-    "docs/08 - Analysis/2026-08-11_tinyllm-c3-posterior-holonomy-interface.md"
+    "docs/08 - Analysis/tinyllm/2026-08-11_tinyllm-c3-posterior-holonomy-interface.md"
 )
 REPORT_SHA256 = "0c97b14dff4879b49ea1c46fb2b5ad99d7a23c90ed5187e071998da87a963ffd"
 PREDECESSOR_RESULT_SHA256 = (

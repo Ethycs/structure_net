@@ -11,7 +11,7 @@ from experiments.structure_net import ncm_task_supervision_development as task
 from experiments.structure_net import ncm_recovered_review_lineage as history
 
 transport, q = qualification.transport, qualification.q
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-isolated-task-evaluation.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-isolated-task-evaluation.md')
 TEST = Path('tests/structure_net/test_ncm_isolated_task_development.py')
 CPU = qualification.BASE/'20261028_isolated_task_evaluation_CPU_v1.json'
 STAGES = ('judge_pilot', 'grade', 'audit')

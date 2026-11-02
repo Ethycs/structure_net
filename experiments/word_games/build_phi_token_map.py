@@ -15,7 +15,7 @@ LARGE = "/model-weights/Phi-4-GGUF/phi-4-Q4_K_M.gguf"
 SMALL = "/model-weights/Phi-4-mini-instruct-GGUF/microsoft_Phi-4-mini-instruct-Q4_K_M.gguf"
 LARGE_SHA = "009aba717c09d4a35890c7d35eb59d54e1dba884c7c526e7197d9c13ab5911d9"
 SMALL_SHA = "01999f17c39cc3074afae5e9c539bc82d45f2dd7faa3917c66cbef76fce8c0c2"
-PLAN = Path("docs/07 - Status Reports/2026-10-31_word-games-phi-token-map-plan.md")
+PLAN = Path("docs/07 - Status Reports/word-games/2026-10-31_word-games-phi-token-map-plan.md")
 
 
 def snapshot_model(model, name):

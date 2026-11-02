@@ -20,7 +20,7 @@ from experiments.structure_net import qwen_moba_prefix as q
 from experiments.structure_net import moba_head_benchmark as b
 from experiments.structure_net.moba_paper_latency_diagnostic import gpu_state
 
-PROTOCOL = Path("docs/07 - Status Reports/2026-09-09_qwen8b-moba-shared-gpu-amendment.md")
+PROTOCOL = Path("docs/07 - Status Reports/moba/2026-09-09_qwen8b-moba-shared-gpu-amendment.md")
 SETTINGS = tuple(q.MoBASetting(block, k, layers) for block, k in ((256, 4), (512, 3), (1024, 2)) for layers in ("all", "last"))
 LENGTHS = (8192, 16384)
 

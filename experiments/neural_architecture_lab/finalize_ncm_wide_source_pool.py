@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_paper_data import ROOT, verify
 from experiments.neural_architecture_lab.ncm_result_registry import register_records
 
 DEST = ROOT / "20261023_application_source_pool_results_v1"
-REPORT = Path("docs/08 - Analysis/2026-10-23_ncm-wide-public-source-pool.md")
+REPORT = Path("docs/08 - Analysis/ncm/2026-10-23_ncm-wide-public-source-pool.md")
 DECISION = ROOT / "20261023_application_source_quota_decision_v1.json"
 
 

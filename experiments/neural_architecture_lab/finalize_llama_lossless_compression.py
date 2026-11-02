@@ -7,7 +7,7 @@ from experiments.structure_net import run_llama_lossless_compression as study
 from neural_architecture_lab.llama_lossless_compression_hypothesis import LosslessCompressionEvidence, PartialCompressionEvidence
 
 codec = study.codec
-REPORT = Path("docs/08 - Analysis/2026-10-10_llama32-lossless-compression.md")
+REPORT = Path("docs/08 - Analysis/llama32/2026-10-10_llama32-lossless-compression.md")
 
 
 def partial(root):

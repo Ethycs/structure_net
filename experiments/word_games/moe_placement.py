@@ -21,8 +21,8 @@ from .qwen_runtime import REQUESTS, REQUESTS_SHA, memory
 
 HYPOTHESIS_ID = 'word-games-moe-placement-v1'
 SCHEMA_VERSION = 'word-games.moe-placement.v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-moe-placement-plan.md')
-EXPERT_PLAN = Path('docs/07 - Status Reports/2026-10-31_word-games-moe-experts-only-amendment.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-moe-placement-plan.md')
+EXPERT_PLAN = Path('docs/07 - Status Reports/word-games/2026-10-31_word-games-moe-experts-only-amendment.md')
 SUPER = 'GPU-7b1db3cb-ec9c-beb3-e7db-826c2543edf9'
 HEALTH = 'http://127.0.0.1:8000/v2/models/qwen3-8b-gguf/ready'
 

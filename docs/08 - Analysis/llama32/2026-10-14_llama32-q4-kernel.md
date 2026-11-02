@@ -13,9 +13,9 @@ Canonical aggregate:
 `data/experiments/llama_q4_kernel/20261014_registered_v1/campaign_results.json`.
 SHA-256:
 `20e8a221ce03d481771fe380c398cbb65a58b5bf0ed2fd853d4ccfc167540885`.
-The [plan](../07%20-%20Status%20Reports/2026-10-14_llama32-q4-kernel-plan.md),
-[load-layout amendment](../07%20-%20Status%20Reports/2026-10-14_llama32-q4-kernel-layout-amendment.md)
-and [epilogue amendment](../07%20-%20Status%20Reports/2026-10-14_llama32-q4-kernel-epilogue-amendment.md)
+The [plan](../../07%20-%20Status%20Reports/llama32/2026-10-14_llama32-q4-kernel-plan.md),
+[load-layout amendment](../../07%20-%20Status%20Reports/llama32/2026-10-14_llama32-q4-kernel-layout-amendment.md)
+and [epilogue amendment](../../07%20-%20Status%20Reports/llama32/2026-10-14_llama32-q4-kernel-epilogue-amendment.md)
 preceded model quality outcomes. Earlier operator evidence is retained;
 implementation rounds are not pooled as independent model replications.
 

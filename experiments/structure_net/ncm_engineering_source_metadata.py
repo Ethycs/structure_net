@@ -9,7 +9,7 @@ from experiments.structure_net.ncm_memory_data import file_hash, text_hash, writ
 
 ROOT, native = data.ROOT, data.native
 DEST = ROOT / '20261025_engineering_source_metadata_v1'
-PLAN = Path('docs/07 - Status Reports/2026-10-25_ncm-engineering-source-metadata-plan.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-25_ncm-engineering-source-metadata-plan.md')
 TEST = Path('tests/structure_net/test_ncm_engineering_source_metadata.py')
 
 

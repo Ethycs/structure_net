@@ -11,7 +11,7 @@ from experiments.neural_architecture_lab.finalize_qwen_moba_idle_latency import 
 from neural_architecture_lab.qwen_nonattention_hypothesis import NonattentionEvidence
 
 ROOT = Path("data/experiments/qwen_moba_prefix")
-REPORT = Path("docs/08 - Analysis/2026-09-09_qwen8b-nonattention-acceleration.md")
+REPORT = Path("docs/08 - Analysis/moba/2026-09-09_qwen8b-nonattention-acceleration.md")
 NAMES = ("fused_fp16", "int8_mlp6", "int8_mlp3", "int8_gate_up6")
 
 
@@ -159,7 +159,7 @@ def main():
               f"- Decisive campaign: `{campaign}`; SHA-256 `{sha256(campaign)}`.",
               f"- MLP pilot: `{micro_path}`; SHA-256 `{sha256(micro_path)}`.",
               f"- Screen fingerprint: `{screen_producer['fingerprint']}`.",
-              "- Protocol: `docs/07 - Status Reports/2026-09-09_qwen8b-nonattention-acceleration.md`.",
+              "- Protocol: `docs/07 - Status Reports/moba/2026-09-09_qwen8b-nonattention-acceleration.md`.",
               "- Seven focused tests cover packed MLP order, full-prefix graph equivalence, numerical gates, two-source selection, and conservative registry status.", "",
               "```bash", "env CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=0 LD_LIBRARY_PATH= \\",
               " PYTHONPATH=.:src TORCHINDUCTOR_COMPILE_THREADS=2 \\",

@@ -18,7 +18,7 @@ from . import deploy
 from .validate import Client
 
 HYPOTHESIS_ID = 'word-games-schema-prefill-v1'
-PLAN = Path('docs/07 - Status Reports/2026-11-01_word-games-schema-prefill-plan.md')
+PLAN = Path('docs/07 - Status Reports/word-games/2026-11-01_word-games-schema-prefill-plan.md')
 REFERENCE = Path('data/experiments/word_games/20261031_triton_native_validation_v2/full_1')
 PREFIXES = [{'name': 'sender', 'text': SENDER_CONTRACT + '\nCURRENT INPUT\n'},
             {'name': 'receiver', 'text': RECEIVER_CONTRACT + '\nAUTHORIZED PACKET\n'}]

@@ -13,7 +13,7 @@ from experiments.structure_net.ncm_recipe_control import PLAN, ROOT
 
 PARENT = Path("data/experiments/ncm_frozen_body/20261022_train_v1")
 QUALITY = ROOT / "20261022_quality_v1"
-NOTE = Path("docs/07 - Status Reports/2026-10-22_ncm-recipe-public-target-clarification.md")
+NOTE = Path("docs/07 - Status Reports/ncm/2026-10-22_ncm-recipe-public-target-clarification.md")
 CALIBRATION = Path("data/experiments/ncm_memory/20261022_accuracy_v2/calibration_primary/result.json")
 
 

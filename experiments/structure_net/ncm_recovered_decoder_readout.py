@@ -16,7 +16,7 @@ from experiments.structure_net import ncm_recovered_paraphrase_catalog as catalo
 
 study, data = evaluation.study, evaluation.data
 ROOTS = {s:data.ROOT/f'20261028_recovered_decoder_readout_{s}_v1' for s in ('pilot','eval','replay')}
-PLAN = Path('docs/07 - Status Reports/2026-10-28_ncm-recovered-decoder-readout.md')
+PLAN = Path('docs/07 - Status Reports/ncm/2026-10-28_ncm-recovered-decoder-readout.md')
 TEST = Path('tests/structure_net/test_ncm_recovered_decoder_readout.py')
 CURRENT = data.ROOT/'20261027_task_supervision_existing_train_v3'
 FROZEN = {'codec':'eb962706f10c693871f9c6df007e9fd3e23004c91c6258f435cdb09abf7fb366',

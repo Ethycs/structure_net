@@ -10,7 +10,7 @@ if not hasattr(np, 'NaN'): np.NaN = np.nan
 
 ROOT = Path('data/experiments/ncm_paper_regime/20261025_broad_generator_results_v1')
 CAMPAIGN = ROOT/'campaign_results.json'
-REPORT = Path('docs/08 - Analysis/2026-10-25_ncm-broad-generator.md')
+REPORT = Path('docs/08 - Analysis/ncm/2026-10-25_ncm-broad-generator.md')
 HYPOTHESIS = 'ncm-broad-generator-v1'
 
 

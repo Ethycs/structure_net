@@ -99,7 +99,7 @@ RUNNER_PATH = Path(
     "experiments/structure_net/tinyllm_noisy_bias_pilot_acquisition.py"
 )
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-10_tinyllm-noisy-bias-pilot-acquisition-preregistration.md"
 )
 SOURCE_REPAIR_CAMPAIGN_PATH = Path(
@@ -446,7 +446,7 @@ def _detail_summary(detail: Mapping[str, Any]) -> dict[str, Any]:
 def build_noisy_bias_pilot_acquisition_meta_hypothesis(
     results_path: Path,
     report_path: Path = Path(
-        "docs/08 - Analysis/2026-08-10_tinyllm-noisy-bias-pilot-acquisition.md"
+        "docs/08 - Analysis/tinyllm/2026-08-10_tinyllm-noisy-bias-pilot-acquisition.md"
     ),
 ) -> dict[str, Any]:
     campaign = _campaign(results_path)

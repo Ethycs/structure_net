@@ -8,7 +8,7 @@
 
 **Classification:** `existing_c3_sensor_contains_analytic_carrier_and_task_gradient`
 
-**Preregistration:** [C3 temporal sensor function class](../07%20-%20Status%20Reports/2026-08-11_tinyllm-c3-temporal-sensor-function-class-preregistration.md)
+**Preregistration:** [C3 temporal sensor function class](../../07%20-%20Status%20Reports/tinyllm/2026-08-11_tinyllm-c3-temporal-sensor-function-class-preregistration.md)
 
 **Primary artifact:** `data/experiments/tinyllm_c3_temporal_sensor_function_class/20260811_preregistered/result.json`
 

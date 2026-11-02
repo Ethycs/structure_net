@@ -39,7 +39,7 @@ SCHEMA_VERSION = "nal.tinyllm-joint-physical-scalar-interface.v1"
 HYPOTHESIS_ID = "tinyllm-joint-physical-scalar-interface-v1"
 EVIDENCE_ROLE = "prospective_frozen_backbone_joint_physical_interface"
 PREREGISTRATION_PATH = Path(
-    "docs/07 - Status Reports/"
+    "docs/07 - Status Reports/tinyllm/"
     "2026-08-11_tinyllm-joint-physical-scalar-interface-preregistration.md"
 )
 PREREGISTRATION_SHA256 = (
