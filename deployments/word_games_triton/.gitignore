@@ -3,3 +3,4 @@
 !release.lock.json
 !validation.json
 !models/**/runtime.json
+!regular/**/*.json

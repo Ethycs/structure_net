@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from experiments.word_games_triton import service
+from experiments.word_games_triton import standalone_service as service
 
 
 @pytest.fixture

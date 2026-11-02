@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-01",
+  "classification": "systems_lifecycle_only_not_quality_evidence",
+  "evidence": "data/experiments/word_games/20261101_regular_triton_migration_v1/result.json",
+  "evidence_sha256": "6eebc09b91a3725d2a3198068cb2e8ea1cb4c78100b6f157b805404beb9db8f2",
+  "focused_tests_passed": 29,
+  "matched_baseline_inferences": 6,
+  "server": "triton",
+  "url": "http://127.0.0.1:8000",
+  "model": "word-games-qwen38-native",
+  "model_ready": true,
+  "other_model_configs_unchanged": true,
+  "gpu_visibility": [
+    "1",
+    "0",
+    "2"
+  ],
+  "native_image": "sha256:ea2c80aa8efcf2b1578db2ab869ea1978a243b8327d5e4df9e95cabaaf74cc4f",
+  "operator_reservation": {
+    "end": "explicit operator release",
+    "preemptible": false,
+    "purpose": "WORD_GAMES model research, translation-proxy evaluation and direct model access"
+  },
+  "seconds": {
+    "start_regular_triton": 6.24,
+    "load_regular": 230.517,
+    "unload_regular": 2.078,
+    "reload_regular": 80.263
+  },
+  "new_throughput_or_task_accuracy_claim": false
+}

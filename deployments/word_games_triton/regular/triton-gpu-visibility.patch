@@ -1,0 +1,21 @@
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -77,13 +77,16 @@
+     #
+     # Two Gemma 4 E2B instances run concurrently on the 6 GB 2060
+     # (~3 GB each + KV = ~6 GB total).  The 8 GB SUPER (host device 2)
+-    # is on the OCR compose, not this one.
++    # is also exposed here for the opt-in WORD_GAMES model; OCR must remain
++    # unloaded while WORD_GAMES occupies all three GPUs.
+     deploy:
+       resources:
+         reservations:
+           devices:
+             - driver: nvidia
+-              device_ids: ["1", "0"]
++              # WORD_GAMES can use all three GPUs when explicitly loaded.
++              # Existing device order is retained; its native child binds UUIDs.
++              device_ids: ["1", "0", "2"]
+               capabilities: [gpu]
+ 
+     volumes:
