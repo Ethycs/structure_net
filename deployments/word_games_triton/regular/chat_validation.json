@@ -1,11 +1,21 @@
 {
-  "date": "2026-11-02",
-  "evidence": "data/experiments/word_games/20261102_litellm_route_v1/release_result.json",
-  "evidence_sha256": "1ff607452ff5fea19d96feb8c2964ee3e04eb7da05dbdac5aeea970026506094",
+  "classification": "systems_lifecycle_only_not_quality_evidence",
   "triton_ready": true,
+  "gateway_model_listed": true,
+  "gateway_model": "qwen3.8-35b-a3b",
+  "gateway_deployment_id": "8b54306d-a232-4c50-8ca6-9defe9969133",
+  "gateway_registration": {
+    "managed_by": "grandfathered",
+    "certified": false,
+    "registered_by": "infrastructure owner via PBX201-1002 with operator exception"
+  },
+  "focused_tests_passed": 40,
+  "new_throughput_or_quality_claim": false,
+  "date": "2026-11-02",
+  "evidence": "data/experiments/word_games/20261102_litellm_chat_guard_v1/result.json",
+  "evidence_sha256": "3f6967ffe1c4e78751acea54e52f2b2535d5221d05e746183e6b187ecdeee72e",
   "native_chat_checks_passed": 3,
-  "research_interface_passed": true,
-  "focused_tests_passed": 29,
-  "gateway_registration": "blocked_by_inference_only_key_http_403",
-  "gateway_validation": "not_run"
+  "gateway_chat_checks_passed": 3,
+  "exposure_checks_passed": 6,
+  "research_interface_passed": true
 }

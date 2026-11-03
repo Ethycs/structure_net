@@ -47,6 +47,7 @@ word-games-qwen38-native/
   installation.json
   1/
     model.py
+    chat_proxy.py            # allowlisted OpenAI HTTP transport
     runtime.json
     runtime-assets/
       native/    # pinned patched llama.cpp executables and libraries
@@ -89,16 +90,22 @@ output tokens. Logs and CUDA cache live inside the regular container under
 
 ## Chat through LiteLLM
 
-Status: the native chat endpoint is deployed and tested. Gateway registration
-is pending infrastructure-admin access: the configured inference key receives
-HTTP 403 from LiteLLM's `/model/new`. `regular/chat_validation.json` records the
-completed upstream checks and the outstanding gateway check.
+Infrastructure has registered `qwen3.8-35b-a3b` in LiteLLM as an explicitly
+grandfathered entry (`managed_by=grandfathered`, `certified=false`). Its model ID
+is `8b54306d-a232-4c50-8ca6-9defe9969133`. The reconciler leaves this entry intact;
+the common acceptance framework is still being developed. The route below is
+the deployed configuration record, not an instruction to create a duplicate.
+`regular/chat_validation.json` records the endpoint and gateway checks. These
+transport checks do not constitute full model or WORD_GAMES certification.
 
-The same Triton-owned native process also exposes its OpenAI-compatible chat
-API at `http://10.158.218.141:18080/v1` on the trusted ZeroTier network. The
-native process listens on the container network; Compose publishes this port
-only on the host's ZeroTier address. The endpoint exists only while
-`word-games-qwen38-native` is loaded. It uses the same weights, GPU placement,
+The Triton model owns an allowlisted HTTP proxy at
+`http://10.158.218.141:18080/v1` on the trusted ZeroTier network. Only
+`POST /v1/chat/completions` and `GET /v1/models` are exposed. Native management
+endpoints such as `/slots` and `/props` are not forwarded. The native worker
+listens only on container loopback at port 18081; the proxy streams chat
+responses without buffering the complete generation. Compose publishes port
+18080 only on the host's ZeroTier address. The endpoint exists only while
+`word-games-qwen38-native` is loaded, and uses the same weights, GPU placement,
 and native optimizations as the research inference interface.
 
 `regular/litellm-route.yaml` contains the gateway entry for
@@ -116,13 +123,15 @@ loading or GPU reservation management is added by this integration.
 
 The host port change is preserved in `regular/triton-chat-port.patch` for the
 infrastructure-owned Compose source. Apply it alongside the existing GPU
-visibility patch when reconstructing this deployment. No second weight process
-or chat adapter container is required.
+visibility patch when reconstructing this deployment. The lightweight HTTP
+proxy runs inside the model's Python backend; no second weight process or
+additional container is required.
 
 Run a fresh systems check against the configured route from the repository root:
 
 ```bash
 pixi run python -m experiments.word_games_triton.check_chat_route \
+  --deployment-id 8b54306d-a232-4c50-8ca6-9defe9969133 \
   --output data/experiments/word_games/<fresh-run>/gateway
 ```
 

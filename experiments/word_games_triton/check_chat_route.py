@@ -36,9 +36,11 @@ def main():
     parser.add_argument('--api-base', default='https://10.158.218.193:4000/v1')
     parser.add_argument('--model', default='qwen3.8-35b-a3b')
     parser.add_argument('--native', action='store_true', help='Direct upstream: no gateway key or fallback controls')
+    parser.add_argument('--deployment-id', help='Require this X-Litellm-Model-Id on gateway responses')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
+    expected_model = NATIVE_MODEL if args.native else args.model
     headers = {'Content-Type': 'application/json'}
     context = ssl.create_default_context(cafile=str(CA) if CA.exists() else None)
     if not args.native:
@@ -61,7 +63,11 @@ def main():
             (args.output / 'failure.json').write_text(json.dumps(failure, indent=2) + '\n')
             raise SystemExit(f'Chat endpoint returned HTTP {error.code}; see failure.json') from None
         with response:
+            deployment_id = response.headers.get('X-Litellm-Model-Id')
+            route_matches = args.native or (bool(deployment_id) and
+                            (not args.deployment_id or deployment_id == args.deployment_id))
             record = {'case': name, 'request': body, 'status': response.status,
+                      'expected_response_model': expected_model, 'route_identity_matches': route_matches,
                       'headers': {k: v for k, v in response.headers.items()
                                   if k.lower() in ('content-type', 'x-litellm-model-id', 'x-litellm-api-base')}}
             if settings.get('stream'):
@@ -77,16 +83,18 @@ def main():
                 content = ''.join(choice.get('delta', {}).get('content') or ''
                                   for event in events for choice in event['data'].get('choices', []))
                 models = {e['data'].get('model') for e in events if e['data'].get('model')}
+                has_usage = any((e['data'].get('usage') or {}).get('completion_tokens', 0) > 0
+                                for e in events)
                 record.update(events=events, done=done, content=content,
                               passed=done and content.strip().strip('.').lower() == 'silver meadow'
-                              and NATIVE_MODEL in models)
+                              and models == {expected_model} and route_matches and has_usage)
             else:
                 data = json.load(response)
                 content = data['choices'][0]['message']['content']
                 correct = (content.strip().strip('.').lower() == 'violet' if name == 'history'
                            else json.loads(content) == {'sum': 42})
                 record.update(response=data, content=content,
-                              passed=correct and data.get('model') == NATIVE_MODEL
+                              passed=correct and data.get('model') == expected_model and route_matches
                               and data.get('usage', {}).get('completion_tokens', 0) > 0)
         record['seconds'] = time.monotonic() - start
         (args.output / (name + '.json')).write_text(json.dumps(record, indent=2) + '\n')
@@ -94,6 +102,7 @@ def main():
         print(json.dumps(results[-1]), flush=True)
     summary = {'classification': 'systems_lifecycle_only_not_quality_evidence',
                'api_base': args.api_base, 'model': args.model, 'native_model': NATIVE_MODEL,
+               'expected_deployment_id': args.deployment_id,
                'source_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'results': results, 'passed': all(r['passed'] for r in results)}
     (args.output / 'result.json').write_text(json.dumps(summary, indent=2) + '\n')

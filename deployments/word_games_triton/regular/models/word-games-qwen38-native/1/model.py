@@ -1,5 +1,6 @@
 """Triton Python backend: one native server per explicit model instance."""
 import http.client
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -10,6 +11,12 @@ import time
 
 import numpy as np
 import triton_python_backend_utils as pb
+
+
+_proxy_spec = importlib.util.spec_from_file_location('word_games_chat_proxy', Path(__file__).with_name('chat_proxy.py'))
+_proxy_module = importlib.util.module_from_spec(_proxy_spec)
+_proxy_spec.loader.exec_module(_proxy_module)
+start_chat_proxy = _proxy_module.start_chat_proxy
 
 
 def decode_scalar(tensor, name):
@@ -37,7 +44,7 @@ def sampling(text):
 
 class TritonPythonModel:
     def initialize(self, args):
-        self.process = self.log = self.http = None
+        self.process = self.log = self.http = self.chat_proxy = None
         config = json.loads((Path(__file__).parent / 'runtime.json').read_text())
         self.profile = config['profile']
         assets = Path(__file__).parent / 'runtime-assets'
@@ -71,6 +78,7 @@ class TritonPythonModel:
                     raise RuntimeError('native process exited; inspect ' + str(self.log_path))
                 try:
                     self.call('GET', '/health')
+                    self.chat_proxy = start_chat_proxy(config['public_chat_port'], config['native_port'])
                     return
                 except (OSError, http.client.HTTPException, RuntimeError):
                     self.http.close()
@@ -125,6 +133,10 @@ class TritonPythonModel:
         return responses
 
     def finalize(self):
+        if self.chat_proxy:
+            self.chat_proxy.shutdown()
+            self.chat_proxy.server_close()
+            self.chat_proxy = None
         if self.http:
             self.http.close()
         if self.process and self.process.poll() is None:

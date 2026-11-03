@@ -44,6 +44,8 @@ def test_regular_backend_confines_gpu_order_to_native_child(monkeypatch, tmp_pat
     child.poll.return_value = None
     popen = Mock(return_value=child)
     monkeypatch.setattr(module.subprocess, 'Popen', popen)
+    proxy = Mock()
+    monkeypatch.setattr(module, 'start_chat_proxy', proxy)
     model = module.TritonPythonModel()
     model.call = Mock(return_value={})
     model.initialize({})
@@ -54,6 +56,7 @@ def test_regular_backend_confines_gpu_order_to_native_child(monkeypatch, tmp_pat
     assert module.os.environ['CUDA_VISIBLE_DEVICES'] == 'parent-order'
     assert str(popen.call_args.kwargs['cwd']).endswith('runtime-assets/native')
     assert command[0].endswith('runtime-assets/sysroot/ld-linux-x86-64.so.2')
+    proxy.assert_called_once_with(18080, 18081)
     model.log.close()
     model.http.close()
 
@@ -104,13 +107,14 @@ def test_incomplete_install_never_publishes_a_model(package):
     assert not (repository / installer.MODEL).exists()
 
 
-def test_regular_profile_changes_only_weight_path_listen_address_and_launch_metadata():
+def test_regular_profile_changes_only_weight_path_private_port_and_launch_metadata():
     root = Path('deployments/word_games_triton')
     original = json.loads((root / f'models/{installer.MODEL}/1/runtime.json').read_text())
     regular = json.loads((root / f'regular/models/{installer.MODEL}/1/runtime.json').read_text())
     args = regular['native_args'][:]
     assert args[args.index('-m')+1].startswith('/model-weights/')
     args[args.index('-m')+1] = '/model.gguf'
-    assert args[args.index('--host')+1] == '0.0.0.0'
-    args[args.index('--host')+1] = '127.0.0.1'
+    assert args[args.index('--host')+1] == '127.0.0.1'
+    assert args[args.index('--port')+1] == '18081'
+    args[args.index('--port')+1] = '18080'
     assert args == original['native_args']

@@ -1,9 +1,14 @@
 {
   "chat_endpoint": {
+    "allowed_routes": {
+      "GET": "/v1/models",
+      "POST": "/v1/chat/completions"
+    },
     "api_base": "http://10.158.218.141:18080/v1",
     "host_bind": "10.158.218.141:18080",
-    "lifecycle": "same Triton-owned native process; no second weights instance",
-    "native_listen": "0.0.0.0:18080"
+    "lifecycle": "Triton model owns native worker and allowlisted HTTP proxy; no second weights instance",
+    "native_listen": "127.0.0.1:18081",
+    "proxy_listen": "0.0.0.0:18080"
   },
   "container": "triton",
   "cuda": {
@@ -304,8 +309,9 @@
     "report": "docs/08 - Analysis/word-games/2026-10-31_word-games-70tps.md"
   },
   "repository_files": {
-    "1/model.py": "aac83fa829e3bd1fbc7346e1c53cbabe48bd7868e8cc4a30617bae818dd9bf60",
-    "1/runtime.json": "d8af9f561df07708db6dcbd5ef6446178d17f6b92abf92bf8b9ffb4243c89c19",
+    "1/chat_proxy.py": "753a38812bd043fb221a4c76c8325661ae14d762b9463561212e4b3e70e27377",
+    "1/model.py": "08d562e7de2de9806f3c989adb4aa703bcdcf0c295025ae2f85cf90cef07eb76",
+    "1/runtime.json": "4187e08a86f4c3eee057e01f88b084d353ec1a82fbc3b3fe561d911eb4cc8c0f",
     "config.pbtxt": "9e43021f27f3d1378dd8de5fd08a61af966019182919f91d0c0cc258f9b2207e"
   },
   "schema_version": 2,

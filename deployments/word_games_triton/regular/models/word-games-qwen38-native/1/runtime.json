@@ -5,9 +5,9 @@
     "--alias",
     "word-games-empero-qwen38-35b-a3b",
     "--host",
-    "0.0.0.0",
+    "127.0.0.1",
     "--port",
-    "18080",
+    "18081",
     "--ctx-size",
     "8192",
     "--parallel",
@@ -61,5 +61,6 @@
     "GPU-7b1db3cb-ec9c-beb3-e7db-826c2543edf9",
     "GPU-8cf440df-e8f4-2210-a2cd-29a9d00aca14"
   ],
-  "native_port": 18080
+  "native_port": 18081,
+  "public_chat_port": 18080
 }
