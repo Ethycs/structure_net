@@ -4,3 +4,4 @@
 !validation.json
 !models/**/runtime.json
 !regular/**/*.json
+!regular/**/*.yaml

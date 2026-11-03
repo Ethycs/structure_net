@@ -85,7 +85,50 @@ canonical deployment source. Visibility alone does not load any models.
 The inference contract is preserved: `text_input` plus optional
 `sampling_parameters`, JSON output, temperature 0, seed 73, and up to 1,024
 output tokens. Logs and CUDA cache live inside the regular container under
-`/tmp/word-games-qwen38-native/`. Native HTTP stays private at port 18080.
+`/tmp/word-games-qwen38-native/`.
+
+## Chat through LiteLLM
+
+Status: the native chat endpoint is deployed and tested. Gateway registration
+is pending infrastructure-admin access: the configured inference key receives
+HTTP 403 from LiteLLM's `/model/new`. `regular/chat_validation.json` records the
+completed upstream checks and the outstanding gateway check.
+
+The same Triton-owned native process also exposes its OpenAI-compatible chat
+API at `http://10.158.218.141:18080/v1` on the trusted ZeroTier network. The
+native process listens on the container network; Compose publishes this port
+only on the host's ZeroTier address. The endpoint exists only while
+`word-games-qwen38-native` is loaded. It uses the same weights, GPU placement,
+and native optimizations as the research inference interface.
+
+`regular/litellm-route.yaml` contains the gateway entry for
+`qwen3.8-35b-a3b`, pointing to upstream model
+`word-games-empero-qwen38-35b-a3b`. Chat uses the native `/v1/chat/completions`
+interface so message roles, history, streaming, and token usage reach the
+native implementation. The existing Triton `text_input` interface retains its
+fixed research JSON contract. The gateway route uses the normal LiteLLM API key;
+the upstream follows the infrastructure's trusted-network policy.
+
+The context budget is 8,192 tokens shared between input and output. The gateway
+entry defaults to 1,024 output tokens, temperature zero, and seed 73. Tool calling
+and multimodal input are not advertised by this route. No automatic model
+loading or GPU reservation management is added by this integration.
+
+The host port change is preserved in `regular/triton-chat-port.patch` for the
+infrastructure-owned Compose source. Apply it alongside the existing GPU
+visibility patch when reconstructing this deployment. No second weight process
+or chat adapter container is required.
+
+Run a fresh systems check against the configured route from the repository root:
+
+```bash
+pixi run python -m experiments.word_games_triton.check_chat_route \
+  --output data/experiments/word_games/<fresh-run>/gateway
+```
+
+This checks conversation history, JSON output, and streaming with fallbacks
+disabled. It reads the existing `LITELLM_KEY` from `.env`, never records the key,
+and requires a new output directory. It is not a task-quality or throughput test.
 
 The previous approximately 67 full-request tokens/s measurement applies to the
 validated workload, not a new benchmark of this migration. This package supplies

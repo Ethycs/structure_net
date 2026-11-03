@@ -1,4 +1,10 @@
 {
+  "chat_endpoint": {
+    "api_base": "http://10.158.218.141:18080/v1",
+    "host_bind": "10.158.218.141:18080",
+    "lifecycle": "same Triton-owned native process; no second weights instance",
+    "native_listen": "0.0.0.0:18080"
+  },
   "container": "triton",
   "cuda": {
     "files": {
@@ -299,7 +305,7 @@
   },
   "repository_files": {
     "1/model.py": "aac83fa829e3bd1fbc7346e1c53cbabe48bd7868e8cc4a30617bae818dd9bf60",
-    "1/runtime.json": "11d59fd7b6186756f978b7ed42ba36777aff08603677705a8cd9c9dd5abdaa5f",
+    "1/runtime.json": "d8af9f561df07708db6dcbd5ef6446178d17f6b92abf92bf8b9ffb4243c89c19",
     "config.pbtxt": "9e43021f27f3d1378dd8de5fd08a61af966019182919f91d0c0cc258f9b2207e"
   },
   "schema_version": 2,

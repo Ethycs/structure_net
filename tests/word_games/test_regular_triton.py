@@ -104,11 +104,13 @@ def test_incomplete_install_never_publishes_a_model(package):
     assert not (repository / installer.MODEL).exists()
 
 
-def test_regular_profile_changes_only_weight_path_and_launch_metadata():
+def test_regular_profile_changes_only_weight_path_listen_address_and_launch_metadata():
     root = Path('deployments/word_games_triton')
     original = json.loads((root / f'models/{installer.MODEL}/1/runtime.json').read_text())
     regular = json.loads((root / f'regular/models/{installer.MODEL}/1/runtime.json').read_text())
     args = regular['native_args'][:]
     assert args[args.index('-m')+1].startswith('/model-weights/')
     args[args.index('-m')+1] = '/model.gguf'
+    assert args[args.index('--host')+1] == '0.0.0.0'
+    args[args.index('--host')+1] = '127.0.0.1'
     assert args == original['native_args']

@@ -5,7 +5,7 @@
     "--alias",
     "word-games-empero-qwen38-35b-a3b",
     "--host",
-    "127.0.0.1",
+    "0.0.0.0",
     "--port",
     "18080",
     "--ctx-size",
