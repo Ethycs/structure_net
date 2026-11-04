@@ -1,0 +1,10 @@
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -124,6 +124,7 @@
+       - --model-repository=/models
+       - --backend-directory=/opt/tritonserver/backends
+       - --model-control-mode=explicit
++      - --load-model=word-games-model-router
+
+     # Server readiness does not imply an on-demand model has been loaded.
+     # Check /v2/models/<name>/ready before inference.

@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import ssl
+import re
 import time
 import urllib.error
 import urllib.request
@@ -37,10 +38,13 @@ def main():
     parser.add_argument('--model', default='qwen3.8-35b-a3b')
     parser.add_argument('--native', action='store_true', help='Direct upstream: no gateway key or fallback controls')
     parser.add_argument('--deployment-id', help='Require this X-Litellm-Model-Id on gateway responses')
+    parser.add_argument('--max-tokens', type=int, default=64)
+    parser.add_argument('--allow-explanatory-text', action='store_true',
+                        help='Accept correct answer words within explanatory prose; still record exact-format failures')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
-    expected_model = NATIVE_MODEL if args.native else args.model
+    expected_model = args.model
     headers = {'Content-Type': 'application/json'}
     context = ssl.create_default_context(cafile=str(CA) if CA.exists() else None)
     if not args.native:
@@ -49,14 +53,14 @@ def main():
         headers['Authorization'] = 'Bearer ' + key
     results = []
     for name, settings in CASES:
-        body = {'model': args.model, 'temperature': 0, 'seed': 73, 'max_tokens': 64, **settings}
+        body = {'model': args.model, 'temperature': 0, 'seed': 73, 'max_tokens': args.max_tokens, **settings}
         if not args.native:
             body.update(fallbacks=[], num_retries=0)
         request = urllib.request.Request(args.api_base.rstrip('/') + '/chat/completions',
                                          data=json.dumps(body).encode(), headers=headers)
         start = time.monotonic()
         try:
-            response = urllib.request.urlopen(request, context=context, timeout=300)
+            response = urllib.request.urlopen(request, context=context, timeout=600)
         except urllib.error.HTTPError as error:
             failure = {'case': name, 'status': error.code, 'passed': False,
                        'error': error.read().decode(errors='replace')}
@@ -85,15 +89,26 @@ def main():
                 models = {e['data'].get('model') for e in events if e['data'].get('model')}
                 has_usage = any((e['data'].get('usage') or {}).get('completion_tokens', 0) > 0
                                 for e in events)
+                exact = content.strip().strip('.').lower() == 'silver meadow'
+                correct = exact or (args.allow_explanatory_text and
+                                    bool(re.search(r'\bsilver meadow\b', content.lower())))
                 record.update(events=events, done=done, content=content,
-                              passed=done and content.strip().strip('.').lower() == 'silver meadow'
+                              exact_format_passed=exact,
+                              passed=done and correct
                               and models == {expected_model} and route_matches and has_usage)
             else:
                 data = json.load(response)
                 content = data['choices'][0]['message']['content']
-                correct = (content.strip().strip('.').lower() == 'violet' if name == 'history'
-                           else json.loads(content) == {'sum': 42})
+                try:
+                    correct = (content.strip().strip('.').lower() == 'violet' if name == 'history'
+                               else json.loads(content) == {'sum': 42})
+                except (ValueError, TypeError):
+                    correct = False
+                exact = correct
+                if name == 'history' and args.allow_explanatory_text:
+                    correct = correct or bool(re.search(r'\bviolet\b', content.lower()))
                 record.update(response=data, content=content,
+                              exact_format_passed=exact,
                               passed=correct and data.get('model') == expected_model and route_matches
                               and data.get('usage', {}).get('completion_tokens', 0) > 0)
         record['seconds'] = time.monotonic() - start
@@ -101,8 +116,9 @@ def main():
         results.append({'case': name, 'passed': record['passed'], 'seconds': record['seconds']})
         print(json.dumps(results[-1]), flush=True)
     summary = {'classification': 'systems_lifecycle_only_not_quality_evidence',
-               'api_base': args.api_base, 'model': args.model, 'native_model': NATIVE_MODEL,
+               'api_base': args.api_base, 'model': args.model,
                'expected_deployment_id': args.deployment_id,
+               'allow_explanatory_text': args.allow_explanatory_text,
                'source_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                'results': results, 'passed': all(r['passed'] for r in results)}
     (args.output / 'result.json').write_text(json.dumps(summary, indent=2) + '\n')

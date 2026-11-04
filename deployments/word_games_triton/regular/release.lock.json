@@ -6,9 +6,10 @@
     },
     "api_base": "http://10.158.218.141:18080/v1",
     "host_bind": "10.158.218.141:18080",
-    "lifecycle": "Triton model owns native worker and allowlisted HTTP proxy; no second weights instance",
+    "lifecycle": "Triton CPU router owns public endpoint; explicit native model owns weights, coordinated by GPU lease",
     "native_listen": "127.0.0.1:18081",
-    "proxy_listen": "0.0.0.0:18080"
+    "proxy_listen": "0.0.0.0:18080",
+    "proxy_owner": "word-games-model-router"
   },
   "container": "triton",
   "cuda": {
@@ -309,9 +310,9 @@
     "report": "docs/08 - Analysis/word-games/2026-10-31_word-games-70tps.md"
   },
   "repository_files": {
-    "1/chat_proxy.py": "753a38812bd043fb221a4c76c8325661ae14d762b9463561212e4b3e70e27377",
-    "1/model.py": "08d562e7de2de9806f3c989adb4aa703bcdcf0c295025ae2f85cf90cef07eb76",
-    "1/runtime.json": "4187e08a86f4c3eee057e01f88b084d353ec1a82fbc3b3fe561d911eb4cc8c0f",
+    "1/chat_proxy.py": "af5f57afe3ca653039e9716f2f7e64f34b80a9e22f592ceb6fb29af31dfaf64e",
+    "1/model.py": "8d1347300b05c3092f06f77bb57e408212654843f69bc01c9a421b93f3a26073",
+    "1/runtime.json": "d1222598b278563e735b96a99eea7ed6243ac20e61f9da9151944a8a3557d76a",
     "config.pbtxt": "9e43021f27f3d1378dd8de5fd08a61af966019182919f91d0c0cc258f9b2207e"
   },
   "schema_version": 2,

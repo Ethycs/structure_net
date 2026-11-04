@@ -1,156 +1,157 @@
-# WORD_GAMES model in regular Triton
+# WORD_GAMES models through Triton and LiteLLM
 
-The optimized Empero Qwen3.8-35B-A3B Q4_K_M model is an ordinary model in the
-existing Triton repository. The regular `triton` container serves it on HTTP
-port **8000**, with gRPC on 8001 and metrics on 8002. Its model name is
-`word-games-qwen38-native`.
+Deployment status: the three new checkpoints and Triton packages are installed
+and validated. Registration of their new LiteLLM aliases has been requested from
+201-1002 and is awaiting confirmation. The existing Empero alias remains registered.
+Direct native chat and the local lifecycle commands are available now.
 
-## Model lifecycle
+The catalog uses the existing `triton` container and model repository. A CPU-only
+Triton model, `word-games-model-router`, exposes OpenAI chat on the existing trusted
+ZeroTier endpoint `http://10.158.218.141:18080/v1`. It selects a native model using
+the request's `model` field and calls Triton's explicit load/unload API.
 
-Use Triton's normal explicit-control API:
+| LiteLLM model name | Triton weights model | Checkpoint | GGUF bytes |
+| --- | --- | --- | ---: |
+| `qwen3.6-35b-a3b-hauhau` | `word-games-hauhau` | HauhauCS Qwen3.6-35B-A3B Aggressive, Q4_K_M | 21,166,758,016 |
+| `dolphin-x1-trinity-nano` | `word-games-dolphin` | Dolphin X1 Trinity Nano, publisher Q5_K_M | 4,384,985,600 |
+| `orion-26b-a4b` | `word-games-orion` | TheDrummer Orion-26B-A4B-v1.1, bartowski Q4_K_M | 17,966,167,008 |
+| `qwen3.8-35b-a3b` | `word-games-qwen38-native` | Existing Empero Qwen3.8, Q4_K_M | 21,713,462,944 |
 
-```bash
-curl -X POST http://127.0.0.1:8000/v2/repository/models/word-games-qwen38-native/load -d '{}'
-curl -f http://127.0.0.1:8000/v2/models/word-games-qwen38-native/ready
-curl -X POST http://127.0.0.1:8000/v2/repository/models/word-games-qwen38-native/unload -d '{}'
+The existing Empero upstream alias is `word-games-empero-qwen38-35b-a3b`.
+The three new upstream aliases equal their LiteLLM names. Source repositories,
+revision hashes, file sizes, SHA-256 hashes and local paths are in
+[`fleet/catalog.json`](fleet/catalog.json). Gateway configuration is in
+[`fleet/litellm-routes.yaml`](fleet/litellm-routes.yaml).
+
+## Selection and GPU memory
+
+```mermaid
+flowchart LR
+    Client -->|model name| LiteLLM
+    LiteLLM -->|OpenAI chat :18080| Router[Triton CPU router]
+    Router -->|explicit load/unload :8000| Triton[Triton model repository]
+    Triton --> Selected[One selected native weights process]
+    Router -->|container loopback; streamed response| Selected
 ```
 
-Repository-root convenience commands call those same APIs:
+Only one catalog model occupies GPU memory at a time. The router waits for an
+active response, including its entire SSE stream, before switching. A client
+which disconnects does not release the lease until the upstream response is
+drained. Repeated requests for the resident model reuse its loaded weights.
+Unknown model names are rejected before any GPU changes; failed loads return an
+error and never use another model as a fallback. A process lock additionally
+rejects overlapping direct Triton loads of catalog models.
+
+Dolphin uses the RTX 2060 SUPER. HauHau, Orion and Empero use whole-layer placement
+across the three reserved GPUs. Each native worker retains the patched llama.cpp
+runtime, GPU expert processing, Flash Attention, Q8_0 K/V, an 8,192-token shared
+input/output context, one generation slot, and disabled speculative decoding.
+The GGUF's own chat template is used for each architecture. These routes are
+text-only; tool calling and vision are not advertised.
+
+The router is lifecycle glue added by this deployment. LiteLLM itself does not
+load Triton models or reserve GPUs. The user's open-ended reservation of the three
+GPUs remains in force until released; unloading weights does not relinquish that
+reservation or restore infrastructure's LLM/OCR workloads.
+
+## Usage
+
+Use the existing LiteLLM API at `https://10.158.218.193:4000/v1` with the usual API
+key and choose one of the table's model names. Default output is capped at 1,024
+tokens. Cold selection loads weights before the response starts; allow up to 600
+seconds. Warm requests skip loading. Concurrent generations are serialized.
+
+From the repository root:
 
 ```bash
+# Preload a particular model; ordinary LiteLLM inference also selects it.
+pixi run word-games-load dolphin-x1-trinity-nano
+pixi run word-games-load qwen3.6-35b-a3b-hauhau
+pixi run word-games-load orion-26b-a4b
+
+# No argument preserves the original Empero default.
 pixi run word-games-load
-pixi run word-games-unload
 pixi run word-games-status
+
+# Release weights; the router remains ready to load a later request.
+pixi run word-games-unload
+
+# Drain and unload weights, then stop the router's HTTP endpoint.
+pixi run word-games-down
+
+# Verify installed file hashes and checkpoint identities.
 pixi run word-games-verify
 ```
 
-`word-games-up` and `word-games-down` are aliases for model load/unload. They
-**do not start, stop or recreate the shared Triton server**. Infrastructure owns
-that server through `triton.service`. The server has explicit model control and
-does not automatically load WORD_GAMES on startup. Unload waits for the native
-child to exit, releasing its GPU allocations while Triton remains available.
+These commands never restart the shared Triton container. After a container
+restart, the CPU router must be loaded before LiteLLM can reach it. Running
+`pixi run python -m experiments.word_games_triton.fleet start` loads the router
+without loading GPU weights. `word-games-status` is read-only and never restarts
+a stopped router.
+Infrastructure can persist that startup behavior with
+`--load-model=word-games-model-router` alongside `--model-control-mode=explicit`.
+Do not automatically load the four GPU models at boot.
 
-The operator has reserved all three GPUs open-ended until explicit release;
-60-second preemption is not authorized. This is an operator decision, not an
-implementation of the planned reservation system. Do not load competing GPU
-models alongside this model. Coordinate eventual release with PBX 201-1002;
-infrastructure handles restoring its LLM/OCR workloads.
+The router's management contract is available only through normal Triton inference:
+`POST /v2/models/word-games-model-router/infer`, a BYTES input named `control`
+containing `{"action":"status"}`, `{"action":"unload"}`, or
+`{"action":"load","model":"<upstream alias>"}`. The public chat endpoint exposes
+only `GET /v1/models` and `POST /v1/chat/completions`. Native `/slots`, `/props`,
+`/completion` and other management paths stay private on container loopback.
 
-## Installed package
+## Installation and reproduction
 
-Versioned source: `regular/models/word-games-qwen38-native/`.
-Installed model: `/data/models/_triton/word-games-qwen38-native/`.
-
-```text
-word-games-qwen38-native/
-  config.pbtxt
-  installation.json
-  1/
-    model.py
-    chat_proxy.py            # allowlisted OpenAI HTTP transport
-    runtime.json
-    runtime-assets/
-      native/    # pinned patched llama.cpp executables and libraries
-      sysroot/   # isolated loader/libraries, used only by the native child
-      cuda/      # pinned CUDA runtime and cuBLAS libraries
-```
-
-The regular server already mounts `/data/models/_triton` as `/models` and
-`/data/models` as `/model-weights`, both read-only. No research workspace mounts
-or separate WORD_GAMES container are required. The 22 GB GGUF is referenced at
-its existing `/model-weights/Empero-Qwen3.8-35B-A3B-Distill-GGUF/` location;
-it is not copied into the model repository.
-
-`pixi run word-games-install` stages and verifies the model package atomically,
-leaving other repository entries untouched. It copies about 1.1 GiB of pinned
-runtime libraries from the existing validated build and host CUDA installation.
-`regular/release.lock.json` pins those files, symlink targets, model sources,
-weights and original image identity. Installation is idempotent for an unchanged
-release and rejects a mismatched existing entry instead of overwriting it.
-
-## Preserved runtime
-
-- Original Q4_K_M weights; llama.cpp b11960 with the sampling-output acquisition patch.
-- All experts on GPU; whole-layer placement across RTX 3060 / 2060 SUPER / 2060.
-- Flash Attention, Q8_0 K/V, 8,192-token context, one native slot.
-- Logical batch 2,048; microbatch 1,024; one CPU compute thread.
-- Unused context checkpoints disabled; speculative decoding and prefix caching disabled.
-- One CPU Triton backend instance owns the native process; no duplicate model per GPU.
-
-The native child uses UUID-based GPU ordering, leaving the shared server's
-mapping for other models unchanged. `/opt/infra/docker-compose.yml` exposes
-host devices `[1,0,2]`, appending the SUPER to its prior `[1,0]` list. The exact
-change is retained in `regular/triton-gpu-visibility.patch` for infrastructure's
-canonical deployment source. Visibility alone does not load any models.
-
-The inference contract is preserved: `text_input` plus optional
-`sampling_parameters`, JSON output, temperature 0, seed 73, and up to 1,024
-output tokens. Logs and CUDA cache live inside the regular container under
-`/tmp/word-games-qwen38-native/`.
-
-## Chat through LiteLLM
-
-Infrastructure has registered `qwen3.8-35b-a3b` in LiteLLM as an explicitly
-grandfathered entry (`managed_by=grandfathered`, `certified=false`). Its model ID
-is `8b54306d-a232-4c50-8ca6-9defe9969133`. The reconciler leaves this entry intact;
-the common acceptance framework is still being developed. The route below is
-the deployed configuration record, not an instruction to create a duplicate.
-`regular/chat_validation.json` records the endpoint and gateway checks. These
-transport checks do not constitute full model or WORD_GAMES certification.
-
-The Triton model owns an allowlisted HTTP proxy at
-`http://10.158.218.141:18080/v1` on the trusted ZeroTier network. Only
-`POST /v1/chat/completions` and `GET /v1/models` are exposed. Native management
-endpoints such as `/slots` and `/props` are not forwarded. The native worker
-listens only on container loopback at port 18081; the proxy streams chat
-responses without buffering the complete generation. Compose publishes port
-18080 only on the host's ZeroTier address. The endpoint exists only while
-`word-games-qwen38-native` is loaded, and uses the same weights, GPU placement,
-and native optimizations as the research inference interface.
-
-`regular/litellm-route.yaml` contains the gateway entry for
-`qwen3.8-35b-a3b`, pointing to upstream model
-`word-games-empero-qwen38-35b-a3b`. Chat uses the native `/v1/chat/completions`
-interface so message roles, history, streaming, and token usage reach the
-native implementation. The existing Triton `text_input` interface retains its
-fixed research JSON contract. The gateway route uses the normal LiteLLM API key;
-the upstream follows the infrastructure's trusted-network policy.
-
-The context budget is 8,192 tokens shared between input and output. The gateway
-entry defaults to 1,024 output tokens, temperature zero, and seed 73. Tool calling
-and multimodal input are not advertised by this route. No automatic model
-loading or GPU reservation management is added by this integration.
-
-The host port change is preserved in `regular/triton-chat-port.patch` for the
-infrastructure-owned Compose source. Apply it alongside the existing GPU
-visibility patch when reconstructing this deployment. The lightweight HTTP
-proxy runs inside the model's Python backend; no second weight process or
-additional container is required.
-
-Run a fresh systems check against the configured route from the repository root:
+Checkpoints live on `/data/models`, mounted read-only as `/model-weights` inside
+Triton. Installed packages live under `/data/models/_triton`, mounted read-only
+as `/models`. Packages contain their pinned native executable, CUDA libraries
+and isolated sysroot; no research checkout is mounted into Triton.
 
 ```bash
-pixi run python -m experiments.word_games_triton.check_chat_route \
-  --deployment-id 8b54306d-a232-4c50-8ca6-9defe9969133 \
-  --output data/experiments/word_games/<fresh-run>/gateway
+pixi run python -m experiments.word_games_triton.download_catalog \
+  --receipt data/experiments/word_games/<fresh-run>/downloads.json
+pixi run word-games-install
 ```
 
-This checks conversation history, JSON output, and streaming with fallbacks
-disabled. It reads the existing `LITELLM_KEY` from `.env`, never records the key,
-and requires a new output directory. It is not a task-quality or throughput test.
+The downloader checks destination space, resumes `.part` files, pins revisions,
+verifies complete SHA-256 hashes, and only then renames each completed file.
+The selected downloads total 43.5 GB; reserve at least 50 GB including runtime packages.
+The rejected community Dolphin Q4 file is retained as a diagnostic artifact (3.8 GB).
+Checksum reads are serialized for the rotational data disk. Installation refuses
+to replace a loaded model, stages outside the model repository, and records all
+installed file hashes in each model's `installation.json`. Unload the router
+with `word-games-down` before reinstalling all entries.
 
-The previous approximately 67 full-request tokens/s measurement applies to the
-validated workload, not a new benchmark of this migration. This package supplies
-the model runtime; V3/V4 WORD_GAMES orchestration remains separate.
+`regular/release.lock.json` continues to pin the native runtime assets and Empero
+legacy backend. `fleet.py` is the current installer and lifecycle controller;
+the older regular and standalone installers are retained for reproduction.
+The Empero `text_input`/`sampling_parameters` Triton contract remains available.
+The additional models provide the same JSON research contract using their own
+native templates. The router adds normal chat, history and streaming independently.
 
-Migration validation is recorded in `regular/validation.json`: 29 focused tests
-passed, and six inference checks after load/reload exactly matched the three
-baseline prompts. Unload kept the shared server healthy and released the native
-model's GPU memory. The observed first load took 230.5 seconds, reload 80.3
-seconds, and unload 2.1 seconds; allow several minutes for model loading.
+The live Compose configuration exposes GPU device IDs `[1,0,2]` and publishes
+port 18080 only on `10.158.218.141`. Infrastructure owns the canonical Compose
+configuration and shared `triton.service`; retain the GPU and chat-port changes
+in `regular/triton-gpu-visibility.patch` and `regular/triton-chat-port.patch`
+when rebuilding it.
 
-The earlier standalone Compose, root `models/`, root lock and validation files
-are retained for reproduction. Their lifecycle controller is now
-`experiments.word_games_triton.standalone_service`; ordinary commands use the
-regular service above. Do not run the historical standalone deployment alongside
-the regular model.
+## Validation
+
+The new deployment evidence is under
+`data/experiments/word_games/20261103_model_fleet_v1/`. Checks cover checkpoint
+integrity, model identity, chat history, JSON, SSE with usage, direct Triton
+inference, memory while loaded, and GPU release on unload. These are deployment
+checks, not task-quality, refusal-rate or WORD_GAMES V3/V4 certification. The
+older approximately 67 tok/s result applies only to the previous Empero workload.
+
+```bash
+pixi run python -m experiments.word_games_triton.validate_fleet \
+  dolphin-x1-trinity-nano --output data/experiments/word_games/<fresh-run>/native
+pixi run python -m experiments.word_games_triton.check_chat_route \
+  --model dolphin-x1-trinity-nano --output data/experiments/word_games/<fresh-run>/gateway
+```
+
+Dolphin uses the publisher’s Q5_K_M because the community Q4_K_M produced repetitive,
+incorrect output even with FP16 KV. It gives coherent answers with the publisher
+checkpoint, but may add explanatory text despite one-word/two-word instructions.
+Its deployment check uses `--allow-explanatory-text` and retains separate
+`exact_format_passed` fields; this is not a claim of exact instruction compliance.

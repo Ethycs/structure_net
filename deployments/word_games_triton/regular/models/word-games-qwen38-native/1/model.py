@@ -1,5 +1,6 @@
 """Triton Python backend: one native server per explicit model instance."""
 import http.client
+import fcntl
 import importlib.util
 import json
 import os
@@ -44,13 +45,13 @@ def sampling(text):
 
 class TritonPythonModel:
     def initialize(self, args):
-        self.process = self.log = self.http = self.chat_proxy = None
+        self.process = self.log = self.http = self.chat_proxy = self.gpu_lock = None
         config = json.loads((Path(__file__).parent / 'runtime.json').read_text())
         self.profile = config['profile']
         assets = Path(__file__).parent / 'runtime-assets'
         native, sysroot, cuda = (assets / name for name in ('native', 'sysroot', 'cuda'))
         self.http = http.client.HTTPConnection('127.0.0.1', config['native_port'], timeout=240)
-        log_dir = Path(tempfile.gettempdir()) / 'word-games-qwen38-native'
+        log_dir = Path(tempfile.gettempdir()) / args.get('model_name', 'word-games-qwen38-native')
         log_dir.mkdir(parents=True, exist_ok=True)
         self.log_path = log_dir / ('native-' + str(time.time_ns()) + '.log')
         self.log = self.log_path.open('w')
@@ -68,22 +69,26 @@ class TritonPythonModel:
                    ':'.join(map(str, (sysroot, native, cuda))) + ':/usr/local/nvidia/lib64:/usr/lib/x86_64-linux-gnu',
                    str(native / 'llama-server'), *config['native_args']]
         try:
+            self.gpu_lock = open('/tmp/word-games-model-gpus.lock', 'a')
+            fcntl.flock(self.gpu_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             # The explicit loader becomes /proc/self/exe; GGML also searches cwd
             # for its CUDA and CPU plugins, so keep that directory explicit.
             self.process = subprocess.Popen(command, cwd=native, env=env, stdout=self.log,
                                             stderr=subprocess.STDOUT, start_new_session=True)
-            deadline = time.monotonic() + 240
+            startup_timeout = config.get('startup_timeout_seconds', 480)
+            deadline = time.monotonic() + startup_timeout
             while time.monotonic() < deadline:
                 if self.process.poll() is not None:
                     raise RuntimeError('native process exited; inspect ' + str(self.log_path))
                 try:
                     self.call('GET', '/health')
-                    self.chat_proxy = start_chat_proxy(config['public_chat_port'], config['native_port'])
+                    if config.get('public_chat_port'):
+                        self.chat_proxy = start_chat_proxy(config['public_chat_port'], config['native_port'])
                     return
                 except (OSError, http.client.HTTPException, RuntimeError):
                     self.http.close()
                     time.sleep(.25)
-            raise TimeoutError('native model load exceeded 240 seconds')
+            raise TimeoutError('native model load exceeded ' + str(startup_timeout) + ' seconds')
         except BaseException:
             self.finalize()
             raise
@@ -148,3 +153,6 @@ class TritonPythonModel:
                 self.process.wait(timeout=10)
         if self.log:
             self.log.close()
+        if self.gpu_lock:
+            self.gpu_lock.close()
+            self.gpu_lock = None

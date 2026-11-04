@@ -1,0 +1,98 @@
+{
+  "created_at": "2026-11-04T00:06:21.432295+00:00",
+  "classification": "deployment_validation_not_task_quality_or_refusal_rate",
+  "local_deployment_complete": true,
+  "litellm_new_aliases_registered": false,
+  "registration_owner": "201-1002",
+  "registration_blocker": "Existing inference key returns HTTP 403 from /model/new; user explicitly delegated registration to 201-1002.",
+  "models": [
+    {
+      "alias": "qwen3.6-35b-a3b-hauhau",
+      "triton_model": "word-games-hauhau",
+      "quantization": "Q4_K_M",
+      "weights": {
+        "repo": "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
+        "revision": "f12a584fecbeb5f20001130d8ecd66c9327ae685",
+        "file": "Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+        "path": "/data/models/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+        "size": 21166758016,
+        "sha256": "bbef58c37ce88820be9d98b6437f1cf4bac890c947bd55fc7b68e22098574231"
+      },
+      "systems_passed": true,
+      "exact_format_passed": true,
+      "loaded_memory_csv": "index, name, memory.total [MiB], memory.used [MiB], memory.free [MiB]\n0, NVIDIA GeForce RTX 3060, 12288 MiB, 10395 MiB, 1513 MiB\n1, NVIDIA GeForce RTX 2060, 6144 MiB, 4696 MiB, 1043 MiB\n2, NVIDIA GeForce RTX 2060 SUPER, 8192 MiB, 6784 MiB, 1003 MiB\n",
+      "evidence": "data/experiments/word_games/20261103_model_fleet_v1/hauhau_native",
+      "result_sha256": "195f36a57f538c5b3925ebcff1d15c7ddfaf662cbda98801d5d8f64601fe20f6"
+    },
+    {
+      "alias": "dolphin-x1-trinity-nano",
+      "triton_model": "word-games-dolphin",
+      "quantization": "Q5_K_M",
+      "weights": {
+        "repo": "dphn/Dolphin-X1-Trinity-Nano-GGUF",
+        "revision": "5a4c1107c2b626e722faf75bfe6066c08dd75035",
+        "file": "dolphin-x1-nano-Q5_K_M.gguf",
+        "size": 4384985600,
+        "sha256": "0d278c920dd877181695a0db70b27e5f9bc0e7480263c0ead04d22bc3d180224",
+        "path": "/data/models/Dolphin-X1-Trinity-Nano-GGUF/dolphin-x1-nano-Q5_K_M.gguf"
+      },
+      "systems_passed": true,
+      "exact_format_passed": false,
+      "loaded_memory_csv": "index, name, memory.total [MiB], memory.used [MiB], memory.free [MiB]\n0, NVIDIA GeForce RTX 3060, 12288 MiB, 183 MiB, 11724 MiB\n1, NVIDIA GeForce RTX 2060, 6144 MiB, 150 MiB, 5589 MiB\n2, NVIDIA GeForce RTX 2060 SUPER, 8192 MiB, 4588 MiB, 3199 MiB\n",
+      "evidence": "data/experiments/word_games/20261103_model_fleet_v1/dolphin_final_native",
+      "result_sha256": "e4e66b248db899100958813126b5750ce31d662380f014741d5ada2f08f24887"
+    },
+    {
+      "alias": "orion-26b-a4b",
+      "triton_model": "word-games-orion",
+      "quantization": "Q4_K_M",
+      "weights": {
+        "repo": "bartowski/TheDrummer_Orion-26B-A4B-v1.1-GGUF",
+        "revision": "ecc1d958b6b4a83445ab80262965e151e00d97ac",
+        "file": "TheDrummer_Orion-26B-A4B-v1.1-Q4_K_M.gguf",
+        "path": "/data/models/TheDrummer_Orion-26B-A4B-v1.1-GGUF/TheDrummer_Orion-26B-A4B-v1.1-Q4_K_M.gguf",
+        "size": 17966167008,
+        "sha256": "b0374debf3034de2c149ef4e3c3d3f30b67d27df0158ef620a445c2598754813"
+      },
+      "systems_passed": true,
+      "exact_format_passed": true,
+      "loaded_memory_csv": "index, name, memory.total [MiB], memory.used [MiB], memory.free [MiB]\n0, NVIDIA GeForce RTX 3060, 12288 MiB, 8757 MiB, 3151 MiB\n1, NVIDIA GeForce RTX 2060, 6144 MiB, 4776 MiB, 963 MiB\n2, NVIDIA GeForce RTX 2060 SUPER, 8192 MiB, 6076 MiB, 1711 MiB\n",
+      "evidence": "data/experiments/word_games/20261103_model_fleet_v1/orion_native",
+      "result_sha256": "d8e831fceaf013e3c0a2d45e0440fc7f20f6c89b88943dd0c1044112b9ad5175"
+    }
+  ],
+  "focus_tests_passed": 50,
+  "installed_files_verified": 636,
+  "public_boundary_checks_passed": 6,
+  "lifecycle": "one resident GPU model; automatic selection through Triton CPU router; explicit unload and stop",
+  "artifact_root": "data/experiments/word_games/20261103_model_fleet_v1",
+  "space": {
+    "destination": "/data/models",
+    "before_free_bytes": 1341315874816,
+    "initial_download_bytes": 42891059200,
+    "selected_model_bytes": 43517910624,
+    "rejected_diagnostic_bytes": 3758134176,
+    "after_free_bytes": 1290595315712,
+    "runtime_reserve_bytes": 10737418240,
+    "simultaneous_gpu_models": 1
+  },
+  "failed_attempts": [
+    "dolphin_native",
+    "dolphin_q4_f16",
+    "dolphin_author_q5_native"
+  ],
+  "reboot": "CPU-router --load-model patch prepared; canonical infrastructure integration awaits owner.",
+  "existing_empero_gateway": {
+    "passed": true,
+    "deployment_id": "8b54306d-a232-4c50-8ca6-9defe9969133",
+    "evidence": "data/experiments/word_games/20261103_model_fleet_v1/empero_gateway_regression/result.json",
+    "sha256": "674e8b151abd493212487d6b6c2c5e8807e000576c358aa1eba89997f4dad9e2",
+    "cold_request_seconds": 158.45224062609486
+  },
+  "remaining_work": [
+    "201-1002 registers three prepared LiteLLM aliases and supplies deployment IDs",
+    "Verify each new gateway alias after registration",
+    "Infrastructure persists CPU router autoload and existing GPU/port changes in canonical Compose"
+  ],
+  "full_request_complete": false
+}

@@ -1,0 +1,76 @@
+# One router; native weights are loaded by explicit Triton model control.
+# Add the three new names. Update the existing qwen3.8-35b-a3b entry in place;
+# preserve deployment ID 8b54306d-a232-4c50-8ca6-9defe9969133.
+model_list:
+  - model_name: qwen3.6-35b-a3b-hauhau
+    litellm_params:
+      model: openai/qwen3.6-35b-a3b-hauhau
+      api_base: http://10.158.218.141:18080/v1
+      api_key: unused
+      temperature: 0
+      seed: 73
+      max_tokens: 1024
+      timeout: 600
+      num_retries: 0
+    model_info:
+      managed_by: grandfathered
+      certified: false
+      mode: chat
+      max_input_tokens: 8192
+      max_output_tokens: 1024
+      supports_function_calling: false
+      supports_vision: false
+  - model_name: dolphin-x1-trinity-nano
+    litellm_params:
+      model: openai/dolphin-x1-trinity-nano
+      api_base: http://10.158.218.141:18080/v1
+      api_key: unused
+      temperature: 0
+      seed: 73
+      max_tokens: 1024
+      timeout: 600
+      num_retries: 0
+    model_info:
+      managed_by: grandfathered
+      certified: false
+      mode: chat
+      max_input_tokens: 8192
+      max_output_tokens: 1024
+      supports_function_calling: false
+      supports_vision: false
+  - model_name: orion-26b-a4b
+    litellm_params:
+      model: openai/orion-26b-a4b
+      api_base: http://10.158.218.141:18080/v1
+      api_key: unused
+      temperature: 0
+      seed: 73
+      max_tokens: 1024
+      timeout: 600
+      num_retries: 0
+    model_info:
+      managed_by: grandfathered
+      certified: false
+      mode: chat
+      max_input_tokens: 8192
+      max_output_tokens: 1024
+      supports_function_calling: false
+      supports_vision: false
+  - model_name: qwen3.8-35b-a3b
+    litellm_params:
+      model: openai/word-games-empero-qwen38-35b-a3b
+      api_base: http://10.158.218.141:18080/v1
+      api_key: unused
+      temperature: 0
+      seed: 73
+      max_tokens: 1024
+      timeout: 600
+      num_retries: 0
+    model_info:
+      managed_by: grandfathered
+      certified: false
+      mode: chat
+      max_input_tokens: 8192
+      max_output_tokens: 1024
+      supports_function_calling: false
+      supports_vision: false

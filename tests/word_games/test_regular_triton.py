@@ -56,9 +56,9 @@ def test_regular_backend_confines_gpu_order_to_native_child(monkeypatch, tmp_pat
     assert module.os.environ['CUDA_VISIBLE_DEVICES'] == 'parent-order'
     assert str(popen.call_args.kwargs['cwd']).endswith('runtime-assets/native')
     assert command[0].endswith('runtime-assets/sysroot/ld-linux-x86-64.so.2')
-    proxy.assert_called_once_with(18080, 18081)
-    model.log.close()
-    model.http.close()
+    proxy.assert_not_called()
+    child.poll.return_value = 0
+    model.finalize()
 
 
 @pytest.fixture

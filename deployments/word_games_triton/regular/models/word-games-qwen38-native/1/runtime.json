@@ -62,5 +62,5 @@
     "GPU-8cf440df-e8f4-2210-a2cd-29a9d00aca14"
   ],
   "native_port": 18081,
-  "public_chat_port": 18080
+  "public_chat_port": null
 }

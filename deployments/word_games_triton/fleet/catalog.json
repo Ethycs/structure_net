@@ -1,0 +1,63 @@
+{
+  "models": [
+    {
+      "alias": "qwen3.6-35b-a3b-hauhau",
+      "triton_model": "word-games-hauhau",
+      "native_port": 18082,
+      "download": true,
+      "weights": {
+        "repo": "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
+        "revision": "f12a584fecbeb5f20001130d8ecd66c9327ae685",
+        "file": "Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+        "path": "/data/models/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+        "size": 21166758016,
+        "sha256": "bbef58c37ce88820be9d98b6437f1cf4bac890c947bd55fc7b68e22098574231"
+      },
+      "quantization": "Q4_K_M"
+    },
+    {
+      "alias": "dolphin-x1-trinity-nano",
+      "triton_model": "word-games-dolphin",
+      "native_port": 18083,
+      "download": true,
+      "weights": {
+        "repo": "dphn/Dolphin-X1-Trinity-Nano-GGUF",
+        "revision": "5a4c1107c2b626e722faf75bfe6066c08dd75035",
+        "file": "dolphin-x1-nano-Q5_K_M.gguf",
+        "size": 4384985600,
+        "sha256": "0d278c920dd877181695a0db70b27e5f9bc0e7480263c0ead04d22bc3d180224",
+        "path": "/data/models/Dolphin-X1-Trinity-Nano-GGUF/dolphin-x1-nano-Q5_K_M.gguf"
+      },
+      "quantization": "Q5_K_M",
+      "notes": "Publisher GGUF. Community Q4_K_M gave repetitive output with Q8 and FP16 KV; excluded from deployment."
+    },
+    {
+      "alias": "orion-26b-a4b",
+      "triton_model": "word-games-orion",
+      "native_port": 18084,
+      "download": true,
+      "weights": {
+        "repo": "bartowski/TheDrummer_Orion-26B-A4B-v1.1-GGUF",
+        "revision": "ecc1d958b6b4a83445ab80262965e151e00d97ac",
+        "file": "TheDrummer_Orion-26B-A4B-v1.1-Q4_K_M.gguf",
+        "path": "/data/models/TheDrummer_Orion-26B-A4B-v1.1-GGUF/TheDrummer_Orion-26B-A4B-v1.1-Q4_K_M.gguf",
+        "size": 17966167008,
+        "sha256": "b0374debf3034de2c149ef4e3c3d3f30b67d27df0158ef620a445c2598754813"
+      },
+      "quantization": "Q4_K_M"
+    },
+    {
+      "alias": "word-games-empero-qwen38-35b-a3b",
+      "public_alias": "qwen3.8-35b-a3b",
+      "triton_model": "word-games-qwen38-native",
+      "native_port": 18081,
+      "download": false,
+      "weights": {
+        "bytes": 21713462944,
+        "path": "/data/models/Empero-Qwen3.8-35B-A3B-Distill-GGUF/Qwen3.8-35B-A3B-Q4_K_M.gguf",
+        "sha256": "196103269085bc54c9b8f49ed21e9f53e1b56b465e8b796c6d8e31e06f63cfa5"
+      },
+      "quantization": "Q4_K_M"
+    }
+  ]
+}
