@@ -13,7 +13,7 @@ the request's `model` field and calls Triton's explicit load/unload API.
 | LiteLLM model name | Triton weights model | Checkpoint | GGUF bytes |
 | --- | --- | --- | ---: |
 | `qwen3.6-35b-a3b-hauhau` | `word-games-hauhau` | HauhauCS Qwen3.6-35B-A3B Aggressive, Q4_K_M | 21,166,758,016 |
-| `dolphin-x1-trinity-nano` | `word-games-dolphin` | Dolphin X1 Trinity Nano, publisher Q5_K_M | 4,384,985,600 |
+| `dolphin-x1-trinity-nano` | `word-games-dolphin` | Dolphin X1 Trinity Nano, original Q4_K_M experts + Q8_0 remaining weights | 4,038,439,776 |
 | `orion-26b-a4b` | `word-games-orion` | TheDrummer Orion-26B-A4B-v1.1, bartowski Q4_K_M | 17,966,167,008 |
 | `qwen3.8-35b-a3b` | `word-games-qwen38-native` | Existing Empero Qwen3.8, Q4_K_M | 21,713,462,944 |
 
@@ -48,6 +48,18 @@ runtime, GPU expert processing, Flash Attention, Q8_0 K/V, an 8,192-token shared
 input/output context, one generation slot, and disabled speculative decoding.
 The GGUF's own chat template is used for each architecture. These routes are
 text-only; tool calling and vision are not advertised.
+
+Dolphin uses a locally derived mixed-precision checkpoint. Controlled tensor swaps
+localized the original Q4 generation collapse to the weights outside the routed
+expert bank: raising those weights to Q8 recovered coherent responses, while
+raising only the experts did not. The expert tensors remain byte-identical to
+the original Q4_K_M file; that bank includes some Q6_K tensors. FP32 tensors are
+unchanged. The repair is 38.2% smaller than full Q8 and 7.9% smaller than the
+previous Q5 checkpoint. This repairs the catastrophic repetition, but Dolphin
+still often ignores terse-output instructions and can give flawed explanations.
+The small diagnostic suite does not establish general task accuracy or broad
+equivalence to Q8. See the [debug report](../../docs/08%20-%20Analysis/word_games/2026-11-03-dolphin-quantization-debug.md)
+and [reconstruction recipe](fleet/dolphin-mixed-precision.json).
 
 The router is lifecycle glue added by this deployment. LiteLLM itself does not
 load Triton models or reserve GPUs. The user's open-ended reservation of the three
@@ -109,13 +121,20 @@ and isolated sysroot; no research checkout is mounted into Triton.
 ```bash
 pixi run python -m experiments.word_games_triton.download_catalog \
   --receipt data/experiments/word_games/<fresh-run>/downloads.json
+pixi run python -m experiments.word_games_triton.prepare_dolphin \
+  --receipt data/experiments/word_games/<fresh-run>/dolphin-weights.json
 pixi run word-games-install
 ```
 
 The downloader checks destination space, resumes `.part` files, pins revisions,
 verifies complete SHA-256 hashes, and only then renames each completed file.
-The selected downloads total 43.5 GB; reserve at least 50 GB including runtime packages.
-The rejected community Dolphin Q4 file is retained as a diagnostic artifact (3.8 GB).
+Hauhau and Orion downloads total 39.1 GB. The selected derived Dolphin is 4.04 GB;
+rebuilding it also requires its pinned Q4 and Q8 source files (10.3 GB). Reserve
+at least 60 GB including inputs and runtime packages when preparing all three.
+`prepare_dolphin` downloads missing inputs, checks architecture/tokenizer metadata,
+copies tensors without requantization, verifies every tensor on readback, and
+checks the expected complete output SHA-256. The original Q4, calibrated Q4, Q5,
+Q8 and diagnostic mixtures are retained outside the selected deployment.
 Checksum reads are serialized for the rotational data disk. Installation refuses
 to replace a loaded model, stages outside the model repository, and records all
 installed file hashes in each model's `installation.json`. Unload the router
@@ -145,13 +164,14 @@ older approximately 67 tok/s result applies only to the previous Empero workload
 
 ```bash
 pixi run python -m experiments.word_games_triton.validate_fleet \
-  dolphin-x1-trinity-nano --output data/experiments/word_games/<fresh-run>/native
+  dolphin-x1-trinity-nano --allow-explanatory-text \
+  --output data/experiments/word_games/<fresh-run>/native
 pixi run python -m experiments.word_games_triton.check_chat_route \
-  --model dolphin-x1-trinity-nano --output data/experiments/word_games/<fresh-run>/gateway
+  --model dolphin-x1-trinity-nano --allow-explanatory-text \
+  --output data/experiments/word_games/<fresh-run>/gateway
 ```
 
-Dolphin uses the publisher’s Q5_K_M because the community Q4_K_M produced repetitive,
-incorrect output even with FP16 KV. It gives coherent answers with the publisher
-checkpoint, but may add explanatory text despite one-word/two-word instructions.
-Its deployment check uses `--allow-explanatory-text` and retains separate
+Dolphin's mixed-precision repair replaces the earlier publisher Q5_K_M selection.
+It may add explanatory text despite one-word/two-word instructions. Its deployment
+check uses `--allow-explanatory-text` and retains separate
 `exact_format_passed` fields; this is not a claim of exact instruction compliance.

@@ -1,0 +1,29 @@
+{
+  "classification": "locally_derived_mixed_precision_research_profile",
+  "base": {
+    "repo": "mradermacher/Dolphin-X1-Trinity-Nano-GGUF",
+    "revision": "58536b87c91b4cec596a97e9e7ae0b06d8ba1170",
+    "file": "Dolphin-X1-Trinity-Nano.Q4_K_M.gguf",
+    "path": "/data/models/Dolphin-X1-Trinity-Nano-GGUF/Dolphin-X1-Trinity-Nano.Q4_K_M.gguf",
+    "size": 3758134176,
+    "sha256": "3f7437cd201d8134345bca849e9c7e9209b36bfd91729045c07f1bccc848064a"
+  },
+  "donor": {
+    "repo": "mradermacher/Dolphin-X1-Trinity-Nano-GGUF",
+    "revision": "58536b87c91b4cec596a97e9e7ae0b06d8ba1170",
+    "file": "Dolphin-X1-Trinity-Nano.Q8_0.gguf",
+    "path": "/data/models/Dolphin-X1-Trinity-Nano-GGUF/Dolphin-X1-Trinity-Nano.Q8_0.gguf",
+    "size": 6531429280,
+    "sha256": "d75395ec5cba3899afe59ae68a2a3a81f1a6df999b5126cd1e23d2c0c1b0fb8e"
+  },
+  "group": "non_experts",
+  "output": {
+    "path": "/data/models/Dolphin-X1-Trinity-Nano-GGUF/Dolphin-X1-Trinity-Nano.Q4_K_M-experts-Q8_0-rest.gguf",
+    "file": "Dolphin-X1-Trinity-Nano.Q4_K_M-experts-Q8_0-rest.gguf",
+    "size": 4038439776,
+    "sha256": "c40c5976e13a101dc24694c4c36c744bd45e754c2e78b816e9292518df799b30"
+  },
+  "operation": "Copy routed expert tensors from the original Q4_K_M GGUF; all other tensors from Q8_0. No training, requantization or tokenizer changes. Every copied tensor is hash-verified.",
+  "validation_scope": "Recovers coherent requested content on 12 elementary probes. Strict instruction following and reasoning remain weak; this is not a general accuracy claim.",
+  "evidence_root": "data/experiments/word_games/20261103_dolphin_debug_v1"
+}

@@ -27,20 +27,20 @@
     {
       "alias": "dolphin-x1-trinity-nano",
       "triton_model": "word-games-dolphin",
-      "quantization": "Q5_K_M",
+      "quantization": "Q4_K_M-experts-Q8_0-rest",
       "weights": {
-        "repo": "dphn/Dolphin-X1-Trinity-Nano-GGUF",
-        "revision": "5a4c1107c2b626e722faf75bfe6066c08dd75035",
-        "file": "dolphin-x1-nano-Q5_K_M.gguf",
-        "size": 4384985600,
-        "sha256": "0d278c920dd877181695a0db70b27e5f9bc0e7480263c0ead04d22bc3d180224",
-        "path": "/data/models/Dolphin-X1-Trinity-Nano-GGUF/dolphin-x1-nano-Q5_K_M.gguf"
+        "path": "/data/models/Dolphin-X1-Trinity-Nano-GGUF/Dolphin-X1-Trinity-Nano.Q4_K_M-experts-Q8_0-rest.gguf",
+        "file": "Dolphin-X1-Trinity-Nano.Q4_K_M-experts-Q8_0-rest.gguf",
+        "size": 4038439776,
+        "sha256": "c40c5976e13a101dc24694c4c36c744bd45e754c2e78b816e9292518df799b30"
       },
       "systems_passed": true,
       "exact_format_passed": false,
-      "loaded_memory_csv": "index, name, memory.total [MiB], memory.used [MiB], memory.free [MiB]\n0, NVIDIA GeForce RTX 3060, 12288 MiB, 183 MiB, 11724 MiB\n1, NVIDIA GeForce RTX 2060, 6144 MiB, 150 MiB, 5589 MiB\n2, NVIDIA GeForce RTX 2060 SUPER, 8192 MiB, 4588 MiB, 3199 MiB\n",
-      "evidence": "data/experiments/word_games/20261103_model_fleet_v1/dolphin_final_native",
-      "result_sha256": "e4e66b248db899100958813126b5750ce31d662380f014741d5ada2f08f24887"
+      "loaded_memory_csv": "index, name, memory.total [MiB], memory.used [MiB], memory.free [MiB]\n0, NVIDIA GeForce RTX 3060, 12288 MiB, 183 MiB, 11724 MiB\n1, NVIDIA GeForce RTX 2060, 6144 MiB, 150 MiB, 5589 MiB\n2, NVIDIA GeForce RTX 2060 SUPER, 8192 MiB, 4186 MiB, 3601 MiB\n",
+      "evidence": "data/experiments/word_games/20261103_dolphin_debug_v1/deployed_mixed",
+      "result_sha256": "792a20a3fb34671eab58afdeeb8d4df35a7cc78291626125488dcb2aab7c358b",
+      "recipe": "deployments/word_games_triton/fleet/dolphin-mixed-precision.json",
+      "quality_note": "Recovered requested content on12diagnosticprobes; strictformat1/12; explanations can still be flawed. Not general accuracy evidence."
     },
     {
       "alias": "orion-26b-a4b",
@@ -61,7 +61,7 @@
       "result_sha256": "d8e831fceaf013e3c0a2d45e0440fc7f20f6c89b88943dd0c1044112b9ad5175"
     }
   ],
-  "focus_tests_passed": 50,
+  "focus_tests_passed": 52,
   "installed_files_verified": 636,
   "public_boundary_checks_passed": 6,
   "lifecycle": "one resident GPU model; automatic selection through Triton CPU router; explicit unload and stop",
@@ -70,7 +70,7 @@
     "destination": "/data/models",
     "before_free_bytes": 1341315874816,
     "initial_download_bytes": 42891059200,
-    "selected_model_bytes": 43517910624,
+    "selected_model_bytes": 43171364800,
     "rejected_diagnostic_bytes": 3758134176,
     "after_free_bytes": 1290595315712,
     "runtime_reserve_bytes": 10737418240,
@@ -94,5 +94,27 @@
     "Verify each new gateway alias after registration",
     "Infrastructure persists CPU router autoload and existing GPU/port changes in canonical Compose"
   ],
-  "full_request_complete": false
+  "full_request_complete": false,
+  "superseded_deployments": [
+    {
+      "alias": "dolphin-x1-trinity-nano",
+      "triton_model": "word-games-dolphin",
+      "quantization": "Q5_K_M",
+      "weights": {
+        "repo": "dphn/Dolphin-X1-Trinity-Nano-GGUF",
+        "revision": "5a4c1107c2b626e722faf75bfe6066c08dd75035",
+        "file": "dolphin-x1-nano-Q5_K_M.gguf",
+        "size": 4384985600,
+        "sha256": "0d278c920dd877181695a0db70b27e5f9bc0e7480263c0ead04d22bc3d180224",
+        "path": "/data/models/Dolphin-X1-Trinity-Nano-GGUF/dolphin-x1-nano-Q5_K_M.gguf"
+      },
+      "systems_passed": true,
+      "exact_format_passed": false,
+      "loaded_memory_csv": "index, name, memory.total [MiB], memory.used [MiB], memory.free [MiB]\n0, NVIDIA GeForce RTX 3060, 12288 MiB, 183 MiB, 11724 MiB\n1, NVIDIA GeForce RTX 2060, 6144 MiB, 150 MiB, 5589 MiB\n2, NVIDIA GeForce RTX 2060 SUPER, 8192 MiB, 4588 MiB, 3199 MiB\n",
+      "evidence": "data/experiments/word_games/20261103_model_fleet_v1/dolphin_final_native",
+      "result_sha256": "e4e66b248db899100958813126b5750ce31d662380f014741d5ada2f08f24887"
+    }
+  ],
+  "updated_at": "2026-11-04T04:02:18.843619+00:00",
+  "dolphin_debug_evidence": "data/experiments/word_games/20261103_dolphin_debug_v1"
 }
