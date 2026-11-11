@@ -1,6 +1,18 @@
 # WORD_GAMES
 
-A two-agent information firewall experiment. The current research endpoint is
+The reservation Bridges service is live at **`http://blackbox.zt:18092`**, using
+`qwen3.8-35b-a3b` through LiteLLM and the shared Triton WORD_GAMES router. It exposes
+separate doer/controller capabilities, persistent sessions, autonomous V3 mappings,
+the V4 checkpoint validator and bounded recursive deployment translation.
+See the [service runbook](../../deployments/word_games_bridges/README.md) for
+credentials, requests and lifecycle commands, and the
+[deployment evidence](../../deployments/word_games_bridges/validation.json) for
+the tests and retained development failures. This is the reservation workflow;
+general two-session messaging remains future work. Claude is testing only.
+
+## Historical V2 research harness (November 1)
+
+A two-agent information firewall experiment. Its historical standalone endpoint was
 **Empero's Qwen3.8-35B-A3B distillation, Q4_K_M**, served as
 `word-games-qwen38-native` at `http://127.0.0.1:8020` through Triton. The
 `free_whole1024` configuration uses the 3060 and both 2060 cards, Q8 KV,
@@ -19,8 +31,8 @@ synthetic scenarios. The receiver's structured state accuracy, the sender's
 operation accuracy, and disclosure checks are reported separately. Permitted
 actions and timing remain possible covert channels.
 
-Run ordinary live functionality from the repository root against the already
-loaded research endpoint:
+The command below belongs to the old standalone harness and does not address the
+current Bridges service. Its original ordinary-functionality invocation was:
 
 ```sh
 pixi run python -m experiments.word_games_triton.normal_operation --output data/experiments/word_games/NEW_NORMAL_OPERATION
@@ -42,14 +54,16 @@ success. Normal operation is not yet reliable across the tested workflow.
 The supplied [V3 autonomous mapping bundle has been reviewed](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-v3-bundle-review.md).
 Its saved 16-event trajectory, 91 mapping probes and four broader controls pass.
 Ordinary saved prompt/output pairs fit the current context; fresh mapping creation
-needs a higher output cap. Its operational mapping pipeline is not integrated,
-and replay success is not a fresh Qwen accuracy result.
+needs a higher output cap. This review predates the current service integration;
+its saved replay success is not a fresh Qwen accuracy result.
 
 The supplied [V4 bundle has been reviewed](../../docs/08%20-%20Analysis/word-games/2026-11-01_word-games-v4-bundle-review.md):
 its saved trajectories and checkpoint audits replay successfully, but its
-generated schema mappings/capsules are not integrated here. It requires adapting
-the disclosed view to this project's policy and increasing generation budgets
-for fresh mapping/capsule creation. The active vendor remains V2.
+generated schema mappings/capsules were not integrated at that review date.
+The current service under `bridges/` vendors its V4 codec, Engine and capsule
+validator, adds opaque payload handles, and stages mapping/deployment generation
+within the existing context. It compiles exact action contracts and transcodes
+checkpoints with the host codec. The legacy campaign's `vendor/` remains V2.
 
 ## Golf through poker on the central proxy
 

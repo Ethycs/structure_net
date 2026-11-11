@@ -1,0 +1,38 @@
+[Unit]
+Description=WORD_GAMES V3/V4 reservation bridges (CPU orchestration)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+User=word-games-bridges
+Group=word-games-bridges
+WorkingDirectory=/opt/word-games-bridges
+ExecStart=/opt/word-games-bridges/.pixi/envs/default/bin/python -m experiments.word_games.bridges.server --bind 10.158.218.141 --port 18092 --state /var/lib/word-games-bridges/bridges.sqlite --ca /etc/word-games-bridges/ca.crt
+Environment=PYTHONPATH=/opt/word-games-bridges
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+UMask=0077
+StateDirectory=word-games-bridges
+StateDirectoryMode=0700
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=1500
+LimitCORE=0
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/word-games-bridges
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=yes
+MemoryMax=1G
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

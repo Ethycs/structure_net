@@ -1,0 +1,27 @@
+{
+  "archive": "Neighborhood_Bridge_V4.zip",
+  "archive_sha256": "c3c063064d3450cb8a45b78d2c3874bea865a11f4eaebee92145430ad2f5910b",
+  "adaptation": "Only relative imports changed in the three runtime modules. Root deployment extracted; no historical model outputs or test answers installed.",
+  "files": {
+    "source_runtime.py": {
+      "original_sha256": "4171fc0259bf280555220b17d56347eca15caadc7094fd1f0cc779a3e1184c33",
+      "installed_sha256": "4171fc0259bf280555220b17d56347eca15caadc7094fd1f0cc779a3e1184c33"
+    },
+    "runtime.py": {
+      "original_sha256": "77a099258993f95a5b804f9326b4203fd48fd11e792e51f028e534bc37f8d154",
+      "installed_sha256": "c895bb71ba604c44f9d47810a7b57656dcbd65d4b4c6b131428c277956792325"
+    },
+    "capsule.py": {
+      "original_sha256": "46bc70470ff08014b84ff88d28b983c29f34bf29a6f5448d3dbc01ed8348ac3c",
+      "installed_sha256": "94ecbe974748d18d967d4985fcf563b50b6633bdf96ec594f04a07d799caead5"
+    },
+    "source_spec.txt": {
+      "original_sha256": "e6602b048fb9ee18574e8706991a8804d7cb9e67fe810cdbab5d00321e95eecd",
+      "installed_sha256": "e6602b048fb9ee18574e8706991a8804d7cb9e67fe810cdbab5d00321e95eecd"
+    },
+    "mapping_abi.txt": {
+      "original_sha256": "44ddd5ae67437196e065e704979b633bbf20bfa7dea10c728a9d5f4b1530e6ed",
+      "installed_sha256": "44ddd5ae67437196e065e704979b633bbf20bfa7dea10c728a9d5f4b1530e6ed"
+    }
+  }
+}

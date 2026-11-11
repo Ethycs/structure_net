@@ -1,0 +1,242 @@
+{
+  "classification": "systems_lifecycle_only_not_task_accuracy",
+  "verified_date": "2026-11-11",
+  "endpoint": "http://blackbox.zt:18092",
+  "bind": "10.158.218.141:18092",
+  "model": "qwen3.8-35b-a3b",
+  "deployment_id": "8b54306d-a232-4c50-8ca6-9defe9969133",
+  "unit": "rabbit user word-games-bridges.service",
+  "linger": true,
+  "release_archive_sha256": "45b50011942abe156d4e60f9deb64103a98be37424fc5685af05bb69507251c8",
+  "unit_sha256": "f5db49c4fcc662f7d98c4a0a3e91c9560719f8aef891134de1bf1eed92363983",
+  "installed_files": [
+    {
+      "path": "app/pixi.toml",
+      "matches": true
+    },
+    {
+      "path": "app/pixi.lock",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/__init__.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/__init__.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/smoke.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/mapping.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/__init__.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/client.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/cli.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/server.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/contract.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/service.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/vendor/source_spec.txt",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/vendor/capsule.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/vendor/mapping_abi.txt",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/vendor/runtime.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/vendor/source_runtime.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/vendor/__init__.py",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/vendor/root_deployment.json",
+      "matches": true
+    },
+    {
+      "path": "app/experiments/word_games/bridges/vendor/provenance.json",
+      "matches": true
+    }
+  ],
+  "unit_tests_passed": 13,
+  "live_checks": [
+    {
+      "stage": "reserve",
+      "passed": true,
+      "seconds": 3.3409793090540916,
+      "source_revision": 1
+    },
+    {
+      "stage": "transfer",
+      "passed": true,
+      "seconds": 3.289970960933715,
+      "source_revision": 2
+    },
+    {
+      "stage": "cancel",
+      "passed": true,
+      "seconds": 2.467334452085197,
+      "source_revision": 3
+    },
+    {
+      "stage": "recursive_checkpoint",
+      "passed": true,
+      "seconds": 24.404138771817088,
+      "generation": 1
+    },
+    {
+      "stage": "translated_resume",
+      "passed": true,
+      "source_revision": 4
+    }
+  ],
+  "live_seconds": 48.24868989409879,
+  "http_checks": {
+    "passed": true,
+    "checks": [
+      "health_without_inference",
+      "invalid_inference_key_denied",
+      "both_role_boundaries_denied",
+      "controller_view_omits_source",
+      "controller_proposal_does_not_commit",
+      "source_state_matches_request",
+      "apply_retry_idempotent"
+    ],
+    "session_id": "190b56341e34b99b025afd6535e07b03",
+    "base": "http://blackbox.zt:18092",
+    "seconds": 14.868495923932642,
+    "classification": "systems_not_accuracy"
+  },
+  "restart_check": {
+    "passed": true,
+    "session_id": "190b56341e34b99b025afd6535e07b03",
+    "version": 3,
+    "source_revision": 1,
+    "check": "same durable session and role capability work after systemd restart"
+  },
+  "development_attempts": [
+    {
+      "attempt": 1,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v1/initial_failure.json",
+      "passed": false,
+      "error": "invalid_bijection:key_map",
+      "checks_passed": []
+    },
+    {
+      "attempt": 2,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v2/initial_failure.json",
+      "passed": false,
+      "error": "invalid_bijection:enum_map",
+      "checks_passed": []
+    },
+    {
+      "attempt": 3,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v3/result.json",
+      "passed": false,
+      "error": "target_response_fields",
+      "checks_passed": []
+    },
+    {
+      "attempt": 4,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v4/result.json",
+      "passed": false,
+      "error": "proposal_rejected",
+      "checks_passed": []
+    },
+    {
+      "attempt": 5,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v5/result.json",
+      "passed": false,
+      "error": "incomplete_generation",
+      "checks_passed": [
+        "reserve",
+        "transfer",
+        "cancel"
+      ]
+    },
+    {
+      "attempt": 6,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v6/result.json",
+      "passed": false,
+      "error": "proposal_rejected",
+      "checks_passed": []
+    },
+    {
+      "attempt": 7,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v7/result.json",
+      "passed": false,
+      "error": "instructions_not_translated",
+      "checks_passed": [
+        "reserve",
+        "transfer",
+        "cancel"
+      ]
+    },
+    {
+      "attempt": 8,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v8/result.json",
+      "passed": false,
+      "error": "source_literal_in_controller_view",
+      "checks_passed": [
+        "reserve",
+        "transfer",
+        "cancel",
+        "recursive_checkpoint"
+      ]
+    },
+    {
+      "attempt": 9,
+      "artifact": "data/experiments/word_games/20261111_bridges_service_v9/result.json",
+      "passed": true,
+      "error": null,
+      "checks_passed": [
+        "reserve",
+        "transfer",
+        "cancel",
+        "recursive_checkpoint",
+        "translated_resume"
+      ]
+    }
+  ],
+  "limits": [
+    "reservation fixture only",
+    "no general messaging proxy",
+    "no independent quality baseline",
+    "first recursive generation tested, deeper generations unmeasured",
+    "user-managed deployment; dedicated infrastructure account and canonical catalog update pending",
+    "state not backed up"
+  ]
+}

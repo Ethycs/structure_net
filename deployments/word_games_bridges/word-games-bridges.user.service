@@ -1,0 +1,24 @@
+[Unit]
+Description=WORD_GAMES V3/V4 reservation bridges (user-managed CPU service)
+After=network-online.target
+
+[Service]
+Type=exec
+WorkingDirectory=%h/.local/lib/word-games-bridges
+ExecStart=%h/.local/lib/word-games-bridges/.pixi/envs/default/bin/python -m experiments.word_games.bridges.server --bind 10.158.218.141 --port 18092 --state %h/.local/share/word-games-bridges/bridges.sqlite --ca %h/.local/lib/word-games-bridges/ca.crt
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+UMask=0077
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=1500
+LimitCORE=0
+NoNewPrivileges=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=yes
+MemoryMax=1G
+TasksMax=64
+
+[Install]
+WantedBy=default.target
