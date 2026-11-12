@@ -1,0 +1,383 @@
+{
+  "artifact_sha256": {
+    "data/experiments/word_games/20261112_humaneval_failure_diagnosis_audit_v2/audit.json": "8d1762a84e4963380810b1b40919bfd84f135af4ce4a18c8968e5568e5d784b1",
+    "data/experiments/word_games/20261112_humaneval_failure_diagnosis_audit_v2/registry_readback.json": "2f198a26f17556a0b5e1c5dce8bb0b820d1b119b416ba196102636efb28528f4",
+    "data/experiments/word_games/20261112_humaneval_failure_diagnosis_audit_v2/trace_review.json": "b3c31a16d81cffe5c2d2e41456ebe72cd22de30833f0904249371a97e4e28d46",
+    "data/experiments/word_games/20261112_humaneval_failure_diagnosis_v1/cases.json": "08cd71b2dcd7f5be587203a2b5019d64160b63933d2cfeac2ba1ce23bf8cfc9e",
+    "data/experiments/word_games/20261112_humaneval_failure_diagnosis_v1/plan.json": "88d9735b0ba87387dc4203e7996195fa5c0ccffa3d654e4e4f3e13dc29ba2baa",
+    "data/experiments/word_games/20261112_humaneval_failure_diagnosis_v1/result.json": "2d919a0b46aac5d02c14a9db9859a57c5027551888322bc7436d335cc5e5e47b",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/canonical/evaluation_input.json": "8595901b60db2b0ece8568c3dfc77dbab0fd6cb5d20b554ee87f128d07a907fa",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/canonical/grade.json": "513daf1bda0bd6a82da10fab1c459440e3c1b5d0261ae8205edef222761306dc",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/canonical/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/canonical/stdout": "1bd5275dbd42ba4b0bd05c56bd1968d6f536b1304b40636c59cb645e5d58322f",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/native/evaluation_input.json": "8595901b60db2b0ece8568c3dfc77dbab0fd6cb5d20b554ee87f128d07a907fa",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/native/grade.json": "513daf1bda0bd6a82da10fab1c459440e3c1b5d0261ae8205edef222761306dc",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/native/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/native/stdout": "1bd5275dbd42ba4b0bd05c56bd1968d6f536b1304b40636c59cb645e5d58322f",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/relabeled/evaluation_input.json": "9fac803d5fa7a263f802decb3048848fb9cfc5560f98b70c5765b67a48e09a20",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/relabeled/grade.json": "6dd1bf4699d3c67b02258fa50297b5011203351e0ed6868e7c57d6c42078a139",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/relabeled/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/113/relabeled/stdout": "6e19e09d8e140efae6b9dfd9a39ce5ba5a2e7875a882442251419f5e601c4309",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/canonical/evaluation_input.json": "b5c030b9e83f91b9cafe90f1fc27470d62a26d7277f3554539e5f481521fd283",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/canonical/grade.json": "513daf1bda0bd6a82da10fab1c459440e3c1b5d0261ae8205edef222761306dc",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/canonical/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/canonical/stdout": "1bd5275dbd42ba4b0bd05c56bd1968d6f536b1304b40636c59cb645e5d58322f",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/native/evaluation_input.json": "b5c030b9e83f91b9cafe90f1fc27470d62a26d7277f3554539e5f481521fd283",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/native/grade.json": "8df5f957c059616afeec5b181e605e4a6e437c3a4e1c2850bf88978e330bcbb5",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/native/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/native/stdout": "6f53ea5a071b65072a71f9c78334c5db7b7a7cc07af60488df1ef1fff3b9d9ef",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/relabeled/evaluation_input.json": "46542d466f2c397c93061f3093d565812f86db164a53247d22c9a631044fec10",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/relabeled/grade.json": "513daf1bda0bd6a82da10fab1c459440e3c1b5d0261ae8205edef222761306dc",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/relabeled/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/160/relabeled/stdout": "1bd5275dbd42ba4b0bd05c56bd1968d6f536b1304b40636c59cb645e5d58322f",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/canonical/evaluation_input.json": "753c095772f22e33c88ae90d30f5092a189435b5531980a7143450107e289373",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/canonical/grade.json": "513daf1bda0bd6a82da10fab1c459440e3c1b5d0261ae8205edef222761306dc",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/canonical/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/canonical/stdout": "1bd5275dbd42ba4b0bd05c56bd1968d6f536b1304b40636c59cb645e5d58322f",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/native/evaluation_input.json": "753c095772f22e33c88ae90d30f5092a189435b5531980a7143450107e289373",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/native/grade.json": "513daf1bda0bd6a82da10fab1c459440e3c1b5d0261ae8205edef222761306dc",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/native/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/native/stdout": "1bd5275dbd42ba4b0bd05c56bd1968d6f536b1304b40636c59cb645e5d58322f",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/relabeled/evaluation_input.json": "6cb1a620c42515495a72a7604b5a67134880dfbe645cbabcd5274bb9ec3805b8",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/relabeled/grade.json": "722d872267d56d225780878196130a3da2583b37327a87d356f44fcedd5a6162",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/relabeled/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/32/relabeled/stdout": "e5aff2691dda1a7d57cd7c00c54e88f236d93699771a64c8c92facc2d06f7957",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/plan.json": "a14cbd41e0ea0816ecbbd54a210bea11af9a00125aafdffcb85953c9b6b0d1da",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/producer.py": "d184dace0c2d7e8dcf291f5d11c37a29582de3c19d692f24df58a0e698c07157",
+    "data/experiments/word_games/20261112_humaneval_public_examples_v1/result.json": "7fcecebc53b722e38baeb0c6b7f200536c65973655e42fff11c59d37bea24c35",
+    "docs/08 - Analysis/word_games/2026-11-12_humaneval-failure-diagnosis.md": "ffc5bc91f92d5354c1910bcb627d038d5a335e14aee355aba724e5488bcc6737",
+    "experiments/neural_architecture_lab/register_word_games_failure_diagnosis.py": "84151120d017be099ba6438a15818e28deec9bdb9aa5604aefcd93357904b97f",
+    "experiments/word_games/audit_humaneval_failure_diagnosis.py": "b53c6ae6c19d27bbc87a56a1fc0ccde658dd1fdede049e4bb301875b401459d7",
+    "experiments/word_games/check_humaneval_public_examples.py": "d184dace0c2d7e8dcf291f5d11c37a29582de3c19d692f24df58a0e698c07157",
+    "src/neural_architecture_lab/word_games_failure_diagnosis_hypothesis.py": "b3a06fca03d1163f345032b22d8ac9d3e1333ae1a824d7107771953a52815355"
+  },
+  "credential_scan": {
+    "configured_key_matches": 0,
+    "files": 645
+  },
+  "focused_tests_passed": 10,
+  "limitations": [
+    "Known-failure diagnosis, not new population accuracy.",
+    "Local code corrections are researcher-authored, not autonomous model repair.",
+    "Only two fresh actor executions per condition; no independent model seeds.",
+    "A missing formatting example may contribute but is not a sufficient explanation.",
+    "No sampler-internal cause of incomplete translation was established."
+  ],
+  "primary_accuracy_unchanged": true,
+  "programs_reexecuted": 22,
+  "public_examples": [
+    {
+      "passed": true,
+      "task": 32,
+      "variant": "canonical"
+    },
+    {
+      "passed": true,
+      "task": 32,
+      "variant": "native"
+    },
+    {
+      "passed": false,
+      "task": 32,
+      "variant": "relabeled"
+    },
+    {
+      "passed": true,
+      "task": 113,
+      "variant": "canonical"
+    },
+    {
+      "passed": true,
+      "task": 113,
+      "variant": "native"
+    },
+    {
+      "passed": false,
+      "task": 113,
+      "variant": "relabeled"
+    },
+    {
+      "passed": true,
+      "task": 160,
+      "variant": "canonical"
+    },
+    {
+      "passed": false,
+      "task": 160,
+      "variant": "native"
+    },
+    {
+      "passed": true,
+      "task": 160,
+      "variant": "relabeled"
+    }
+  ],
+  "registry_readback": {
+    "exact_readback": {
+      "audit": "data/experiments/word_games/20261112_humaneval_failure_diagnosis_audit_v2/audit.json",
+      "audit_sha256": "8d1762a84e4963380810b1b40919bfd84f135af4ce4a18c8968e5568e5d784b1",
+      "autonomous_repair_demonstrated": false,
+      "category": "information_flow",
+      "confirmation_status": "selected_failure_mechanisms_tested",
+      "confirmed": false,
+      "corrected_format_replays_passed": 2,
+      "corrected_root_replays_passed": 0,
+      "description": "Selected known failures on HumanEval 32, 113, 160. Researcher-authored local corrections pass official and targeted suites in 5/5 saved programs. Fresh root actor replays: original 0/2, corrected interface 0/2. Formatting replays: original 1/2, completed example 2/2. No execution tool was available to actors. This diagnoses handoff and implementation defects, not general accuracy or autonomous repair.",
+      "general_accuracy_established": false,
+      "id": "word-games-humaneval-failure-diagnosis-v1",
+      "name": "WORD_GAMES selected HumanEval failure mechanisms",
+      "original_format_replays_passed": 1,
+      "original_root_replays_passed": 0,
+      "primary_accuracy_unchanged": true,
+      "production_deployed": false,
+      "project": "WORD_GAMES",
+      "public_example_failures_detected": 3,
+      "public_examples": "data/experiments/word_games/20261112_humaneval_public_examples_v1/result.json",
+      "public_examples_sha256": "7fcecebc53b722e38baeb0c6b7f200536c65973655e42fff11c59d37bea24c35",
+      "report": "docs/08 - Analysis/word_games/2026-11-12_humaneval-failure-diagnosis.md",
+      "report_sha256": "ffc5bc91f92d5354c1910bcb627d038d5a335e14aee355aba724e5488bcc6737",
+      "saved_repairs_passing": 5,
+      "selected_task_families": 3,
+      "tested": true,
+      "trace_review": "data/experiments/word_games/20261112_humaneval_failure_diagnosis_audit_v2/trace_review.json",
+      "trace_review_sha256": "b3c31a16d81cffe5c2d2e41456ebe72cd22de30833f0904249371a97e4e28d46"
+    },
+    "record": {
+      "audit": "data/experiments/word_games/20261112_humaneval_failure_diagnosis_audit_v2/audit.json",
+      "audit_sha256": "8d1762a84e4963380810b1b40919bfd84f135af4ce4a18c8968e5568e5d784b1",
+      "autonomous_repair_demonstrated": false,
+      "category": "information_flow",
+      "confirmation_status": "selected_failure_mechanisms_tested",
+      "confirmed": false,
+      "corrected_format_replays_passed": 2,
+      "corrected_root_replays_passed": 0,
+      "description": "Selected known failures on HumanEval 32, 113, 160. Researcher-authored local corrections pass official and targeted suites in 5/5 saved programs. Fresh root actor replays: original 0/2, corrected interface 0/2. Formatting replays: original 1/2, completed example 2/2. No execution tool was available to actors. This diagnoses handoff and implementation defects, not general accuracy or autonomous repair.",
+      "general_accuracy_established": false,
+      "id": "word-games-humaneval-failure-diagnosis-v1",
+      "name": "WORD_GAMES selected HumanEval failure mechanisms",
+      "original_format_replays_passed": 1,
+      "original_root_replays_passed": 0,
+      "primary_accuracy_unchanged": true,
+      "production_deployed": false,
+      "project": "WORD_GAMES",
+      "public_example_failures_detected": 3,
+      "public_examples": "data/experiments/word_games/20261112_humaneval_public_examples_v1/result.json",
+      "public_examples_sha256": "7fcecebc53b722e38baeb0c6b7f200536c65973655e42fff11c59d37bea24c35",
+      "report": "docs/08 - Analysis/word_games/2026-11-12_humaneval-failure-diagnosis.md",
+      "report_sha256": "ffc5bc91f92d5354c1910bcb627d038d5a335e14aee355aba724e5488bcc6737",
+      "saved_repairs_passing": 5,
+      "selected_task_families": 3,
+      "tested": true,
+      "trace_review": "data/experiments/word_games/20261112_humaneval_failure_diagnosis_audit_v2/trace_review.json",
+      "trace_review_sha256": "b3c31a16d81cffe5c2d2e41456ebe72cd22de30833f0904249371a97e4e28d46"
+    },
+    "semantic_ids": [
+      "word-games-humaneval-failure-diagnosis-v1",
+      "word-games-humaneval-labels-v1",
+      "ncm-conditional-residual-learning-v2",
+      "ncm-public-source-metadata-v1",
+      "ncm-oracle-codec-semantic-quality-v1",
+      "ncm-reserved-oracle-prefix-v1",
+      "ncm-source-hierarchy-bootstrap-v1",
+      "ncm-grounded-semantic-transport-stop-v1",
+      "ncm-sol-teacher144-outage-firsts-v1",
+      "tinyllm-c3-switching-corruption-fixed-decoder-corrective-v1"
+    ],
+    "status": "registered_and_read_back"
+  },
+  "resource_termination_differences": [
+    {
+      "original_error": "timeout",
+      "replay_error": "exit:137",
+      "section": "offline",
+      "suite": "official",
+      "task": 32,
+      "variant": "native_original"
+    }
+  ],
+  "status": "independently_audited_and_registered",
+  "study": "word-games-humaneval-failure-diagnosis-v1",
+  "summary": {
+    "live": [
+      {
+        "official_passed": false,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 0,
+        "targeted_passed": false,
+        "task": 32,
+        "variant": "0_original"
+      },
+      {
+        "official_passed": false,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 12,
+        "targeted_passed": false,
+        "task": 32,
+        "variant": "0_corrected"
+      },
+      {
+        "official_passed": false,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 4,
+        "targeted_passed": false,
+        "task": 32,
+        "variant": "1_corrected"
+      },
+      {
+        "official_passed": false,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 0,
+        "targeted_passed": false,
+        "task": 32,
+        "variant": "1_original"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 40,
+        "targeted_cases_passed": 40,
+        "targeted_passed": true,
+        "task": 113,
+        "variant": "0_original"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 40,
+        "targeted_cases_passed": 40,
+        "targeted_passed": true,
+        "task": 113,
+        "variant": "0_corrected"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 40,
+        "targeted_cases_passed": 40,
+        "targeted_passed": true,
+        "task": 113,
+        "variant": "1_corrected"
+      },
+      {
+        "official_passed": false,
+        "targeted_cases": 40,
+        "targeted_cases_passed": 5,
+        "targeted_passed": false,
+        "task": 113,
+        "variant": "1_original"
+      }
+    ],
+    "offline": [
+      {
+        "official_passed": true,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 20,
+        "targeted_passed": true,
+        "task": 32,
+        "variant": "canonical"
+      },
+      {
+        "official_passed": false,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 8,
+        "targeted_passed": false,
+        "task": 32,
+        "variant": "native_original"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 20,
+        "targeted_passed": true,
+        "task": 32,
+        "variant": "native_corrected"
+      },
+      {
+        "official_passed": false,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 0,
+        "targeted_passed": false,
+        "task": 32,
+        "variant": "relabeled_original"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 20,
+        "targeted_cases_passed": 20,
+        "targeted_passed": true,
+        "task": 32,
+        "variant": "relabeled_corrected"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 40,
+        "targeted_cases_passed": 40,
+        "targeted_passed": true,
+        "task": 113,
+        "variant": "canonical"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 40,
+        "targeted_cases_passed": 40,
+        "targeted_passed": true,
+        "task": 113,
+        "variant": "native_original"
+      },
+      {
+        "official_passed": false,
+        "targeted_cases": 40,
+        "targeted_cases_passed": 5,
+        "targeted_passed": false,
+        "task": 113,
+        "variant": "relabeled_original"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 40,
+        "targeted_cases_passed": 40,
+        "targeted_passed": true,
+        "task": 113,
+        "variant": "relabeled_corrected"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 1524,
+        "targeted_cases_passed": 1524,
+        "targeted_passed": true,
+        "task": 160,
+        "variant": "canonical"
+      },
+      {
+        "official_passed": false,
+        "targeted_cases": 1524,
+        "targeted_cases_passed": 20,
+        "targeted_passed": false,
+        "task": 160,
+        "variant": "native_original"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 1524,
+        "targeted_cases_passed": 1524,
+        "targeted_passed": true,
+        "task": 160,
+        "variant": "native_corrected"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 1524,
+        "targeted_cases_passed": 1502,
+        "targeted_passed": false,
+        "task": 160,
+        "variant": "relabeled_original"
+      },
+      {
+        "official_passed": true,
+        "targeted_cases": 1524,
+        "targeted_cases_passed": 1524,
+        "targeted_passed": true,
+        "task": 160,
+        "variant": "relabeled_corrected"
+      }
+    ]
+  },
+  "targeted_inputs": 1584
+}
