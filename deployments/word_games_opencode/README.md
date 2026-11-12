@@ -54,11 +54,38 @@ pixi run -e word-games python -m experiments.word_games.opencode_harness \
   --output data/experiments/word_games/NEW_CONTINUATION
 ```
 
-OpenCode state is isolated under `.pixi/word-games-opencode-runtime/`; existing
-personal OpenCode settings and sessions are not changed. The launcher uses `--pure`
-and disables project config loading and automatic updates. Raw tool events,
+The launcher now runs OpenCode inside **bubblewrap 0.6.1** on blackbox. It fails
+if bubblewrap or the installed OpenCode binary is unavailable; there is no
+unsandboxed fallback. It uses the installed Snap's ELF directly, since the Snap
+launcher expects host services that are outside the sandbox.
+
+The selected `--workspace` is writable. Configuration, OpenCode's binary, system
+files and the infrastructure CA are read-only. Other home directories and projects,
+`.claude`, `.codex`, `.ssh`, `/data`, `/opt` and the host process tree are hidden.
+The sandbox has private mount, user, PID and IPC namespaces and private `/tmp`
+and `/dev`. **Networking is shared** for the existing LiteLLM connection; this
+is filesystem/process isolation, not a network firewall. All files inside the
+selected workspace, including dotfiles, are deliberately exposed to the actor.
+Use a dedicated task workspace when the full repository contains private data.
+
+Only the required `LITELLM_KEY` is forwarded, with a small explicit environment.
+Subscription credentials, SSH agent sockets and unrelated environment variables
+are not inherited. The launcher reads `--key-env-file` outside the sandbox;
+that file is not separately mounted. A model credential must remain available
+to the trusted OpenCode process for inference.
+
+OpenCode history, state and caches persist under
+`.pixi/word-games-opencode-runtime/sandboxes/<workspace-path-hash>/`. Only the
+current workspace's store is mounted. Other histories are masked even when the
+whole StructureNet repository is the selected workspace. Existing personal
+settings and the earlier unsandboxed test sessions are unchanged; those legacy
+sessions are not automatically imported into the new stores. Resume a sandboxed
+session with the **same workspace path** and its recorded session ID.
+
+The launcher uses `--pure` and disables project config loading and automatic updates. Raw tool events,
 per-step token usage and process duration are retained under the requested output
-directory. A zero exit code is not treated as task success.
+directory, along with the sandbox command (no key), startup result and policy
+source hash. A zero exit code is not treated as task success.
 
 ## What was actually verified
 
@@ -81,6 +108,43 @@ tool steps; Qwen selected its `read` and `edit` calls.
 Evidence:
 `data/experiments/word_games/20261111_opencode_native_v1/`,
 `20261111_opencode_native_v2/`, and `20261111_opencode_native_resume_v1/`.
+
+## Bubblewrap verification
+
+The original infrastructure handoff described sandboxing the **bridge HTTP
+service**, but no live unit had been changed. The user clarified that the intended
+target was **OpenCode sessions**. This change wraps the actor launcher; the
+`word-games-bridges` service on port 18092 remains unchanged and is not bubblewrapped.
+
+The real OS-boundary checks run with:
+
+```sh
+pixi run -e word-games python -m pytest --confcutdir=tests/word_games -q tests/word_games/test_opencode_sandbox.py
+```
+
+Five tests passed, covering allowed writes, hidden host files and processes,
+symlink escapes, read-only configuration including a second path inside the
+workspace, environment filtering, separate workspace histories, persistence,
+and actual OpenCode startup/configuration loading. These are checks of the stated
+policy, not an exhaustive sandbox security assessment.
+
+The first two sandbox attempts stopped before inference because OpenCode tried
+to initialize its read-only configuration directory and `.gitignore`. The
+launcher now precreates those files without making the configuration writable.
+Both failed attempts remain recorded. The first attempt also had a missing test
+fixture, caught before any actor ran.
+
+The working live attempt used Qwen's native `read → edit → read` sequence and
+passed full-ledger equality on the initial reservation request in **15.04 s**.
+Live process observations confirmed separate mount, PID and user namespaces;
+the network namespace was shared as intended. A fresh sandbox invocation resumed
+the same OpenCode session, cancelled only that reservation, and passed exact
+equality with the original ledger in **15.74 s**. The evidence is in
+`data/experiments/word_games/20261111_opencode_bubblewrap_v3/`; earlier failures
+are `20261111_opencode_bubblewrap_v1/` and `20261111_opencode_bubblewrap_v2/`.
+The continuation is `20261111_opencode_bubblewrap_resume_v1/`; see
+`bubblewrap-validation.json` for the verification receipt. Timings include
+process and transport overhead and are not a controlled speed comparison.
 
 This establishes an existing native-actor harness for the bridge work. It does
 **not** turn the previously deployed reservation proxy into a complete double-pass

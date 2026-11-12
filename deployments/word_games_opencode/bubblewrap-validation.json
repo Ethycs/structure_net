@@ -1,0 +1,45 @@
+{
+  "verified_date": "2026-11-11",
+  "classification": "sandbox_and_harness_integration_not_accuracy_estimate",
+  "sandbox": "bubblewrap 0.6.1",
+  "harness": "OpenCode 1.19.5",
+  "model": "qwen3.8-35b-a3b",
+  "bridge_service_changed": false,
+  "double_pass_bridge_integrated": false,
+  "tests_passed": 5,
+  "initial_task_passed": true,
+  "initial_seconds": 15.042350052855909,
+  "continuation_task_passed": true,
+  "continuation_seconds": 15.743912619072944,
+  "same_session": true,
+  "namespace_isolation": {
+    "mnt": true,
+    "pid": true,
+    "user": true
+  },
+  "network": "shared",
+  "credential_scan": {
+    "files": 32,
+    "key_found": false
+  },
+  "failures": [
+    {
+      "artifact": "data/experiments/word_games/20261111_opencode_bubblewrap_v1",
+      "error": "read-only config subdirectory initialization; missing fixture before actor start"
+    },
+    {
+      "artifact": "data/experiments/word_games/20261111_opencode_bubblewrap_v2",
+      "error": "read-only .gitignore initialization"
+    }
+  ],
+  "source_proof": [
+    "data/experiments/word_games/20261111_opencode_bubblewrap_v3",
+    "data/experiments/word_games/20261111_opencode_bubblewrap_resume_v1"
+  ],
+  "source_sha256": {
+    "experiments/word_games/opencode_harness.py": "8debd641f39e0f8608580cd2152d3dc0290bcda22f5ec19b6556d68124356608",
+    "experiments/word_games/opencode_sandbox.py": "28e161ac3aa427068564675ea5ef739058296a9e700d60b33a1e608676f60b79",
+    "deployments/word_games_opencode/opencode.jsonc": "3deb3d306b11229a2788a79f35fd7dd60fbe1b6f07ae4fb4289ca23034ec535f",
+    "tests/word_games/test_opencode_sandbox.py": "17fbabe451cfdc68209b513b02c6ba97f2feee9d158188cff64fe7da8e963b6e"
+  }
+}

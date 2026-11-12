@@ -12,45 +12,42 @@ import signal
 import subprocess
 import time
 
+from .opencode_sandbox import launch, runtime_for
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT/'deployments/word_games_opencode/opencode.jsonc'
-RUNTIME = ROOT/'.pixi/word-games-opencode-runtime'
-
-
-def environment(key):
-    env = dict(os.environ)
-    for name, folder in [('XDG_CONFIG_HOME','config'), ('XDG_DATA_HOME','data'),
-                         ('XDG_STATE_HOME','state'), ('XDG_CACHE_HOME','cache')]:
-        path = RUNTIME/folder
-        path.mkdir(parents=True, exist_ok=True)
-        env[name] = str(path)
-    env.update(OPENCODE_CONFIG=str(CONFIG), OPENCODE_DISABLE_PROJECT_CONFIG='1',
-               OPENCODE_DISABLE_AUTOUPDATE='1', OPENCODE_DISABLE_MODELS_FETCH='1',
-               NODE_EXTRA_CA_CERTS='/etc/docker/certs.d/10.158.218.193:5000/ca.crt',
-               LITELLM_KEY=key)
-    return env
-
-
 def run(workspace, prompt, output, key, session=None, timeout=240):
     workspace = Path(workspace).resolve()
     if not workspace.is_dir():
         raise ValueError('workspace must exist')
-    output = Path(output)
+    output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
-    env = environment(key)
-    version = subprocess.check_output(['opencode', '--version'], env=env, text=True, timeout=30).strip()
+    (output/'prompt.txt').write_text(prompt)
+    snapshot = output/'config.json'
+    snapshot.write_bytes(CONFIG.read_bytes())  # Only an env reference, never the key.
+    sandbox, env = launch(workspace, snapshot, key)
+    executable = '/run/word-games/opencode'
+    (output/'sandbox.json').write_text(json.dumps({
+        'launcher': sandbox, 'environment_names': sorted(env),
+        'network': 'shared', 'session_runtime': str(runtime_for(workspace)),
+        'source_sha256': hashlib.sha256(Path(__file__).with_name('opencode_sandbox.py').read_bytes()).hexdigest(),
+    }, indent=2)+'\n')
+    preflight = subprocess.run(sandbox + [executable, '--version'], env=env,
+                               capture_output=True, text=True, timeout=30)
+    (output/'preflight.json').write_text(json.dumps({
+        'returncode': preflight.returncode, 'stdout': preflight.stdout, 'stderr': preflight.stderr,
+    }, indent=2)+'\n')
+    if preflight.returncode:
+        raise RuntimeError('Sandboxed OpenCode startup failed; see preflight.json')
+    version = preflight.stdout.strip()
     if version != '1.19.5':
         raise RuntimeError('Configuration verified for OpenCode 1.19.5; revalidate installed version '+version)
-    command = ['opencode', 'run', '--pure', '--format', 'json', '--agent', 'actor',
+    command = sandbox + [executable, 'run', '--pure', '--format', 'json', '--agent', 'actor',
                '--model', 'wordgames/qwen3.8-35b-a3b', '--dir', str(workspace)]
     if session:
         command += ['--session', session]
     command += [prompt]
-    (output/'prompt.txt').write_text(prompt)
-    (output/'config.json').write_bytes(CONFIG.read_bytes())  # Contains an environment reference, not the key.
-    env['OPENCODE_CONFIG'] = str((output/'config.json').resolve())
-    config_hash = hashlib.sha256((output/'config.json').read_bytes()).hexdigest()
+    config_hash = hashlib.sha256(snapshot.read_bytes()).hexdigest()
     started = time.monotonic()
     with (output/'events.jsonl').open('w') as stdout, (output/'stderr.txt').open('w') as stderr:
         process = subprocess.Popen(command, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
@@ -81,6 +78,8 @@ def run(workspace, prompt, output, key, session=None, timeout=240):
               'tools': tools, 'usage_by_step': usage,
               'errors': [e for e in events if e.get('type') == 'error'],
               'config_sha256': config_hash,
+              'sandbox': 'bubblewrap', 'network': 'shared',
+              'session_runtime': str(runtime_for(workspace)),
               'classification': 'native_actor_transport_only_task_success_requires_independent_check'}
     (output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
     return result
