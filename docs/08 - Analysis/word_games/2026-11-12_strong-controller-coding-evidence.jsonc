@@ -1,0 +1,328 @@
+{
+  "coding": {
+    "native": {
+      "clarification_requests": 0,
+      "median_task_seconds": 31.643845930113457,
+      "resource_failures": 0,
+      "tasks": 8,
+      "tasks_passed": 8,
+      "tests": 32,
+      "tests_passed": 32
+    },
+    "translated": {
+      "clarification_requests": 3,
+      "median_task_seconds": 37.022753860102966,
+      "resource_failures": 1,
+      "tasks": 8,
+      "tasks_passed": 2,
+      "tests": 32,
+      "tests_passed": 10
+    }
+  },
+  "completion_caveat": "The existing actor completion rule checks CLI exit and error events but not a terminal length finish. Primary frozen scores are retained; stricter normal-stop scores are reported separately.",
+  "focused_tests_passed": 30,
+  "input_sha256": {
+    "data/experiments/word_games/20261111_coding_recovery_v3/c01/grading_private_aliases.json": "2c1cb7aea214ff4a891e8ac0243134cb2275046043c814cc19e4d00d17d08261",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c01/hidden_source_tests.json": "497260bd61e8edeb92483db356858ed9181f47d8f7f844979628cc31bbdd755a",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c02/grading_private_aliases.json": "b48d736db40bd34c7a8c5df270ebfd6768c4e7d76b331ac1f8a57953ee6ab667",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c02/hidden_source_tests.json": "ed31d65dd6cce65513cf1e03b7b1572c9a80e5dfc467571d3c4fd4514df259b6",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c03/grading_private_aliases.json": "af4cd7c1f1137f5a49c8c4a968f1954223579ebcd82902f28e3afdd983503b0b",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c03/hidden_source_tests.json": "1a93fa96a94ae19ab29395c6f8a74f34521942eeb5c8dfa71e061e0d5ff23b2e",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c04/grading_private_aliases.json": "dd48d6e0a1c13f2b996135358f6e10437bf066495d9594b5d426730698da3934",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c04/hidden_source_tests.json": "13b43a42fd717ff1ec2d96a9a8aa9b13ff2d8f1470ca88e3ec55546c08656111",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c05/grading_private_aliases.json": "78e7842d8d9783cccaa3ea5ebcef90c73f02a0b95600fee2f98045a07df4c2e7",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c05/hidden_source_tests.json": "3b09389e55ad53f6f06028b50f8a005b90dee0dc3f93222a6cc99ef94a5865d9",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c06/grading_private_aliases.json": "2f945a8733846bbff58ddbdf9d80ae74c7196156e8d8f4216290a5adb4f17056",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c06/hidden_source_tests.json": "f94b44835053ce54ab9ace7c2aef9dd66dc1b2464c499c7940a541258bd74121",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c07/grading_private_aliases.json": "52d5167ec1e99f63e93671a8dd5aa6c4cf441bc128d922b3c46386c3bf1a47a2",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c07/hidden_source_tests.json": "c32baeea16ca616e35dc04a18fbf7624431054a92eb37b1327998dcd18b32854",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c08/grading_private_aliases.json": "0935b1f08b8c8b26226500e35efbf83c20c49d9cf817af09f382f2f3b4d50909",
+    "data/experiments/word_games/20261111_coding_recovery_v3/c08/hidden_source_tests.json": "0bb77b376d4f862a47ace078691fcf5c22d0d54bcb9ab83e1ff59f18d45b2557"
+  },
+  "key_artifact_sha256": {
+    "data/experiments/word_games/20261112_strong_controller_coding_audit_v2/audit.json": "aa0355ede20f04074e17d1f60c20661665239716465a5d1218e3a23f539311da",
+    "data/experiments/word_games/20261112_strong_controller_coding_audit_v2/registry_readback.json": "35675ad47bcf4cdcdc2800f0b334f0ddb6d35e7be297c73bfb0f833d8fc68513",
+    "data/experiments/word_games/20261112_strong_controller_coding_v1/plan.json": "dd6207001dbbb87f13ed8432193a08526e788eb5f1480dbc5a1fa431885d88f9",
+    "data/experiments/word_games/20261112_strong_controller_coding_v1/result.json": "197f07c257e7b0ec4795aab1b4d46f3f08a79cc38e51459eaa1ccb7c0efe6b64",
+    "docs/07 - Status Reports/word-games/2026-11-12_strong-controller-coding-plan.md": "64b1b133d645957712d83379e80c1b3acc97900cba7015d45b19ca5b81cbbc62",
+    "docs/08 - Analysis/word_games/2026-11-12_strong-controller-coding.md": "78a4ed081a3fd86eea1cc768ed4e685ce9d7daf0180e9d4c7a340c9e044bcc5f"
+  },
+  "limitations": [
+    "Known eight-task regression set, not general coding accuracy.",
+    "Old-pilot comparison is descriptive; this run adds Terra instructions and pause handling.",
+    "No confidentiality claim and no production HTTP deployment.",
+    "Model identities are gateway aliases and deployment IDs, not independent weight attestations."
+  ],
+  "model_calls": {
+    "codex_sdk/gpt-5.6-terra": {
+      "calls": 11,
+      "seconds": 154.31347051006742
+    },
+    "qwen3.8-35b-a3b": {
+      "calls": 11,
+      "seconds": 20.066820171894506
+    }
+  },
+  "prior_coding": {
+    "native": {
+      "tasks": 8,
+      "tasks_passed": 8,
+      "tests": 32,
+      "tests_passed": 32
+    },
+    "translated": {
+      "tasks": 8,
+      "tasks_passed": 3,
+      "tests": 32,
+      "tests_passed": 14
+    }
+  },
+  "prior_result_sha256": "ddc1aac58cb3938fa38bbd2931ccd2d36bc7e379f4051d008cd28fbd6deb70e4",
+  "raw_grades_recomputed": true,
+  "registry_record": {
+    "audit": "data/experiments/word_games/20261112_strong_controller_coding_audit_v2/audit.json",
+    "audit_sha256": "aa0355ede20f04074e17d1f60c20661665239716465a5d1218e3a23f539311da",
+    "category": "information_flow",
+    "completion_rule_caveat": "The existing actor completion rule checks CLI exit and error events but not a terminal length finish. Primary frozen scores are retained; stricter normal-stop scores are reported separately.",
+    "confirmation_status": "known_regression_comparison_complete",
+    "confirmed": false,
+    "description": "Terra interprets eight known synthetic coding tasks; Qwen translates and executes with bounded clarification. Native 8/8 (32/32 tests); translated 2/8 (10/32). Translated clarification requests: 3. Matched arms reuse the old data and opaque aliases. No general accuracy or isolated clarification-benefit claim.",
+    "direct_experiment_count": 8,
+    "general_accuracy_established": false,
+    "id": "word-games-strong-controller-coding-v1",
+    "name": "WORD_GAMES Terra controller and Qwen coding regression",
+    "native_correct": 8,
+    "native_tests": 32,
+    "observed_task_count_parity": false,
+    "production_deployed": false,
+    "project": "WORD_GAMES",
+    "report": "docs/08 - Analysis/word_games/2026-11-12_strong-controller-coding.md",
+    "report_sha256": "78a4ed081a3fd86eea1cc768ed4e685ce9d7daf0180e9d4c7a340c9e044bcc5f",
+    "strict_native_correct": 8,
+    "strict_translated_correct": 1,
+    "strict_translated_tests": 6,
+    "tested": true,
+    "tested_scope": "eight previously inspected synthetic tasks, four fixed tests each, one Terra route and one Qwen route",
+    "translated_clarifications": 3,
+    "translated_correct": 2,
+    "translated_tests": 10
+  },
+  "registry_status": "registered_and_read_back",
+  "result": "data/experiments/word_games/20261112_strong_controller_coding_v1/result.json",
+  "result_sha256": "197f07c257e7b0ec4795aab1b4d46f3f08a79cc38e51459eaa1ccb7c0efe6b64",
+  "rows": [
+    {
+      "native": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 39.28255156497471,
+        "status": "delivered",
+        "tests_passed": 4
+      },
+      "task": "c01",
+      "translated": {
+        "artifact_tests_passed": 0,
+        "clarifications": 0,
+        "last_actor_finish_reason": "length",
+        "passed": false,
+        "seconds": 41.00614149495959,
+        "status": "context_or_timeout_failure",
+        "tests_passed": 0
+      }
+    },
+    {
+      "native": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 30.839713780209422,
+        "status": "delivered",
+        "tests_passed": 4
+      },
+      "task": "c02",
+      "translated": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "length",
+        "passed": true,
+        "seconds": 33.54267465299927,
+        "status": "delivered",
+        "tests_passed": 4
+      }
+    },
+    {
+      "native": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 30.307578900130466,
+        "status": "delivered",
+        "tests_passed": 4
+      },
+      "task": "c03",
+      "translated": {
+        "artifact_tests_passed": 0,
+        "clarifications": 2,
+        "last_actor_finish_reason": null,
+        "passed": false,
+        "seconds": 41.67798563512042,
+        "status": "invalid_model_output",
+        "tests_passed": 0
+      }
+    },
+    {
+      "native": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 54.63418286293745,
+        "status": "delivered",
+        "tests_passed": 4
+      },
+      "task": "c04",
+      "translated": {
+        "artifact_tests_passed": 0,
+        "clarifications": 1,
+        "last_actor_finish_reason": null,
+        "passed": false,
+        "seconds": 43.56031987606548,
+        "status": "invalid_model_output",
+        "tests_passed": 0
+      }
+    },
+    {
+      "native": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 32.44797808001749,
+        "status": "delivered",
+        "tests_passed": 4
+      },
+      "task": "c05",
+      "translated": {
+        "artifact_tests_passed": 1,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": false,
+        "seconds": 36.1303655852098,
+        "status": "delivered",
+        "tests_passed": 1
+      }
+    },
+    {
+      "native": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 30.80735489889048,
+        "status": "delivered",
+        "tests_passed": 4
+      },
+      "task": "c06",
+      "translated": {
+        "artifact_tests_passed": 1,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": false,
+        "seconds": 33.29880067193881,
+        "status": "delivered",
+        "tests_passed": 1
+      }
+    },
+    {
+      "native": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 40.780267557129264,
+        "status": "delivered",
+        "tests_passed": 4
+      },
+      "task": "c07",
+      "translated": {
+        "artifact_tests_passed": 0,
+        "clarifications": 0,
+        "last_actor_finish_reason": "length",
+        "passed": false,
+        "seconds": 37.91514213499613,
+        "status": "delivered",
+        "tests_passed": 0
+      }
+    },
+    {
+      "native": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 27.55526746204123,
+        "status": "delivered",
+        "tests_passed": 4
+      },
+      "task": "c08",
+      "translated": {
+        "artifact_tests_passed": 4,
+        "clarifications": 0,
+        "last_actor_finish_reason": "stop",
+        "passed": true,
+        "seconds": 32.481982144061476,
+        "status": "delivered",
+        "tests_passed": 4
+      }
+    }
+  ],
+  "source_and_input_hashes_verified": true,
+  "source_sha256": {
+    "/home/rabbit/structure_net/deployments/word_games_opencode/opencode.jsonc": "3deb3d306b11229a2788a79f35fd7dd60fbe1b6f07ae4fb4289ca23034ec535f",
+    "experiments/word_games/bridges/client.py": "92cfa91215f2b3cfe0fbd00b8577d55f3a0a954c798338c61d0adc5876a0b4bd",
+    "experiments/word_games/bridges/contract.py": "ab14a32eff42881c3282313065bafac60869775333170b7fa91a12682c9391a4",
+    "experiments/word_games/bridges/service.py": "7319f111078756aa486fd6e9f6b5cf0103e021e84918fae6defc073c22bc7737",
+    "experiments/word_games/bridges/vendor/runtime.py": "c895bb71ba604c44f9d47810a7b57656dcbd65d4b4c6b131428c277956792325",
+    "experiments/word_games/bridges/vendor/source_runtime.py": "4171fc0259bf280555220b17d56347eca15caadc7094fd1f0cc779a3e1184c33",
+    "experiments/word_games/coding_recovery.py": "ba9716e066bf11f728662ae8edbd91ebdbb884838aee51b28b4748b395b14626",
+    "experiments/word_games/coding_recovery_tasks.py": "2b763c1a44455d48d706ee137665423795c68972f629f58111d72dda2f073fa3",
+    "experiments/word_games/common.py": "2b831404a192cd7b23938c9e0438657a54be4d29533851f73819c8437d71d228",
+    "experiments/word_games/controller_coding.py": "a0e146aaf1927aafbd6a4a63bb693bcbe0be8a3a266089c8beceae7e45e7bded",
+    "experiments/word_games/fixtures/verified_reservation_phi.jsonc": "4cbfa0679ead783db600f2270c292759d0f13dc4be4f8cd4e0627baf26afe401",
+    "experiments/word_games/instruction_feedback.py": "8838f0c423963850f7dc753abb65d3bee16c63773cdfb647e8701f562b896f9c",
+    "experiments/word_games/opencode_harness.py": "e77a68a314215abfef798bf9beb1c261e6798192e0ce5e718fdba17af7dc5571",
+    "experiments/word_games/opencode_sandbox.py": "0ce2235f35a3ca6769cb72c6517239bff07c6f2dc5c11f99fa6a9c06db1ec2bd"
+  },
+  "status": "independently_audited",
+  "strict_completion_coding": {
+    "native": {
+      "tasks": 8,
+      "tasks_passed": 8,
+      "tests": 32,
+      "tests_passed": 32
+    },
+    "translated": {
+      "tasks": 8,
+      "tasks_passed": 1,
+      "tests": 32,
+      "tests_passed": 6
+    }
+  },
+  "study": "word-games-strong-controller-coding-v1",
+  "truncated_clean_exit_cases": [
+    {
+      "arm": "translated",
+      "counted_task_pass": true,
+      "task": "c02"
+    },
+    {
+      "arm": "translated",
+      "counted_task_pass": false,
+      "task": "c07"
+    }
+  ]
+}
