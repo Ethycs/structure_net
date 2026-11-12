@@ -1,0 +1,381 @@
+{
+  "artifact_sha256": {
+    "data/experiments/word_games/20261111_coding_recovery_v1/result.json": "9b71025872b16c9500855d1aa58cbd5422fb6db0efcfc77041939688b0df1182",
+    "data/experiments/word_games/20261111_coding_recovery_v3/result.json": "ddc1aac58cb3938fa38bbd2931ccd2d36bc7e379f4051d008cd28fbd6deb70e4",
+    "data/experiments/word_games/20261112_humaneval_data_v1/HumanEval.jsonl.gz": "b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef",
+    "data/experiments/word_games/20261112_humaneval_data_v1/source.json": "c3d6fed96bbf3dd5c73397f095c178cea85c0a5668347768a705a65fd5cacd74",
+    "data/experiments/word_games/20261112_humaneval_labels_audit_v1/audit.json": "841897c64e07662a5407423d5d97769dd70f1e9cbc109baddaa569632eab8902",
+    "data/experiments/word_games/20261112_humaneval_labels_audit_v1/registry_readback.json": "1130cef8de89c7aaf410fb769fb5f6c053f01ce8a8a4cc992112bdf6320b0bee",
+    "data/experiments/word_games/20261112_humaneval_labels_preflight_v1/result.json": "611ea277e60f5171463cb3e78281355302e22ed9abc7e8a090f8c65da7e05a8e",
+    "data/experiments/word_games/20261112_humaneval_labels_v1/plan.json": "6bdb7a358df54a0eddb8917868bc47c16eaf6acc5a4a738e953ad486f79f86fe",
+    "data/experiments/word_games/20261112_humaneval_labels_v1/result.json": "3860f37fefbb9ccee10413b8aa8d9a0b13592c79f54e351a0fc5df00c613b997",
+    "data/experiments/word_games/20261112_humaneval_labels_v1/suite.json": "f7b77bf3f8ce49c1d3972974d1dad0ab59795b3470ce4ebc5113ff0a3ed2a45b",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/canonical/evaluation_input.json": "eb11b8057c117ed9ee0f574b8befb44c103a75de398b216664a12b31c99447c1",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/canonical/grade.json": "513daf1bda0bd6a82da10fab1c459440e3c1b5d0261ae8205edef222761306dc",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/canonical/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/canonical/stdout": "1bd5275dbd42ba4b0bd05c56bd1968d6f536b1304b40636c59cb645e5d58322f",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/native/evaluation_input.json": "eb11b8057c117ed9ee0f574b8befb44c103a75de398b216664a12b31c99447c1",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/native/grade.json": "02d527e4a7510adf8694c3bd6b11b4f49a81089abd2d3332b7d8e0ac5c081038",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/native/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/native/stdout": "b4f71a068bf9f2e68d59ab49b2437e48153bdc04445255140d512c3ab91335f1",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/plan.json": "f6bf49a360bf4b80d76a215881cb22a27d09b935be252a7a09c49949ab1b4e9e",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/relabeled/evaluation_input.json": "5acb50a840fc530045b93cf3907b8da81e6cdfb424475115733e1b0093fb579b",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/relabeled/grade.json": "83b95bd5d25552db8b35f5c838ef02a19ed0e31cbc1d7f59de95ecc4a6899647",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/relabeled/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/relabeled/stdout": "8b19e021f30caeb54ff9fc4e9f1540ded9ea7f4492e5808f87d655a1acd108d4",
+    "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/result.json": "4285d99853867b81854b54f763f377da1100bb6265610f6e71bf1503d5163a3a",
+    "data/experiments/word_games/20261112_relabel_coding_v1/result.json": "ad51989a32e8a46fa0d654baed5dac519d10d8e70735d2a23cccab2690351080",
+    "data/experiments/word_games/20261112_strong_controller_coding_v1/result.json": "197f07c257e7b0ec4795aab1b4d46f3f08a79cc38e51459eaa1ccb7c0efe6b64",
+    "docs/08 - Analysis/word_games/2026-11-12_humaneval-labels.md": "ca3ba5c966591c4d5825cd85c24ae03490d6cfa3b706d75a40d35fd03064e96c",
+    "experiments/neural_architecture_lab/register_word_games_humaneval_labels.py": "ad5aca43aaa4cdf0f559f1c401832dc00704f7a1e29b111d89327c298ec9569a",
+    "experiments/word_games/audit_humaneval_labels.py": "5092fc5a55185579dd76523432dfcf8a7bd248e3580daa6089453aa9d2d9df94",
+    "experiments/word_games/fetch_humaneval_labels.py": "d0ae318c93a4e97c783f53b45046c527165d336b4dee561483f901fad7d56e3f",
+    "src/neural_architecture_lab/word_games_humaneval_labels_hypothesis.py": "7774173abc9927818b7b1ec1585ef07a03f675c516115332fd7cdb8f6f2366af"
+  },
+  "campaign_seconds": 1516.4054580510128,
+  "canonical_preflight_checks_passed": 64,
+  "cases": [
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/5"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/6"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/21"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/23"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/26"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/31"
+    },
+    {
+      "native": false,
+      "relabeled": false,
+      "task": "HumanEval/32"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/34"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/35"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/41"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/45"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/46"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/52"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/54"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/56"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/59"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/62"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/63"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/65"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/66"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/72"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/78"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/79"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/95"
+    },
+    {
+      "native": true,
+      "relabeled": false,
+      "task": "HumanEval/113"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/124"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/133"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/139"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/141"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/152"
+    },
+    {
+      "native": true,
+      "relabeled": true,
+      "task": "HumanEval/159"
+    },
+    {
+      "native": false,
+      "relabeled": true,
+      "task": "HumanEval/160"
+    }
+  ],
+  "coding": {
+    "native": {
+      "artifact_tasks_passed": 30,
+      "clarification_requests": 0,
+      "median_task_seconds": 27.21977603249252,
+      "normal_completions": 32,
+      "observed_pass_rate": 0.9375,
+      "requested": 32,
+      "tasks": 32,
+      "tasks_passed": 30,
+      "unattempted": 0,
+      "wilson_95": [
+        0.7985287685584542,
+        0.982689432968359
+      ]
+    },
+    "paired": {
+      "both_fail": 1,
+      "both_pass": 29,
+      "direct_only": 1,
+      "relabeled_only": 1
+    },
+    "relabeled": {
+      "artifact_tasks_passed": 30,
+      "clarification_requests": 0,
+      "median_task_seconds": 29.320249735959806,
+      "normal_completions": 32,
+      "observed_pass_rate": 0.9375,
+      "requested": 32,
+      "tasks": 32,
+      "tasks_passed": 30,
+      "unattempted": 0,
+      "wilson_95": [
+        0.7985287685584542,
+        0.982689432968359
+      ]
+    }
+  },
+  "credential_scan": {
+    "configured_litellm_key_matches": 0,
+    "files": 1727
+  },
+  "focused_tests_passed": 24,
+  "limitations": [
+    "32 sampled public functions, one generation per arm; unknown training contamination.",
+    "Controller-assisted pipeline; not bare-model leaderboard accuracy or repository repair.",
+    "Interface labels only; no information-secrecy claim.",
+    "Original official tests miss an observed associativity error; expanded-suite accuracy not established.",
+    "Extra associativity case was chosen after code inspection and is kept separate from primary scores."
+  ],
+  "model_calls": {
+    "codex_sdk/gpt-5.6-terra": 32,
+    "qwen3.8-35b-a3b": 32
+  },
+  "posthoc_adjusted_task_counts": {
+    "classification": "targeted_posthoc_diagnostic_not_preregistered_accuracy",
+    "native": 30,
+    "primary_scores_unchanged": true,
+    "relabeled": 29,
+    "total": 32
+  },
+  "posthoc_associativity": {
+    "classification": "posthoc_diagnostic_not_primary_accuracy",
+    "primary_results_unchanged": true,
+    "results": {
+      "canonical": {
+        "artifact_passed": true,
+        "delivery_complete": true,
+        "error": null,
+        "grader": "official HumanEval check(candidate)",
+        "network": "unshared",
+        "passed": true,
+        "response": {
+          "captured_output": "",
+          "error": null,
+          "passed": true
+        }
+      },
+      "native": {
+        "artifact_passed": false,
+        "delivery_complete": true,
+        "error": null,
+        "grader": "official HumanEval check(candidate)",
+        "network": "unshared",
+        "passed": false,
+        "response": {
+          "captured_output": "",
+          "error": "IndexError",
+          "message": "list index out of range",
+          "passed": false
+        }
+      },
+      "relabeled": {
+        "artifact_passed": false,
+        "delivery_complete": true,
+        "error": null,
+        "grader": "official HumanEval check(candidate)",
+        "network": "unshared",
+        "passed": false,
+        "response": {
+          "captured_output": "",
+          "error": "AssertionError",
+          "message": "Exponentiation must associate right: 2 ** (3 ** 2)",
+          "passed": false
+        }
+      }
+    }
+  },
+  "program_reexecution_verified": true,
+  "registry_readback": {
+    "exact_readback": {
+      "audit": "data/experiments/word_games/20261112_humaneval_labels_audit_v1/audit.json",
+      "audit_sha256": "841897c64e07662a5407423d5d97769dd70f1e9cbc109baddaa569632eab8902",
+      "both_correct": 29,
+      "category": "information_flow",
+      "confirmation_status": "sampled_public_coding_evaluated",
+      "confirmed": false,
+      "description": "Terra interprets and Qwen executes 32 preselected public HumanEval tasks. Direct 30/32, Qwen interface-relabeled 30/32; 29 both pass. Official tests and normal actor completion required. One sample per arm, tool-assisted controller pipeline. No general coding accuracy, privacy or bare-model leaderboard claim. A separately recorded post-hoc associativity case exposes another relabeled-code defect beyond the official suite.",
+      "direct_experiment_count": 32,
+      "direct_only": 1,
+      "general_accuracy_established": false,
+      "id": "word-games-humaneval-labels-v1",
+      "information_secrecy_tested": false,
+      "name": "WORD_GAMES paired HumanEval interface relabeling",
+      "native_correct": 30,
+      "posthoc_diagnostic": "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/result.json",
+      "posthoc_native_associativity_passed": false,
+      "posthoc_relabeled_associativity_passed": false,
+      "posthoc_sha256": "4285d99853867b81854b54f763f377da1100bb6265610f6e71bf1503d5163a3a",
+      "production_deployed": false,
+      "project": "WORD_GAMES",
+      "relabeled_correct": 30,
+      "relabeled_only": 1,
+      "report": "docs/08 - Analysis/word_games/2026-11-12_humaneval-labels.md",
+      "report_sha256": "ca3ba5c966591c4d5825cd85c24ae03490d6cfa3b706d75a40d35fd03064e96c",
+      "tested": true,
+      "tested_scope": "32 of 164 HumanEval functions selected with seed 731113; one generation per arm; interface labels only"
+    },
+    "record": {
+      "audit": "data/experiments/word_games/20261112_humaneval_labels_audit_v1/audit.json",
+      "audit_sha256": "841897c64e07662a5407423d5d97769dd70f1e9cbc109baddaa569632eab8902",
+      "both_correct": 29,
+      "category": "information_flow",
+      "confirmation_status": "sampled_public_coding_evaluated",
+      "confirmed": false,
+      "description": "Terra interprets and Qwen executes 32 preselected public HumanEval tasks. Direct 30/32, Qwen interface-relabeled 30/32; 29 both pass. Official tests and normal actor completion required. One sample per arm, tool-assisted controller pipeline. No general coding accuracy, privacy or bare-model leaderboard claim. A separately recorded post-hoc associativity case exposes another relabeled-code defect beyond the official suite.",
+      "direct_experiment_count": 32,
+      "direct_only": 1,
+      "general_accuracy_established": false,
+      "id": "word-games-humaneval-labels-v1",
+      "information_secrecy_tested": false,
+      "name": "WORD_GAMES paired HumanEval interface relabeling",
+      "native_correct": 30,
+      "posthoc_diagnostic": "data/experiments/word_games/20261112_humaneval_posthoc_associativity_v1/result.json",
+      "posthoc_native_associativity_passed": false,
+      "posthoc_relabeled_associativity_passed": false,
+      "posthoc_sha256": "4285d99853867b81854b54f763f377da1100bb6265610f6e71bf1503d5163a3a",
+      "production_deployed": false,
+      "project": "WORD_GAMES",
+      "relabeled_correct": 30,
+      "relabeled_only": 1,
+      "report": "docs/08 - Analysis/word_games/2026-11-12_humaneval-labels.md",
+      "report_sha256": "ca3ba5c966591c4d5825cd85c24ae03490d6cfa3b706d75a40d35fd03064e96c",
+      "tested": true,
+      "tested_scope": "32 of 164 HumanEval functions selected with seed 731113; one generation per arm; interface labels only"
+    },
+    "semantic_ids": [
+      "word-games-humaneval-labels-v1",
+      "word-games-strong-controller-coding-v1",
+      "word-games-isomorphic-label-coding-v1",
+      "ncm-public-curriculum-epoch4-v1",
+      "ncm-public-curriculum-epoch2-v1",
+      "ncm-public-curriculum-epoch1-v1",
+      "ncm-native-parent-competence-v1",
+      "ncm-generated-code-decoder-v1",
+      "ncm-broad-generator-v1",
+      "ncm-sequential-full732-pixi-DEV-v1"
+    ],
+    "status": "registered_and_read_back"
+  },
+  "status": "independently_audited_and_registered",
+  "study": "word-games-humaneval-labels-v1"
+}
