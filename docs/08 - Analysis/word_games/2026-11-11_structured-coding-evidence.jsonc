@@ -1,0 +1,172 @@
+{
+  "actor_resource_failures": {
+    "native": 0,
+    "translated": 3
+  },
+  "artifact_coding": {
+    "native": {
+      "tasks_passed": 8,
+      "tests_passed": 32
+    },
+    "translated": {
+      "tasks_passed": 4,
+      "tests_passed": 18
+    }
+  },
+  "artifacts_sha256": {
+    "data/experiments/word_games/20261111_coding_recovery_v3/result.json": "ddc1aac58cb3938fa38bbd2931ccd2d36bc7e379f4051d008cd28fbd6deb70e4",
+    "data/experiments/word_games/20261111_structured_coding_audit_v1/audit.json": "463ea04700377a4502f1d2e2d1e83383decc3ff55e09740341f80b7c6c30d637",
+    "data/experiments/word_games/20261111_structured_coding_audit_v1/registry_readback.json": "0b5b2933d85682714b183d32b448a2761ac46170dd15f77126d350f36f8f286d",
+    "data/experiments/word_games/20261111_structured_proof_v1/result.json": "ef0e49177c26f2a6b8d85ce0fca634b18696540e43a1953c5e3c085a065290d6",
+    "docs/08 - Analysis/word_games/2026-11-11_coding-utility-and-information-recovery.md": "e831bbfb581083f34dab46b3cfaf0a0907448c04ef498d08ab2ce40bba45a6b9",
+    "docs/08 - Analysis/word_games/2026-11-11_structured-commutation-proof.md": "4ab5ecc4475fb52a1ae917677ae0f6274af96da6a13792447c58d474df13d4ec",
+    "experiments/word_games/fixtures/verified_reservation_phi.jsonc": "4cbfa0679ead783db600f2270c292759d0f13dc4be4f8cd4e0627baf26afe401"
+  },
+  "classification": "bounded_structure_passed_empirical_limits_measured",
+  "coding": {
+    "native": {
+      "tasks": 8,
+      "tasks_passed": 8,
+      "tests": 32,
+      "tests_passed": 32
+    },
+    "translated": {
+      "tasks": 8,
+      "tasks_passed": 3,
+      "tests": 32,
+      "tests_passed": 14
+    }
+  },
+  "coding_producer_sha256": {
+    "deployments/word_games_opencode/opencode.jsonc": "3deb3d306b11229a2788a79f35fd7dd60fbe1b6f07ae4fb4289ca23034ec535f",
+    "experiments/word_games/bridges/client.py": "92cfa91215f2b3cfe0fbd00b8577d55f3a0a954c798338c61d0adc5876a0b4bd",
+    "experiments/word_games/bridges/contract.py": "ab14a32eff42881c3282313065bafac60869775333170b7fa91a12682c9391a4",
+    "experiments/word_games/bridges/service.py": "7319f111078756aa486fd6e9f6b5cf0103e021e84918fae6defc073c22bc7737",
+    "experiments/word_games/bridges/vendor/runtime.py": "c895bb71ba604c44f9d47810a7b57656dcbd65d4b4c6b131428c277956792325",
+    "experiments/word_games/bridges/vendor/source_runtime.py": "4171fc0259bf280555220b17d56347eca15caadc7094fd1f0cc779a3e1184c33",
+    "experiments/word_games/coding_recovery.py": "28b29cc53e6fc8947c965276af302fcb767f2ebf5d12ac596c135e23b0610961",
+    "experiments/word_games/coding_recovery_tasks.py": "2b763c1a44455d48d706ee137665423795c68972f629f58111d72dda2f073fa3",
+    "experiments/word_games/fixtures/verified_reservation_phi.jsonc": "4cbfa0679ead783db600f2270c292759d0f13dc4be4f8cd4e0627baf26afe401",
+    "experiments/word_games/opencode_harness.py": "8debd641f39e0f8608580cd2152d3dc0290bcda22f5ec19b6556d68124356608",
+    "experiments/word_games/opencode_sandbox.py": "28e161ac3aa427068564675ea5ef739058296a9e700d60b33a1e608676f60b79"
+  },
+  "coding_result": "data/experiments/word_games/20261111_coding_recovery_v3/result.json",
+  "coding_result_sha256": "ddc1aac58cb3938fa38bbd2931ccd2d36bc7e379f4051d008cd28fbd6deb70e4",
+  "data_provenance": "New synthetic tasks and reservation fixture only; no DataAnnotation material.",
+  "deployment_id": "8b54306d-a232-4c50-8ca6-9defe9969133",
+  "focused_tests_passed": 19,
+  "limitations": [
+    "One model, one source domain, eight related synthetic tasks; repeated controls are not independent samples.",
+    "Not SWE-bench; not arbitrary-code support in the deployed HTTP API.",
+    "Bounded adapter proof uses the existing authoritative Engine, not an independent target Engine.",
+    "No proof of natural-language equivalence, general model accuracy or information secrecy."
+  ],
+  "literal_leakage": {
+    "raw_codec_canary": 8,
+    "raw_codec_original_titles": 48,
+    "receiver_canary": 0,
+    "receiver_original_titles": 0,
+    "titles_total": 48
+  },
+  "model": "qwen3.8-35b-a3b",
+  "oracle_inverse_exact": 8,
+  "producer_hashes_verified": true,
+  "proof": {
+    "cases": 85176,
+    "committed": 3457,
+    "counterexamples": 0,
+    "rejected": 81719,
+    "replays": 85176,
+    "table_checks": {
+      "enum_map": {
+        "injective": true,
+        "size": 18,
+        "total": true
+      },
+      "id_prefixes": {
+        "injective": true,
+        "size": 5,
+        "total": true
+      },
+      "key_map": {
+        "injective": true,
+        "size": 52,
+        "total": true
+      }
+    },
+    "unrestricted_json_bijection": false
+  },
+  "proof_producer_sha256": {
+    "/home/rabbit/structure_net/experiments/word_games/structured_proof.py": "5fa1d89a016a1be6d50c00ef9b5816ae139dda49ef36b0b95850c9a84b94e3ce",
+    "experiments/word_games/bridges/service.py": "7319f111078756aa486fd6e9f6b5cf0103e021e84918fae6defc073c22bc7737",
+    "experiments/word_games/bridges/vendor/runtime.py": "c895bb71ba604c44f9d47810a7b57656dcbd65d4b4c6b131428c277956792325",
+    "experiments/word_games/bridges/vendor/source_runtime.py": "4171fc0259bf280555220b17d56347eca15caadc7094fd1f0cc779a3e1184c33",
+    "experiments/word_games/fixtures/verified_reservation_phi.jsonc": "4cbfa0679ead783db600f2270c292759d0f13dc4be4f8cd4e0627baf26afe401"
+  },
+  "proof_result": "data/experiments/word_games/20261111_structured_proof_v1/result.json",
+  "proof_result_sha256": "ef0e49177c26f2a6b8d85ce0fca634b18696540e43a1953c5e3c085a065290d6",
+  "proof_symbol_count": {
+    "enums": 18,
+    "keys": 52,
+    "prefixes": 5
+  },
+  "raw_recovery_positive_control": true,
+  "recovery": {
+    "no_view": {
+      "canaries_recovered": 0,
+      "cases": 8,
+      "domain_recovered": 0,
+      "titles_recovered": 0,
+      "titles_total": 48
+    },
+    "raw_source": {
+      "canaries_recovered": 8,
+      "cases": 8,
+      "domain_recovered": 8,
+      "titles_recovered": 48,
+      "titles_total": 48
+    },
+    "translated": {
+      "canaries_recovered": 0,
+      "cases": 8,
+      "domain_recovered": 0,
+      "titles_recovered": 0,
+      "titles_total": 48
+    }
+  },
+  "registry_record": {
+    "audit": "data/experiments/word_games/20261111_structured_coding_audit_v1/audit.json",
+    "audit_sha256": "463ea04700377a4502f1d2e2d1e83383decc3ff55e09740341f80b7c6c30d637",
+    "canaries_recovered": 0,
+    "category": "information_flow",
+    "confirmation_status": "bounded_structure_passed_empirical_limits_measured",
+    "confirmed": false,
+    "description": "Actual Engine/Bridge commute over 85176 declared state/context/transaction cases with replay; unrestricted JSON bijection has counterexamples. Native coding 8/8 versus translated 3/8 on synthetic tasks, including actor resource failures. Schema-aware recovery 24/64 renamed-key guesses. Not a natural-language equivalence or secrecy proof.",
+    "direct_experiment_count": 8,
+    "general_secrecy_proved": false,
+    "id": "word-games-structured-proof-coding-recovery-v1",
+    "name": "WORD_GAMES bounded commutation and synthetic coding recovery",
+    "native_correct": 8,
+    "project": "WORD_GAMES",
+    "proof_cases": 85176,
+    "renamed_keys_recovered": 24,
+    "renamed_keys_total": 64,
+    "report": "docs/08 - Analysis/word_games/2026-11-11_coding-utility-and-information-recovery.md",
+    "report_sha256": "e831bbfb581083f34dab46b3cfaf0a0907448c04ef498d08ab2ce40bba45a6b9",
+    "swe_bench_evaluated": false,
+    "tested": true,
+    "tested_scope": "one frozen mapping; 21 states, 8 contexts, 22 events, atomic length <=2; eight related synthetic coding tasks; one Qwen model",
+    "translated_correct": 3,
+    "unrestricted_json_bijection": false
+  },
+  "registry_status": "registered_and_read_back",
+  "renamed_key_recovery": {
+    "correct": 24,
+    "schema_keys": 52,
+    "total": 64,
+    "unchanged_schema_keys": 44
+  },
+  "schema_version": 1,
+  "status": "independently_audited",
+  "study": "word-games-structured-proof-coding-recovery-v1"
+}
