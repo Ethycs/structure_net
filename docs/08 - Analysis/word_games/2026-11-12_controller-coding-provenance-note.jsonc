@@ -1,0 +1,12 @@
+{
+  "kind": "post_run_provenance_followup",
+  "date": "2026-11-12",
+  "measured_source_commit": "1c5bef6",
+  "finding": "The absolute CONFIG path in the producer list rewrote identical source bytes rather than copying into the producer directory. Its hash was checked and it remained Git tracked; per-invocation effective configurations were captured correctly.",
+  "fix": "Normalize all producer paths to repository-relative paths before snapshotting future runs.",
+  "verified_original_config_copy": "data/experiments/word_games/20261112_strong_controller_coding_audit_v2/verified_config_source/deployments/word_games_opencode/opencode.jsonc",
+  "config_sha256": "3deb3d306b11229a2788a79f35fd7dd60fbe1b6f07ae4fb4289ca23034ec535f",
+  "measurement_unchanged": true,
+  "original_result_sha256": "197f07c257e7b0ec4795aab1b4d46f3f08a79cc38e51459eaa1ccb7c0efe6b64",
+  "replay_note": "Use commit 1c5bef6 or the frozen producer source when auditing this measured run against its original source hashes. The later path-normalization change affects future artifact packaging only."
+}

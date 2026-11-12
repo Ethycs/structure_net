@@ -174,6 +174,10 @@ def main():
         Path('experiments/word_games/bridges/contract.py'),Path('experiments/word_games/bridges/service.py'),
         Path('experiments/word_games/bridges/vendor/runtime.py'),Path('experiments/word_games/bridges/vendor/source_runtime.py'),
         Path('experiments/word_games/common.py'),PHI,CONFIG]
+    # CONFIG is absolute; joining it directly would write back to its source
+    # instead of placing a copy beneath the experiment's producer directory.
+    repo = Path(__file__).resolve().parents[2]
+    paths = [p.resolve().relative_to(repo) for p in paths]
     input_paths = [PRIOR/task/name for task,_ in SPECS for name in ('hidden_source_tests.json','grading_private_aliases.json')]
     plan = {'study':'word-games-strong-controller-coding-v1','classification':'known_regression_set_exploratory',
         'controller':CONTROLLER,'controller_deployment_id':CONTROLLER_ID,'executor':qwen.model,
