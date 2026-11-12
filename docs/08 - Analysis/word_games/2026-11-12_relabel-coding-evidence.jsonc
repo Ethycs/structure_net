@@ -1,0 +1,154 @@
+{
+  "actor_invocations": 16,
+  "artifact_sha256": {
+    "data/experiments/word_games/20261112_relabel_coding_audit_v1/audit.json": "04d53d2870df104f8041ccd9a6c209ec00675a29aede82c2b7266ad4cb9bad70",
+    "data/experiments/word_games/20261112_relabel_coding_audit_v1/registry_readback.json": "f0f2d75e7ab30410be8f9006e5cbd787d07e2568b6c9659d5b21ed7adfdaed29",
+    "data/experiments/word_games/20261112_relabel_coding_audit_v1/registry_report_amendment.json": "a9109f0ba676a7e5bbfc24e2f32b4639444eb1d8be5974f4f0d222dabeb73453",
+    "data/experiments/word_games/20261112_relabel_coding_audit_v1/report_before_latency_wording_correction.md": "a8fb32e559e0a5e9a9d46f5bb17ce3134eeab3070605ad61a7e3fe5359ba3039",
+    "data/experiments/word_games/20261112_relabel_coding_v1/plan.json": "9efdf4bad4aec4246122bb091529a6fb2957ce4ade3fd4a9d5af87ea2133c40e",
+    "data/experiments/word_games/20261112_relabel_coding_v1/result.json": "ad51989a32e8a46fa0d654baed5dac519d10d8e70735d2a23cccab2690351080",
+    "data/experiments/word_games/20261112_relabel_coding_v1/suite.json": "7a01b06f045eabc127384b8b4d91c0f7eec2b34f3888cc9ce331986da217cafc",
+    "docs/08 - Analysis/word_games/2026-11-12_relabel-coding.md": "afe08695c169f7f430a502b3f0dcb01bad90c6894d555a8d8526a3189e7a6e81",
+    "experiments/neural_architecture_lab/register_word_games_relabel_coding.py": "94609cb108db0fe9dd142930993d1a5cd65efea31ce3f1c4cc6baef81dea36cb",
+    "experiments/word_games/audit_relabel_coding.py": "7a57f24627f496f7a8b4f9c2201b279061bc5a5656b48fdb29a57ae4b044bb02",
+    "src/neural_architecture_lab/word_games_relabel_coding_hypothesis.py": "b61cafac369887a70858aac604071d32593abc34d23ca6064b3216b6f21a8be2"
+  },
+  "campaign_seconds": 466.3457544289995,
+  "coding": {
+    "native": {
+      "clarification_requests": 0,
+      "median_task_seconds": 34.601766481413506,
+      "original_tests": 32,
+      "original_tests_passed": 32,
+      "tasks": 8,
+      "tasks_passed": 8,
+      "tests": 288,
+      "tests_passed": 288
+    },
+    "relabeled": {
+      "clarification_requests": 0,
+      "median_task_seconds": 36.744817424565554,
+      "original_tests": 32,
+      "original_tests_passed": 32,
+      "tasks": 8,
+      "tasks_passed": 8,
+      "tests": 288,
+      "tests_passed": 288
+    }
+  },
+  "credential_scan": {
+    "configured_litellm_key_matches": 0,
+    "scanned_files": 359
+  },
+  "exact_target_outputs_verified": true,
+  "focused_tests_passed": 29,
+  "input_roundtrip_checks": 288,
+  "latency_scope": "Shared initial controller latency charged to each arm, translation where applicable, actor and harness work; excludes offline grading and audit.",
+  "limitations": [
+    "Eight known task families, one relabeling and one run; not general coding accuracy.",
+    "Free text and identifier suffixes are intentionally visible; no confidentiality claim.",
+    "Compact contracts and disjoint protocol also changed; old-run comparison is not a single-factor estimate.",
+    "Original four examples per task plus 32 generated cases; generated tests are new inputs, not new task families."
+  ],
+  "model_calls": {
+    "codex_sdk/gpt-5.6-terra": {
+      "calls": 8,
+      "seconds": 116.81188441207632
+    },
+    "qwen3.8-35b-a3b": {
+      "calls": 8,
+      "seconds": 15.018523814389482
+    }
+  },
+  "normal_final_actor_stops": 16,
+  "paired_case_disagreements": 0,
+  "producer_sha256": {
+    "deployments/word_games_opencode/opencode.jsonc": "3deb3d306b11229a2788a79f35fd7dd60fbe1b6f07ae4fb4289ca23034ec535f",
+    "docs/07 - Status Reports/word-games/2026-11-12_relabel-coding-plan.md": "4f29acbbdc0686b98a2abac92a2d434e8cadb091835c9b2841e87f13923c7f29",
+    "experiments/word_games/bridges/client.py": "92cfa91215f2b3cfe0fbd00b8577d55f3a0a954c798338c61d0adc5876a0b4bd",
+    "experiments/word_games/bridges/vendor/source_runtime.py": "4171fc0259bf280555220b17d56347eca15caadc7094fd1f0cc779a3e1184c33",
+    "experiments/word_games/coding_recovery.py": "ba9716e066bf11f728662ae8edbd91ebdbb884838aee51b28b4748b395b14626",
+    "experiments/word_games/coding_recovery_tasks.py": "2b763c1a44455d48d706ee137665423795c68972f629f58111d72dda2f073fa3",
+    "experiments/word_games/common.py": "2b831404a192cd7b23938c9e0438657a54be4d29533851f73819c8437d71d228",
+    "experiments/word_games/controller_coding.py": "f7399efc6827f3f67be2b4d3cbf6c8b42a73aff9c9127dda684d92e28ce2abfc",
+    "experiments/word_games/instruction_feedback.py": "8838f0c423963850f7dc753abb65d3bee16c63773cdfb647e8701f562b896f9c",
+    "experiments/word_games/opencode_harness.py": "e77a68a314215abfef798bf9beb1c261e6798192e0ce5e718fdba17af7dc5571",
+    "experiments/word_games/opencode_sandbox.py": "0ce2235f35a3ca6769cb72c6517239bff07c6f2dc5c11f99fa6a9c06db1ec2bd",
+    "experiments/word_games/relabel_coding.py": "591b2f0dac6e1ba7753129f226bd518710c569b6a61a2ff3b1f3235ec2279f8c",
+    "experiments/word_games/run_relabel_coding.py": "1d21ae36c8c2b45b75eeece3f6618f0cec7078dd86bbf00dc320495a8c3ee21c"
+  },
+  "program_reexecution_verified": true,
+  "registry_receipt": {
+    "amendment": "Report text correction; measured evidence unchanged.",
+    "exact_readback": {
+      "audit": "data/experiments/word_games/20261112_relabel_coding_audit_v1/audit.json",
+      "audit_sha256": "04d53d2870df104f8041ccd9a6c209ec00675a29aede82c2b7266ad4cb9bad70",
+      "category": "information_flow",
+      "confirmation_status": "paired_label_coding_evaluated",
+      "confirmed": false,
+      "description": "Terra controller and Qwen translator/executor on eight known coding tasks with 36 cases each. Native 8/8 tasks and 288/288 cases; relabeled 8/8 and 288/288. Strict normal-stop completion required. Free text and identifier suffixes deliberately preserved. Paired case disagreements 0. Not a general accuracy or privacy claim.",
+      "direct_experiment_count": 8,
+      "general_accuracy_established": false,
+      "id": "word-games-isomorphic-label-coding-v1",
+      "information_secrecy_tested": false,
+      "name": "WORD_GAMES Qwen coding with typed equivalent labels",
+      "native_correct": 8,
+      "native_tests": 288,
+      "paired_case_disagreements": 0,
+      "production_deployed": false,
+      "project": "WORD_GAMES",
+      "relabeled_correct": 8,
+      "relabeled_tests": 288,
+      "report": "docs/08 - Analysis/word_games/2026-11-12_relabel-coding.md",
+      "report_sha256": "afe08695c169f7f430a502b3f0dcb01bad90c6894d555a8d8526a3189e7a6e81",
+      "source_target_reference_checks": 288,
+      "tested": true,
+      "tested_scope": "eight known synthetic task families, one label table, 288 cases; compact contracts, typed maps and disjoint protocol"
+    },
+    "previous_receipt": "data/experiments/word_games/20261112_relabel_coding_audit_v1/registry_readback.json",
+    "previous_receipt_sha256": "f0f2d75e7ab30410be8f9006e5cbd787d07e2568b6c9659d5b21ed7adfdaed29",
+    "previous_report": "data/experiments/word_games/20261112_relabel_coding_audit_v1/report_before_latency_wording_correction.md",
+    "previous_report_sha256": "a8fb32e559e0a5e9a9d46f5bb17ce3134eeab3070605ad61a7e3fe5359ba3039",
+    "record": {
+      "audit": "data/experiments/word_games/20261112_relabel_coding_audit_v1/audit.json",
+      "audit_sha256": "04d53d2870df104f8041ccd9a6c209ec00675a29aede82c2b7266ad4cb9bad70",
+      "category": "information_flow",
+      "confirmation_status": "paired_label_coding_evaluated",
+      "confirmed": false,
+      "description": "Terra controller and Qwen translator/executor on eight known coding tasks with 36 cases each. Native 8/8 tasks and 288/288 cases; relabeled 8/8 and 288/288. Strict normal-stop completion required. Free text and identifier suffixes deliberately preserved. Paired case disagreements 0. Not a general accuracy or privacy claim.",
+      "direct_experiment_count": 8,
+      "general_accuracy_established": false,
+      "id": "word-games-isomorphic-label-coding-v1",
+      "information_secrecy_tested": false,
+      "name": "WORD_GAMES Qwen coding with typed equivalent labels",
+      "native_correct": 8,
+      "native_tests": 288,
+      "paired_case_disagreements": 0,
+      "production_deployed": false,
+      "project": "WORD_GAMES",
+      "relabeled_correct": 8,
+      "relabeled_tests": 288,
+      "report": "docs/08 - Analysis/word_games/2026-11-12_relabel-coding.md",
+      "report_sha256": "afe08695c169f7f430a502b3f0dcb01bad90c6894d555a8d8526a3189e7a6e81",
+      "source_target_reference_checks": 288,
+      "tested": true,
+      "tested_scope": "eight known synthetic task families, one label table, 288 cases; compact contracts, typed maps and disjoint protocol"
+    },
+    "semantic_ids": [
+      "word-games-isomorphic-label-coding-v1",
+      "word-games-strong-controller-coding-v1",
+      "ncm-broad-generator-v1",
+      "ncm-generated-code-decoder-v1",
+      "ncm-public-curriculum-epoch4-v1",
+      "ncm-public-curriculum-epoch2-v1",
+      "ncm-public-curriculum-epoch1-v1",
+      "ncm-sequential-full732-pixi-DEV-v1",
+      "ncm-sol-teacher144-outage-firsts-v1",
+      "ncm-native-parent-competence-v1"
+    ],
+    "status": "registered_and_read_back"
+  },
+  "semantic_equivalence_checks": 288,
+  "status": "independently_audited_and_registered",
+  "study": "word-games-isomorphic-label-coding-v1"
+}
