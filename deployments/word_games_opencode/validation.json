@@ -1,0 +1,36 @@
+{
+  "verified_date": "2026-11-11",
+  "harness": "OpenCode",
+  "harness_version": "1.19.5",
+  "model": "qwen3.8-35b-a3b",
+  "config_sha256": "3deb3d306b11229a2788a79f35fd7dd60fbe1b6f07ae4fb4289ca23034ec535f",
+  "native_tool_execution_confirmed": true,
+  "initial_task_passed": false,
+  "initial_tools": [
+    {
+      "tool": "read",
+      "status": "completed"
+    },
+    {
+      "tool": "edit",
+      "status": "completed"
+    },
+    {
+      "tool": "edit",
+      "status": "completed"
+    },
+    {
+      "tool": "read",
+      "status": "completed"
+    }
+  ],
+  "resume_task_passed": true,
+  "same_session_confirmed": true,
+  "source_proof": [
+    "data/experiments/word_games/20261111_opencode_native_v1",
+    "data/experiments/word_games/20261111_opencode_native_v2",
+    "data/experiments/word_games/20261111_opencode_native_resume_v1"
+  ],
+  "double_pass_bridge_integrated": false,
+  "classification": "harness_integration_not_accuracy_estimate"
+}

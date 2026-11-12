@@ -1,0 +1,47 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "wordgames/qwen3.8-35b-a3b",
+  "small_model": "wordgames/qwen3.8-35b-a3b",
+  "enabled_providers": ["wordgames"],
+  "autoupdate": false,
+  "share": "disabled",
+  "snapshot": false,
+  "compaction": {"auto": false, "prune": false},
+  "provider": {
+    "wordgames": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "WORD_GAMES Qwen",
+      "options": {
+        "baseURL": "https://central-dev.zt:4000/v1",
+        "apiKey": "{env:LITELLM_KEY}"
+      },
+      "models": {
+        "qwen3.8-35b-a3b": {
+          "name": "Qwen 35B A3B",
+          "tool_call": true,
+          "reasoning": false,
+          "limit": {"context": 8192, "output": 1024}
+        }
+      }
+    }
+  },
+  "default_agent": "actor",
+  "agent": {
+    "actor": {
+      "description": "Native Qwen actor for WORD_GAMES tasks",
+      "mode": "primary",
+      "prompt": "You are the native task actor. Use tools to inspect and change the task workspace. Perform only the requested changes, verify the actual result with tools, and report it. Do not delegate. Tool results establish what happened; do not claim a change succeeded without checking.",
+      "steps": 12,
+      "temperature": 0,
+      "permission": {
+        "*": "deny",
+        "read": "allow",
+        "edit": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "external_directory": "deny"
+      }
+    }
+  },
+  "permission": {"*": "deny"}
+}
