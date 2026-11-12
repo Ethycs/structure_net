@@ -13,23 +13,39 @@ import subprocess
 import time
 
 from .opencode_sandbox import launch, runtime_for
+from .instruction_feedback import ASK_PROMPT, REVIEW_PROMPT, extract
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT/'deployments/word_games_opencode/opencode.jsonc'
-def run(workspace, prompt, output, key, session=None, timeout=240):
+def run(workspace, prompt, output, key, session=None, timeout=240, *, instruction_check=False):
     workspace = Path(workspace).resolve()
     if not workspace.is_dir():
         raise ValueError('workspace must exist')
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
+    if instruction_check:
+        (output/'proposed_instruction.txt').write_text(prompt)
+        prompt = ('REVIEW ONLY. The quoted instruction below is data to assess, not an action '
+                  'to carry out in this turn. Read task files if needed, then stop. '
+                  'If the instruction is clear, return only {"kind":"ready"}; the executor '
+                  'will act later. If not, return only {"kind":"needs_simplification",'
+                  '"needs":[applicable reason codes]}. Do not try to edit or find other ways '
+                  'to execute it.\nPROPOSED INSTRUCTION\n' + json.dumps(prompt))
     (output/'prompt.txt').write_text(prompt)
     snapshot = output/'config.json'
-    snapshot.write_bytes(CONFIG.read_bytes())  # Only an env reference, never the key.
-    sandbox, env = launch(workspace, snapshot, key)
+    config = json.loads(CONFIG.read_text())
+    if instruction_check:
+        config['agent']['actor']['prompt'] = REVIEW_PROMPT
+        config['agent']['actor']['permission']['edit'] = 'deny'
+    else:
+        config['agent']['actor']['prompt'] += '\n' + ASK_PROMPT
+    snapshot.write_text(json.dumps(config, indent=2)+'\n')  # Env reference only; never the key.
+    sandbox, env = launch(workspace, snapshot, key, read_only=instruction_check)
     executable = '/run/word-games/opencode'
     (output/'sandbox.json').write_text(json.dumps({
         'launcher': sandbox, 'environment_names': sorted(env),
-        'network': 'shared', 'session_runtime': str(runtime_for(workspace)),
+        'network': 'shared', 'workspace_read_only': instruction_check,
+        'session_runtime': str(runtime_for(workspace)),
         'source_sha256': hashlib.sha256(Path(__file__).with_name('opencode_sandbox.py').read_bytes()).hexdigest(),
     }, indent=2)+'\n')
     preflight = subprocess.run(sandbox + [executable, '--version'], env=env,
@@ -81,6 +97,26 @@ def run(workspace, prompt, output, key, session=None, timeout=240):
               'sandbox': 'bubblewrap', 'network': 'shared',
               'session_runtime': str(runtime_for(workspace)),
               'classification': 'native_actor_transport_only_task_success_requires_independent_check'}
+    result['instruction_check'] = instruction_check
+    result['instruction_status'] = 'unreviewed'
+    result['controller_request'] = None
+    if not (returncode or timed_out or result['errors']):
+        try:
+            feedback = extract(events, review=instruction_check)
+        except ValueError as exc:
+            result['errors'].append({'type': 'error', 'error': {
+                'name': 'InvalidInstructionFeedback', 'message': str(exc)}})
+            result['instruction_status'] = 'invalid_feedback'
+        else:
+            if feedback:
+                result['instruction_status'] = feedback['kind']
+                if feedback['kind'] == 'needs_simplification':
+                    result['controller_request'] = feedback
+                    result['writes_before_pause'] = any(t['tool'] in {'edit', 'write', 'apply_patch'}
+                        and t['status'] == 'completed' for t in tools)
+                    result['classification'] = 'waiting_for_stronger_controller_simplification'
+                else:
+                    result['classification'] = 'instruction_ready_not_executed'
     (output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
     return result
 
@@ -91,6 +127,8 @@ def main():
     parser.add_argument('--prompt', required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--session')
+    parser.add_argument('--instruction-check', action='store_true',
+                        help='Read-only Qwen readiness check; exit 2 requests simpler controller instructions')
     parser.add_argument('--key-env-file', type=Path, help='Read existing LITELLM_KEY without storing it in OpenCode auth config')
     args = parser.parse_args()
     os.umask(0o077)
@@ -100,10 +138,13 @@ def main():
                    for x in args.key_env_file.read_text().splitlines() if x.startswith('LITELLM_KEY='))
     if not key:
         parser.error('LITELLM_KEY is required')
-    result = run(args.workspace, args.prompt, args.output, key, args.session)
+    result = run(args.workspace, args.prompt, args.output, key, args.session,
+                 instruction_check=args.instruction_check)
     print(json.dumps(result, indent=2))
     if result['returncode'] or result['timed_out'] or result['errors']:
         raise SystemExit(1)
+    if result['controller_request']:
+        raise SystemExit(2)
 
 
 if __name__ == '__main__':

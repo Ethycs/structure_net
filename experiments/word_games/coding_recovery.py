@@ -131,6 +131,7 @@ def main():
     source_manual={'name':SOURCE_DOMAIN,'rules':manual(source_map)}
     paths=[Path(__file__),Path('experiments/word_games/coding_recovery_tasks.py'),PHI,CONFIG,
         Path('experiments/word_games/opencode_harness.py'),Path('experiments/word_games/opencode_sandbox.py'),
+        Path('experiments/word_games/instruction_feedback.py'),
         Path('experiments/word_games/bridges/service.py'),Path('experiments/word_games/bridges/contract.py'),
         Path('experiments/word_games/bridges/client.py'),Path('experiments/word_games/bridges/vendor/runtime.py'),
         Path('experiments/word_games/bridges/vendor/source_runtime.py')]
@@ -195,6 +196,11 @@ def main():
                     'Do not merely describe the code.',out,key)
                 error_names={e.get('error',{}).get('name') for e in outcome['errors']}
                 resource_failure=outcome['timed_out'] or bool(error_names and error_names<={'ContextOverflowError'})
+                # A clean OpenCode exit can be a request to its controller,
+                # not delivery of an executable answer. This old pilot has no
+                # stronger-controller loop: stop rather than invent a reply.
+                if outcome.get('controller_request'):
+                    raise RuntimeError('stronger_controller_simplification_required:'+task+':'+arm)
                 delivery_complete=not (outcome['timed_out'] or outcome['errors'] or outcome['returncode'])
                 if not delivery_complete and not resource_failure:
                     raise RuntimeError('actor_transport_failure:'+task+':'+arm)

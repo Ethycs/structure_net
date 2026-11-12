@@ -1,0 +1,79 @@
+{
+  "architecture": "stronger controller interprets -> Qwen translates/checks -> Qwen executes; clarification returns to stronger controller",
+  "artifact_sha256": {
+    "data/experiments/word_games/20261112_instruction_simplification_v3/execute/result.json": "145136bac023691db4b1e33ca3221e0284d8efb214a6ac3f172b13ad63f7adce",
+    "data/experiments/word_games/20261112_instruction_simplification_v3/execution_check.json": "6ade64e4c1f0d7f0bef5291aa3a1bf066dbdbe5bdbebde01f154f76d0e1a773d",
+    "data/experiments/word_games/20261112_instruction_simplification_v3/plan.json": "3427518d6365aa914600b764e2da353906065853b39a9cf5d075be2d66060879",
+    "data/experiments/word_games/20261112_instruction_simplification_v3/revised_review/result.json": "7a237dff1af0d76374392b2dbe902d9ede4482244854c94c6682e4d4d3f03470",
+    "data/experiments/word_games/20261112_instruction_simplification_v3/unclear_review/result.json": "ad01aca90e8c0e4408cd05370a4d0cff25f5b6818dd045ad5e31c0630529d827",
+    "data/experiments/word_games/20261112_instruction_simplification_v3/validation.json": "8f4d8587a37d9910f6a406a453b10ee029255339463a20674838c6816a698286"
+  },
+  "clarification_request": {
+    "kind": "needs_simplification",
+    "message": "Supply the missing task detail instead of asking me to guess.",
+    "needs": [
+      "missing_information"
+    ]
+  },
+  "classification": "systems_check_not_accuracy_experiment",
+  "date": "2026-11-12",
+  "execution_check": {
+    "expected": {
+      "account": "synthetic-account",
+      "balance": 12,
+      "unit": "credits"
+    },
+    "observed": {
+      "account": "synthetic-account",
+      "balance": 12,
+      "unit": "credits"
+    },
+    "passed": true,
+    "same_session": true,
+    "seconds": 11.336175543023273,
+    "tools": [
+      {
+        "status": "completed",
+        "tool": "read"
+      },
+      {
+        "status": "completed",
+        "tool": "edit"
+      },
+      {
+        "status": "completed",
+        "tool": "read"
+      }
+    ]
+  },
+  "focused_tests_passed": 19,
+  "harness": "OpenCode 1.19.5 + bubblewrap",
+  "limitations": [
+    "One new synthetic task; no coding-accuracy claim.",
+    "Controller revision came from the current stronger assistant session; no automatic remote controller route was configured.",
+    "Qwen review and execution were tested; the full metaphor-translation pipeline and deployed HTTP bridge were not changed.",
+    "Ordinary actor pauses do not roll back prior writes; readonly review prevents task writes."
+  ],
+  "model": "qwen3.8-35b-a3b",
+  "non_outcome_source_note": "After the run, the old coding pilot producer list was extended to snapshot the new feedback helper. That pilot was not executed in this systems check.",
+  "prior_failed_attempts": [
+    "data/experiments/word_games/20261112_instruction_simplification_v1",
+    "data/experiments/word_games/20261112_instruction_simplification_v2"
+  ],
+  "review_workspace_unchanged": true,
+  "same_session_all_three_stages": true,
+  "seconds_by_stage": {
+    "execute": 11.336175543023273,
+    "revised_review": 4.573850322980434,
+    "unclear_review": 4.724698066012934
+  },
+  "source_sha256_at_launch": {
+    "deployments/word_games_opencode/opencode.jsonc": "3deb3d306b11229a2788a79f35fd7dd60fbe1b6f07ae4fb4289ca23034ec535f",
+    "experiments/word_games/coding_recovery.py": "6af62be66bf098b34c619df55a0d08920c490523b74a0ec13d6e9029da6ae09a",
+    "experiments/word_games/instruction_feedback.py": "8838f0c423963850f7dc753abb65d3bee16c63773cdfb647e8701f562b896f9c",
+    "experiments/word_games/opencode_harness.py": "e77a68a314215abfef798bf9beb1c261e6798192e0ce5e718fdba17af7dc5571",
+    "experiments/word_games/opencode_sandbox.py": "0ce2235f35a3ca6769cb72c6517239bff07c6f2dc5c11f99fa6a9c06db1ec2bd"
+  },
+  "status": "verified_local_pause_reply_resume",
+  "study": "word-games-instruction-simplification-v1"
+}

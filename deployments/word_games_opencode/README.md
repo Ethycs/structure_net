@@ -1,6 +1,6 @@
 # Native Qwen actor in OpenCode
 
-Last verified: 2026-11-11.
+Last verified: 2026-11-12.
 
 Use the installed **OpenCode 1.19.5** harness with **Qwen3.8-35B-A3B** as the
 native task actor. OpenCode owns the model/tool loop, file operations, session
@@ -86,6 +86,77 @@ The launcher uses `--pure` and disables project config loading and automatic upd
 per-step token usage and process duration are retained under the requested output
 directory, along with the sandbox command (no key), startup result and policy
 source hash. A zero exit code is not treated as task success.
+
+## Asking the stronger controller for simpler instructions
+
+The intended forward path is **stronger controller interprets → Qwen translates
+→ Qwen executes**. Either Qwen pass must be able to ask the stronger controller
+to simplify its instruction. Simplification preserves the objective and success
+criteria; it must not silently make the task easier by dropping requirements.
+
+The native actor now has an explicit pause contract. When it needs a smaller
+step, plain language, exact inputs/outputs, a success check, a resolved conflict
+or a missing detail, it ends its turn with a typed `needs_simplification` verdict.
+The launcher exposes `instruction_status` and `controller_request` in `result.json`.
+The CLI exits **2** for this pause, **1** for transport/protocol errors and **0**
+for an ordinary completed invocation. Exit zero still does not prove task success.
+The old coding pilot stops on a request because it has no stronger-controller
+loop; it cannot count a pause as a completed answer.
+
+Only fixed reason codes and host-written messages appear in `controller_request`.
+Explanatory model text and tool outputs remain private run artifacts. Extra
+request fields, unknown codes, duplicate keys and malformed verdicts are rejected.
+The caller must forward this field, not the raw event log, to its controller.
+
+For a check **before any task writes**, run:
+
+```sh
+pixi run -e word-games python -m experiments.word_games.opencode_harness \
+  --workspace /absolute/path/to/task-workspace \
+  --instruction-check \
+  --prompt 'The translated instruction for the next step.' \
+  --output data/experiments/word_games/NEW_INSTRUCTION_REVIEW \
+  --key-env-file .env
+```
+
+This disables editing and mounts the workspace read-only in bubblewrap. Qwen
+can inspect files, then return `ready` or `needs_simplification`; it cannot execute
+the task. Session history remains writable so the same session can continue.
+An ordinary execution can also pause, but earlier edits are not rolled back;
+`writes_before_pause` reports completed write-tool calls observed in that turn.
+
+On a pause, the stronger controller should supply one smaller step with explicit
+inputs, output and an observable success check. Pass that revision through the
+Qwen translation stage, then repeat the check using the recorded `--session`.
+Once ready, invoke the ordinary actor with that session and the accepted
+translated instruction to execute it. A readiness verdict is not authorization
+to execute an unrelated or subsequently changed instruction.
+
+The launcher emits the handoff and supports same-session resumption; it does not
+select or call a remote stronger-controller model automatically. Each invocation
+has the existing step/time budget, and there is no automatic clarification retry
+loop. The separate reservation HTTP service has not acquired this native-actor
+workflow merely because the launcher supports it.
+
+The 2026-11-12 synthetic systems check verified the complete local pause/reply/
+resume sequence. Qwen requested a missing adjustment policy without changing the
+ledger; this stronger assistant session supplied a concrete revision; Qwen marked
+it ready in a second read-only turn; the same session then used `read → edit →
+read` and changed only the requested balance. Both review turns left the ledger
+unchanged. The checks took 4.57 seconds for the clear review and 11.34 seconds for
+execution, including process/transport overhead. This is one synthetic mechanism
+check, not a coding-accuracy estimate or a completed metaphor-translation test.
+
+Two earlier attempts are preserved: v1 rejected a correct pause because the actor
+put prose before its JSON; v2 passed the pause but tried to execute the clarified
+imperative during review. Read-only isolation prevented changes. V3 discards
+prose before a validated terminal verdict and explicitly quotes the proposed
+instruction as review data. The failed attempts are not pooled into the passing
+check. Raw artifacts are in
+`data/experiments/word_games/20261112_instruction_simplification_v{1,2,3}/`;
+`instruction-simplification-validation.jsonc` records hashes and scope. Nineteen
+focused tests passed, including the real read-only boundary and existing sandbox
+and coding-grader checks.
 
 ## What was actually verified
 

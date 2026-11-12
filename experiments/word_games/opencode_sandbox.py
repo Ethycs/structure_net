@@ -14,7 +14,7 @@ def runtime_for(workspace):
     return RUNTIME / 'sandboxes' / identity
 
 
-def launch(workspace, config, key):
+def launch(workspace, config, key, *, read_only=False):
     """Return the sandbox prefix and minimal environment. Fail if unavailable.
 
     The network is shared for LiteLLM. Writable host mounts are the requested
@@ -54,7 +54,7 @@ def launch(workspace, config, key):
         '--ro-bind', '/etc', '/etc',
         '--ro-bind', '/run/systemd/resolve', '/run/systemd/resolve',
         '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp',
-        '--bind', str(workspace), str(workspace),
+        '--ro-bind' if read_only else '--bind', str(workspace), str(workspace),
     ]
     # If the whole repository is the task workspace, hide all other actor
     # histories and mask the writable alias to this run's config snapshot.
