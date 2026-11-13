@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/structure_net", "src/neural_architecture_lab"]
+packages = ["src/structure_net", "src/neural_architecture_lab", "src/structure_net_resources"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -49,6 +49,9 @@ LD_LIBRARY_PATH = ""
 CUBLAS_WORKSPACE_CONFIG = ":4096:8"
 
 [tool.pixi.tasks]
+gpu-status = "python -m structure_net_resources.cli status"
+gpu-reservation = "python -m structure_net_resources.cli"
+gpu-run = "python -m structure_net_resources.cli run"
 word-games-up = "python -m experiments.word_games_triton.fleet load"
 word-games-down = "python -m experiments.word_games_triton.fleet stop"
 word-games-load = "python -m experiments.word_games_triton.fleet load"
