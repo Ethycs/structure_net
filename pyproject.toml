@@ -3,7 +3,7 @@ authors = [{name = "Ethycs", email = "Ethycs@users.noreply.github.com"}]
 name = "structure_net"
 requires-python = ">= 3.11"
 version = "0.1.0"
-dependencies = ["jax[cuda12]>=0.6.0,<0.7", "ripser>=0.6.15,<0.7"]
+dependencies = ["jax[cuda12]>=0.6.0,<0.7", "ripser>=0.6.15,<0.7", "pyarrow==19.0.1"]
 
 [build-system]
 build-backend = "hatchling.build"

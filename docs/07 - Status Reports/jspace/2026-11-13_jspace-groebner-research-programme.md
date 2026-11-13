@@ -269,3 +269,28 @@ gain, interventions fail, reconstruction is ambiguous, or costs exceed savings.
 GPU stages must acquire and release an experiment reservation; CPU analyses use
 root locked Pixi with CUDA hidden. Existing services remain offline unless the
 user requests a deployment.
+
+## Compact attention transport pilot, 2026-11-13
+
+[JSPACE-ATTENTION-TRANSPORT-01](../../08%20-%20Analysis/jspace/2026-11-13_jspace-attention-transport.md)
+tests actual attention writes and composed nonzero-observable maps without a
+source-ideal gate. The eight selected country-token J rows do not constitute a
+validated causal concept: a layer-26 compact edit changes country identity in
+0/128 held-out worlds, versus 127/128 for dense and complementary donor edits.
+Country identity is readable from the compact coordinates in 128/128 examples
+from layer 27 onward. Exact task answer accuracy is only 65/128 because country
+names usually replace requested nationality adjectives; the identity endpoint
+was declared separately before evaluation and must not replace that task score.
+
+Quadratic composed change error at layer 29 is 8.181 versus linear 5.799 and
+zero-change baseline 1. A posthoc full-state audit shows the perturbation is not
+simply erased: median final L2 is 19.75× injection, but only 0.49% of aggregate
+energy is inside the selected J chart. All 128 worlds show downstream growth,
+and replayed generations match exactly. This is numerical propagation outside
+the narrow measured span, not a transported semantic or polynomial certificate.
+
+The concrete next target is the successful layer-26 donor route and the layer-27
+attention transition: learn cross-attribute country contrasts in a broader J
+dictionary, validate causal edits against full/PCA controls, then test contextual
+transport of their readouts. The study narrows the coordinate-construction issue;
+it does not invalidate the broader operator/module or Gröbner programme.
