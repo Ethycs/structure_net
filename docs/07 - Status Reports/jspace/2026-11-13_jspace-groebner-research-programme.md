@@ -17,18 +17,78 @@ or support a cheaper task-specific replacement.
 
 The working chain is:
 
-`task Jacobians → candidate CAVs → causal validation → approximate relations → bounded symbolic reasoning → measured replacement`
+`task Jacobians → candidate CAVs → causal validation → observable transport and relations → bounded symbolic reasoning → measured replacement`
 
 Each arrow is a separate empirical question. A token-associated Jacobian row is
 a candidate direction, not automatically a validated concept. A low residual is
 evidence about sampled data, not an exact equation of the transformer. A compact
 symbolic expression does not automatically use fewer bytes or run faster.
 
+## Reassessment after the user's request for perspective
+
+This is a correction to the research framing, made after the completed studies.
+It changes neither their frozen questions nor their measured results. The
+original conversation already distinguishes the action on observables from
+preserving their defining equations. Our neural pilots did not adequately test
+that broader construction.
+
+Four mathematical objects must remain separate:
+
+1. A within-layer vanishing relation, `g(z_l)=0`.
+2. A mixed-layer graph relation, `p(z_l,z_next)=0`.
+3. Transport of observable values, such as
+   `Phi_next(F_l(H)) = M_l Phi_l(H)` on a specified domain.
+4. Operator/module relations among transported readouts, as in the fixed-linear
+   CAV/Krylov construction in the original discussion.
+
+Our neural searches primarily addressed the first two, and the polynomial heads
+addressed classification. Neither is a complete test of the third or fourth.
+The original requirement for a nonempty source ideal was legitimate for its
+particular ideal-transport certificate, but must not gate all observable
+transport research. For `x_next=2x`, `x_next²=4x²` transports a polynomial
+observable exactly even though unrestricted source `x` has zero vanishing ideal.
+Likewise, projecting `(t,t²)` to `t` leaves no destination-only constraint, but
+the second source coordinate remains exactly recoverable as `t²`. An empty
+destination ideal does not establish loss of recoverability or failure of
+compression relative to a redundant source representation.
+
+The central interpretation question is whether semantically anchored functions
+of activations have a compact, predictable action through actual model layers.
+The polynomial's coefficients and its coordinate chart may change with depth.
+The relevant layer pullback is `U_l f = f composed with F_l`. Different
+transformer layers have different maps, so ordinary powers of one fixed matrix
+are not a faithful model without an additional justified construction.
+Coordinate polynomials commute under pointwise multiplication; arbitrary layer
+operators need not commute. The fixed-operator module prototype cannot be
+transferred to multiple layer operators by assuming those operators commute.
+
+Interpretive value can precede autonomous state compression. Recovering a
+concept with a transported nonlinear readout, identifying where two concepts
+become indistinguishable, or predicting an interaction under intervention would
+each be informative. A final-token closure failure establishes omitted context
+for that chosen state/domain; it does not invalidate a contextual mechanism or
+every possible concept algebra. Conversely, merely finding a polynomial that
+fits a finite dataset is not sufficient evidence for any of these claims.
+
+The current positive signal is seven held-out J cross-layer relations, compared
+with thirteen PCA and zero random relations. Their counts are not independent
+mechanisms or a measure of algebraic dimension. Residual carryover can explain
+some such relationships, and the tests have not isolated the semantic content
+or a multi-layer action. The current negative signal is that a small, selected
+J dictionary and weak country CAVs fail the declared intervention gate. That
+limits this implementation, not the full-vocabulary J-space hypothesis. The
+linear exit is an engineering baseline, not evidence for the concept algebra.
+
+The possible contribution is a causally meaningful algebra of transformer
+observables with a measured, composable action and a characterized error/domain.
+Novelty and practical compression are separate claims, both still unestablished.
+
 ## Classification of useful outcomes
 
 | Use | What the algebra contributes | Evidence required | Present status |
 | --- | --- | --- | --- |
 | Describe representation structure | Identify relationships among continuous observables, remove redundant polynomial descriptions, expose interactions | New-world and new-format residuals; stable coefficients/support; shuffled, linear, PCA and random controls; semantic anchoring | Some held-out mixed-layer relations; no demonstrated J advantage |
+| Explain how concept functions transform | Recover an action on a family of observables, including nonlinear downstream readouts and operator/module dependencies | Contiguous-layer and composed predictions; held-out concept combinations; predicted intervention effects; matched carryover and learned linear controls | Central construction remains under-tested; separate adjacent-pair equations and output classifiers are partial evidence |
 | Explain how relations propagate | Eliminate intermediate variables; check a target relation's pullback by normal-form reduction; distinguish created, preserved and broken relations | Valid source conditions and transition model; intervention agreement; explicit domain and approximation errors | Exact constructed controls work; neural transport remains unestablished |
 | Compress stored coordinates | Solve for omitted coordinates, identify necessary branch information and numerical sensitivity | Unique/stable decoder, actual byte counts, round-trip errors and downstream task quality | Finite toy codec works; no neural state compression validated |
 | Replace a task-specific output computation | Use discriminative vanishing-polynomial features with a small trained head, potentially exiting the backbone earlier | Fresh task accuracy against the full model and linear, polynomial and MLP heads with full cost accounting; total parameters and measured latency | Linear early exit scored 62/64; polynomial 61/64, MLP 62/64. No polynomial advantage; costs were reported, not exactly matched |
@@ -111,6 +171,25 @@ and bounded exact verification should therefore be separate stages.
 
 ## Relevant literature and its limits
 
+[Extended DMD](https://arxiv.org/abs/1408.4408) approximates the evolution of
+observable functions from paired states and an observable dictionary. This is
+the closest dynamical framing for the transport question; it does not require
+discovering a nonzero within-layer vanishing ideal first. Finite useful closure
+remains something to establish, not a consequence of invoking Koopman theory.
+
+[Representing Neural Network Layers as Linear Operations via Koopman Operator
+Theory](https://arxiv.org/abs/2409.01308) applies observable embeddings and DMD to
+replace layers in pretrained MLPs on Yin-Yang and MNIST. This is direct neural
+layer precedent, not a demonstration of semantic polynomial transport in a
+large language model.
+
+[Neiger and Schost, Computing syzygies in finite dimension using fast linear
+algebra](https://arxiv.org/abs/1912.01848) computes Gröbner bases of relations
+among module elements given a finite-dimensional module action. It grounds the
+operator/module part of the fixed-linear CAV construction. The known action and
+finite-dimensional setting are real assumptions. The new empirical burden is
+finding a compact, useful action and semantic generators in the trained model.
+
 [Vanishing Component Analysis](https://proceedings.mlr.press/v28/livni13.html)
 provides a numerical route to approximate vanishing polynomials and compact
 classifiers. It motivates relation discovery; it is not a transformer compression
@@ -141,20 +220,23 @@ is available; the README notes that an internal dataset cache is not included.
    positive and norm-matched random controls. Report target redirection and
    original-answer retention separately; answer retention is not specificity
    evidence when the corresponding dense control also cannot change the answer.
-2. **Compare relation-discovery methods on the resulting coordinates.** Start
-   with degree one/two, gradient-normalized approximate vanishing relations and
-   sparse support. Compare J/CAV, PCA and random coordinates, pooled and
-   class-conditional relations. Include identity/residual-stream baselines:
-   adjacent layers can correlate because they mostly copy their inputs. Freeze
-   on training/development before fresh evaluation. Measure conditional
-   reconstruction, coefficient stability and constraint-gradient rank, not just
-   the number of small residuals.
-3. **Replicate the measured task-head shortcut before enlarging it.** The linear
-   baseline matched or exceeded the tested polynomial heads and was cheaper.
-   Test new worlds and formats, more than 64 evaluation cases, and then a task
-   with practical relevance. Keep total encoder/head costs and a strong linear
-   baseline. Any further polynomial work needs an advantage that survives these
-   controls; the existing gain is task specialization.
+2. **Test the induced action on observables through contiguous layers.** Start
+   with degree one/two and a fixed training-only complexity budget. Track actual
+   attention and MLP boundaries, allow readout coordinates to change with depth,
+   and include necessary source/context observables or explicitly condition on
+   them. Fit action maps jointly enough to preserve observable identity, then
+   compare composed predictions with direct measurements several layers later.
+   A nonempty within-layer ideal is not an entry gate. Compare identity/residual
+   carryover, learned linear maps, ordinary polynomial regression, PCA and J/CAV
+   coordinates. Freeze before fresh evaluation; hold out concept combinations,
+   not only new names or random rows. Report transport error and operator cost.
+3. **Test whether transported functions explain semantic interventions.** Use
+   the fitted action to predict changes in later observables and task output
+   before interventions run. Distinguish preserved, mixed, newly created and
+   unrecoverable concept functions; compare nonlinear recovery with linear
+   probes. Measure derivative agreement when making tangent/rank claims.
+   Partial context-dependent explanations can be useful before full autonomous
+   closure, but their conditioning variables and costs must remain explicit.
 4. **Test closure before replacing attention or layers.** Hold retained
    observables fixed while varying admissible residual/context information.
    Evaluate the next observables and task output, including interventions and
@@ -163,12 +245,22 @@ is available; the README notes that an internal dataset cache is not included.
    Expand retained source/context information or narrow the domain before
    fitting reduced dynamics; do not extrapolate hybrid-state failures into a
    universal impossibility theorem on natural activations.
-5. **Benchmark only a quality-qualified replacement.** Actually remove the
+5. **Use algebra to remove demonstrated redundancies.** Discover stable
+   approximate vanishing or operator/module relations where the measured action
+   supports them. Count independent information and actual representation cost,
+   not generators. Compare composition and generalization with the same feature
+   library without algebraic reduction. Exact normal-form certificates apply to
+   a justified polynomial surrogate/domain, not automatically to Qwen.
+6. **Benchmark only a quality-qualified replacement.** Actually remove the
    replaced computation, include encoder/decoder and branch costs, and measure
    memory and end-to-end latency on the intended token range. Match output
    interfaces: 2.505× became 1.196× when both models returned one class label.
    Parameter counts, theoretical FLOPs and toy payload savings are separate from
    measured tok/s. The current result is a one-run batch-one synthetic benchmark.
+
+The existing linear task-head shortcut is a separate engineering branch. Any
+extension needs new worlds/formats and more than 64 evaluation cases. Its
+classification accuracy must not substitute for testing semantic transport.
 
 Each step receives a separate prospective protocol with numerical gates before
 execution. Do not keep increasing symbolic timeouts or search degree simply to
