@@ -121,3 +121,52 @@ def test_invalid_layer_is_rejected_without_installing_hooks():
     with pytest.raises(ValueError, match="requires"):
         generate_answer(model, FakeTokenizer(), "prompt", patch=lambda h: h)
     assert all(len(block._forward_hooks) == 0 for block in model.model.layers)
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_nonfinite_logits_never_become_semantic_answers_and_hooks_are_cleaned(value):
+    model = tiny_model([3])
+    original = model.lm_head.forward
+
+    def nonfinite(hidden):
+        logits = original(hidden)
+        logits[..., 0] = value
+        return logits
+
+    model.lm_head.forward = nonfinite
+    with pytest.raises(FloatingPointError, match="Nonfinite output logits"):
+        generate_answer(model, FakeTokenizer(), "prompt", layer=0, patch=lambda h: h,
+                        observe_layers=(0, 1))
+    assert all(len(block._forward_hooks) == 0 for block in model.model.layers)
+
+
+def test_nonfinite_decoder_states_abort_before_vocabulary_projection():
+    model = tiny_model([3])
+    original = model.model.forward
+
+    def nonfinite(**kwargs):
+        output = original(**kwargs)
+        # Even an unscored earlier position invalidates this forward pass.
+        output.last_hidden_state[0, 0, 0] = float("nan")
+        return output
+
+    model.model.forward = nonfinite
+    with pytest.raises(FloatingPointError, match="Nonfinite decoder hidden states"):
+        generate_answer(model, FakeTokenizer(), "prompt", observe_layers=(0, 1))
+    assert model.lm_head.shapes == []
+    assert all(len(block._forward_hooks) == 0 for block in model.model.layers)
+
+
+def test_nonfinite_prefill_observations_are_not_returned_as_evidence():
+    model = tiny_model([3])
+
+    def nonfinite(hidden):
+        changed = hidden.clone()
+        changed[0, -1, 0] = float("nan")
+        return changed
+
+    with pytest.raises(FloatingPointError, match="Nonfinite prefill observation"):
+        generate_answer(model, FakeTokenizer(), "prompt", layer=0, patch=nonfinite,
+                        observe_layers=(0, 1))
+    assert model.lm_head.shapes == []
+    assert all(len(block._forward_hooks) == 0 for block in model.model.layers)

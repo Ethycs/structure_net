@@ -129,6 +129,8 @@ def generate_answer(
                     raise ValueError("Residual patch must preserve tensor shape, dtype and device")
                 hidden = updated
             if index in observe:
+                if not bool(torch.isfinite(hidden[0, -1]).all()):
+                    raise FloatingPointError("Nonfinite prefill observation; generation aborted")
                 observed[index] = hidden[0, -1].detach().float().cpu().clone()
             if isinstance(output, tuple):
                 return (hidden, *output[1:])
@@ -149,7 +151,11 @@ def generate_answer(
                              use_cache=True, return_dict=True)
             prefill = False
             for step in range(max_new_tokens):
+                if not bool(torch.isfinite(output.last_hidden_state).all()):
+                    raise FloatingPointError("Nonfinite decoder hidden states; generation aborted")
                 logits = model.lm_head(output.last_hidden_state[:, -1, :])
+                if not bool(torch.isfinite(logits).all()):
+                    raise FloatingPointError("Nonfinite output logits; generation aborted")
                 next_id = int(logits[0].argmax().item())
                 generated.append(next_id)
                 raw = _decode(tokenizer, generated)

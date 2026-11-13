@@ -30,6 +30,8 @@ HYPOTHESIS_ID = "JSPACE-CAV-PILOT-01"
 SCHEMA_VERSION = 1
 ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL = "docs/07 - Status Reports/jspace/2026-11-12_jspace-cav-pilot-plan.md"
+AMENDMENT = "docs/07 - Status Reports/jspace/2026-11-12_jspace-cav-pilot-amendment-01.md"
+CHAT_INSTRUCTION = "Complete the fact below. Reply with only the missing word or number, without explanation.\n\n"
 CACHE = Path.home() / ".cache/huggingface/hub"
 MODEL_PATHS = [
     CACHE / "models--Qwen--Qwen2.5-0.5B/snapshots/060db6499f32faf8b98477b0a26969ef7d8b9987",
@@ -67,7 +69,7 @@ def write_json(path, value):
 
 
 def source_files():
-    files = [PROTOCOL, "pyproject.toml", "pixi.lock"]
+    files = [PROTOCOL, AMENDMENT, "pyproject.toml", "pixi.lock"]
     files += [f"experiments/structure_net/jspace_{name}.py"
               for name in ("lens", "tasks", "runtime", "pilot")]
     files += [str(p.relative_to(ROOT)) for p in sorted(
@@ -98,7 +100,8 @@ def validate_calibration(path, cases):
     return calib
 
 
-def prepare(out, *, data=DEFAULT_DATA, calibration=DEFAULT_CALIBRATION):
+def prepare(out, *, data=DEFAULT_DATA, calibration=DEFAULT_CALIBRATION,
+            model_paths=None, dtype="float32", prompt_format="original", parent_plan=None):
     from transformers import AutoTokenizer
 
     out = Path(out)
@@ -106,7 +109,10 @@ def prepare(out, *, data=DEFAULT_DATA, calibration=DEFAULT_CALIBRATION):
         raise FileExistsError(f"New artifact root required: {out}")
     if file_hash(data) != UPSTREAM_DATA_SHA256:
         raise ValueError("Tasks differ from the pinned upstream dataset")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATHS[0], local_files_only=True)
+    model_paths = [Path(p) for p in (model_paths or MODEL_PATHS)]
+    if dtype not in ("float16", "bfloat16", "float32") or prompt_format not in ("original", "instruction_chat"):
+        raise ValueError("Unsupported precision or prompt format")
+    tokenizer = AutoTokenizer.from_pretrained(model_paths[0], local_files_only=True)
     cases = load_cases(data)
     accepted, exclusions = eligible_cases(
         cases, lambda text: tokenizer.encode(text, add_special_tokens=False))
@@ -116,7 +122,7 @@ def prepare(out, *, data=DEFAULT_DATA, calibration=DEFAULT_CALIBRATION):
                    for name in vocabulary}
     validate_calibration(calibration, cases)
     models = []
-    for path in MODEL_PATHS:
+    for path in model_paths:
         other = AutoTokenizer.from_pretrained(path, local_files_only=True)
         if any(other.encode(" " + name, add_special_tokens=False) != [tid]
                for name, tid in concept_ids.items()):
@@ -129,6 +135,10 @@ def prepare(out, *, data=DEFAULT_DATA, calibration=DEFAULT_CALIBRATION):
                        "layers": candidates, "fit_layers": fitted,
                        "width": config["hidden_size"]})
     sources = {name: file_hash(ROOT / name) for name in source_files()}
+    manifest = split_manifest(splits)
+    parent = json.loads(Path(parent_plan).read_text()) if parent_plan else None
+    if parent and parent["split_manifest"]["sha256"] != manifest["sha256"]:
+        raise ValueError("Amended run must preserve the original split manifest")
     plan = {
         "schema_version": SCHEMA_VERSION, "hypothesis_id": HYPOTHESIS_ID,
         "conformance": "EXPLORATORY", "upstream_commit": UPSTREAM_COMMIT,
@@ -136,10 +146,14 @@ def prepare(out, *, data=DEFAULT_DATA, calibration=DEFAULT_CALIBRATION):
         "git_head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "producer_sha256": sources, "models": models,
         "data_sha256": file_hash(data), "calibration_sha256": file_hash(calibration),
-        "split_manifest": split_manifest(splits), "exclusions": exclusions,
+        "split_manifest": manifest, "exclusions": exclusions,
         "eligible_rows": len(accepted), "eligible_pairs": len({c.pair_group for c in accepted}),
         "concept_ids": concept_ids, "token_ids": sorted(set(concept_ids.values())),
-        "seed": 7, "ranks": RANKS, "max_new_tokens": 8, "dtype": "float16",
+        "seed": 7, "ranks": RANKS, "max_new_tokens": 8, "dtype": dtype,
+        "prompt_format": prompt_format, "chat_instruction": CHAT_INSTRUCTION,
+        "amendment": AMENDMENT,
+        "parent_fingerprint": parent["scientific_fingerprint"] if parent else None,
+        "producer_identity": "content_hashed_worktree; git_head_is_base_revision",
         "lens": {"dim_batch": 4, "max_seq_len": 64, "skip_first": 16},
         "gates": {"development_parent_correct": 8, "evaluation_parent_correct": 24,
                   "answer_retention": .95, "accuracy_loss_max": .05,
@@ -309,7 +323,12 @@ class Pilot:
 
     def generation(self, case, *, layer=None, patch=None, observe_layers=()):
         from .jspace_runtime import generate_answer
-        result = generate_answer(self.model, self.tokenizer, case.prompt, layer=layer, patch=patch,
+        prompt = case.prompt
+        if self.plan.get("prompt_format", "original") == "instruction_chat":
+            prompt = self.tokenizer.apply_chat_template(
+                [{"role": "user", "content": self.plan["chat_instruction"] + prompt}],
+                tokenize=False, add_generation_prompt=True)
+        result = generate_answer(self.model, self.tokenizer, prompt, layer=layer, patch=patch,
                                  observe_layers=observe_layers, max_new_tokens=self.plan["max_new_tokens"])
         observed = result.pop("observed")
         result["first_token_label_match"] = (normalize_answer(result["first_token_text"]) ==
@@ -327,20 +346,20 @@ class Pilot:
     def choose_model(self):
         screens = []
         for index, spec in enumerate(self.plan["models"]):
-            self.model, self.tokenizer = load_small_qwen(spec["path"], device="cuda:0", dtype=torch.float16)
+            self.model, self.tokenizer = load_small_qwen(spec["path"], device="cuda:0",
+                                                       dtype=getattr(torch, self.plan["dtype"]))
             torch.cuda.reset_peak_memory_stats()
-            if index == 0:
-                smoke = fit_token_rows(self.model, self.tokenizer, self.prompts[:1],
-                                       source_layers=spec["layers"][:1], token_ids=self.plan["token_ids"][:2],
-                                       dim_batch=2, max_seq_len=32, skip_first=16)
-                path = self.run_root / "shakedown_lens.pt"
-                smoke.save(path)
-                loaded = LensFit.load(path)
-                if any(not torch.equal(rows, loaded.token_rows[k]) for k, rows in smoke.token_rows.items()):
-                    raise RuntimeError("Lens save/reload roundtrip failed")
-                self.event("shakedown", status="systems_lifecycle_only_not_quality_evidence",
-                           peak_allocated_mib=torch.cuda.max_memory_allocated() / 2**20)
-                del smoke, loaded
+            smoke = fit_token_rows(self.model, self.tokenizer, self.prompts[:1],
+                                   source_layers=spec["layers"][:1], token_ids=self.plan["token_ids"][:2],
+                                   dim_batch=2, max_seq_len=32, skip_first=16)
+            path = self.run_root / f"shakedown_lens_model_{index}.pt"
+            smoke.save(path)
+            loaded = LensFit.load(path)
+            if any(not torch.equal(rows, loaded.token_rows[k]) for k, rows in smoke.token_rows.items()):
+                raise RuntimeError("Lens save/reload roundtrip failed")
+            self.event("shakedown", model_index=index, status="systems_lifecycle_only_not_quality_evidence",
+                       peak_allocated_mib=torch.cuda.max_memory_allocated() / 2**20)
+            del smoke, loaded
             records = self.baseline_cases("development", observe_layers=spec["fit_layers"])
             count = sum(correctness(self.split["development"], records))
             screen = {"model": spec["path"], "correct": count, "total": len(records), "records": records}
@@ -515,6 +534,8 @@ def run(root):
     # No CUDA query, allocation, or model loading precedes live lease validation.
     lease = require_gpu_lease([0])
     plan = verify_plan(root)
+    if plan["dtype"] == "bfloat16" and not torch.cuda.is_bf16_supported():
+        raise RuntimeError("BF16 pilot requires a device with BF16 support")
     torch.set_num_threads(4)
     torch.manual_seed(plan["seed"])
     pilot = Pilot(root, plan, lease)
@@ -524,7 +545,7 @@ def run(root):
                        "scientific_fingerprint": plan["scientific_fingerprint"], "status": "completed",
                        "conformance": "EXPLORATORY", "confirmed": False,
                        "environment": {"torch": str(torch.__version__), "device": torch.cuda.get_device_name(),
-                                       "dtype": "float16", "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+                                       "dtype": plan["dtype"], "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
                                        "lease_id": lease["id"]},
                        "peak_allocated_mib": torch.cuda.max_memory_allocated() / 2**20,
                        "peak_reserved_mib": torch.cuda.max_memory_reserved() / 2**20,
@@ -560,11 +581,17 @@ def main(argv=None):
     prep.add_argument("--output", required=True)
     prep.add_argument("--data", default=str(DEFAULT_DATA))
     prep.add_argument("--calibration", default=str(DEFAULT_CALIBRATION))
+    prep.add_argument("--model-path", action="append", dest="model_paths")
+    prep.add_argument("--dtype", choices=("float16", "bfloat16", "float32"), default="float32")
+    prep.add_argument("--prompt-format", choices=("original", "instruction_chat"), default="original")
+    prep.add_argument("--parent-plan")
     execute = sub.add_parser("run")
     execute.add_argument("--root", required=True)
     args = parser.parse_args(argv)
     if args.action == "prepare":
-        result = prepare(args.output, data=args.data, calibration=args.calibration)
+        result = prepare(args.output, data=args.data, calibration=args.calibration,
+                         model_paths=args.model_paths, dtype=args.dtype,
+                         prompt_format=args.prompt_format, parent_plan=args.parent_plan)
     else:
         result = run(args.root)
     print(json.dumps(result, indent=2, allow_nan=False))
