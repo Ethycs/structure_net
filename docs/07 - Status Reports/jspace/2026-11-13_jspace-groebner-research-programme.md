@@ -294,3 +294,66 @@ attention transition: learn cross-attribute country contrasts in a broader J
 dictionary, validate causal edits against full/PCA controls, then test contextual
 transport of their readouts. The study narrows the coordinate-construction issue;
 it does not invalidate the broader operator/module or Gröbner programme.
+
+## Country stack and a library of reduced operators, 2026-11-13
+
+[JSPACE-COUNTRY-STACK-GROEBNER-01](../../08%20-%20Analysis/jspace/2026-11-13_jspace-country-stack.md)
+produced a finite four-country quotient, exact symbolic country actions, and a
+lossless recorded-label codec. It reduced 128 natural nine-layer label traces
+from 298 to 58 bytes, with explicit exceptions for nonconstant trajectories.
+The selected continuous readout file is 7.97× smaller, but its neural fidelity
+failed: source label agreement is 96/128 and dense-swap agreement 97/128. The
+linear comparator preserves 128/128 and 126/128 labels, respectively, but also
+fails the predeclared continuous-score error threshold. None of these results
+establishes a smaller full transformer.
+
+The exact training-support algebra identifies two unconstrained country/task
+cells. The selected quadratic decoder gets every seen source combination right
+and every held-out source combination wrong. This supports using algebra to audit
+semantic coverage before treating an empirical relation as a global task law.
+
+A tiny actual Qwen control also verifies exact fusion of a linear attention
+readout into V/O projections (maximum output difference 2.602e-17, input-gradient
+difference zero). This is an operator simplification with Q/K and softmax retained,
+not a closure result or a runtime benchmark.
+
+The user's proposed library is a research extension, not a completed experiment.
+Each entry should contain an encoder into task-relevant continuous coordinates,
+normalized approximate relations or exact surrogate certificates, a reduced
+update operator, an output map, a validity domain, and measured error/cost. Learn
+small local representations for broad task families rather than running a single
+symbolic calculation over the full hidden dimension.
+
+Compare entries after alignment on shared calibration examples. Use subspace
+overlap for linear coordinates, held-out relation residuals, similarity of induced
+updates under the alignment, and causal transfer. Raw Gröbner coefficient distance
+is not a sufficient similarity measure: coordinates and monomial order matter.
+Even the same four-state label algebra can describe unrelated tasks. Finite
+quotient multiplication matrices can help compare algebraic structure, but their
+existence must not be assumed for our infinite-dimensional continuous quotient.
+For relations meant to hold across a union of families, test them on that union;
+simply adding all generators can impose mutually incompatible restrictions.
+
+Compile shared operations plus small family-specific corrections offline. At
+inference, route to one or a few entries using a cheap router and retain a dense
+fallback where validation requires it. Include router, correction, cache and
+fallback costs. If routing changes KV representations during a sequence, provide
+a compatible cache or account for migration/recomputation. Do not perform symbolic
+Gröbner computations for each generated token.
+
+Start with country-capital and country-nationality plus a structurally matched
+non-geographic entity-attribute task. Cover all semantic cells in training, then
+hold out names, prompt formats, whole families and compositions separately. Compare
+original attention, rank-matched SVD/low-rank attention, independent family modules,
+a shared library without algebraic reduction, and the proposed algebraic library.
+Measure task accuracy, intervention agreement, composed-update error, payload,
+peak memory and end-to-end tokens/s. The key evidence is transfer to an unseen
+family or composition with lower total execution cost at matched task quality.
+Freeze a numerical protocol before any such new training or GPU experiment.
+
+Related primary work supports individual components, not this exact proposal:
+[Eigen Attention](https://arxiv.org/abs/2408.05646) computes attention in a low-rank
+space; [MoH](https://arxiv.org/abs/2410.11842) routes tokens to selected heads;
+[gradient-normalized approximate vanishing ideals](https://arxiv.org/abs/1911.04174)
+address spurious vanishing and coordinate scaling. Their reported results do not
+establish our library's transfer, accuracy, or speed.
