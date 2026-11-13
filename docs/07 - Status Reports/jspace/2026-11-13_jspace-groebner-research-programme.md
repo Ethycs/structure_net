@@ -31,9 +31,9 @@ symbolic expression does not automatically use fewer bytes or run faster.
 | Describe representation structure | Identify relationships among continuous observables, remove redundant polynomial descriptions, expose interactions | New-world and new-format residuals; stable coefficients/support; shuffled, linear, PCA and random controls; semantic anchoring | Some held-out mixed-layer relations; no demonstrated J advantage |
 | Explain how relations propagate | Eliminate intermediate variables; check a target relation's pullback by normal-form reduction; distinguish created, preserved and broken relations | Valid source conditions and transition model; intervention agreement; explicit domain and approximation errors | Exact constructed controls work; neural transport remains unestablished |
 | Compress stored coordinates | Solve for omitted coordinates, identify necessary branch information and numerical sensitivity | Unique/stable decoder, actual byte counts, round-trip errors and downstream task quality | Finite toy codec works; no neural state compression validated |
-| Replace a task-specific output computation | Use discriminative vanishing-polynomial features with a small trained head, potentially exiting the backbone earlier | Fresh task accuracy against the full model and equal-budget linear, polynomial and MLP heads; total parameters and measured latency | Literature-supported route in image classification; not yet tested here |
-| Replace a model segment with reduced dynamics | Simplify a polynomial transition modulo validated relations and retain only sufficient state | Closure under controlled changes to omitted information; multi-step error; causal interventions; task quality | Not yet established for our Qwen coordinates |
-| Reduce deployed model cost | Compile and execute the successful replacement, actually removing weights or computation | Resident/serialized bytes, prefill/decode speed, batch and context matched comparisons, accuracy and confidence intervals | No Qwen speedup or parameter reduction established |
+| Replace a task-specific output computation | Use discriminative vanishing-polynomial features with a small trained head, potentially exiting the backbone earlier | Fresh task accuracy against the full model and linear, polynomial and MLP heads with full cost accounting; total parameters and measured latency | Linear early exit scored 62/64; polynomial 61/64, MLP 62/64. No polynomial advantage; costs were reported, not exactly matched |
+| Replace a model segment with reduced dynamics | Simplify a polynomial transition modulo validated relations and retain only sufficient state | Closure under controlled changes to omitted information; multi-step error; causal interventions; task quality | Eight exact-copy counterexamples for selected middle-layer projections on a hybrid-intervention domain; natural-manifold compression remains open |
+| Reduce deployed model cost | Compile and execute the successful replacement, actually removing weights or computation | Resident/serialized bytes, prefill/decode speed, batch and context matched comparisons, accuracy and confidence intervals | Research four-colour classifier removes 15% of parameters and achieves 1.196× matched single-label throughput; no general LLM compression or deployed service |
 
 Interpretability can succeed even if compression fails. A task head can succeed
 without reconstructing every hidden state. Conversely, exact reconstruction of
@@ -99,6 +99,15 @@ and bounded exact verification should therefore be separate stages.
   no validated target-only relation; six symbolic cells were unresolved under
   the declared time/size limits. This is a bounded result, not a universal
   absence claim.
+- [Active-position CAVs and task heads](../../08%20-%20Analysis/jspace/2026-11-13_jspace-active-cav-heads.md):
+  dense query-donor transfer works at the chosen sites, but full country CAVs
+  redirect only 6/59 and 11/59 answers; J components redirect 0/59. The stronger
+  predeclared causal gate fails. The selected linear task head scores 62/64
+  versus teacher 61/64 and polynomial head 61/64. A 30-block prefix removes
+  462 million parameters; matched single-label latency improves 77.04→64.39 ms.
+  The original 2.505× comparison also avoided a teacher generation step and is
+  not the isolated compression gain. Post-hoc exact-copy witnesses show omitted
+  context changes next states and answers despite identical retained patterns.
 
 ## Relevant literature and its limits
 
@@ -124,14 +133,14 @@ is available; the README notes that an internal dataset cache is not included.
 
 ## Next experiments, in decision order
 
-1. **Validate the coordinates at active positions.** Use a fresh training and
-   evaluation split with independent country/colour permutations. Train CAVs
-   from matched task contrasts, distinguish country from answer colour, and
-   test full/J/remainder edits against dense donor and norm-matched random
-   controls. Use the measured block-24 question mask and block-29 final state;
-   do not reuse a final-position Jacobian as if it were a Jacobian for every
-   position. Report counterfactual target success and original-answer retention
-   separately, using clean-correct pairs as the declared denominator.
+1. **Revise the causal coordinates after the active-position result.** That
+   experiment completed with weak full-CAV effects and no measured J advantage.
+   Its 94-token dictionary omitted the actual colour output tokens. A fresh
+   study should include task-output directions and source-fact/context
+   observables, keep country and answer changes independent, and retain dense
+   positive and norm-matched random controls. Report target redirection and
+   original-answer retention separately; answer retention is not specificity
+   evidence when the corresponding dense control also cannot change the answer.
 2. **Compare relation-discovery methods on the resulting coordinates.** Start
    with degree one/two, gradient-normalized approximate vanishing relations and
    sparse support. Compare J/CAV, PCA and random coordinates, pooled and
@@ -140,20 +149,26 @@ is available; the README notes that an internal dataset cache is not included.
    on training/development before fresh evaluation. Measure conditional
    reconstruction, coefficient stability and constraint-gradient rank, not just
    the number of small residuals.
-3. **Run a task-head replacement alongside the relation study.** Compare a
-   polynomial head inspired by VI-Net with linear, ordinary quadratic and small
-   MLP heads at matched stored bytes and compute. This offers a compression test
-   that does not require full hidden-state closure. If ordinary baselines match
-   it, report task specialization without claiming a Gröbner-specific gain.
+3. **Replicate the measured task-head shortcut before enlarging it.** The linear
+   baseline matched or exceeded the tested polynomial heads and was cheaper.
+   Test new worlds and formats, more than 64 evaluation cases, and then a task
+   with practical relevance. Keep total encoder/head costs and a strong linear
+   baseline. Any further polynomial work needs an advantage that survives these
+   controls; the existing gain is task specialization.
 4. **Test closure before replacing attention or layers.** Hold retained
    observables fixed while varying admissible residual/context information.
    Evaluate the next observables and task output, including interventions and
-   multiple steps. A systematic difference means the reduced state needs more
-   variables or a narrower declared task domain.
+   multiple steps. Eight counterexamples already establish this problem for
+   the tested middle-layer projections on the intervention-augmented domain.
+   Expand retained source/context information or narrow the domain before
+   fitting reduced dynamics; do not extrapolate hybrid-state failures into a
+   universal impossibility theorem on natural activations.
 5. **Benchmark only a quality-qualified replacement.** Actually remove the
    replaced computation, include encoder/decoder and branch costs, and measure
-   memory and end-to-end latency on the intended token range. Parameter counts,
-   theoretical FLOPs and toy payload savings are separate from measured tok/s.
+   memory and end-to-end latency on the intended token range. Match output
+   interfaces: 2.505× became 1.196× when both models returned one class label.
+   Parameter counts, theoretical FLOPs and toy payload savings are separate from
+   measured tok/s. The current result is a one-run batch-one synthetic benchmark.
 
 Each step receives a separate prospective protocol with numerical gates before
 execution. Do not keep increasing symbolic timeouts or search degree simply to
