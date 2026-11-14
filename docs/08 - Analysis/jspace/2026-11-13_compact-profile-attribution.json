@@ -1,0 +1,142 @@
+{
+  "source": "data/experiments/jspace_compact_performance/20261113_v1/profile/result.json",
+  "source_sha256": "75e242cbfe1372179e0819edede6c3de8267530493683801c1a40b6bd61e7d3f",
+  "performance_fingerprint": "9dc26ee292f6ace22c15e6c810f2fbcc4f0a4a5975e9291d2d3b414a58214c86",
+  "aggregation_python": "import json, statistics, collections\nfrom pathlib import Path\nr = json.loads(Path(\"data/experiments/jspace_compact_performance/20261113_v1/profile/result.json\").read_text())\nresults = []\nfor arm, rows in r.items():\n    for mode in (\"prefill\", \"decode\"):\n        selected = [x for x in rows if x[\"mode\"] == mode]\n        geometry = 0.; down = collections.defaultdict(float); copies = [0., 0.]\n        kernels = []; memory = []\n        for x in selected:\n            divisor = x[\"iterations\"] * len(selected)\n            kernels.append(sum(v for k, v in x[\"kernels\"].items() if not k.startswith((\"Memset\", \"Memcpy\"))) / x[\"iterations\"])\n            memory.append(sum(v for k, v in x[\"kernels\"].items() if k.startswith((\"Memset\", \"Memcpy\"))) / x[\"iterations\"])\n            for o in x[\"top_operators\"]:\n                if o[\"name\"] == \"aten::copy_\":\n                    copies[0] += o[\"self_device_us\"] / divisor\n                    copies[1] += o[\"count\"] / divisor\n                if o[\"name\"] not in (\"aten::mm\", \"aten::bmm\"):\n                    continue\n                shapes = o[\"input_shapes\"]\n                if len(shapes) < 2:\n                    continue\n                if shapes[1][-2:] in ([2048, 1536], [1536, 2048]):\n                    geometry += o[\"self_device_us\"] / divisor\n                if len(shapes[0]) == 2 and shapes[0][1] in (11008, 10309) and shapes[1][-1] == 1536:\n                    down[str(shapes[0][1])] += o[\"self_device_us\"] / divisor\n        results.append(dict(arm=arm, mode=mode, lengths=[x[\"tokens\"] for x in selected], actual_kernels_per_call=statistics.mean(kernels), memory_activities_per_call=statistics.mean(memory), geometry_device_us_per_call=geometry, down_projection_device_us_per_call=dict(down), copy_device_us_per_call=copies[0], copy_calls=copies[1]))\n",
+  "results": [
+    {
+      "arm": "native",
+      "mode": "prefill",
+      "lengths": [
+        87,
+        103,
+        179,
+        172,
+        313,
+        293,
+        66,
+        60
+      ],
+      "actual_kernels_per_call": 48.25,
+      "memory_activities_per_call": 0.875,
+      "geometry_device_us_per_call": 0.0,
+      "down_projection_device_us_per_call": {},
+      "copy_device_us_per_call": 58.70395833333292,
+      "copy_calls": 7.5
+    },
+    {
+      "arm": "native",
+      "mode": "decode",
+      "lengths": [
+        87,
+        103,
+        179,
+        172,
+        313,
+        293,
+        66,
+        60
+      ],
+      "actual_kernels_per_call": 49.0,
+      "memory_activities_per_call": 0.0,
+      "geometry_device_us_per_call": 0.0,
+      "down_projection_device_us_per_call": {},
+      "copy_device_us_per_call": 37.8398750000003,
+      "copy_calls": 8.0
+    },
+    {
+      "arm": "r1536_h64",
+      "mode": "prefill",
+      "lengths": [
+        87,
+        103,
+        179,
+        172,
+        313,
+        293,
+        66,
+        60
+      ],
+      "actual_kernels_per_call": 71.125,
+      "memory_activities_per_call": 2.375,
+      "geometry_device_us_per_call": 341.308291666667,
+      "down_projection_device_us_per_call": {
+        "11008": 199.52699999999973
+      },
+      "copy_device_us_per_call": 290.7949166666658,
+      "copy_calls": 15.75
+    },
+    {
+      "arm": "r1536_h64",
+      "mode": "decode",
+      "lengths": [
+        87,
+        103,
+        179,
+        172,
+        313,
+        293,
+        66,
+        60
+      ],
+      "actual_kernels_per_call": 77.0,
+      "memory_activities_per_call": 0.0,
+      "geometry_device_us_per_call": 82.39870833333337,
+      "down_projection_device_us_per_call": {
+        "11008": 103.6947916666664
+      },
+      "copy_device_us_per_call": 53.944750000000084,
+      "copy_calls": 18.0
+    },
+    {
+      "arm": "r1536_h64_gb",
+      "mode": "prefill",
+      "lengths": [
+        87,
+        103,
+        179,
+        172,
+        313,
+        293,
+        66,
+        60
+      ],
+      "actual_kernels_per_call": 85.125,
+      "memory_activities_per_call": 2.875,
+      "geometry_device_us_per_call": 341.1578333333336,
+      "down_projection_device_us_per_call": {
+        "10309": 324.2830416666671
+      },
+      "copy_device_us_per_call": 274.3557499999991,
+      "copy_calls": 16.0
+    },
+    {
+      "arm": "r1536_h64_gb",
+      "mode": "decode",
+      "lengths": [
+        87,
+        103,
+        179,
+        172,
+        313,
+        293,
+        66,
+        60
+      ],
+      "actual_kernels_per_call": 91.0,
+      "memory_activities_per_call": 0.0,
+      "geometry_device_us_per_call": 82.59070833333283,
+      "down_projection_device_us_per_call": {
+        "10309": 97.50266666666661
+      },
+      "copy_device_us_per_call": 58.47304166666606,
+      "copy_calls": 20.0
+    }
+  ],
+  "interpretation": [
+    "Profiler timings are device attribution, not eager end-to-end latency.",
+    "top_operators includes ATen and CUDA entries; sum only the named ATen operations above to avoid double counting.",
+    "Top40 truncation can omit small copy operations; geometry and down-projection entries were present for the compact blocks.",
+    "Kernel counts exclude recorded memcpy and memset activities."
+  ]
+}
