@@ -1,6 +1,7 @@
 from copy import deepcopy
 import json
 from pathlib import Path
+import shutil
 
 import pytest
 import torch
@@ -48,6 +49,48 @@ def test_completed_gate_accepts_scientific_failure_and_authenticates_selection(t
     block = torch.nn.Linear(2, 2, bias=False)
     verification.load_selected(block, checked)
     assert torch.equal(block.weight, torch.ones(2, 2)) and not block.weight.requires_grad
+
+
+def runtime_policy(root):
+    from experiments.structure_net import jspace_single_block_reserved as reserved
+    recipe = verification.recipe
+    sources = [Path(reserved.__file__), recipe.ROOT / "tests/structure_net/test_jspace_single_block_reserved.py"]
+    policy = dict(schema=reserved.SCHEMA, base_schema=verification.single.SCHEMA,
+        base_plan_fingerprint="parent", base_plan_sha256=recipe.sha(root / "plan.json"),
+        headroom_mib=reserved.HEADROOM_MIB, allocator_backend="native", device=0, requires_fresh_cuda_process=True,
+        source_sha256={str(path):recipe.sha(path) for path in sources})
+    policy["fingerprint"] = recipe.digest(policy)
+    for path in sources:
+        target = root / "runtime_producer" / path.relative_to(recipe.ROOT)
+        target.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(path, target)
+    recipe.write(root / "runtime_policy.json", policy)
+    return policy
+
+
+@pytest.mark.parametrize("status", ["missing", "failed", "completed"])
+def test_bounded_runtime_receipt_is_required_and_frozen(tmp_path, monkeypatch, status):
+    root, _, _, _, _ = campaign(tmp_path, monkeypatch)
+    policy = runtime_policy(root)
+    if status != "missing":
+        verification.recipe.write(root / "runtime_train.json", dict(status=status, stage="train",
+            base_plan_fingerprint="parent", runtime_policy_fingerprint=policy["fingerprint"],
+            base_stage_manifest_sha256=verification.recipe.sha(root / "train/manifest.json")))
+    if status != "completed":
+        monkeypatch.setattr(verification.recipe, "load", lambda *_:pytest.fail("Checkpoint loaded before runtime receipt gate"))
+        with pytest.raises((FileNotFoundError, ValueError)):
+            verification.completed_training(root)
+    else:
+        checked = verification.completed_training(root)
+        assert checked["runtime_policy_fingerprint"] == policy["fingerprint"]
+        for name in ("runtime_policy.json", "runtime_train.json"):
+            assert checked["input_sha256"][str(root / name)] == verification.recipe.sha(root / name)
+        monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
+        receipt = tmp_path / "receipt"; verification.prepare(root, receipt)
+        assert verification.verify(receipt)[0]["runtime_policy_fingerprint"] == policy["fingerprint"]
+        # A removed policy cannot silently downgrade to the uncapped protocol.
+        (root / "runtime_policy.json").unlink()
+        with pytest.raises(ValueError, match="allocator policy"):
+            verification.completed_training(root)
 
 
 @pytest.mark.parametrize("changed", ["manifest", "checkpoint", "reference", "normalization"])

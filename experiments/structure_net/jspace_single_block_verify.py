@@ -38,7 +38,18 @@ class Tolerances:
 def completed_training(campaign):
     """Authenticate metadata and selected bytes before any checkpoint load."""
     campaign = Path(campaign).resolve()
-    plan = single.verify(campaign)
+    runtime_inputs = {}; runtime_fingerprint = None
+    if (campaign / "runtime_policy.json").exists():
+        from . import jspace_single_block_reserved as reserved
+        plan, policy = reserved.verify(campaign)
+        reserved.verify_runtime_receipt(campaign, "train", plan, policy)
+        runtime_fingerprint = policy["fingerprint"]
+        runtime_inputs = {str(path): recipe.sha(path) for path in
+            (campaign / "runtime_policy.json", campaign / "runtime_train.json")}
+    else:
+        if any(campaign.glob("runtime_*.json")):
+            raise ValueError("Runtime receipts require their frozen allocator policy")
+        plan = single.verify(campaign)
     directory = campaign / "train"
     manifest = recipe.read(directory / "manifest.json")
     result_path = directory / "result.json"
@@ -74,6 +85,7 @@ def completed_training(campaign):
         raise ValueError("Reference predictions disagree with selected accuracy")
     inputs = {str(p): recipe.sha(p) for p in (campaign / "plan.json", campaign / "items.json",
         directory / "manifest.json", result_path, checkpoint, reference_path)}
+    inputs.update(runtime_inputs)
     # The fit and native feature banks are consumed again by this process.
     for key in ("fit_path", "input_path", "target_path"):
         path = plan[key]
@@ -82,7 +94,7 @@ def completed_training(campaign):
             raise ValueError("Changed native pair or enriched geometry: " + path)
         inputs[path] = expected_hash
     return dict(plan=plan, result=result, reference=reference, checkpoint=checkpoint,
-                items=items, input_sha256=inputs)
+                items=items, input_sha256=inputs, runtime_policy_fingerprint=runtime_fingerprint)
 
 
 def validate_records(records, cases):
@@ -131,6 +143,7 @@ def prepare(campaign, root, *, tolerances=Tolerances()):
     checked = completed_training(campaign)
     producers = [Path(__file__), recipe.ROOT / "tests/structure_net/test_jspace_single_block_verify.py"]
     plan = dict(schema=SCHEMA, campaign=str(campaign), campaign_fingerprint=checked["plan"]["fingerprint"],
+        runtime_policy_fingerprint=checked["runtime_policy_fingerprint"],
         selected_epoch=checked["result"]["selected_epoch"], selected_checkpoint=str(checked["checkpoint"]),
         checkpoint_sha256=checked["input_sha256"][str(checked["checkpoint"])],
         tolerances=asdict(tolerances), input_sha256=checked["input_sha256"],
@@ -156,7 +169,9 @@ def verify(root):
         if recipe.sha(path) != digest:
             raise ValueError("Changed verification input: " + path)
     checked = completed_training(plan["campaign"])
-    if checked["plan"]["fingerprint"] != plan["campaign_fingerprint"] or str(checked["checkpoint"]) != plan["selected_checkpoint"]:
+    if (checked["plan"]["fingerprint"] != plan["campaign_fingerprint"]
+            or str(checked["checkpoint"]) != plan["selected_checkpoint"]
+            or checked["runtime_policy_fingerprint"] != plan["runtime_policy_fingerprint"]):
         raise ValueError("Verification campaign or selection changed")
     return plan, checked
 
@@ -242,6 +257,7 @@ def run(root, *, device="cuda:0"):
         packed = compare(checked["reference"], packed_features, scored["records"], cases, tolerance)
         guard()
         result = dict(status="completed", fingerprint=plan["fingerprint"], campaign_fingerprint=plan["campaign_fingerprint"],
+            runtime_policy_fingerprint=plan["runtime_policy_fingerprint"],
             checkpoint_sha256=plan["checkpoint_sha256"], selected_epoch=plan["selected_epoch"],
             passed=unpacked["passed"] and packed["passed"], strict_state_load=True,
             unpacked=unpacked, packed=packed, records=scored["records"],
