@@ -87,3 +87,40 @@ Source roots: `jspace_accuracy_oracles/20261114_v1`,
 `jspace_accuracy_recovery/20261114_*`, `jspace_first_block_ablation/20261114_*`,
 `jspace_prefix_localization/20261114_v1`, and
 `jspace_answer_mass/20261114_joint_v1`, all under `data/experiments/`.
+
+## Same-width reachable-state repair
+
+A subsequent, separately frozen intervention keeps the334 strong J columns
+bit-identical, adds global-input and position-zero input/update mean directions,
+and fills the remaining slots from equal trace-normalized input/update second
+moments. It uses128 training cases for fitting and a disjoint128 training cases
+for projection diagnostics. The total residual rank remains1024. Head dimensions
+remain native128 in this first-block test; there is no recovery training.
+
+Development accuracy rises from27/64 to46/64:27 gains and8 losses against the
+old half-rank basis. Against native50/64, it has0 gains and4 losses. Per-family
+counts are ARC15, BoolQ13, HellaSwag12 and WinoGrande6 out of16 each. It therefore
+shows a substantial local repair but still exceeds the allowed five-point
+accuracy drop. It is not an all-block or held-out confirmation result.
+
+On the separate training projection check, native-update energy lost falls
+43.64%→8.32%, and the output-J-weighted update error falls22.87%→3.29%. Retained
+input-Gram trace remains99.70%. These energy measurements include position0;
+its large update can dominate aggregate energy. Further all-block diagnostics
+must also report non-position0 errors. The fit does not explicitly preserve the
+intermediate attention-to-MLP state, so these projection metrics cannot replace
+the observed task test.
+
+Fit: `data/experiments/jspace_first_block_enrich/20261114_v1`, fingerprint
+`c433057e20d736af26a09f4697b7b4d5c67ceb0f4caca4ac297445b90a3182ec`.
+Probe: `data/experiments/jspace_first_block_enrich/20261114_probe_v1/result.json`,
+SHA256 `fcb05c30869551204623fb0c8f081584de2f8858bee10ebfe2f678dd35b43d7e`.
+
+The distinction between input statistics and output sensitivity has relevant
+precedent: [IO-SVD](https://arxiv.org/abs/2605.15626) combines activation whitening
+with an output-side KL sensitivity metric. Our fixed-J plus reachable-state
+enrichment is a different intervention; that paper does not validate this run.
+[SVD-LLM](https://proceedings.iclr.cc/paper_files/paper/2025/hash/3104e1ab39875cf54fe1eb4473e7c5a1-Abstract-Conference.html)
+also couples compression with sequential parameter updates. These sources
+motivate checking both the representation and its recovered computation rather
+than treating input-Jacobian energy alone as a quality certificate.
