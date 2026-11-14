@@ -5,7 +5,7 @@ import json
 import pytest
 
 from neural_architecture_lab.jspace_allblocks_hypothesis import (
-    FAIL, PASS, STUDY_ID, THRESHOLDS, JSpaceAllBlocksRecord, required_stages,
+    FAIL, PASS, STUDY_ID, THRESHOLDS, V2_THRESHOLDS, JSpaceAllBlocksRecord, required_stages,
 )
 
 
@@ -24,7 +24,7 @@ def quality(deltas=(0, 0, 0, 0)):
 def evidence(*, speed=1.4, deltas=(0, 0, 0, 0)):
     config = dict(THRESHOLDS, layers=36, group_size=6, epochs=12, microbatch=4, accumulation=4,
         learning_rate=1.2e-4, temperature=2., kl_weight=.7, ce_weight=.3, gradient_clip=1., native_bytes=10000)
-    plan = dict(study_id=STUDY_ID, systems_only=False, fingerprint="a"*64, config=config)
+    plan = dict(schema="jspace.qwen-parallel.v1", study_id=STUDY_ID, systems_only=False, fingerprint="a"*64, config=config)
     q = quality(deltas)
     gates = dict(overall_quality=q["overall"]["accuracy_drop"] <= .01,
         every_family_quality=all(v["accuracy_drop"] <= 4/128 for v in q["by_family"].values()),
@@ -65,6 +65,75 @@ def test_overall_quality_cannot_hide_one_failed_family():
     record = JSpaceAllBlocksRecord.from_evidence(evidence(deltas=(-5, 4, 0, 0)))
     assert record.gates["overall_quality"] and not record.gates["every_family_quality"]
     assert record.classification == FAIL
+
+
+def amended_evidence(*, deltas=(-20, 0, 0, 0), speed=1.4):
+    value = evidence(deltas=deltas, speed=speed)
+    value["plan"]["schema"] = "jspace.qwen-parallel.v2"
+    value["plan"]["config"].update(V2_THRESHOLDS, rank_gate="actual_sketch_svd_shape_fp32")
+    result = value["result"]; acceptance = result["acceptance"]
+    acceptance["thresholds"] = dict(V2_THRESHOLDS)
+    acceptance["diagnostics"] = {"every_family_quality": acceptance["gates"].pop("every_family_quality"),
+        "original_one_percentage_point_quality": acceptance["gates"]["overall_quality"]}
+    acceptance["primary_quality_scope"] = "aggregate_accuracy"
+    acceptance["gates"]["overall_quality"] = result["quality"]["overall"]["accuracy_drop"] <= .05
+    result["targets_met"] = acceptance["passed"] = all(acceptance["gates"].values())
+    result["classification"] = PASS if result["targets_met"] else FAIL
+    return value
+
+
+def test_v2_five_point_aggregate_budget_keeps_family_and_one_point_diagnostics():
+    record = JSpaceAllBlocksRecord.from_evidence(amended_evidence())
+    assert record.targets_met and record.confirmed is False
+    assert record.compact_correct == 380 and record.native_correct == 400
+    assert record.quality_thresholds["maximum_accuracy_drop"] == .05
+    assert record.quality_diagnostics == {"every_family_quality": False, "original_one_percentage_point_quality": False}
+    assert "every_family_quality" not in record.gates
+    assert not JSpaceAllBlocksRecord.from_evidence(amended_evidence(deltas=(-26, 0, 0, 0))).targets_met
+    assert not JSpaceAllBlocksRecord.from_evidence(amended_evidence(speed=1.39)).targets_met
+
+
+@pytest.mark.parametrize("change", ["hidden_veto", "promoted_diagnostic", "wrong_scope", "wrong_rank"])
+def test_v2_rejects_misreported_amendment(change):
+    value = amended_evidence()
+    if change == "hidden_veto":
+        value["result"]["acceptance"]["gates"]["every_family_quality"] = False
+    elif change == "promoted_diagnostic":
+        value["result"]["acceptance"]["diagnostics"]["every_family_quality"] = True
+    elif change == "wrong_scope":
+        value["result"]["acceptance"]["primary_quality_scope"] = "per_family"
+    else:
+        value["plan"]["config"]["rank_gate"] = "different"
+    with pytest.raises(ValueError):
+        JSpaceAllBlocksRecord.from_evidence(value)
+
+
+def test_v2_closeout_verifies_original_production_manifest_and_hardlink(tmp_path):
+    import os
+    from experiments.neural_architecture_lab.finalize_jspace_allblocks import reused_stage_provenance, digest, sha
+    old, new = tmp_path / "old", tmp_path / "new"
+    old.mkdir(); new.mkdir()
+    old_plan = {"source_sha256": {}, "input_sha256": {}}
+    old_plan["fingerprint"] = digest(old_plan)
+    (old / "plan.json").write_text(json.dumps(old_plan))
+    (old / "artifact").write_bytes(b"unchanged")
+    os.link(old / "artifact", new / "artifact")
+    stage = "groups/group_00/capture"
+    path = old / stage / "manifest.json"; path.parent.mkdir(parents=True)
+    original = {"status": "completed", "fingerprint": old_plan["fingerprint"], "artifacts": {"artifact": sha(old / "artifact")}}
+    path.write_text(json.dumps(original))
+    plan = {"schema": "jspace.qwen-parallel.v2", "reuse": {"root": str(old), "source_fingerprint": old_plan["fingerprint"],
+        "manifest_sha256": {stage + "/manifest.json": sha(path)}}}
+    wrapper = {"provenance_kind": "verified_immutable_reuse", "artifacts": original["artifacts"],
+        "reused_from": {"root": str(old), "source_fingerprint": old_plan["fingerprint"], "manifest": stage + "/manifest.json", "manifest_sha256": sha(path)},
+        "original_stage_metadata": {k: v for k, v in original.items() if k != "artifacts"}}
+    assert reused_stage_provenance(new, plan, stage, wrapper)[str(path)] == sha(path)
+    broken = deepcopy(wrapper); broken["original_stage_metadata"]["fingerprint"] = "new producer"
+    with pytest.raises(ValueError, match="production metadata"):
+        reused_stage_provenance(new, plan, stage, broken)
+    (new / "artifact").unlink(); (new / "artifact").write_bytes(b"unchanged")
+    with pytest.raises(ValueError, match="hardlink"):
+        reused_stage_provenance(new, plan, stage, wrapper)
 
 
 @pytest.mark.parametrize("mutation", ["confirmation", "fingerprint", "missing_stage", "group", "budget", "selection", "rate", "threshold", "promote"])

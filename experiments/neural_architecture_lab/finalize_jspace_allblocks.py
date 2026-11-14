@@ -20,7 +20,7 @@ from neural_architecture_lab.jspace_allblocks_hypothesis import (
 from . import finalize_jspace_qwen_affine as common
 
 ROOT, LOG = common.ROOT, common.LOG
-DEFAULT_ROOT = ROOT / "data/experiments/jspace_qwen_parallel/20261114_v1"
+DEFAULT_ROOT = ROOT / "data/experiments/jspace_qwen_parallel/20261114_v2"
 DEFAULT_REPORT = ROOT / "docs/08 - Analysis/jspace/2026-11-14_jspace-allblocks-parallel.md"
 DEFAULT_REGISTRY = ROOT / "data/hypothesis_registry/jspace_allblocks_20261114.json"
 TYPED = ROOT / "src/neural_architecture_lab/jspace_allblocks_hypothesis.py"
@@ -117,6 +117,34 @@ def packed_parameter_count(run, plan, result):
             "other_resident_buffer_bytes": difference, "scope": "Packed learned tensors, original tied vocabulary once, final RMS gain; buffers excluded from parameter count"}
 
 
+def reused_stage_provenance(run, plan, name, manifest):
+    """Reused v1 bytes keep their production identity under a v2 wrapper."""
+    if "reused_from" not in manifest:
+        return {}
+    require(plan["schema"] == "jspace.qwen-parallel.v2" and manifest.get("provenance_kind") == "verified_immutable_reuse",
+            "Undeclared immutable artifact reuse")
+    reuse, reference = plan["reuse"], manifest["reused_from"]
+    old_root = Path(reuse["root"]); relative = name + "/manifest.json"
+    require(reference == {"root": str(old_root), "source_fingerprint": reuse["source_fingerprint"],
+            "manifest": relative, "manifest_sha256": reuse["manifest_sha256"][relative]}, "Reused stage lineage changed")
+    require(sha(old_root / relative) == reference["manifest_sha256"], "Original reused manifest changed")
+    old_manifest, old_plan = read(old_root / relative), read(old_root / "plan.json")
+    require(old_plan["fingerprint"] == reuse["source_fingerprint"] == digest({k: v for k, v in old_plan.items() if k != "fingerprint"}),
+            "Original reused producer fingerprint changed")
+    require(old_manifest["status"] == "completed" and old_manifest["fingerprint"] == old_plan["fingerprint"] and
+            old_manifest["artifacts"] == manifest["artifacts"] and
+            manifest["original_stage_metadata"] == {k: v for k, v in old_manifest.items() if k != "artifacts"},
+            "Reused artifact production metadata changed")
+    for artifact in manifest["artifacts"]:
+        require((run / artifact).samefile(old_root / artifact), "Reused immutable artifact is no longer the original hardlink")
+    hashes = {str(old_root / relative): reference["manifest_sha256"]}
+    for source, checksum in old_plan["source_sha256"].items():
+        hashes[source] = checksum
+        hashes[str(old_root / "producer" / Path(source).relative_to(ROOT))] = checksum
+    hashes.update(old_plan["input_sha256"])
+    return hashes
+
+
 def analyze(run):
     plan, result = read(run / "plan.json"), read(run / "campaign_results.json")
     require(plan["fingerprint"] == digest({k: v for k, v in plan.items() if k != "fingerprint"}), "Changed frozen plan")
@@ -126,10 +154,15 @@ def analyze(run):
         path = run / name / "manifest.json"; manifest = read(path)
         require(manifest["status"] == "completed" and manifest["fingerprint"] == plan["fingerprint"], "Incomplete/mismatched stage: " + name)
         manifests[name] = manifest; verification[str(path)] = sha(path)
+        hashes.update(reused_stage_provenance(run, plan, name, manifest))
         for relative, value in manifest["artifacts"].items():
             target = str(run / relative)
             require(target not in hashes or hashes[target] == value, "Conflicting artifact hash")
             hashes[target] = value
+    if plan["schema"] == "jspace.qwen-parallel.v2":
+        expected_reuse = set(plan["reuse"]["manifest_sha256"])
+        require({name + "/manifest.json" for name, manifest in manifests.items() if "reused_from" in manifest} == expected_reuse,
+                "Declared reused stages differ from manifests")
     for path, value in plan["source_sha256"].items():
         hashes[path] = value
         hashes[str(run / "producer" / Path(path).relative_to(ROOT))] = value
@@ -172,7 +205,7 @@ def analyze(run):
             require(relation["teacher_fingerprint"] == teacher and relation["layer"] == layer, "Relation teacher/layer provenance changed")
             require(relation["fixed_anchor_width"] == plan["config"]["anchors"] and relation["removed_channels"] == plan["config"]["removed_channels"], "Polynomial compilation budget changed")
             relations[str(layer)] = relation; verification[str(path)] = sha(path)
-    value = {"schema_version": "jspace.allblocks.closeout.v1", "created_at": datetime.now(timezone.utc).isoformat(),
+    value = {"schema_version": "jspace.allblocks.closeout.v2", "created_at": datetime.now(timezone.utc).isoformat(),
         "plan": plan, "result": result, "training": training, "manifests": manifests,
         "teacher_chain": teachers, "relations": relations, "redundancy": redundancy_summary(relations),
         "parameter_count": packed_parameter_count(run, plan, result), "artifact_sha256": hashes,
@@ -211,10 +244,20 @@ def report(run, path):
         f"Producer root: `{run}`. Scientific fingerprint: `{r.scientific_fingerprint}`. "
         f"Producer aggregate SHA-256: `{sha(run/'campaign_results.json')}`. Closeout evidence SHA-256: `{sha(run/'closeout_analysis.json')}`.", "",
         "| Joint gate | Required | Result |", "| --- | --- | --- |"]
-    labels = {"overall_quality": "≤1pp accuracy loss", "every_family_quality": "≤4/128 net loss per family",
+    labels = {"overall_quality": f"≤{100*r.quality_thresholds['maximum_accuracy_drop']:g}pp aggregate accuracy loss", "every_family_quality": "≤4/128 net loss per family",
               "deployed_size": "≥38% fewer tensor bytes", "whole_model_speed": "≥1.4× whole-model rate",
               "packed_reload_exact": "exact packed reload records", "graph_static_tokens_exact": "graph/static token parity"}
     lines.extend(f"| {name} | {labels[name]} | {'pass' if passed else 'fail'} |" for name, passed in r.gates.items())
+    if r.protocol_schema.endswith(".v2"):
+        reuse = value["plan"]["reuse"]
+        lines += ["", "The user authorized a five-percentage-point aggregate accuracy budget before v2 recovery and held-out scoring. "
+            "Per-family results and the original one-point budget remain diagnostics, with no per-family veto of the aggregate gate. "
+            f"Original 1pp diagnostic: {'pass' if r.quality_diagnostics['original_one_percentage_point_quality'] else 'fail'}; "
+            f"all-family 4/128 diagnostic: {'pass' if r.quality_diagnostics['every_family_quality'] else 'fail'}.", "",
+            f"V2 reuses group-0 capture, basis and fits {reuse['completed_relation_layers']} from `{reuse['root']}` "
+            f"(original fingerprint `{reuse['source_fingerprint']}`). Wrapper manifests retain original producer identity and verify immutable hardlinks. "
+            "The stopped v1 had no recovery training or held-out scoring. The numerical-rank amendment uses the actual sketch-SVD dimensions; "
+            "its diagnostic, prior failure and protocol changes are frozen in the v2 plan."]
     lines += ["", f"Native deployed tensors: {r.native_tensor_bytes:,} bytes; compact: {r.compact_tensor_bytes:,} bytes. "
               "These include all parameters/buffers and the tied vocabulary once, excluding serving caches and allocator overhead. "
               "The packed export is a stack-plus-final-norm delta requiring the pinned native embedding/readout.", "",
@@ -259,6 +302,9 @@ def metadata(run, record):
         "correct": record.compact_correct, "count": 512, "targets_met": record.targets_met,
         "whole_model_speedup": record.whole_model_speedup, "tensor_reduction": record.size_reduction,
         "graph_tokens_per_second": record.compact_graph_tokens_per_second,
+        "protocol_schema": record.protocol_schema,
+        "maximum_accuracy_drop": record.quality_thresholds["maximum_accuracy_drop"],
+        "family_quality_is_gate": record.quality_thresholds.get("family_quality_is_gate", True),
         "accuracy_scope": SCOPE,
         "scientific_fingerprint": record.scientific_fingerprint, "analysis_sha256": sha(run / "closeout_analysis.json")}
 
