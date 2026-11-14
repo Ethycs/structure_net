@@ -1,6 +1,7 @@
 # Qwen recovery: residual compression fails before the head
 
-Status: completed development diagnostics; recovery training remains in progress.
+Status: completed development diagnostics and failed joint-recovery trial;
+single-layer distillation is the next recovery experiment.
 Study: `JSPACE-QWEN-ACCURACY-RECOVERY-01`, exploratory, `confirmed=false`.
 Primary diagnostic aggregate:
 `data/experiments/jspace_accuracy_recovery_diagnostics/20261114_v1/result.json`.
@@ -73,9 +74,11 @@ Full-vocabulary answer cross entropy decomposes into conditional choice cross
 entropy plus a penalty for assigning little total probability to valid answer
 letters. Conditional choice cross entropy worsens1.2370→1.2660, while mean total
 answer-letter probability rises from6.19e-7 to0.4301. The loss reduction is
-principally a format/calibration repair, not improved choice accuracy. Training
-continues under the fixed three-epoch budget; no accuracy-recovery claim follows
-from these intermediate losses.
+principally a format/calibration repair, not improved choice accuracy. The
+three-epoch run subsequently completed96updates: development correct counts
+were29 initially, then20,20,25. Accuracy-first selection retained epoch0, and
+strict checkpoint reload reproduced it exactly. This is failed recovery; the
+fresh confirmation set was not opened.
 
 All GPU runs use experiment reservations. Every intervention has a separate
 artifact root, source/input hashes and retained predictions. CPU tests cover
@@ -124,3 +127,21 @@ enrichment is a different intervention; that paper does not validate this run.
 also couples compression with sequential parameter updates. These sources
 motivate checking both the representation and its recovered computation rather
 than treating input-Jacobian energy alone as a quality certificate.
+
+## Full-stack probe and corrected distillation order
+
+Extending the same enrichment to36 bases and using native initialization with
+full128-wide heads scores24/64 before recovery. Predictions are A51/B11/D2;
+this remains a largely collapsed model. The single-block improvement is not a
+successful full-stack replacement. This run is
+`data/experiments/jspace_all_layer_enrich/20261114_probe_h128`; its training-only
+fit is `data/experiments/jspace_all_layer_enrich/20261114_v1`, fingerprint
+`26c3a381fd03a50b1eef7b27add1920424c17b43f384a4a5b12aa6de5dafeb5c`.
+
+The user corrected the training order: distill one compressed layer first,
+with the rest of the model native and frozen, then test the assembled model
+before adding another compressed layer. The new all-stack semantic runner was
+prepared but never launched. The next experiment follows
+`docs/07 - Status Reports/jspace/2026-11-14_qwen-single-layer-recovery.md`.
+Full-vocabulary/conditional-loss helpers remain available for later controlled
+experiments; they do not substitute for this single-layer gate.
