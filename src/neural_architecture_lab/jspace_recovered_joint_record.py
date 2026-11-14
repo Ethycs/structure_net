@@ -5,7 +5,7 @@ import math
 from .jspace_single_layer_record import require, scores
 
 STUDY_ID = "JSPACE-QWEN-RECOVERED-JOINT-DISTILLATION-01"
-SCOPE = ("Whole36-block selected compact assembly, jointly recovered on512 training cases and selected on the original64 "
+SCOPE = ("Complete 36-block selected compact assembly, jointly recovered on 512 training cases and selected on the original 64 "
          "development cases. One seed; no untouched confirmation, packing-parity, inference-speed or deployment claim.")
 METRICS = ("loss","full_kl","choice_kl","choice_ce","weighted_full_kl","weighted_choice_kl","weighted_choice_ce",
            "teacher_accuracy","teacher_agreement","choice_margin","valid_label_probability","answer_full_vocab_ce")
