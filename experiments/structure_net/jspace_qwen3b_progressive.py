@@ -19,6 +19,7 @@ from . import jspace_qwen_parallel_train as core
 from . import jspace_qwen3b_progressive_model as model
 from . import jspace_qwen3b_progressive_calibrate as calibration
 from . import jspace_qwen3b_progressive_train as training
+from . import jspace_3b_teacher_targets as targets
 
 base=old.base
 read=old.read
@@ -51,7 +52,63 @@ def check_plan(plan):
         raise ValueError("Plan fingerprint changed")
 
 
-def prepare(root,seed_root):
+def reusable_calibration(root,seed,inputs):
+    """Reuse complete VJPs from the preserved pre-training target-rounding stop."""
+    root=Path(root).resolve();prior=read(root/"plan.json");check_plan(prior)
+    stage=read(stage_dir(root,28)/"plan.json");check_plan(stage)
+    directory=stage_dir(root,28)/"capture"
+    failure=read(directory/"failure.json");wrapper=read(directory/"progressive_wrapper.json")
+    metadata=read(directory/"metadata.json")
+    if (prior.get("seed_checkpoint_sha256")!=SEED_SHA or stage.get("parent_checkpoint_sha256")!=SEED_SHA or
+        stage.get("root_fingerprint")!=prior["fingerprint"] or stage.get("cut")!=28 or
+        failure.get("error_type")!="RuntimeError" or "Differentiable teacher cache changed packed parent predictions" not in failure.get("error","") or
+        wrapper.get("status")!="completed" or wrapper.get("systems_only") is not False or wrapper.get("seed")!=120861 or
+        metadata.get("status")!="completed" or metadata.get("layers")!=[28] or
+        wrapper.get("metadata_sha256")!=base.sha(directory/"metadata.json") or
+        wrapper.get("teacher_fingerprint")!=base.digest(SEED_SHA) or metadata.get("teacher_fingerprint")!=base.digest(SEED_SHA)):
+        raise ValueError("Only the complete, authenticated pre-training rounding-stop calibration can be reused")
+    if read(directory/"items.json")["items"]!=read(seed["items_path"])["items"]:
+        raise ValueError("Reused calibration cases differ from accepted seed")
+    if (metadata.get("capture_order")!=list(range(576)) or metadata.get("seed")!=120861 or
+        metadata.get("probe_groups")!=2 or metadata.get("probes_per_group")!=8 or
+        metadata.get("activation_positions")!=16 or
+        metadata.get("calibration_indices")!=prior.get("calibration_indices") or
+        metadata.get("development_indices")!=list(range(512,576))):
+        raise ValueError("Reused calibration is incomplete or its probe configuration changed")
+    allowed={str(Path(__file__).resolve()),str(PROTOCOL),str(base.ROOT/"tests/structure_net/test_jspace_qwen3b_progressive.py")}
+    for path,digest in prior["source_sha256"].items():
+        archive=root/"producer"/Path(path).relative_to(base.ROOT);old.pin(inputs,archive,digest)
+        if path not in allowed and base.sha(path)!=digest:
+            raise ValueError("Calibration algorithm changed since captured VJPs: "+path)
+    for path in (root/"plan.json",stage_dir(root,28)/"plan.json",directory/"failure.json"):
+        old.pin(inputs,path)
+    files={}
+    for path in sorted(directory.rglob("*")):
+        if path.is_file() and path.name not in ("failure.json","manifest.json","result.json"):
+            old.pin(inputs,path);files[str(path.relative_to(directory))]=base.sha(path)
+    block=metadata.get("blocks",{}).get("28",{})
+    required=[metadata.get("accepted_teacher_logits"),*[block.get(key) for key in
+        ("statistics","boundary","mlp_calibration","mlp_development","mlp_jacobian_bf16")]]
+    for value in required:
+        path=Path(value).resolve() if isinstance(value,str) else None
+        if path is None or not path.is_relative_to(directory.resolve()) or str(path.relative_to(directory.resolve())) not in files:
+            raise ValueError("Reused calibration metadata references a missing or external artifact")
+    return dict(root=str(directory),source_fingerprint=prior["fingerprint"],teacher_fingerprint=base.digest(SEED_SHA),
+        files=files,reason="Complete original differentiable VJPs retained; separate packed targets correct BF16 tie mismatch")
+
+
+def link_calibration(reuse,destination):
+    """Copy immutable calibration bytes without changing source inode identities."""
+    destination=Path(destination);destination.mkdir(exist_ok=False)
+    source=Path(reuse["root"])
+    for name,digest in reuse["files"].items():
+        target=source/name
+        if not target.resolve().is_relative_to(source.resolve()) or base.sha(target)!=digest:
+            raise ValueError("Reused calibration artifact changed")
+        output=destination/name;output.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(target,output)
+
+
+def prepare(root,seed_root,calibration_root=None):
     if os.environ.get("CUDA_VISIBLE_DEVICES")!="":raise ValueError("Preparation must hide CUDA")
     root,seed_root=Path(root).resolve(),Path(seed_root).resolve()
     if root.exists():raise FileExistsError(root)
@@ -76,10 +133,12 @@ def prepare(root,seed_root):
     mapping=old.validate_items(items,original["items"])
     if mapping!=list(range(len(items))):raise ValueError("Cached native prefix layout must match all original case rows")
     fits={str(i):str(Path(seed["parent_root"])/"groups"/f"group_{1 if i==29 else 0:02d}"/f"block_{i:02d}") for i in range(29,36)}
+    reuse=reusable_calibration(calibration_root,seed,inputs) if calibration_root is not None else None
     sources=dict(seed["source_sha256"])
     extra=[*Path(__file__).parent.glob("jspace_qwen3b_progressive*.py"),
            *base.ROOT.glob("tests/structure_net/test_jspace_qwen3b_progressive*.py"),
-           Path(__file__).with_name("jspace_allblocks_rankfit.py"),PROTOCOL]
+           Path(__file__).with_name("jspace_allblocks_rankfit.py"),Path(targets.__file__).resolve(),
+           base.ROOT/"tests/structure_net/test_jspace_3b_teacher_targets.py",PROTOCOL]
     for path in extra:sources[str(path.resolve())]=base.sha(path)
     if shutil.disk_usage(root.parent).free<350*1024**3:raise OSError("At least350GiB free required for preserved campaign artifacts")
     plan=dict(schema=SCHEMA,study_id=STUDY,seed_root=str(seed_root),seed_fingerprint=seed["fingerprint"],
@@ -88,7 +147,7 @@ def prepare(root,seed_root):
         seed_correct=51,native_correct=48,seed_cut=29,target_cut=0,model=seed["model"],fits=fits,
         native_cache=str(cache),items_path=str(cache/"items.json"),original_indices=mapping,
         label_ids=seed["label_ids"],calibration_indices=original["calibration_indices"],config=asdict(CONFIG),
-        allocation_mib=11264,allocator_mib=11008,input_sha256=inputs,
+        allocation_mib=11264,allocator_mib=11008,calibration_reuse=reuse,input_sha256=inputs,
         input_identity={p:old.file_identity(p) for p in inputs},source_sha256=sources,confirmed=False)
     plan["fingerprint"]=base.digest(plan);root.mkdir(parents=True)
     for path,digest in sources.items():
@@ -292,17 +351,28 @@ def run_phase(root,cut,phase):
             norm.to("cuda:0");readout=readout.to("cuda:0");rotary.to("cuda:0")
             control=controls(plan,stage,stack,norm,readout,rotary,guard)
             if not control["passed"]:raise RuntimeError("Parent/seam/native replay failed: "+json.dumps(control))
-            block=native.load_native_block(plan["model"]["path"],cut,device="cuda:0")
-            teacher=calibration.CachedPrefixTeacher(read(plan["items_path"])["items"],
-                Path(plan["native_cache"])/f"boundary_{cut:02d}.npy",cut,block,stack,norm,readout,rotary,guard=guard)
-            metadata=calibration.capture(output,teacher,plan["calibration_indices"],teacher_fingerprint=stage["teacher_fingerprint"],progress=progress)
+            reuse=plan.get("calibration_reuse") if cut==28 else None
+            if reuse:
+                link_calibration(reuse,output)
+                event("calibration_reused",source=reuse["root"],source_fingerprint=reuse["source_fingerprint"])
+            else:
+                block=native.load_native_block(plan["model"]["path"],cut,device="cuda:0")
+                teacher=calibration.CachedPrefixTeacher(read(plan["items_path"])["items"],
+                    Path(plan["native_cache"])/f"boundary_{cut:02d}.npy",cut,block,stack,norm,readout,rotary,guard=guard)
+                calibration.capture(output,teacher,plan["calibration_indices"],teacher_fingerprint=stage["teacher_fingerprint"],progress=progress)
             data=data_for(plan,cut,output/"accepted_teacher_logits.npy")
-            diagnostic=old.compare_rows(old.rows_from_cache(data,plan["label_ids"],"accepted"),records(stage["parent_records"]),
+            differentiable=old.compare_rows(old.rows_from_cache(data,plan["label_ids"],"accepted"),records(stage["parent_records"]),
                 [data.items[i] for i in data.development])
-            if not diagnostic["predictions_exact"]:
-                raise RuntimeError("Differentiable teacher cache changed packed parent predictions: "+json.dumps(diagnostic))
+            data.close();data=data_for(plan,cut+1)
+            target_receipt=targets.capture_packed_teacher(output/"packed_teacher_logits.npy",stack,norm,readout,rotary,data,
+                guard=guard,progress=progress)
+            data.close();data=data_for(plan,cut,output/"packed_teacher_logits.npy")
+            diagnostic=old.compare_rows(old.rows_from_cache(data,plan["label_ids"],"accepted"),records(stage["parent_records"]),
+                [data.items[i] for i in data.development],expected_correct=stage["parent_correct"])
+            if not diagnostic["passed"]:raise RuntimeError("Packed teacher targets changed accepted parent predictions/logits")
             result=dict(status="completed",controls=control,inheritance=inheritance,teacher_cache_diagnostic=diagnostic,
-                teacher_cache_logit_gate_applied=False,teacher_fingerprint=stage["teacher_fingerprint"])
+                differentiable_teacher_cache_diagnostic=differentiable,packed_target_receipt=target_receipt,
+                teacher_cache_logit_gate_applied=True,teacher_fingerprint=stage["teacher_fingerprint"],calibration_reused=bool(reuse))
         elif phase=="fit":
             output.mkdir();calibration.finalize(directory/"capture",output,device="cuda:0",guard=guard,progress=progress)
             block=native.load_native_block(plan["model"]["path"],cut,device="cuda:0")
@@ -313,7 +383,7 @@ def run_phase(root,cut,phase):
             result=dict(status="completed",cut=cut,teacher_fingerprint=stage["teacher_fingerprint"])
         else:
             stack,norm,readout,rotary,inheritance=make_stack(plan,stage,"cuda:0")
-            data=data_for(plan,cut,directory/"capture/accepted_teacher_logits.npy")
+            data=data_for(plan,cut,directory/"capture/packed_teacher_logits.npy")
             trainer=training.ProgressiveTrainer(stack,norm,readout,rotary,data,plan["label_ids"],config=CONFIG,guard=guard,
                 native_correct=48,parent_correct=stage["parent_correct"])
             if phase=="pilot":
@@ -395,9 +465,9 @@ def campaign(root,*,stop_cut=0):
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("phase",choices=("prepare","prepare-stage","campaign",*PHASES));parser.add_argument("--root",required=True,type=Path)
-    parser.add_argument("--seed-root",type=Path);parser.add_argument("--cut",type=int);parser.add_argument("--stop-cut",type=int,default=0)
+    parser.add_argument("--seed-root",type=Path);parser.add_argument("--calibration-root",type=Path);parser.add_argument("--cut",type=int);parser.add_argument("--stop-cut",type=int,default=0)
     args=parser.parse_args()
-    if args.phase=="prepare":result=prepare(args.root,args.seed_root)
+    if args.phase=="prepare":result=prepare(args.root,args.seed_root,args.calibration_root)
     elif args.phase=="prepare-stage":result=prepare_stage(args.root,args.cut)
     elif args.phase=="campaign":result=campaign(args.root,stop_cut=args.stop_cut)
     else:result=run_phase(args.root,args.cut,args.phase)

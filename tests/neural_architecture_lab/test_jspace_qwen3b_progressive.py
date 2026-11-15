@@ -161,6 +161,21 @@ def test_optional_raw_control_rows_enable_recomputation_and_cannot_be_forged():
     with pytest.raises(ValueError,match="Saved control rows"):Record.from_evidence(value)
 
 
+def test_packed_targets_are_distinct_from_unchanged_differentiable_calibration_cache():
+    value=evidence([stage()]);capture=value["stages"][0]["raw_stages"]["capture"]
+    capture["teacher_cache_diagnostic"].update(passed=True,logits_pass=True)
+    capture["teacher_cache_logit_gate_applied"]=True
+    capture["differentiable_teacher_cache_diagnostic"]=dict(count=64,correct=50,max_abs_logit_delta=.25,predictions_exact=False)
+    capture["packed_target_receipt"]=dict(status="completed",shape=[576,4,151936],microbatch=4,training_count=512,
+        development_count=64,fixed_state_unchanged=True,calibration_jacobians_changed=False,
+        path="/separate/packed_teacher_logits.npy",sha256="a"*64)
+    result=Record.from_evidence(value).stages[0]
+    assert result["recovery_target_execution"]=="packed_inference" and result["differentiable_teacher_correct"]==50
+    assert result["parent_correct"]==51 and result["selected"]["correct"]==51
+    capture["packed_target_receipt"]["calibration_jacobians_changed"]=True
+    with pytest.raises(ValueError,match="without changing VJP"):Record.from_evidence(value)
+
+
 def test_snapshot_cannot_enter_registry(monkeypatch,tmp_path):
     value=evidence([stage()]);r=Record.from_evidence(value)
     monkeypatch.setattr(final,"expected",lambda root:(dict(value,snapshot=True),r))

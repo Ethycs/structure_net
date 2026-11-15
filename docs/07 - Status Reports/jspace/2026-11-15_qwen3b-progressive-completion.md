@@ -15,6 +15,30 @@ change to the estimator, initialization, objective, budget or quality gates.
 The active root is `data/experiments/jspace_qwen3b_progressive/20261115_v2`;
 v2 regenerates calibration and does not reuse the partial v1 capture.
 
+Teacher-target amendment before any recovery update: v2 completed all 576
+capture cases, but its differentiable-path logits changed one BoolQ decision
+from the packed parent's correct label to an exact BF16 tie (31.375/31.5
+became 31.5/31.5). It scored 50/64 versus the packed parent's 51/64, while
+every choice logit remained inside the declared numerical tolerance. The
+v2 stop is preserved, reported and registered as an execution failure, not
+a compression-quality failure.
+
+The active root is now `data/experiments/jspace_qwen3b_progressive/20261115_v3`.
+Version 3 keeps the differentiable full-vocabulary VJP estimator and its
+original logits unchanged, but creates a SEPARATE `packed_teacher_logits.npy`
+for distillation. Those targets come from the exact accepted packed parent at
+native boundary `cut+1`, in the same four-case batches used for parent scoring.
+The packed targets must reproduce all 64 parent predictions and satisfy the
+unchanged logit tolerance; the differentiable-path discrepancy is diagnostic.
+All later stages use this same separation. No accuracy threshold is relaxed.
+
+The first v3 stage reuses v2's complete gradient/statistics capture, after
+pinning every consumed file and its archived producer, verifying unchanged
+calibration algorithm/seed/cases/teacher fingerprint, and checking the precise
+pre-training failure reason. Byte-identical copies preserve original arrays and
+metadata. New packed targets are generated under a fresh GPU reservation.
+No partial v1 data, failed student weights or unseen outcomes are reused.
+
 ## Starting point and intervention
 
 Continue the verified seven-block checkpoint from
@@ -54,13 +78,13 @@ The corrected rank fitter uses actual singular values, 24 anchors, 1024
 removed channels, 128-column packing, seed 861, ridge 0.01 and the existing
 development diagnostics. Development examples never fit basis/coefficients.
 
-Teacher logits are freshly captured from the frozen accepted parent with the
-one new block still native. This teacher is functionally the preceding
-accepted model with an unchanged native prefix. Its differentiable Torch
-execution and packed deployment may differ numerically in BF16; record the
-choice-level difference separately rather than silently treating them as
-bitwise identical. Teacher-cache accuracy is diagnostic, not a substitute
-for the packed parent accuracy used in admission.
+Differentiable calibration executes the frozen accepted parent with the one
+new block still native. This is functionally the preceding accepted model
+with an unchanged native prefix. Its original logits remain a diagnostic.
+Version 3's recovery targets instead use that parent's packed deployment and
+the already-authenticated next native boundary, as detailed in the amendment.
+Keep both banks and both diagnostics explicit; never relabel differentiable
+50/64 outputs as packed 51/64 outputs.
 
 ## Recovery and acceptance
 
@@ -134,8 +158,9 @@ Log typed exploratory results and an append-only research journal entry.
 Run CPU preparation and the CPU supervisor from the repository, in the locked
 Pixi `ncm` environment with `CUDA_VISIBLE_DEVICES=''`. Preparation uses
 `python -m experiments.structure_net.jspace_qwen3b_progressive prepare
---root data/experiments/jspace_qwen3b_progressive/20261115_v2
---seed-root data/experiments/jspace_incremental_suffix/20261115_v2`.
+--root data/experiments/jspace_qwen3b_progressive/20261115_v3
+--seed-root data/experiments/jspace_incremental_suffix/20261115_v2
+--calibration-root data/experiments/jspace_qwen3b_progressive/20261115_v2`.
 Then invoke the same module with `campaign --root <root>`. The supervisor
 requests each worker lease using `inference-ctl lease run`; direct GPU phase
 commands are rejected without the matching lease.

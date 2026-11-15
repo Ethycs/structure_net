@@ -229,8 +229,15 @@ def test_run_phase_pilot_serializes_real_probe_keys_and_strictly_reloads(tmp_pat
     assert not (directory/'pilot/failure.json').exists()
 
 
-def test_run_phase_capture_progress_accepts_existing_cut_and_phase_fields(tmp_path,monkeypatch):
+@pytest.mark.parametrize('reused',[False,True])
+def test_run_phase_capture_progress_accepts_existing_cut_and_phase_fields(tmp_path,monkeypatch,reused):
     current,directory,_,_,data=mocked_run_phase(tmp_path,monkeypatch)
+    if reused:
+        plan,_=study.verify_stage(tmp_path,28)
+        original=tmp_path/'old_capture';original.mkdir()
+        artifact=original/'accepted_teacher_logits.npy';artifact.write_bytes(b'differentiable original')
+        plan['calibration_reuse']=dict(root=str(original),source_fingerprint='original',
+            files={artifact.name:study.base.sha(artifact)})
     monkeypatch.setattr(study,'controls',lambda *a,**k:{'passed':True})
     monkeypatch.setattr(study.native,'load_native_block',lambda *a,**k:object())
     teacher=SimpleNamespace(closed=False)
@@ -238,15 +245,96 @@ def test_run_phase_capture_progress_accepts_existing_cut_and_phase_fields(tmp_pa
     teacher.close=close
     monkeypatch.setattr(study.calibration,'CachedPrefixTeacher',lambda *a,**k:teacher)
     def capture(output,model,indices,*,teacher_fingerprint,progress):
+        assert not reused,'Reused VJPs must not be recaptured'
         output.mkdir()
         progress(dict(kind='case_completed',cut=999,phase='nested',case=7))
         return {'completed':True}
     monkeypatch.setattr(study.calibration,'capture',capture)
+    calls=[]
+    def data_for(plan,cut,path=None):
+        calls.append((cut,None if path is None else path.name));return data
+    monkeypatch.setattr(study,'data_for',data_for)
+    def packed(path,*args,**kwargs):
+        path.write_bytes(b'packed targets');return {'status':'completed','calibration_jacobians_changed':False}
+    monkeypatch.setattr(study.targets,'capture_packed_teacher',packed)
     monkeypatch.setattr(study.old,'rows_from_cache',lambda *a,**k:[])
-    monkeypatch.setattr(study.old,'compare_rows',lambda *a,**k:{'predictions_exact':True})
+    comparisons=iter([{'predictions_exact':False,'passed':False},{'predictions_exact':True,'passed':True}])
+    monkeypatch.setattr(study.old,'compare_rows',lambda *a,**k:next(comparisons))
     study.run_phase(tmp_path,28,'capture')
-    assert study.checked(directory,'capture',current)['controls']['passed']
+    result=study.checked(directory,'capture',current)
+    assert result['controls']['passed'] and result['teacher_cache_logit_gate_applied']
+    assert not result['differentiable_teacher_cache_diagnostic']['predictions_exact']
+    assert calls==[(28,'accepted_teacher_logits.npy'),(29,None),(28,'packed_teacher_logits.npy')]
+    assert 'packed_teacher_logits.npy' in study.read(directory/'capture/manifest.json')['artifacts']
     events=[json.loads(line) for line in (tmp_path/'progress.jsonl').read_text().splitlines()]
     matched=[event for event in events if event.get('kind',event.get('event'))=='case_completed']
-    assert len(matched)==1 and matched[0]['cut']==28 and matched[0]['phase']=='capture'
-    assert data.closed and teacher.closed
+    if reused:
+        assert matched==[] and result['calibration_reused']
+        assert (directory/'capture/accepted_teacher_logits.npy').read_bytes()==b'differentiable original'
+    else:
+        assert len(matched)==1 and matched[0]['cut']==28 and matched[0]['phase']=='capture'
+    assert data.closed and teacher.closed is (not reused)
+
+
+def reuse_fixture(tmp_path,monkeypatch,mutation=None):
+    monkeypatch.setattr(study.base,'ROOT',tmp_path)
+    source=tmp_path/'algorithm.py';source.write_text('unchanged algorithm\n')
+    root=tmp_path/'old';directory=study.stage_dir(root,28)/'capture';directory.mkdir(parents=True)
+    archive=root/'producer/algorithm.py';archive.parent.mkdir();archive.write_bytes(source.read_bytes())
+    items=[{'identity':str(i)} for i in range(576)]
+    seed_path=tmp_path/'seed_items.json';study.base.write(seed_path,{'items':items})
+    study.base.write(directory/'items.json',{'items':items})
+    prior=dict(seed_checkpoint_sha256=study.SEED_SHA,source_sha256={str(source):study.base.sha(source)},calibration_indices=[0,1])
+    prior['fingerprint']=study.base.digest(prior);study.base.write(root/'plan.json',prior)
+    current=dict(parent_checkpoint_sha256=study.SEED_SHA,root_fingerprint=prior['fingerprint'],cut=28)
+    current['fingerprint']=study.base.digest(current);study.base.write(directory.parent/'plan.json',current)
+    study.base.write(directory/'failure.json',dict(error_type='RuntimeError',error='Differentiable teacher cache changed packed parent predictions'))
+    block={}
+    for key in ('statistics','boundary','mlp_calibration','mlp_development','mlp_jacobian_bf16'):
+        path=directory/'block_28'/f'{key}.bin';path.parent.mkdir(exist_ok=True);path.write_bytes(key.encode());block[key]=str(path)
+    logits=directory/'accepted_teacher_logits.npy';logits.write_bytes(b'original logits')
+    metadata=dict(status='completed',layers=[28],teacher_fingerprint=study.base.digest(study.SEED_SHA),
+        seed=120861,probe_groups=2,probes_per_group=8,activation_positions=16,calibration_indices=[0,1],
+        development_indices=list(range(512,576)),capture_order=list(range(576)),blocks={'28':block},accepted_teacher_logits=str(logits))
+    if mutation:mutation(metadata)
+    study.base.write(directory/'metadata.json',metadata)
+    study.base.write(directory/'progressive_wrapper.json',dict(status='completed',systems_only=False,seed=120861,
+        metadata_sha256=study.base.sha(directory/'metadata.json'),teacher_fingerprint=study.base.digest(study.SEED_SHA)))
+    return root,directory,source,dict(items_path=str(seed_path))
+
+
+def test_reuse_copies_preserve_original_identity_and_pass_phase_authentication(tmp_path,monkeypatch):
+    root,source,_,seed=reuse_fixture(tmp_path,monkeypatch)
+    inputs={};reuse=study.reusable_calibration(root,seed,inputs)
+    identities={name:study.old.file_identity(source/name) for name in reuse['files']}
+    directory=tmp_path/'new';directory.mkdir();destination=directory/'capture'
+    study.link_calibration(reuse,destination)
+    for name,digest in reuse['files'].items():
+        assert not (destination/name).is_symlink()
+        assert (destination/name).stat().st_ino!=(source/name).stat().st_ino
+        assert study.old.file_identity(source/name)==identities[name]
+        assert study.base.sha(destination/name)==digest
+    current=stage();result,_=result_for('capture',current)
+    study.base.write(destination/'result.json',result)
+    study.base.write(destination/'manifest.json',dict(status='completed',fingerprint=current['fingerprint'],
+        artifacts={str(p.relative_to(destination)):study.base.sha(p) for p in destination.rglob('*') if p.is_file()}))
+    assert study.checked(directory,'capture',current)['controls']['passed']
+
+
+@pytest.mark.parametrize('mutation',[
+    lambda m:m.update(capture_order=list(range(575))),
+    lambda m:m.update(probes_per_group=4),
+    lambda m:m['blocks']['28'].update(statistics='/missing/statistics.pt'),
+])
+def test_reuse_rejects_incomplete_or_changed_calibration(tmp_path,monkeypatch,mutation):
+    root,_,_,seed=reuse_fixture(tmp_path,monkeypatch,mutation)
+    with pytest.raises(ValueError):study.reusable_calibration(root,seed,{})
+
+
+def test_reuse_rejects_changed_algorithm_and_artifact(tmp_path,monkeypatch):
+    root,directory,source,seed=reuse_fixture(tmp_path,monkeypatch)
+    reuse=study.reusable_calibration(root,seed,{})
+    (directory/'accepted_teacher_logits.npy').write_bytes(b'tampered')
+    with pytest.raises(ValueError,match='artifact changed'):study.link_calibration(reuse,tmp_path/'destination')
+    source.write_text('changed algorithm\n')
+    with pytest.raises(ValueError,match='algorithm changed'):study.reusable_calibration(root,seed,{})

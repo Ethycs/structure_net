@@ -48,9 +48,26 @@ def stage_summary(value,native_rows,parent_rows,parent_correct):
     if cut==28:
         checked_control(controls["native"],native_rows,48)
     diagnostic=capture["teacher_cache_diagnostic"]
-    require(diagnostic["predictions_exact"] is True and diagnostic["correct"]==parent_correct and
-        capture["teacher_cache_logit_gate_applied"] is False,
-        "Differentiable accepted-teacher cache must preserve parent decisions; logit rounding remains diagnostic")
+    require(diagnostic["predictions_exact"] is True and diagnostic["correct"]==parent_correct,
+        "Recovery targets must preserve accepted parent decisions")
+    target_execution="differentiable_torch"
+    differentiable_correct=diagnostic["correct"]
+    if "differentiable_teacher_cache_diagnostic" in capture:
+        original=capture["differentiable_teacher_cache_diagnostic"];receipt=capture["packed_target_receipt"]
+        require(capture["teacher_cache_logit_gate_applied"] is True and diagnostic["passed"] is True and
+            diagnostic["logits_pass"] is True and original["count"]==64 and
+            type(original["correct"]) is int and 0<=original["correct"]<=64 and
+            math.isfinite(original["max_abs_logit_delta"]) and
+            receipt["status"]=="completed" and receipt["shape"]==[576,4,151936] and
+            receipt["microbatch"]==4 and receipt["training_count"]==512 and receipt["development_count"]==64 and
+            receipt["fixed_state_unchanged"] is True and receipt["calibration_jacobians_changed"] is False and
+            receipt["path"].endswith("/packed_teacher_logits.npy") and
+            isinstance(receipt["sha256"],str) and len(receipt["sha256"])==64,
+            "Packed targets must be separate, complete and preserve parent replay without changing VJP calibration")
+        target_execution="packed_inference";differentiable_correct=original["correct"]
+    else:
+        require(capture["teacher_cache_logit_gate_applied"] is False,
+                "Historical Torch teacher rounding comparison must remain diagnostic")
     require(pilot["passed"] is True and pilot["systems_only"] is True and pilot["discarded"] is True and
         pilot["layer_indices"]==layers and pilot["fp32_master_changed_by_block"]==[True]*len(layers) and
         pilot["norm_fp32_master_changed"] is True and pilot["fixed_state_unchanged"] is True and
@@ -92,6 +109,7 @@ def stage_summary(value,native_rows,parent_rows,parent_correct):
     return dict(cut=cut,compressed_layers=len(layers),parent_correct=parent_correct,initial=epochs[0],selected=selected,
         selected_epoch=best["epoch"],initializer_selected=best["epoch"]==0,quality=gates,storage=fresh["storage"],
         epochs=epochs,updates=384,selected_checkpoint=value["selected_checkpoint"],training_seconds=value["training_seconds"],
+        recovery_target_execution=target_execution,differentiable_teacher_correct=differentiable_correct,
         control_rows_independently_recomputed=all("records" in controls[k] for k in ("parent","seam")+( ("native",) if cut==28 else ())))
 
 
