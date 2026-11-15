@@ -171,3 +171,82 @@ def test_stage_preparation_rejects_unaccepted_parent(tmp_path,monkeypatch,qualit
         {'quality_pass':quality} if phase=='train' else {'passed':verified})
     with pytest.raises(ValueError,match='unaccepted'):study.prepare_stage(tmp_path,27)
     assert not study.stage_dir(tmp_path,27).exists()
+
+
+def mocked_run_phase(tmp_path,monkeypatch):
+    """Reach real branch serialization without CUDA/model execution."""
+    from experiments.structure_net import jspace_full_lease
+    current=stage();directory=study.stage_dir(tmp_path,28);directory.mkdir(parents=True)
+    items=tmp_path/'items.json';study.base.write(items,{'items':[]})
+    reference=tmp_path/'reference.json';study.base.write(reference,[])
+    current['parent_records']=str(reference)
+    plan=dict(label_ids=[32,33,34,35],model={'path':'unused'},items_path=str(items),
+        native_cache=str(tmp_path),calibration_indices=[0],allocation_mib=11264,allocator_mib=11008)
+    monkeypatch.setattr(study,'verify_stage',lambda root,cut:(plan,current))
+    lease=dict(id='mock-lease',allocation={'GPU-0370fdb0-test':11264})
+    monkeypatch.setattr(jspace_full_lease,'wait_ready',lambda slots:lease)
+    monkeypatch.setattr(study,'cap_allocator',lambda supplied,configuration:{'allocator_limit_bytes':1024})
+    monkeypatch.setattr(study.torch.cuda,'init',lambda:None)
+    monkeypatch.setattr(study.torch.cuda,'reset_peak_memory_stats',lambda:None)
+    monkeypatch.setattr(study.torch.cuda,'max_memory_reserved',lambda:0)
+    monkeypatch.setattr(study.torch,'set_num_threads',lambda count:None)
+    monkeypatch.setattr(study.torch,'manual_seed',lambda seed:None)
+    class Module:
+        def __init__(self):self.loads=[]
+        def to(self,*args,**kwargs):return self
+        def pack(self,**kwargs):return self
+        def load_state_dict(self,value,strict):
+            assert strict;self.loads.append(value)
+    stack,norm,readout,rotary=[Module() for _ in range(4)]
+    monkeypatch.setattr(study,'make_stack',lambda *a,**k:(stack,norm,readout,rotary,{'passed':True}))
+    data=SimpleNamespace(training=list(range(32)),lengths=list(range(4,36)),development=[],items=[],closed=False)
+    def close():data.closed=True
+    data.close=close
+    monkeypatch.setattr(study,'data_for',lambda *a,**k:data)
+    return current,directory,stack,norm,data
+
+
+def test_run_phase_pilot_serializes_real_probe_keys_and_strictly_reloads(tmp_path,monkeypatch):
+    current,directory,stack,norm,data=mocked_run_phase(tmp_path,monkeypatch)
+    for phase in ('capture','fit'):install(directory,phase,current)
+    class Trainer:
+        def __init__(self,*args,**kwargs):pass
+        def packed_development(self):return {'correct':51,'count':64},[]
+        def master_update_probe(self,indices):
+            assert indices==list(range(31,15,-1))
+            result,_=result_for('pilot',current)
+            # Actual trainer probe has systems_only/discarded already, but the
+            # lifecycle wrapper supplies status and initial/reload fields.
+            for key in ('status','inheritance','checkpoint_strict_load'):result.pop(key)
+            return result
+        def snapshot(self):return {'stack':{},'norm':{}}
+    monkeypatch.setattr(study.training,'ProgressiveTrainer',Trainer)
+    result=study.run_phase(tmp_path,28,'pilot')
+    assert result==dict(status='completed',cut=28,phase='pilot')
+    actual=study.checked(directory,'pilot',current)
+    assert actual['systems_only'] and actual['discarded'] and actual['initial']['correct']==51
+    assert stack.loads==[{}] and norm.loads==[{}] and data.closed
+    assert not (directory/'pilot/failure.json').exists()
+
+
+def test_run_phase_capture_progress_accepts_existing_cut_and_phase_fields(tmp_path,monkeypatch):
+    current,directory,_,_,data=mocked_run_phase(tmp_path,monkeypatch)
+    monkeypatch.setattr(study,'controls',lambda *a,**k:{'passed':True})
+    monkeypatch.setattr(study.native,'load_native_block',lambda *a,**k:object())
+    teacher=SimpleNamespace(closed=False)
+    def close():teacher.closed=True
+    teacher.close=close
+    monkeypatch.setattr(study.calibration,'CachedPrefixTeacher',lambda *a,**k:teacher)
+    def capture(output,model,indices,*,teacher_fingerprint,progress):
+        output.mkdir()
+        progress(dict(kind='case_completed',cut=999,phase='nested',case=7))
+        return {'completed':True}
+    monkeypatch.setattr(study.calibration,'capture',capture)
+    monkeypatch.setattr(study.old,'rows_from_cache',lambda *a,**k:[])
+    monkeypatch.setattr(study.old,'compare_rows',lambda *a,**k:{'predictions_exact':True})
+    study.run_phase(tmp_path,28,'capture')
+    assert study.checked(directory,'capture',current)['controls']['passed']
+    events=[json.loads(line) for line in (tmp_path/'progress.jsonl').read_text().splitlines()]
+    matched=[event for event in events if event.get('kind',event.get('event'))=='case_completed']
+    assert len(matched)==1 and matched[0]['cut']==28 and matched[0]['phase']=='capture'
+    assert data.closed and teacher.closed

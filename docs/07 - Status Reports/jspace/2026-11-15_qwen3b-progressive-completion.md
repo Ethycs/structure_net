@@ -6,6 +6,15 @@ All results remain unconfirmed until an independent held-out assessment.
 Initial artifact root:
 `data/experiments/jspace_qwen3b_progressive/20261115_v1`.
 
+Execution amendment before any recovery update: v1 calibration was stopped
+under its own reservation after code inspection found a duplicate
+`systems_only` keyword in the later pilot-result constructor. The original
+source snapshot and partial capture are preserved. Version 2 corrects that
+dictionary construction and additionally retains raw control rows, with no
+change to the estimator, initialization, objective, budget or quality gates.
+The active root is `data/experiments/jspace_qwen3b_progressive/20261115_v2`;
+v2 regenerates calibration and does not reuse the partial v1 capture.
+
 ## Starting point and intervention
 
 Continue the verified seven-block checkpoint from
@@ -125,7 +134,7 @@ Log typed exploratory results and an append-only research journal entry.
 Run CPU preparation and the CPU supervisor from the repository, in the locked
 Pixi `ncm` environment with `CUDA_VISIBLE_DEVICES=''`. Preparation uses
 `python -m experiments.structure_net.jspace_qwen3b_progressive prepare
---root data/experiments/jspace_qwen3b_progressive/20261115_v1
+--root data/experiments/jspace_qwen3b_progressive/20261115_v2
 --seed-root data/experiments/jspace_incremental_suffix/20261115_v2`.
 Then invoke the same module with `campaign --root <root>`. The supervisor
 requests each worker lease using `inference-ctl lease run`; direct GPU phase

@@ -35,6 +35,12 @@ def records(path):
     return value["records"] if isinstance(value,dict) else value
 
 
+def pilot_result(probe,initial,initial_rows,inheritance):
+    if not probe.get("passed"):raise RuntimeError("Discarded pilot gradient/fixed-state proof failed")
+    return {**probe,"status":"completed","systems_only":True,"initial":initial,
+        "initial_records":initial_rows,"inheritance":inheritance,"checkpoint_strict_load":True}
+
+
 def stage_dir(root,cut):
     if type(cut) is not int or not 0<=cut<=28:raise ValueError("New cut must be an integer in [0,28]")
     return Path(root)/"stages"/f"block_{cut:02d}"
@@ -237,12 +243,13 @@ def controls(plan,stage,stack,norm,readout,rotary,guard):
         seam_rows=old.score(seam,norm,readout,rotary,data,plan["label_ids"],guard)
         seam_check=old.compare_rows(seam_rows,reference,cases,expected_correct=stage["parent_correct"])
         del seam,block
-        result=dict(parent=parent_check,seam=seam_check,passed=parent_check["passed"] and seam_check["passed"])
+        result=dict(parent=dict(**parent_check,records=parent_rows),seam=dict(**seam_check,records=seam_rows),
+            passed=parent_check["passed"] and seam_check["passed"])
         if cut==28:
             _,native_norm,_=native.load_readout_norm(plan["model"]["path"],device=readout.device)
             tail=old.NativeTail([native.load_native_block(plan["model"]["path"],i,device=readout.device) for i in range(cut,36)])
             rows=old.score(tail,native_norm,readout,rotary,data,plan["label_ids"],guard,batch_size=1)
-            result["native"]=old.compare_rows(rows,old.rows_from_cache(data,plan["label_ids"]),cases,expected_correct=48)
+            result["native"]={**old.compare_rows(rows,old.rows_from_cache(data,plan["label_ids"]),cases,expected_correct=48),"records":rows}
             result["passed"] &=result["native"]["passed"]
         return result
     finally:data.close();parent_data.close()
@@ -316,8 +323,7 @@ def run_phase(root,cut,phase):
                 if not probe["passed"]:raise RuntimeError("Discarded pilot gradient/fixed-state proof failed")
                 snapshot=native._load(output/"discarded_state.pt")
                 stack.load_state_dict(snapshot["stack"],strict=True);norm.load_state_dict(snapshot["norm"],strict=True)
-                result=dict(**probe,status="completed",systems_only=True,initial=initial,initial_records=initial_rows,
-                    inheritance=inheritance,checkpoint_strict_load=True)
+                result=pilot_result(probe,initial,initial_rows,inheritance)
             elif phase=="train":
                 result=trainer.fit(output,event=event,initial_reference=checked(directory,"pilot",stage))
             else:
