@@ -53,6 +53,8 @@ def admit_campaign(root):
         producer=campaign
     elif schema=="jspace.qwen3b-native-budget.v1":
         producer=importlib.import_module(".jspace_qwen3b_native_budget",package=__package__)
+    elif schema=="jspace.3b-staged-campaign.v1":
+        producer=importlib.import_module(".jspace_3b_staged_campaign",package=__package__)
     else:
         raise ValueError("Unsupported compression campaign schema")
     plan=producer.verify_root(root);outcome=read(root/"outcome.json")

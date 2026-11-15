@@ -77,12 +77,14 @@ def test_failed_full_model_admission_precedes_any_confirmation_read(tmp_path,mon
     assert not (tmp_path/'final').exists()
 
 
-def test_native_budget_admission_keeps_seed_policy_and_checks_every_new_transition(tmp_path,monkeypatch):
+@pytest.mark.parametrize('schema,module',[('jspace.qwen3b-native-budget.v1','jspace_qwen3b_native_budget'),
+    ('jspace.3b-staged-campaign.v1','jspace_3b_staged_campaign')])
+def test_native_budget_admission_keeps_seed_policy_and_checks_every_new_transition(tmp_path,monkeypatch,schema,module):
     """Producer validation owns the seed audit; final admission retains that receipt."""
     receipt=tmp_path/'seed_gate_receipt.json'
     study.base.write(receipt,dict(old_quality_pass=False,new_quality=dict(passed=True,
         policy='original_native_only',parent_gate_required=False,parent=dict(passed=False))))
-    plan=dict(schema='jspace.qwen3b-native-budget.v1',fingerprint='campaign',seed_cut=2,
+    plan=dict(schema=schema,fingerprint='campaign',seed_cut=2,
         seed_correct=47,seed_checkpoint_sha256='seed',seed_gate_receipt=str(receipt))
     study.base.write(tmp_path/'plan.json',plan)
     study.base.write(tmp_path/'outcome.json',dict(status='all_blocks_recovered',last_accepted_cut=0,compressed_blocks=36))
@@ -93,7 +95,7 @@ def test_native_budget_admission_keeps_seed_policy_and_checks_every_new_transiti
         return study.read(directory/phase/'result.json')
     producer=SimpleNamespace(verify_root=lambda root:plan,stage_dir=stage_dir,
         check_plan=lambda stage:None,checked=check)
-    monkeypatch.setitem(sys.modules,'experiments.structure_net.jspace_qwen3b_native_budget',producer)
+    monkeypatch.setitem(sys.modules,'experiments.structure_net.'+module,producer)
     previous='seed'
     for cut in (1,0):
         directory=stage_dir(tmp_path,cut);(directory/'train').mkdir(parents=True);(directory/'verify').mkdir()

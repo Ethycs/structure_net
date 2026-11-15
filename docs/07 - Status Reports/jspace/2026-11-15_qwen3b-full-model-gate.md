@@ -35,6 +35,18 @@ The native-budget continuation uses a separate final root,
 `data/experiments/jspace_3b_fullmodel/20261115_v2`. Its final plan retains the
 campaign schema and original seed-admission receipt alongside the new chain.
 
+A second prospective continuation, specified before any confirmation was
+opened, uses `jspace.3b-staged-campaign.v1`. It returns to the authenticated
+nine-block seed (52/64) after the eleven-block branch exposed a native boundary
+batching mismatch and unstable joint recovery. Admit its seed chain and all
+27 new transitions, cuts 26 through zero. Each transition must pass entrance
+prealignment, protected-initializer selection, the unchanged original-native
+minimum of 45/64, and fresh packed verification. Authenticate the six phase
+receipts using that campaign's own validator. The final root for this branch is
+`data/experiments/jspace_3b_fullmodel/20261115_v3`. Earlier failed attempts and
+their receipts remain unchanged; the held-out, size and speed criteria below
+also remain unchanged.
+
 The historical parallel experiment's 512 evaluation examples were subsequently
 used by the quadratic-attention experiment. They are not an untouched test.
 Use the separate 512 `confirmation` examples in
