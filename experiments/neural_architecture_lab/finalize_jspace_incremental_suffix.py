@@ -17,7 +17,7 @@ from .finalize_jspace_single_layer import native_inventory, tensor_inventory, re
 from .finalize_jspace_recovered_assembly import identity
 
 ROOT, read, sha, write, logger = common.ROOT, common.read, common.sha, common.write, common.logger
-DEFAULT = ROOT / "data/experiments/jspace_incremental_suffix/20261115_v1"
+DEFAULT = ROOT / "data/experiments/jspace_incremental_suffix/20261115_v2"
 REPORT = ROOT / "docs/08 - Analysis/jspace/2026-11-15_qwen-incremental-suffix-results.md"
 REGISTRY = ROOT / "data/hypothesis_registry/jspace_incremental_suffix_20261115.json"
 TYPED = ROOT / "src/neural_architecture_lab/jspace_incremental_suffix_record.py"

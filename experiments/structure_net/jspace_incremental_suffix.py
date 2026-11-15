@@ -150,10 +150,11 @@ class NativeTail(nn.Module):
 
 
 @torch.inference_mode()
-def score(stack,norm,readout,rotary,data,label_ids,guard):
+def score(stack,norm,readout,rotary,data,label_ids,guard,*,batch_size=4):
+    if type(batch_size) is not int or batch_size<1:raise ValueError("Positive scoring batch size required")
     rows=[];device=readout.device
-    for start in range(0,len(data.development),4):
-        guard();batch=data.batch(data.development[start:start+4],device=device)
+    for start in range(0,len(data.development),batch_size):
+        guard();batch=data.batch(data.development[start:start+batch_size],device=device)
         h=batch["hidden"];rope=rotary(h,batch["position_ids"])
         h=stack(h,attention_mask=batch["attention_mask"],position_ids=batch["position_ids"],
             cache_position=batch["position_ids"][0],position_embeddings=rope,use_cache=False)[0]
@@ -170,7 +171,8 @@ def controls(plan,device,guard):
     readout,norm,rotary=builder.load_readout_norm(plan["model"]["path"],device=device)
     try:
         native=NativeTail([builder.load_native_block(plan["model"]["path"],i,device=device) for i in range(29,36)]).eval().requires_grad_(False)
-        native_rows=score(native,norm,readout,rotary,data,plan["label_ids"],guard)
+        # The original native logit bank was captured one unpadded case at a time.
+        native_rows=score(native,norm,readout,rotary,data,plan["label_ids"],guard,batch_size=1)
         native_check=compare_rows(native_rows,rows_from_cache(data,plan["label_ids"]),cases,expected_correct=48)
         del native;gc.collect();guard()
         previous=builder.load_recovered_checkpoint(plan["parent_root"],0)
@@ -314,6 +316,7 @@ def prepare(root,parent_root):
         label_ids=original["label_ids"],config=asdict(CONFIG),native_correct=48,parent_correct=51,minimum_correct=48,
         input_sha256=inputs,input_identity={p:file_identity(p) for p in inputs},source_sha256=sources,
         gpu_prefix="GPU-0370fdb0",allocation_mib=8192,allocator_mib=7936,logit_atol=ATOL,logit_rtol=RTOL,
+        native_control_microbatch=1,other_scoring_microbatch=4,
         metric_atol=1e-7,metric_rtol=1e-6,confirmed=False,scope=SCOPE)
     plan["fingerprint"]=base.digest(plan);root.mkdir(parents=True)
     for path,digest in sources.items():

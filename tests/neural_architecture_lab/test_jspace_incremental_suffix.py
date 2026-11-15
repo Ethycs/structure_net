@@ -203,6 +203,14 @@ def test_registry_metadata_does_not_confuse_parent_or_confirmation_with_primary(
     assert metadata["packed_prediction_parity"] is True and metadata["compressed_layer_count"] == 7
 
 
+def test_closeout_defaults_to_v2_without_changing_parity_or_explicit_root(tmp_path,monkeypatch):
+    from experiments.neural_architecture_lab import finalize_jspace_incremental_suffix as final
+    assert final.DEFAULT.name == "20261115_v2"
+    assert (final.ATOL,final.RTOL) == (.03125,1/128)
+    _,explicit,*_=fixture_analysis(tmp_path,monkeypatch)
+    assert explicit != final.DEFAULT and final.expected(explicit)[1].selected["correct"] == 49
+
+
 def producer_fixture(tmp_path,monkeypatch):
     from experiments.structure_net import jspace_incremental_suffix as producer
     from experiments.neural_architecture_lab import finalize_jspace_incremental_suffix as final

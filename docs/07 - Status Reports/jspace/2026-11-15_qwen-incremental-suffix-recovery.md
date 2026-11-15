@@ -1,7 +1,7 @@
 # Incremental expansion of the recovered Qwen suffix
 
 Study **JSPACE-QWEN-INCREMENTAL-SUFFIX-01**, exploratory, dated 2026-11-15 UTC.
-Artifact root: `data/experiments/jspace_incremental_suffix/20261115_v1`.
+Artifact root: `data/experiments/jspace_incremental_suffix/20261115_v2`.
 This is one prospectively specified seven-block experiment, not an automatic
 campaign extending to all 36 blocks. All results remain `confirmed: false`.
 
@@ -82,7 +82,9 @@ Before a scientific update, execute:
 1. Matched native BF16 blocks 29–35 plus native norm/readout, starting from the
    same authenticated native-prefix-29 bank. Compare its 64 predictions with
    the original native BF16 reference, expected 48/64. Do not substitute the
-   later FP32 native result of 50/64.
+   later FP32 native result of 50/64. Execute this control one unpadded case at
+   a time, matching the original reference capture. All other scoring paths
+   retain microbatch four.
 2. Exact accepted six-block packed model from its native boundary-30 bank.
    Require all 64 historical predictions to replay, including 51 correct.
 3. The seven-block initializer, with exact inherited weights and geometry
@@ -100,6 +102,20 @@ this experiment, CPU inspection found identical 64 decisions but a maximum
 choice-logit difference of 0.25. Record this cache/packed difference separately;
 do not require these distinct paths' logits to be bitwise equal or silently
 rewrite either reference.
+
+The preserved `20261115_v1` pilot stopped before any optimizer update because
+native scoring used padded batches of four against the singleton native
+reference. All 64 predictions still matched (48 correct), but three of 192
+choice logits differed by 0.5 and exceeded the fixed tolerance. The parent
+replay remained exact at 51/64; the seam replay also retained all 64 decisions.
+Read-only CPU comparison found the two native-prefix-29 banks identical across
+all 18,401,280 development values, excluding changed cached inputs. A separately
+reserved diagnostic replayed the native suffix with singleton batches and
+reproduced every reference logit exactly (maximum difference zero), recorded in
+`20261115_v1/native_singleton_diagnostic.json`. Version 2 corrects only the
+native-control execution shape. It preserves the failed attempt and its source
+snapshots, retains the original tolerance, and leaves parent/seam scoring,
+scientific initialization, training, selection and fresh verification unchanged.
 
 Run a discarded one-update pilot on training examples covering the longest
 contexts. Verify finite gradients and actual FP32 optimizer-master changes in

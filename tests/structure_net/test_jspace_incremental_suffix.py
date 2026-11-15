@@ -145,6 +145,31 @@ def test_bf16_comparison_distinguishes_exact_decisions_and_logit_tolerance():
     assert not study.compare_rows(observed,reference,cases)["passed"]
 
 
+def test_native_singleton_score_replays_capture_shape_without_changing_default_batch_four(tmp_path):
+    torch.manual_seed(481);dataset=data(tmp_path)
+    cfg=Qwen2Config(hidden_size=8,intermediate_size=12,num_attention_heads=2,num_key_value_heads=1,
+        num_hidden_layers=36,vocab_size=16,max_position_embeddings=32,attention_dropout=0.)
+    cfg._attn_implementation="eager"
+    native=study.NativeTail([Qwen2DecoderLayer(cfg,layer_idx=i).bfloat16() for i in range(29,36)]).eval().requires_grad_(False)
+    norm=Qwen2RMSNorm(8).bfloat16();readout=torch.randn(16,8).bfloat16();rotary=Qwen2RotaryEmbedding(config=cfg)
+    shapes=[];handle=native.register_forward_pre_hook(lambda _m,args:shapes.append(tuple(args[0].shape[:2])))
+    singleton=study.score(native,norm,readout,rotary,dataset,[2,3],lambda:None,batch_size=1)
+    assert shapes==[(1,dataset.lengths[i]) for i in dataset.development]
+    expected=[]
+    with torch.inference_mode():
+        for index in dataset.development:
+            batch=dataset.batch([index]);h=batch["hidden"];positions=batch["position_ids"]
+            h=native(h,attention_mask=batch["attention_mask"],position_ids=positions,cache_position=positions[0],
+                position_embeddings=rotary(h,positions),use_cache=False)[0]
+            # Original capture readout: exactly four rows of one unpadded case.
+            logits=torch.nn.functional.linear(norm(h[0,batch["loss_positions"][0]]),readout).float()[-1,[2,3]]
+            expected.append(logits.tolist())
+    assert [r["logits"] for r in singleton]==expected
+    shapes.clear();study.score(native,norm,readout,rotary,dataset,[2,3],lambda:None)
+    assert shapes==[(4,max(dataset.lengths[i] for i in dataset.development))]
+    handle.remove();dataset.close()
+
+
 def test_metadata_inventory_counts_original_prefix_tiedE_and_compact_suffix_once(tmp_path):
     stack,norm,_,rotary,*_=components()
     header={"model.embed_tokens.weight":dict(dtype="BF16",shape=[16,8]),
