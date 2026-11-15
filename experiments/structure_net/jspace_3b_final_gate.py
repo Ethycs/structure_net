@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import gc
+import importlib
 import json
 import math
 import os
@@ -47,16 +48,27 @@ def _pin(inputs,path,expected=None):
 
 def admit_campaign(root):
     """Authenticate every accepted parent transition before opening confirmation."""
-    root=Path(root).resolve();plan=campaign.verify_root(root);outcome=read(root/"outcome.json")
+    root=Path(root).resolve();schema=read(root/"plan.json").get("schema")
+    if schema==campaign.SCHEMA:
+        producer=campaign
+    elif schema=="jspace.qwen3b-native-budget.v1":
+        producer=importlib.import_module(".jspace_qwen3b_native_budget",package=__package__)
+    else:
+        raise ValueError("Unsupported compression campaign schema")
+    plan=producer.verify_root(root);outcome=read(root/"outcome.json")
     if outcome.get("status")!="all_blocks_recovered" or outcome.get("last_accepted_cut")!=0 or outcome.get("compressed_blocks")!=36:
         raise ValueError("Accepted, completed full36 campaign required")
     chain=[];inputs={};previous_sha=plan["seed_checkpoint_sha256"];previous_correct=plan["seed_correct"]
-    for cut in range(28,-1,-1):
-        directory=campaign.stage_dir(root,cut);stage=read(directory/"plan.json");campaign.check_plan(stage)
+    seed_gate=None
+    if "seed_gate_receipt" in plan:
+        seed_path=Path(plan["seed_gate_receipt"]);_pin(inputs,seed_path)
+        seed_gate=read(seed_path)
+    for cut in range(plan["seed_cut"]-1,-1,-1):
+        directory=producer.stage_dir(root,cut);stage=read(directory/"plan.json");producer.check_plan(stage)
         if (stage.get("root_fingerprint")!=plan["fingerprint"] or stage.get("cut")!=cut or
                 stage.get("parent_checkpoint_sha256")!=previous_sha or stage.get("parent_correct")!=previous_correct):
             raise ValueError("Broken accepted-parent chain")
-        trained=campaign.checked(directory,"train",stage);verified=campaign.checked(directory,"verify",stage)
+        trained=producer.checked(directory,"train",stage);verified=producer.checked(directory,"verify",stage)
         if not trained["quality_pass"] or not verified["passed"]:raise ValueError("Failed stage cannot enter final confirmation")
         for path in (directory/"plan.json",directory/"train/manifest.json",directory/"train/result.json",
                      directory/"verify/manifest.json",directory/"verify/result.json"):_pin(inputs,path)
@@ -69,7 +81,7 @@ def admit_campaign(root):
     reference=root/"stages/block_00/train"/f"epoch_{trained['selected_epoch']:02d}_development.json"
     for path in (root/"plan.json",root/"outcome.json",reference):_pin(inputs,path)
     return dict(root=str(root),plan=plan,stage=stage,training=trained,verification=verified,chain=chain,
-        checkpoint=str(selected),selected_reference=str(reference),input_sha256=inputs)
+        seed_gate_receipt=seed_gate,checkpoint=str(selected),selected_reference=str(reference),input_sha256=inputs)
 
 
 def _recorded_predictions(value):
@@ -153,6 +165,7 @@ def prepare(root,campaign_root,confirmation_root=confirmation.DEFAULT_ROOT):
     for path in extras:source[str(path.resolve())]=base.sha(path)
     plan=dict(schema=SCHEMA,study_id=STUDY,config=CONFIG,campaign_root=accepted["root"],
         campaign_fingerprint=accepted["plan"]["fingerprint"],stage_fingerprint=accepted["stage"]["fingerprint"],
+        campaign_schema=accepted["plan"]["schema"],seed_gate_receipt=accepted["seed_gate_receipt"],
         accepted_chain=accepted["chain"],selected_checkpoint=accepted["checkpoint"],selected_checkpoint_sha256=accepted["training"]["selected_checkpoint_sha256"],
         selected_reference=accepted["selected_reference"],fits=accepted["stage"]["fits"],model=model,
         confirmation_root=str(confirmation_root),confirmation_receipt=confirmation_receipt,separation=separation,

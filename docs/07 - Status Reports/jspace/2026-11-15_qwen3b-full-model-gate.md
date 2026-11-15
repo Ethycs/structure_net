@@ -12,12 +12,28 @@ selected checkpoint, immediate-parent connection, both five-percentage-point
 development gates, and fresh packed verification. Do not evaluate a failed
 cut-zero model or select among candidates on the held-out outcomes.
 
+Prospective continuation amendment, before any confirmation was opened:
+the original campaign stopped at ten blocks, scoring 47/64 against native
+48/64 and its immediate parent 52/64. It passed the user's original-native
+budget but failed our additional parent-relative gate. Preserve that original
+stop. The separate `jspace.qwen3b-native-budget.v1` campaign authenticates its
+ten-block seed and records the policy change explicitly, then adds blocks
+25 through zero under the fixed original-native minimum of 45/64. For this
+campaign, admit its authenticated seed receipt and all 26 new transitions;
+parent-relative drops remain diagnostics. Do not describe the rejected
+historical transition as having passed the original dual-gate protocol.
+The held-out accuracy, size and speed criteria below remain unchanged.
+
 Prepare a new immutable root at
 `data/experiments/jspace_3b_fullmodel/20261115_v1` only after admission. Pin
 the final selected checkpoint, all fitted geometry/relation artifacts, native
 Qwen2.5-3B-Instruct revision `aa8e72537993ba99e69dfaafa59ed015b17504d1`,
 the final evaluator source closure, locked environment and the task manifest.
 No 8B model is part of this comparison.
+
+The native-budget continuation uses a separate final root,
+`data/experiments/jspace_3b_fullmodel/20261115_v2`. Its final plan retains the
+campaign schema and original seed-admission receipt alongside the new chain.
 
 The historical parallel experiment's 512 evaluation examples were subsequently
 used by the quadratic-attention experiment. They are not an untouched test.

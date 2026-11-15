@@ -4,6 +4,7 @@ from contextlib import nullcontext
 import json
 from pathlib import Path
 from types import SimpleNamespace
+import sys
 
 import pytest
 
@@ -69,10 +70,59 @@ def test_failed_full_model_admission_precedes_any_confirmation_read(tmp_path,mon
     monkeypatch.setenv('CUDA_VISIBLE_DEVICES','')
     monkeypatch.setattr(study.campaign,'verify_root',lambda root:{})
     campaign=tmp_path/'campaign';campaign.mkdir()
+    study.base.write(campaign/'plan.json',dict(schema=study.campaign.SCHEMA))
     study.base.write(campaign/'outcome.json',dict(status='quality_stop',last_accepted_cut=28,compressed_blocks=8))
     monkeypatch.setattr(study.confirmation,'verify',lambda root:pytest.fail('confirmation opened before admission'))
     with pytest.raises(ValueError,match='full36'):study.prepare(tmp_path/'final',campaign,tmp_path/'closed_confirmation')
     assert not (tmp_path/'final').exists()
+
+
+def test_native_budget_admission_keeps_seed_policy_and_checks_every_new_transition(tmp_path,monkeypatch):
+    """Producer validation owns the seed audit; final admission retains that receipt."""
+    receipt=tmp_path/'seed_gate_receipt.json'
+    study.base.write(receipt,dict(old_quality_pass=False,new_quality=dict(passed=True,
+        policy='original_native_only',parent_gate_required=False,parent=dict(passed=False))))
+    plan=dict(schema='jspace.qwen3b-native-budget.v1',fingerprint='campaign',seed_cut=2,
+        seed_correct=47,seed_checkpoint_sha256='seed',seed_gate_receipt=str(receipt))
+    study.base.write(tmp_path/'plan.json',plan)
+    study.base.write(tmp_path/'outcome.json',dict(status='all_blocks_recovered',last_accepted_cut=0,compressed_blocks=36))
+    checked=[]
+    def stage_dir(root,cut):return Path(root)/'stages'/f'block_{cut:02d}'
+    def check(directory,phase,stage):
+        checked.append((stage['cut'],phase))
+        return study.read(directory/phase/'result.json')
+    producer=SimpleNamespace(verify_root=lambda root:plan,stage_dir=stage_dir,
+        check_plan=lambda stage:None,checked=check)
+    monkeypatch.setitem(sys.modules,'experiments.structure_net.jspace_qwen3b_native_budget',producer)
+    previous='seed'
+    for cut in (1,0):
+        directory=stage_dir(tmp_path,cut);(directory/'train').mkdir(parents=True);(directory/'verify').mkdir()
+        stage=dict(root_fingerprint='campaign',fingerprint=f'stage{cut}',cut=cut,
+            parent_checkpoint_sha256=previous,parent_correct=47)
+        study.base.write(directory/'plan.json',stage)
+        trained=dict(quality_pass=True,selected_checkpoint_sha256=f'checkpoint{cut}',selected={'correct':47},
+            selected_epoch=0,quality=dict(passed=True,policy='original_native_only',parent_gate_required=False))
+        for phase,value in (('train',trained),('verify',dict(passed=True))):
+            study.base.write(directory/phase/'manifest.json',dict(status='completed'))
+            study.base.write(directory/phase/'result.json',value)
+        study.base.write(directory/'train/epoch_00_development.json',dict(records=[]))
+        previous=f'checkpoint{cut}'
+    value=study.admit_campaign(tmp_path)
+    assert checked==[(1,'train'),(1,'verify'),(0,'train'),(0,'verify')]
+    assert [s['cut'] for s in value['chain']]==[1,0]
+    assert value['seed_gate_receipt']['old_quality_pass'] is False
+    assert str(receipt) in value['input_sha256']
+    broken=study.read(stage_dir(tmp_path,0)/'plan.json');broken['parent_checkpoint_sha256']='wrong'
+    (stage_dir(tmp_path,0)/'plan.json').write_text(json.dumps(broken))
+    with pytest.raises(ValueError,match='parent chain'):study.admit_campaign(tmp_path)
+
+
+def test_unknown_campaign_schema_cannot_open_confirmation(tmp_path,monkeypatch):
+    monkeypatch.setenv('CUDA_VISIBLE_DEVICES','')
+    campaign=tmp_path/'campaign';campaign.mkdir()
+    study.base.write(campaign/'plan.json',dict(schema='unknown'))
+    monkeypatch.setattr(study.confirmation,'verify',lambda root:pytest.fail('confirmation opened'))
+    with pytest.raises(ValueError,match='Unsupported'):study.prepare(tmp_path/'final',campaign)
 
 
 def test_confirmation_population_and_prior_prediction_leakage():
