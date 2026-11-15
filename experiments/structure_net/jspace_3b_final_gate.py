@@ -147,7 +147,7 @@ def prepare(root,campaign_root,confirmation_root=confirmation.DEFAULT_ROOT):
     source=dict(accepted["plan"]["source_sha256"])
     extras=[Path(__file__),Path(__file__).with_name("jspace_3b_final_evaluate.py"),
         Path(__file__).with_name("jspace_allblocks_artifact.py"),Path(__file__).with_name("jspace_qwen_parallel_evaluate.py"),
-        Path(confirmation.__file__),PROTOCOL,base.ROOT/"pixi.toml",base.ROOT/"pixi.lock",
+        Path(confirmation.__file__),PROTOCOL,base.ROOT/"pyproject.toml",base.ROOT/"pixi.lock",
         base.ROOT/"tests/structure_net/test_jspace_3b_final_gate.py",
         base.ROOT/"tests/structure_net/test_jspace_3b_final_evaluate.py"]
     for path in extras:source[str(path.resolve())]=base.sha(path)
