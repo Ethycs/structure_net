@@ -1,7 +1,7 @@
 {
   "schema": "jspace.3b-attention-retry-preparation.v1",
   "date": "2026-11-16",
-  "status": "cpu_adapter_tested_not_queued",
+  "status": "implemented_cpu_verified",
   "cpu_validation": {
     "tests_passed": 18,
     "elapsed_seconds": 7.47,
@@ -11,6 +11,20 @@
     "tests_sha256": "a9006e76f5febc749116fc59aba74b3f0620badd7f5ea1a74dfb76e26178e72b",
     "source_review": "Independent read-only review found no remaining blocker in the intended uncached Torch path",
     "scope": "Tiny CPU forward/gradient/update/export/reload controls; not GPU or scientific-quality evidence"
+  },
+  "integration_validation": {
+    "unique_tests_passed": 60,
+    "first_run": "55 passed; five test-fixture failures corrected",
+    "corrected_failure_run": "5 passed, 23 deselected",
+    "real_parent_budget_verified": {
+      "optimizer_updates": 71,
+      "training_examples": 1136,
+      "response_eos_tokens": 25245
+    },
+    "worker_module": "experiments.structure_net.jspace_3b_attention_retry",
+    "controller_module": "experiments.structure_net.jspace_3b_attention_retry_controller",
+    "runtime_state_directory": "/data/structure_net_experiments/jspace_3b_attention_retry/20261116_v1/controller_v1",
+    "scope": "CPU contracts and real parent admission budget; GPU systems qualification and quality results remain pending"
   },
   "question": "Can the recovered three-block model accommodate quadratic attention in its final block under matched recovery?",
   "scope": "Exploratory one-block architectural intervention; no whole-model recovery or speed claim",
@@ -73,11 +87,9 @@
     "gpu_wait_holds_no_reservation": true
   },
   "remaining_before_training": [
-    "Bind selected parent checkpoint and immutable artifact hashes",
-    "Implement and freeze the paired worker/protocol with explicit output roots",
-    "Acquire the reservation and pass the discarded GPU systems pilot"
+    "Wait for all parent evaluations and bind the selected checkpoint in the new runtime plan",
+    "Acquire the reservation and pass both discarded GPU systems pilots"
   ],
   "gpu_job_launched": false,
-  "queued": false,
   "confirmed": false
 }
