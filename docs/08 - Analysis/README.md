@@ -8,6 +8,7 @@ Reports are grouped by project in subfolders. See the [project-subfolder note](.
 
 Current analysis:
 
+- [2026-11-15_compression-evidence-synthesis.md](jspace/2026-11-15_compression-evidence-synthesis.md) — reconciles J-space/polynomial compression, progressive recovery, independent layer assembly, and all-at-once training; distinguishes selected DEV results from generation quality and matched efficiency measurements.
 - [2026-09-09_tinyllm-moba-distillation.md](moba/2026-09-09_tinyllm-moba-distillation.md) — completes 40 CUDA cells across five paired adaptation streams; routing losses improve soft distribution matching but fail the joint conversion gate in every seed, while logit distillation gives the best tested sparse-model fidelity.
 - `tinyllm/2026-08-11_tinyllm-calm-framework-shakedown.md` — validates the composable CALM-style TinyLLM lifecycle on CPU and RTX 3060 while explicitly leaving reconstruction and language quality open.
 - `structure-net/2026-08-03_runner-experiment-data-modernization.md` — reconciles the modern runner branches, NAL experiment dataclasses, and dataset/search/time-series architecture against their active consumers and tests.

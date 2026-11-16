@@ -7,6 +7,14 @@
 
 This tree separates foundations, intent, implementation, as-built architecture, contracts, plans, snapshots, and measured analysis. The code remains authoritative where a legacy document and implementation disagree.
 
+## J-space compression and recovery
+
+The November 2026 compression work has three companion guides:
+
+- [Design and rationale](01%20-%20Design/jspace/residual-compression-and-recovery.md): the compact-plus-residual architecture, progressive recovery, and open research questions.
+- [Implementation guide](02%20-%20Implementation/jspace-compression-and-recovery.md): the actual compilation order, training paths, checkpoint contracts, and reservation-backed execution.
+- [Experimental evidence](08%20-%20Analysis/jspace/2026-11-15_compression-evidence-synthesis.md): measured results, failures, and the limits of current accuracy and efficiency claims.
+
 ## Start here
 
 1. Read [`03 - Architecture/structure-net-overview.md`](03%20-%20Architecture/structure-net-overview.md) for the current system map.
