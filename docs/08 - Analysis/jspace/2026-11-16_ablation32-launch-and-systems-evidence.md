@@ -104,3 +104,17 @@ Root: `/data/structure_net_experiments/jspace_3b_ablation32/20261116_v1`.
 
 Do not promote the pilot weights, label preparation as completed training, or
 report the original Fashion-MNIST accuracy as a Qwen result.
+
+## Continuation at 19:08 UTC
+
+The user approved continuing after clarification that the search estimate
+excludes recovery and the literal recovery schedule can take weeks. Both arms
+remain scheduled at the recorded full budget: 36 stages × 12 epochs × 3,938
+examples each, or 3,402,432 training-example passes in total, plus selection
+and final evaluation. No measured full-run ETA is available yet.
+
+The shared native cache completed verification. ABLATION32 advanced automatically
+to fixed-anchor preparation (9/36 layer banks completed at this check), without
+reserving GPUs during that CPU/disk phase. Its controller has no failure record.
+The independent progressive campaign passed its two-block pilot and started
+two-block recovery on the RTX 3060 under reservation `b1f95c779b92`.
