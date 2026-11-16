@@ -1,0 +1,83 @@
+{
+  "schema": "jspace.3b-attention-retry-preparation.v1",
+  "date": "2026-11-16",
+  "status": "cpu_adapter_tested_not_queued",
+  "cpu_validation": {
+    "tests_passed": 18,
+    "elapsed_seconds": 7.47,
+    "environment": "Locked/offline Pixi ncm; CUDA hidden; two CPU threads",
+    "pytest_arguments": "-q --confcutdir=tests/structure_net tests/structure_net/test_jspace_3b_attention_retry_model.py",
+    "adapter_sha256": "b231647207e9a58d66461f460e23d16b0000a109c42a10ac5ecffa550d300da8",
+    "tests_sha256": "a9006e76f5febc749116fc59aba74b3f0620badd7f5ea1a74dfb76e26178e72b",
+    "source_review": "Independent read-only review found no remaining blocker in the intended uncached Torch path",
+    "scope": "Tiny CPU forward/gradient/update/export/reload controls; not GPU or scientific-quality evidence"
+  },
+  "question": "Can the recovered three-block model accommodate quadratic attention in its final block under matched recovery?",
+  "scope": "Exploratory one-block architectural intervention; no whole-model recovery or speed claim",
+  "parent_worker_root": "/data/structure_net_experiments/jspace_3b_usable_recovery/20261116_v1/stage_a",
+  "parent_worker_fingerprint": "2f7a29fa28d29b5af106a4d5c9e32ec403908679881f5d5c71e95d62733d0574",
+  "parent_labels": ["update_0000", "update_0071", "update_0134", "update_0199", "update_0278"],
+  "selected_checkpoint": null,
+  "seed_admission": {
+    "all_five_generation_and_judgment_receipts_required": true,
+    "all_five_judgments_must_have_available_evidence": true,
+    "selection": "Existing parent generation-first selection; never substitute minimum NLL for missing judgments",
+    "if_all_candidates_unqualified": "Best observed seed can initialize a diagnostic retry, with no promotion or recovered-generation claim"
+  },
+  "architecture": {
+    "absolute_layer_indices": [33, 34, 35],
+    "changed_attention_layers": [35],
+    "arms": ["softmax", "quadratic"],
+    "sole_architectural_difference": "Normalized attention weights in layer35",
+    "quadratic": "p(s)=1+s+s*s/2; zero excluded polynomial weights before row normalization",
+    "score_scale": "Preserve saved native 1/sqrt(128)",
+    "query_heads": 16,
+    "kv_heads": 2,
+    "head_dimension": 64,
+    "residual_dimension": 1024,
+    "preserve_existing_polynomial_mlp": true,
+    "new_metric_parameters": false,
+    "execution": "Explicit Torch control; no fused-runtime or speed claim"
+  },
+  "proposed_recovery_pilot": {
+    "separate_disposable_gpu_systems_pilot_required": true,
+    "same_initial_weights_and_example_order_both_arms": true,
+    "training_population": "Existing admitted TRAIN only; reference responses plus actual EOS",
+    "trainable_parameters": "Same three compact blocks and final normalization in both arms",
+    "fixed": ["teacher", "native_prefix", "embedding_readout", "bases", "bridges", "anchors", "RoPE"],
+    "objective": "Exact full-vocabulary forward KL",
+    "temperature": 1,
+    "ce_weight": 0,
+    "learning_rate": 0.00002,
+    "precision": "BF16 live parameters, FP32 CPU Adam masters and moments",
+    "initial_matched_budget": "First71 existing full-corpus windows,25245 response/EOS tokens per arm",
+    "evaluate_before_and_after_recovery": true,
+    "automatic_full_pass_or_multiseed_expansion": false
+  },
+  "evaluation": {
+    "primary": "Useful completed generated tasks with semantic/executable verification",
+    "monitoring": ["natural EOS", "repetition", "numerical fidelity", "DEV response NLL and teacher KL"],
+    "mc_guardrail": "Existing five-percentage-point overall retention allowance; paired comparisons against softmax control and native",
+    "existing_dev_is_exposed": true,
+    "no_dev_or_test_training": true,
+    "future_confirmation": "Fresh source-group-separated cases and repeated matched training seeds after a successful exploratory pilot"
+  },
+  "resources": {
+    "gpu_profile": "plain2060",
+    "reservation_mib": 3584,
+    "allocator_cap_mib": 3328,
+    "gpu_launch_requires": "inference-ctl lease run plus actual discarded systems/memory qualification",
+    "wait_for": "Parent's five generation phases and available generation-based seed selection",
+    "do_not_compete_between_parent_generation_leases": true,
+    "interrupt_existing_jobs": false,
+    "gpu_wait_holds_no_reservation": true
+  },
+  "remaining_before_training": [
+    "Bind selected parent checkpoint and immutable artifact hashes",
+    "Implement and freeze the paired worker/protocol with explicit output roots",
+    "Acquire the reservation and pass the discarded GPU systems pilot"
+  ],
+  "gpu_job_launched": false,
+  "queued": false,
+  "confirmed": false
+}
