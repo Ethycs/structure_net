@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import time
 
@@ -45,10 +46,12 @@ def selected_parent(stage):
     return checkpoint["path"]
 
 
-def run(base):
+def run(base, *, attempt_name="controller"):
     if os.environ.get("CUDA_VISIBLE_DEVICES")!="":
         raise ValueError("CPU orchestration requires CUDA hidden")
-    base=Path(base).resolve();out=base/"controller";out.mkdir(exist_ok=False)
+    if re.fullmatch(r"controller(?:_retry_[0-9]+)?",attempt_name) is None:
+        raise ValueError("An explicit local controller attempt name is required")
+    base=Path(base).resolve();out=base/attempt_name;out.mkdir(exist_ok=False)
     paths=[Path(__file__),PROTOCOL,base/"data/plan.json"]
     paths += [ROOT/"experiments/structure_net"/("jspace_3b_rebuild_"+name+".py")
               for name in ("data","fit","fit_campaign","recovery")]
@@ -125,4 +128,6 @@ def run(base):
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser(__doc__);parser.add_argument("--root",type=Path,required=True)
-    run(parser.parse_args().root)
+    parser.add_argument("--attempt-name",default="controller")
+    args=parser.parse_args()
+    run(args.root,attempt_name=args.attempt_name)

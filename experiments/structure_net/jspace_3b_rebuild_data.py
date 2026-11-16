@@ -26,6 +26,7 @@ FAMILIES = ('arc', 'boolq', 'dolly', 'gsm8k', 'hellaswag', 'mbpp', 'winogrande',
 SEED = 20261116
 ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL = ROOT/'docs/07 - Status Reports/jspace/2026-11-16_qwen3b-progressive-response-rebuild.md'
+SYSTEMS_AMENDMENT = ROOT/'docs/07 - Status Reports/jspace/2026-11-16_qwen3b-progressive-response-rebuild-systems-amendment.md'
 read, write, sha, identity, data = cache.read, cache.write, cache.sha, cache.identity, cache.data
 
 
@@ -156,7 +157,7 @@ def prepare(root, response_cache_root, *, cuts=(35,34), mc_cache_root=None,
         input_sha256=inputs, input_identity={path:identity(path) for path in inputs},
         **selections(records,budget=target_response_tokens,accumulation=accumulation,seed=seed),
         confirmed=False, promoted=False)
-    files = cache.prior.source.inherited.local_import_closure([Path(__file__), PROTOCOL,
+    files = cache.prior.source.inherited.local_import_closure([Path(__file__), PROTOCOL, SYSTEMS_AMENDMENT,
         ROOT/'tests/structure_net/test_jspace_3b_rebuild_data.py'])
     p['source_sha256'] = {str(f):sha(f) for f in sorted(files)}
     p['fingerprint'] = data.digest(p)
@@ -236,7 +237,11 @@ def capture(root, *, limit_mib=11008):
         arrays={cut:np.lib.format.open_memmap(out/f'boundary_{cut:02d}.npy',mode='w+',
             dtype=np.int16,shape=(p['total_tokens'],p['width'])) for cut in p['boundary_cuts']}
         banks.extend(arrays.values())
-        with cache.execution.arithmetic_policy(),torch.inference_mode():
+        # Construct ordinary tensors so real parameter/buffer version counters
+        # remain available for the frozen-teacher proof. no_grad avoids graphs
+        # without inference_mode's removal of those counters (even if a caller
+        # entered inference mode before invoking this producer).
+        with cache.execution.arithmetic_policy(),torch.inference_mode(False),torch.no_grad():
             model=cache.execution.load_native_model(p['model']['path'],device='cuda:0',attention='eager',guard=guard)
             if model.lm_head.weight is not model.model.embed_tokens.weight: raise ValueError('Original tied readout required')
             frozen=[(id(v),v._version) for v in (*model.parameters(),*model.buffers())]

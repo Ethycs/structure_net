@@ -158,3 +158,87 @@ def test_prepare_requires_cpu_and_does_not_touch_existing_root(tmp_path,monkeypa
     with pytest.raises(ValueError,match='CUDA hidden'): rebuild.prepare(tmp_path/'new',tmp_path/'missing')
     monkeypatch.setenv('CUDA_VISIBLE_DEVICES','')
     with pytest.raises(FileExistsError): rebuild.prepare(tmp_path,tmp_path/'missing')
+
+
+@pytest.mark.parametrize('mutate_teacher',[False,True])
+def test_real_capture_constructs_versioned_teacher_and_detects_mutation(tmp_path,monkeypatch,mutate_teacher):
+    """Execute the producer lifecycle on CPU, including model construction.
+
+    Hook-only tests missed constructing the model inside inference_mode. The
+    second arm mutates an unused buffer without changing outputs: exact output
+    replay must not replace the separate frozen-tensor version-counter guard.
+    """
+    class Body(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.embed_tokens=nn.Embedding(1000,3)
+            self.layers=nn.ModuleList([Add(1) for _ in range(36)])
+            self.norm=nn.Identity()
+
+        def forward(self,input_ids,use_cache=False):
+            x=self.embed_tokens(input_ids)
+            for layer in self.layers: x=layer(x)
+            return SimpleNamespace(last_hidden_state=self.norm(x))
+
+    class Native(nn.Module):
+        def __init__(self):
+            super().__init__(); self.model=Body(); self.lm_head=nn.Linear(3,1000,bias=False)
+            self.lm_head.weight=self.model.embed_tokens.weight
+            self.register_buffer('tracked',torch.zeros(()))
+
+    torch.manual_seed(42)
+    original=Native().bfloat16().eval().requires_grad_(False)
+    source_state={k:v.clone() for k,v in original.state_dict().items()}
+    records=[record('arc',1),record('arc',10,'development')]
+    rows=rebuild.cache.index_records(records); teacher=[]; seam=[]
+    with torch.no_grad(),rebuild.boundary_hooks(original,[20]) as captured:
+        for r in records:
+            captured.clear()
+            h=original.model(input_ids=torch.tensor([r.input_ids]),use_cache=False).last_hidden_state
+            teacher.append(rebuild._bits(h,len(r.input_ids),3).copy())
+            seam.append(rebuild._bits(captured[20],len(r.input_ids),3).copy())
+    old=tmp_path/'old'; (old/'native').mkdir(parents=True)
+    np.save(old/'native/teacher_hidden.npy',np.concatenate(teacher))
+    np.save(old/'native/boundary_20.npy',np.concatenate(seam))
+    root=tmp_path/'capture'; root.mkdir()
+    plan=dict(response_cache_root=str(old),total_tokens=rows[-1]['stop'],width=3,
+        existing_boundary_cut=20,boundary_cuts=[34,35,36],cuts=[35,34],model={'path':'fixture'},
+        rows=rows,mc=None,fingerprint='fixture')
+    monkeypatch.setattr(rebuild,'verify',lambda *a,**k:(plan,records))
+    calls=[]
+    def loader(*args,**kwargs):
+        assert not torch.is_inference_mode_enabled()
+        assert not torch.is_grad_enabled()
+        model=Native().bfloat16().eval().requires_grad_(False); model.load_state_dict(source_state)
+        assert all(not value.is_inference() and isinstance(value._version,int)
+                   for value in (*model.parameters(),*model.buffers()))
+        calls.append(model)
+        if mutate_teacher:
+            def mutate(*_): model.tracked.add_(0)
+            model.model.register_forward_hook(mutate)
+        return model
+    monkeypatch.setattr(rebuild.cache.execution,'load_native_model',loader)
+    monkeypatch.setattr(rebuild.cache,'reservation',lambda *_:({'id':'cpu-fixture','allocation':{'fixture':11009}},lambda:None))
+    monkeypatch.setattr(torch.cuda,'max_memory_reserved',lambda *a:0)
+    monkeypatch.setattr(torch.cuda,'_lazy_init',lambda:pytest.fail('CPU capture regression initialized CUDA'))
+    tensor=torch.tensor
+    def cpu_tensor(*args,**kwargs):
+        if kwargs.get('device')=='cuda:0': kwargs['device']='cpu'
+        return tensor(*args,**kwargs)
+    monkeypatch.setattr(torch,'tensor',cpu_tensor)
+    with torch.inference_mode():
+        if mutate_teacher:
+            with pytest.raises(ValueError,match='Frozen original teacher changed'):
+                rebuild.capture(root)
+        else:
+            result=rebuild.capture(root)
+            assert result['teacher_unchanged'] and result['full_teacher_bit_exact']
+            assert result['existing_boundary_bit_exact'] and result['final_normalization_bit_exact']
+            assert result['records']==2
+    assert len(calls)==1
+    if mutate_teacher:
+        assert (root/'native/failure.json').is_file()
+        assert not (root/'native/manifest.json').exists()
+    else:
+        assert (root/'native/manifest.json').is_file()
+        for cut in (34,35,36): assert np.load(root/'native'/f'boundary_{cut:02d}.npy').shape==(10,3)
