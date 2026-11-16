@@ -10,16 +10,23 @@ from experiments.structure_net.jspace_qwen_compact_stack import CompactQwenStack
 from experiments.structure_net.jspace_3b_dense_adapter import DenseCompactQwen, HFTeacherTargets
 
 
-def make_models(rank=8, checkpoint=True):
+def make_models(rank=8, checkpoint=True, full_structure=False, dtype=torch.float32):
     torch.manual_seed(913)
     config = Qwen2Config(hidden_size=8, intermediate_size=12, num_hidden_layers=2,
         num_attention_heads=2, num_key_value_heads=1, vocab_size=19,
         max_position_embeddings=32, attention_dropout=0., tie_word_embeddings=True)
     config._attn_implementation = "eager"
-    teacher = Qwen2ForCausalLM(config).eval()
-    blocks = [AffineQwenBlock(layer, torch.eye(8)[:, :rank], torch.randn(12, 8)/10)
-              for layer in teacher.model.layers]
-    stack = CompactQwenStack(blocks, checkpoint_blocks=checkpoint)
+    teacher = Qwen2ForCausalLM(config).to(dtype).eval()
+    projection = (dict(rope_pairs=torch.tensor([[0]]), value_basis=torch.eye(4)[None, :, :2])
+                  if full_structure else None)
+    blocks = [AffineQwenBlock(layer, torch.eye(8)[:, :rank], torch.randn(12, 8)/10,
+                             head_projection=projection) for layer in teacher.model.layers]
+    if full_structure:
+        for block in blocks:
+            block.compile_polynomial(dict(anchors=[0, 1], mean=torch.zeros(12), scale=torch.ones(12),
+                coefficients={'2': torch.randn(12, 6)/100}), [10, 11])
+    stack = CompactQwenStack(blocks, checkpoint_blocks=checkpoint,
+        geometry_mode='bf16' if dtype == torch.bfloat16 else 'fp32')
     student = DenseCompactQwen(stack, deepcopy(teacher.model.norm),
         teacher.model.embed_tokens.weight.detach().clone(), deepcopy(teacher.model.rotary_emb),
         max_length=12, expected_layers=2)
@@ -120,10 +127,12 @@ def test_context_and_structure_contracts_are_not_silently_relaxed():
                          student.rotary, max_length=12, expected_layers=3)
 
 
-def test_shared_dense_trainer_updates_real_compact_qwen_and_reloads(tmp_path):
+@pytest.mark.parametrize('dtype', [torch.float32, torch.bfloat16])
+def test_shared_dense_trainer_updates_real_compact_qwen_and_reloads(tmp_path, dtype):
     from experiments.neural_architecture_lab.distillation_recovery import module
     training, data = module('distillation_training'), module('distillation_data')
-    teacher, student = make_models(rank=4)
+    teacher, student = make_models(rank=4, full_structure=True, dtype=dtype)
+    assert all(b.has_polynomial and b.head_dim == 2 and b.rank == 4 for b in student.stack.blocks)
     teacher.eval().requires_grad_(False)
     teacher_id = training.module_fingerprint(teacher)
     records = [data.ResponseRecord(example_id=f'qwen-{i}', group_id=f'qwen-group-{i}',
@@ -146,7 +155,7 @@ def test_shared_dense_trainer_updates_real_compact_qwen_and_reloads(tmp_path):
     assert result['fixed_state_unchanged'] and result['in_process_reload_exact']
     assert all(any(n.startswith(f'stack.blocks.{i}.') for n in result['changed_parameters']) for i in range(2))
     assert training.module_fingerprint(teacher) == teacher_id
-    _, fresh = make_models(rank=4)
+    _, fresh = make_models(rank=4, full_structure=True, dtype=dtype)
     training.load_checkpoint(result['final_checkpoint']['path'], fresh,
         expected_sha256=result['final_checkpoint']['sha256'], identities=identities)
     assert torch.equal(student.next_logits(b['input_ids'][:1]), fresh.next_logits(b['input_ids'][:1]))

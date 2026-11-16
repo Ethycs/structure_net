@@ -71,6 +71,10 @@ no semantic accuracy result and must never be counted as quality evidence.
    admission, avoiding a second vocabulary matrix and CPU vocabulary projection.
    A later target call receives `[row, predicting_position]` pairs.
 5. Create a fresh optimizer over exactly the intended trainable parameters.
+   Declare weight, gradient-accumulation, master-weight and moment precision
+   separately. The first BF16 scientific profile should retain FP32 optimizer
+   state; a tiny BF16 AdamW execution test does not qualify its default state
+   precision for recovery quality.
    Pass `student.hidden_forward`, `student.readout`, the teacher provider and
    explicit `DistillationConfig` to `DistillationTrainer`. The exact loss
    computes bounded token chunks, accumulates hidden adjoints, then backpropagates
