@@ -315,10 +315,11 @@ def require_device(device_id, lease_checker=None):
 
 
 def run_directory(root, experiment):
-    return Path(root) / "runs" / experiment.parameters["arm"] / f"seed_{experiment.seed}"
+    return Path(root).resolve() / "runs" / experiment.parameters["arm"] / f"seed_{experiment.seed}"
 
 
 def checked(root, experiment):
+    root = Path(root).resolve()
     plan, _ = verify_plan(root)
     directory = run_directory(root, experiment)
     result = read(directory / "result.json")
@@ -439,6 +440,7 @@ class RecoveryWorker:
 
 
 def aggregate(root):
+    root = Path(root).resolve()
     plan, study = verify_plan(root)
     rows = []
     for experiment in make_experiments(study):

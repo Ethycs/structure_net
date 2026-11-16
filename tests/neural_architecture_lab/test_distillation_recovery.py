@@ -240,3 +240,31 @@ def test_actual_cpu_update_save_reload_and_ledger_roundtrip(tmp_path, monkeypatc
     assert ledger.metrics["supervised_tokens"] == 12 and ledger.metrics["optimizer_updates"] == 2
     assert ledger.primary_metric == 0 and record["verdict"]["gates"] is None
     assert cli.cpu_shakedown(root) == result
+
+
+@pytest.mark.parametrize("symlink", (False, True))
+def test_real_cli_relative_and_symlink_roots_resume_and_aggregate(tmp_path, monkeypatch, symlink):
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
+    monkeypatch.chdir(tmp_path)
+    physical = tmp_path / "physical"
+    physical.mkdir()
+    if symlink:
+        (tmp_path / "data").symlink_to(physical, target_is_directory=True)
+        root = Path("data/study")
+    else:
+        root = Path("physical/study")
+    first = cli.main(["cpu-shakedown", "--root", str(root)])
+    _, config = nal.verify_plan(root)
+    experiment = nal.make_experiments(config)[0]
+    directory = nal.run_directory(root, experiment)
+    assert directory == physical / "study/runs/dense_reference/seed_17"
+    _, loaded = nal.checked(root, experiment)
+    assert Path(loaded.model_checkpoint) == directory / "training/final.pt"
+    checkpoint_sha = nal.sha(loaded.model_checkpoint)
+    progress_sha = nal.sha(directory / "progress.jsonl")
+    assert cli.main(["cpu-shakedown", "--root", str(root)]) == first
+    assert nal.sha(loaded.model_checkpoint) == checkpoint_sha
+    assert nal.sha(directory / "progress.jsonl") == progress_sha
+    output = Path("aggregate/readback.json")
+    assert cli.main(["aggregate", "--root", str(root), "--output", str(output)]) == first
+    assert nal.read(output) == first
