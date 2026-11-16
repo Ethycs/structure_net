@@ -123,11 +123,18 @@ def test_pilot_discard_and_complete_three_epoch_lifecycle_fresh_reload(system,tm
     data,make,_,_=system
     pilot=make();receipt=pilot.pilot(data.training)
     assert receipt["passed"] and receipt["fixed_state_unchanged"] and receipt["discarded"]
+    changed=receipt["effective_parameter_change"]
+    assert receipt["bf16_parameters_changed"] and changed["changed_tensor_count"]>0
+    assert changed["changed_tensor_count"]==sum(changed["changed_by_name"].values())
+    assert all(changed["changed_by_name"][k]==(v!=changed["initial_sha256_by_name"][k])
+               for k,v in changed["current_sha256_by_name"].items())
     with pytest.raises(ValueError):pilot.fit(tmp_path/"forbidden")
     trainer=make();result=trainer.fit(tmp_path/"training")
     assert result["epochs"]==3 and result["updates"]==3 and result["supervised_tokens"]==12
     assert [r["epoch"] for r in result["history"]]==[0,1,2,3]
     assert result["selected"]==min(result["history"],key=trial.selection_key)
+    assert result["history"][0]["effective_parameter_change"]["changed"] is False
+    assert result["selected_effective_parameter_change"]==result["selected"]["effective_parameter_change"]
     assert result["fixed_state_unchanged"] and result["internal_reload"]["passed"]
     verification=trial.verify_checkpoint(make(),tmp_path/"training")
     assert verification["passed"] and verification["records_and_metrics_exact"]
@@ -144,6 +151,21 @@ def test_selection_uses_earliest_accuracy_tie_not_ce():
     assert min(rows,key=trial.selection_key)==rows[0]
     rows.append(dict(epoch=3,correct=46,ce=99))
     assert min(rows,key=trial.selection_key)==rows[3]
+
+
+def test_pilot_rejects_master_only_update_if_all_stored_bf16_weights_round_back(system,monkeypatch):
+    data,make,_,_=system;trainer=make()
+    original=trainer.optimizer.step
+    before={name:p.detach().clone() for name,p in trainer.block.named_parameters()}
+    def master_only(*args,**kwargs):
+        result=original(*args,**kwargs)
+        with torch.no_grad():
+            for name,p in trainer.block.named_parameters():p.copy_(before[name])
+        return result
+    monkeypatch.setattr(trainer.optimizer,"step",master_only)
+    result=trainer.pilot(data.training)
+    assert result["master_before"]!=result["master_after"]
+    assert not result["bf16_parameters_changed"] and not result["passed"]
 
 
 def test_data_rejects_eos_offset_or_hash_mismatch(system):

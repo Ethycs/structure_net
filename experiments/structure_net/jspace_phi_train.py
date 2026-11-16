@@ -205,6 +205,7 @@ class PhiTrainer:
         rotary.eval().requires_grad_(False); rotary.zero_grad(set_to_none=True)
         self.parameters = list(block.parameters())
         self.parameter_ids = tuple(map(id,self.parameters))
+        self.initial_bf16_parameters = self.parameter_fingerprints()
         self.identities = dict(identities or {}, data=data.fingerprint,
             initializer=fingerprint(block.named_parameters())["sha256"])
         self.fixed = self.fixed_state()
@@ -218,6 +219,17 @@ class PhiTrainer:
 
     def _guard(self):
         if self.guard is not None: self.guard()
+
+    def parameter_fingerprints(self):
+        return {name:fingerprint([(name,p)])["sha256"] for name,p in self.block.named_parameters()}
+
+    def effective_parameter_change(self):
+        current=self.parameter_fingerprints()
+        changed={name:current[name]!=before for name,before in self.initial_bf16_parameters.items()}
+        return dict(changed=any(changed.values()),changed_tensor_count=sum(changed.values()),
+            total_tensor_count=len(changed),changed_by_name=changed,
+            initial_sha256_by_name=self.initial_bf16_parameters,current_sha256_by_name=current,
+            scope="Actual stored BF16 parameter tensors; counts are tensors, not changed scalar elements")
 
     def fixed_state(self):
         return fingerprint([("block."+n,v) for n,v in self.block.named_buffers()]
@@ -326,10 +338,12 @@ class PhiTrainer:
         before=fingerprint([(n,self.optimizer.state[p]["master"]) for n,p in self.block.named_parameters()])
         update=self.train_window(indices)
         after=fingerprint([(n,self.optimizer.state[p]["master"]) for n,p in self.block.named_parameters()])
+        effective=self.effective_parameter_change()
         self.finished=True;fixed=self.unchanged()
-        return dict(passed=before!=after and fixed and update["optimizer"]["unclipped_gradient_norm"]>0,
+        return dict(passed=before!=after and effective["changed"] and fixed and update["optimizer"]["unclipped_gradient_norm"]>0,
             systems_only=True,discarded=True,update=update,master_before=before,master_after=after,
-            fixed_state_unchanged=fixed)
+            fixed_state_unchanged=fixed,bf16_parameters_changed=effective["changed"],
+            effective_parameter_change=effective)
 
     def _save(self,path,epoch):
         payload=dict(schema=SCHEMA,block=_state(self.block),epoch=epoch,updates=self.updates,
@@ -352,7 +366,8 @@ class PhiTrainer:
             cp=directory/f"epoch_{epoch:02d}.pt";cp_sha=self._save(cp,epoch)
             rp=directory/f"development_{epoch:02d}.json";write(rp,report)
             row=dict(epoch=epoch,updates=self.updates,correct=report["correct"],ce=report["ce"],
-                checkpoint=cp.name,checkpoint_sha256=cp_sha,report=rp.name,report_sha256=sha(rp))
+                checkpoint=cp.name,checkpoint_sha256=cp_sha,report=rp.name,report_sha256=sha(rp),
+                effective_parameter_change=self.effective_parameter_change())
             history.append(row);event(dict(phase="development",**row))
         selected=min(history,key=selection_key);self.finished=True
         load_selected(self,directory/selected["checkpoint"],selected["checkpoint_sha256"])
@@ -364,6 +379,7 @@ class PhiTrainer:
             epochs=self.config.epochs,updates=self.updates,supervised_tokens=sum(v["supervised_tokens"] for v in update_rows),
             selection="highest DEV correct; earliest epoch on all accuracy ties; initializer eligible; CE diagnostic only",
             history=history,selected=selected,metrics=actual,fixed=self.fixed,fixed_state_unchanged=self.unchanged(),
+            selected_effective_parameter_change=self.effective_parameter_change(),
             internal_reload=dict(passed=True,strict_state_load=True,records_and_metrics_exact=True),
             storage=dict(compact_unpacked_block_bytes=block_bytes,native_decoded_block_bytes=self.native_block_bytes,
                 frozen_norm_head_bytes=fingerprint([("head",self.head),*self.norm.named_parameters()])["tensor_bytes"],
@@ -433,6 +449,10 @@ def verify_checkpoint(trainer,directory):
     load_selected(trainer,directory/winner["checkpoint"],winner["checkpoint_sha256"])
     actual=trainer.development();expected=read(directory/winner["report"])
     if actual!=expected or actual!=result["metrics"]:raise ValueError("Fresh Phi DEV replay differs")
+    effective=trainer.effective_parameter_change()
+    if effective!=winner["effective_parameter_change"] or effective!=result["selected_effective_parameter_change"]:
+        raise ValueError("Selected BF16 parameter-change evidence differs from freshly loaded weights")
     return dict(status="completed",passed=True,strict_state_load=True,checkpoint_sha256=winner["checkpoint_sha256"],
         selected_epoch=winner["epoch"],metrics=actual,fixed_state_unchanged=trainer.unchanged(),
-        records_and_metrics_exact=True,training_result_sha256=sha(directory/"result.json"),confirmed=False)
+        records_and_metrics_exact=True,effective_parameter_change=effective,
+        training_result_sha256=sha(directory/"result.json"),confirmed=False)
