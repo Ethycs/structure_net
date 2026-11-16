@@ -1,0 +1,149 @@
+{
+  "schema": "jspace.3b-broad-generation.v1",
+  "study_id": "jspace-qwen3b-broad-recovery-v1",
+  "status": "frozen_before_model_outputs",
+  "purpose": "Detect gross generative collapse that multiple-choice accuracy and interface smoke tests may miss.",
+  "admission": {
+    "when": "After both broad-recovery arms complete and the global candidate is frozen by development only.",
+    "arms": [
+      "pinned_native",
+      "protected_fourteen_block_seed",
+      "development_selected_fourteen_block_candidate"
+    ],
+    "execution": "Sequential active reservations; identical prompts and settings; no cache in every arm.",
+    "heldout_access": false
+  },
+  "generation": {
+    "prompt_format": "Pinned tokenizer chat template; one user message; add_generation_prompt=true.",
+    "do_sample": false,
+    "num_beams": 1,
+    "num_beam_groups": 1,
+    "num_return_sequences": 1,
+    "max_new_tokens": 64,
+    "position_capacity": 416,
+    "capacity_policy": "Reject if tokenized input plus 64 requested output tokens exceeds 416; never truncate silently.",
+    "eos_policy": "Honor the pinned EOS tokens; do not force generation to 64 tokens.",
+    "other_settings": "Copy the same pinned native generation configuration, retaining EOS/pad and repetition processors; apply listed overrides and cache_implementation=None.",
+    "use_cache": false
+  },
+  "review": {
+    "method": "Paired semantic review against each canary's explicit requirements; retain both raw responses and token IDs.",
+    "dimensions": [
+      "instruction_following",
+      "factual_or_computational_correctness",
+      "coherence"
+    ],
+    "collapse_flags": [
+      "Unexpected empty response before fulfilling the request.",
+      "Unrelated multiple-choice labels in place of the requested explanation, summary, extraction, edit or code.",
+      "Unrelated or incoherent text.",
+      "Repetitive text that prevents completing the requested task."
+    ],
+    "task_aware": "A brief correct number, edited sentence, JSON object or function is not collapse merely because it is short.",
+    "matching": "Do not grade explanations or summaries by exact wording. Permit equivalent phrasing and correct alternative implementations. JSON key order and code formatting do not determine semantic correctness.",
+    "reporting": "Report each arm's fulfillment and each compact-only regression separately. Preserve native failures rather than assuming that every native response is correct.",
+    "scope": "Six exploratory partial-model generation canaries; no weight selection, training, throughput or population quality claim. The separate full36 canary protocol is unchanged."
+  },
+  "canaries": [
+    {
+      "id": "concept_heat_transfer",
+      "category": "concept_explanation",
+      "prompt": "A metal spoon and a wooden spoon have been in the same room for hours. Why can the metal spoon feel colder when you touch it? Explain in two short sentences.",
+      "semantic_requirements": [
+        "Explain that metal transfers heat away from the hand faster than wood.",
+        "Recognize that the spoons can be at the same room temperature; do not claim that metal must actually be colder.",
+        "Give a coherent explanation in two short sentences."
+      ]
+    },
+    {
+      "id": "summary_sensor_kits",
+      "category": "invented_numeric_summary",
+      "prompt": "Summarize this passage in no more than two short sentences, preserving the numbers and delivery day: On Monday, Noor's team packed 24 sensor kits. Six were reserved for training, and 18 were sent to Larch School. The school delivery is scheduled for Friday.",
+      "semantic_requirements": [
+        "Preserve the total of 24 kits and the split of 6 reserved for training and 18 sent to Larch School.",
+        "Preserve Friday as the scheduled school delivery day.",
+        "Do not invent an arrival confirmation, different destination or additional quantity.",
+        "Use at most two short sentences; equivalent summary wording is allowed."
+      ]
+    },
+    {
+      "id": "extract_booking_json",
+      "category": "supplied_fact_json_extraction",
+      "prompt": "Name: Aster. Guests: 3. Room: 204. Return only a JSON object with the keys name, guests, and room. Use numbers for guests and room.",
+      "semantic_requirements": [
+        "Return a valid JSON object with exactly the keys name, guests, and room.",
+        "Set name to the string Aster, guests to the number 3, and room to the number 204.",
+        "Do not add prose or a Markdown code fence; JSON key order is unrestricted."
+      ]
+    },
+    {
+      "id": "edit_two_steps",
+      "category": "two_step_editing",
+      "prompt": "Start with this text: the blue door is open. First replace blue with green. Then capitalize only the first letter of the sentence and end with one period. Return only the edited sentence.",
+      "semantic_requirements": [
+        "Replace blue with green and retain the other words in their original order.",
+        "Capitalize the initial T and leave the remaining letters lowercase.",
+        "End with exactly one period and provide no explanation."
+      ],
+      "expected_result": "The green door is open."
+    },
+    {
+      "id": "arithmetic_remaining_rolls",
+      "category": "simple_numerical_word_problem",
+      "prompt": "There are 3 trays with 8 bread rolls on each tray. Nine rolls are sold. How many rolls remain? Give the number and one short sentence explaining your calculation.",
+      "semantic_requirements": [
+        "Give 15 as the number of remaining rolls.",
+        "Explain the calculation as 3 times 8 minus 9, or an equivalent correct calculation.",
+        "Do not substitute an unrelated answer label for the requested result."
+      ]
+    },
+    {
+      "id": "python_count_even",
+      "category": "tiny_python_function",
+      "prompt": "Write a Python function named count_even(numbers) that returns how many integers in numbers are even. Return only the function; a Markdown code fence is optional.",
+      "semantic_requirements": [
+        "Define a syntactically valid Python function named count_even with one parameter named numbers.",
+        "Return the count of even integers, including zero and negative even integers; do not return the sum of the integers.",
+        "Return 0 for an empty input and handle odd integers correctly.",
+        "Use no external packages, input prompts or unrelated prose; correct alternative implementations are allowed."
+      ],
+      "semantic_examples": [
+        {
+          "input": [],
+          "expected_return": 0
+        },
+        {
+          "input": [
+            -2,
+            -1,
+            0,
+            3,
+            4
+          ],
+          "expected_return": 3
+        },
+        {
+          "input": [
+            1,
+            3,
+            5
+          ],
+          "expected_return": 0
+        }
+      ]
+    }
+  ],
+  "evidence_to_retain": [
+    "This configuration file's SHA256.",
+    "Pinned native revision and exact source/global-selected fourteen-block checkpoint identities.",
+    "Tokenizer/chat-template identity and effective generation settings for both arms.",
+    "Prompt token IDs, output token IDs, decoded response and stop reason when available.",
+    "Per-canary paired semantic observations, including failures in either arm."
+  ],
+  "model_outputs_collected": false,
+  "confirmed": false,
+  "source_canaries": {
+    "path": "experiments/structure_net/jspace_3b_generative_canaries_v1.json",
+    "sha256": "773672c8d4048f8ecf7d6f5681a7945a4c37a507aba08fd33ab6c0e9eed4665b"
+  }
+}
