@@ -94,6 +94,36 @@ SUPER, under leases `fc58c8b6208b` and `cf47bed1e165`. Their receipts and the
 subsequent scientific progress live under
 `data/experiments/jspace_3b_response_recovery/20261116_v1/`.
 
+Both pilots completed successfully: every compact block received gradients,
+changed its FP32 masters and changed actual BF16 parameter storage. Fixed state
+was unchanged and saved pilot checkpoints replayed full-vocabulary logits
+exactly. The normalization FP32 master changed while its BF16 storage did not;
+that declared diagnostic remains visible. Pilot weights are not used for science.
+
+| Pilot | Peak CUDA reserved | Update-window times | CPU masters/moments plus gradient bank |
+| --- | ---: | ---: | ---: |
+| Progressive16 | 5,752,487,936 bytes | 34.19s, 33.91s | 7,478,603,776 bytes |
+| All36 | 5,152,702,464 bytes | 83.39s, 84.10s | 16,824,113,152 bytes |
+
+The scientific progressive worker launched under lease `d0f328ac1a12` on the
+3060, and all36 under `0d378d7d602e` on the SUPER. At 2026-11-16 07:46 UTC,
+progressive was evaluating its fresh initializer and all36 was initializing.
+This snapshot does not count pilot updates as scientific recovery progress.
+
+The final focused integration suite passed **65 tests**, including actual
+bubblewrap isolation. An independent read-only audit checked both frozen plans,
+full-response/EOS coverage, teacher binding, disjoint groups, fresh scientific
+initialization, asynchronous checkpoint-specific judgments and selection.
+Implementation, tests and initial records are committed as `9b368d1`.
+
+The progressive scientific initializer's new complete-response DEV NLL is
+6.96739 versus native 2.17769 over 4,875 target tokens; teacher KL is 5.98475.
+Its actual unpacked MC path scores 186/256, one fewer than the archived packed
+187/256 measurement. This runtime distinction is recorded rather than treating
+the two paths as interchangeable. At 07:50 UTC both scientific workers were
+still performing their initial quality evaluations, with no scientific update
+yet reported; the real pilot updates remain separate.
+
 ## Data-access incident
 
 Superseded corpus v1 decoded the reserved final512 task JSON to collect question
