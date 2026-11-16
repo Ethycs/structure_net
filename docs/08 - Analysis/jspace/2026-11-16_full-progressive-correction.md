@@ -56,3 +56,15 @@ Artifacts and ongoing progress are in
 [the full run](/data/structure_net_experiments/jspace_3b_full_progressive/20261116_v1/controller/progress.jsonl)
 and [the seed probe](/data/structure_net_experiments/jspace_3b_progressive_task_probe/20261116_v1).
 This is an active full-depth campaign, **not a completed36-block model**.
+
+The fixed seed probe's subsequent CPU grading completed all16 pairs with the
+declared blinded `codex_sdk/gpt-5.6-sol` judge. Observed task success was
+**1/16 student versus4/16 native**; generation success was **0/16 versus8/16**.
+Together with canaries0/6 versus2/6 and the failed executable MBPP screen, this
+fails the small generation-retention screen. These are direct measurements
+that the original NLL shortcut had omitted. They show why77.3% MC accuracy must
+not be presented as overall model accuracy, and identify generation as an
+outstanding recovery problem. They do not cancel the full-depth compression
+schedule. All16 judgments were available; no timeout was counted as a wrong
+answer. The detailed fixed-candidate result is
+[saved here](/data/structure_net_experiments/jspace_3b_progressive_task_probe/20261116_v1/judgment/result.json).
