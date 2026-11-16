@@ -1,5 +1,6 @@
 """Paired recovery eligibility, real feature gradients and retained quarter states."""
 from copy import deepcopy
+from contextlib import contextmanager
 from dataclasses import asdict,replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -13,6 +14,76 @@ from test_jspace_3b_sanity_evaluate import tiny
 
 
 FAMILIES=('arc','boolq','hellaswag','winogrande')
+
+
+def test_model_device_uses_explicit_cuda_target_and_restores_caller(monkeypatch):
+    current=['cuda:1'];seen=[]
+    @contextmanager
+    def device_context(device):
+        seen.append(str(device));previous=current[0];current[0]=str(device)
+        try:yield
+        finally:current[0]=previous
+    monkeypatch.setattr(torch.cuda,'device',device_context)
+    with study._model_device('cpu'):
+        assert current[0]=='cuda:1' and not seen
+    with pytest.raises(RuntimeError,match='kernel failure'):
+        with study._model_device('cuda:0'):
+            assert current[0]=='cuda:0'
+            raise RuntimeError('kernel failure')
+    assert seen==['cuda:0'] and current[0]=='cuda:1'
+
+
+@pytest.mark.parametrize('kernel_error',[False,True])
+@torch.inference_mode()
+def test_packed_score_scopes_readout_device_after_guard_even_if_tail_was_current(tiny,monkeypatch,kernel_error):
+    from test_jspace_3b_sanity_evaluate import arguments
+    native,stack,norm,items,labels=tiny;case=items[-1]
+    _,hidden=study.cache.sanity.native_case(native,case,labels,2)
+    batch=dict(hidden=hidden,**arguments(hidden,native.model.rotary_emb),
+        loss_positions=torch.tensor([[0,1,2,len(case['input_ids'])-1]]),
+        targets=torch.tensor([[1,2,3,labels[case['answer']]]]),teacher=torch.zeros(1,4,len(native.lm_head.weight)))
+    data=SimpleNamespace(development=[0],items=[case],batch=lambda *_a,**_k:batch)
+    current=['tail'];events=[]
+    def guard():current[0]='tail';events.append('guard')
+    @contextmanager
+    def model_device(device):
+        assert events[-1]=='guard'
+        previous=current[0];current[0]=str(device);events.append(('enter',str(device)))
+        try:yield
+        finally:current[0]=previous;events.append('exit')
+    def entering_stack(_module,_args):
+        assert current[0]==str(native.lm_head.weight.device)
+        events.append('kernel')
+        if kernel_error:raise RuntimeError('kernel failure')
+    monkeypatch.setattr(study,'_model_device',model_device)
+    handle=stack.register_forward_pre_hook(entering_stack)
+    try:
+        if kernel_error:
+            with pytest.raises(RuntimeError,match='kernel failure'):
+                study.score_packed(stack,norm,native.lm_head.weight,native.model.rotary_emb,data,labels,guard)
+        else:
+            _,records=study.score_packed(stack,norm,native.lm_head.weight,native.model.rotary_emb,data,labels,guard)
+            assert len(records)==1
+    finally:handle.remove()
+    assert events==['guard',('enter','cpu'),'kernel','exit'] and current[0]=='tail'
+
+
+def test_run_restores_front_after_both_allocator_resets_before_model_work(tmp_path,monkeypatch):
+    events=[];plan=dict(fingerprint='plan')
+    monkeypatch.setattr(study,'verify',lambda *_:plan)
+    monkeypatch.setattr(study,'wait_ready',lambda *_:events.append('lease') or dict(id='lease',allocation={}))
+    settings=dict(front=dict(device=1),tail=dict(device=0))  # Reversed visible order is intentional.
+    monkeypatch.setattr(study.source.replay,'allocator_settings',lambda *_:events.append('allocator') or settings)
+    monkeypatch.setattr(torch.cuda,'reset_peak_memory_stats',lambda d:events.append(('reset',d)))
+    monkeypatch.setattr(torch.cuda,'set_device',lambda d:events.append(('current',d)))
+    monkeypatch.setattr(torch,'set_num_threads',lambda *_:None)
+    monkeypatch.setattr(torch,'manual_seed',lambda *_:None)
+    def stop_at_dataset(*_):
+        assert events==['lease','allocator',('reset',1),('reset',0),('current',1)]
+        raise RuntimeError('stop before model allocation')
+    monkeypatch.setattr(study,'dataset_for',stop_at_dataset)
+    with pytest.raises(RuntimeError,match='stop before model allocation'):
+        study.run(tmp_path,'parent_legacy','pilot')
 
 
 def cases(count=256):

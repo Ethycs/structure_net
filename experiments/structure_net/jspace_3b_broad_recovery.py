@@ -7,6 +7,7 @@ No audit or final-confirmation contents are opened here.
 from __future__ import annotations
 import argparse
 from collections import Counter
+from contextlib import nullcontext
 from dataclasses import asdict,replace
 import gc
 import json
@@ -31,6 +32,12 @@ CONFIG=replace(source.CONFIG,epochs=1,learning_rate=5e-6)
 CHECKPOINT_UPDATES=(0,72,144,216,288)
 POLICY='eligible_highest_correct_then_fewest_updates; cross_arm_exact_tie_parent_legacy; no_CE_KL_veto'
 RESET='Weights-only BF16 warm start; fresh FP32 masters, zero moments/counters and identical RNG/order in both arms'
+
+
+def _model_device(device):
+    """Triton selects its target from the current device, not tensor placement."""
+    device=torch.device(device)
+    return torch.cuda.device(device) if device.type=='cuda' else nullcontext()
 
 
 def eligibility(records,native_records,cases):
@@ -83,15 +90,19 @@ def score_packed(stack,norm,E,rotary,dataset,label_ids,guard=lambda:None):
     if not stack.packed:raise ValueError('Packed evaluation required')
     rows=[];totals=dict(loss=0.,kl=0.,ce=0.)
     for index in dataset.development:
-        guard();batch=dataset.batch([index],device=E.device);h=batch['hidden']
-        output=stack(h,attention_mask=batch['attention_mask'],position_ids=batch['position_ids'],
-            cache_position=batch['position_ids'][0],position_embeddings=rotary(h,batch['position_ids']),use_cache=False)[0]
-        selected=output[torch.arange(1,device=E.device)[:,None],batch['loss_positions']]
-        logits=F.linear(norm(selected),E).float()
-        loss,kl,ce=core.output_objective(logits,batch['teacher'],batch['targets'],CONFIG)
-        if not all(torch.isfinite(v) for v in (loss,kl,ce)):raise ValueError('Nonfinite development objective')
-        for k,v in zip(totals,(loss,kl,ce)):totals[k]+=float(v)
-        rows.append(cache.sanity._record(dataset.items[index],norm(output[:,-1]),E,label_ids))
+        guard()
+        # Allocator setup and the resident optimizer also touch the SUPER.
+        # Restore the model GPU after the guard, before any fused invocation.
+        with _model_device(E.device):
+            batch=dataset.batch([index],device=E.device);h=batch['hidden']
+            output=stack(h,attention_mask=batch['attention_mask'],position_ids=batch['position_ids'],
+                cache_position=batch['position_ids'][0],position_embeddings=rotary(h,batch['position_ids']),use_cache=False)[0]
+            selected=output[torch.arange(1,device=E.device)[:,None],batch['loss_positions']]
+            logits=F.linear(norm(selected),E).float()
+            loss,kl,ce=core.output_objective(logits,batch['teacher'],batch['targets'],CONFIG)
+            if not all(torch.isfinite(v) for v in (loss,kl,ce)):raise ValueError('Nonfinite development objective')
+            for k,v in zip(totals,(loss,kl,ce)):totals[k]+=float(v)
+            rows.append(cache.sanity._record(dataset.items[index],norm(output[:,-1]),E,label_ids))
     count=len(rows)
     if not count:raise ValueError('No development records')
     correct=sum(r['answer']==r['prediction'] for r in rows)
@@ -313,6 +324,7 @@ def run(root,arm,phase):
         settings=source.replay.allocator_settings(lease) if dual else source.inherited.cap_allocator(lease,p)
         front=settings['front']['device'] if dual else 0;device=f'cuda:{front}';cuda=True
         for d in ([v['device'] for v in settings.values()] if dual else [0]):torch.cuda.reset_peak_memory_stats(d)
+        torch.cuda.set_device(front)
         torch.set_num_threads(4);torch.manual_seed(CONFIG.seed)
         def guard():
             current=wait_ready([0,1] if dual else [0])
