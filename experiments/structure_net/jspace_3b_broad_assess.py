@@ -58,6 +58,48 @@ def reused_generation(seed,*,seed_sha,selected_sha,seed_manifest_sha):
         reused_manifest_sha256=seed_manifest_sha,reuse_reason="Identical checkpoint, tokenizer, prompts and generation settings")
 
 
+def development_controls(recovery_root,cache_root,candidate):
+    """Bind one existing DEV row to each checkpoint before opening the sealed audit."""
+    recovery_root,cache_root=Path(recovery_root),Path(cache_root)
+    arm=candidate["arm"]
+    if arm not in cache.ARMS:raise ValueError("Selected recovery arm required")
+    pilot=read(recovery_root/arm/"pilot/result.json")
+    trained=read(recovery_root/arm/"train/result.json")
+    items=read(cache_root/"items.json")["items"]
+    dev=[c for c in items if c["split"]=="development"]
+    selected=read(candidate["report"])["records"]
+    sanity.validate_records(selected,dev);sanity.validate_records(pilot["initial_records"],dev)
+    if len(dev)!=256 or pilot["probe"]["fixed_state"]!=trained["fixed_state"]:
+        raise ValueError("Original matched DEV256 and complete fixed-state receipt required")
+    return dict(case=dev[0],boundary_path=str((cache_root/"native/boundary_22.npy").resolve()),
+        boundary_shape=[items[-1]["stop"],2048],
+        seed=dict(record=pilot["initial_records"][0],fixed_state=pilot["probe"]["fixed_state"],
+                  checkpoint_sha256=pilot["checkpoint_sha256"]),
+        selected=dict(record=selected[0],fixed_state=trained["fixed_state"],
+                      checkpoint_sha256=candidate["checkpoint_sha256"]),
+        scope="First existing DEV case, singleton: exact cached native prefix and saved choice logits; no selection")
+
+
+def control_boundary(controls):
+    case=controls["case"];bank=np.load(controls["boundary_path"],mmap_mode="r")
+    try:
+        if bank.dtype!=np.int16 or list(bank.shape)!=controls["boundary_shape"]:
+            raise ValueError("Pinned DEV prefix bank layout changed")
+        return torch.from_numpy(np.array(bank[case["offset"]:case["stop"]],copy=True)).view(torch.bfloat16)[None]
+    finally:bank._mmap.close()
+
+
+def require_development_record(actual,expected):
+    if actual!=expected:raise ValueError("Compact development choice record differs from saved checkpoint")
+    return dict(passed=True,records_exact=True,actual=actual,expected=expected)
+
+
+def partial_development_control(model,controls,which,label_ids,guard):
+    actual,boundary=sanity.native_case(model,controls["case"],label_ids,22,guard)
+    prefix=sanity.boundary_control(boundary,control_boundary(controls))
+    return dict(**require_development_record(actual,controls[which]["record"]),boundary=prefix)
+
+
 def prepare(root,recovery_root):
     if os.environ.get("CUDA_VISIBLE_DEVICES")!="":raise ValueError("Assessment preparation requires CUDA hidden")
     root,recovery_root=Path(root).resolve(),Path(recovery_root).resolve()
@@ -69,6 +111,9 @@ def prepare(root,recovery_root):
     candidate=selection["candidate"]
     if base.sha(candidate["checkpoint"])!=candidate["checkpoint_sha256"]:
         raise ValueError("Globally selected checkpoint changed")
+    controls=development_controls(recovery_root,selection["cache_root"],candidate)
+    if controls["seed"]["checkpoint_sha256"]!=cp["checkpoint_sha256"]:
+        raise ValueError("Seed development control belongs to another checkpoint")
     audit=read(data_root/"audit_tasks.json")["splits"]["audit"]
     identities=read(data_root/"audit_identities.json")
     if (len(audit)!=128 or len({c["identity"] for c in audit})!=128
@@ -86,7 +131,9 @@ def prepare(root,recovery_root):
     paths=[recovery_root/"plan.json",recovery_root/"selection.json",recovery_root/"manifest.json",
         Path(selection["cache_root"])/"plan.json",data_root/"plan.json",data_root/"manifest.json",
         data_root/"audit_tasks.json",data_root/"audit_identities.json",GENERATION_CONFIG,cache.PROTOCOL,
-        Path(candidate["checkpoint"]),Path(candidate["report"])]
+        Path(candidate["checkpoint"]),Path(candidate["report"]),
+        Path(selection["cache_root"])/"items.json",Path(selection["cache_root"])/"native/manifest.json",
+        Path(controls["boundary_path"])]
     for arm in cache.ARMS:
         for phase in ("pilot","train","verify"):
             directory=recovery_root/arm/phase
@@ -96,12 +143,14 @@ def prepare(root,recovery_root):
                 inputs[str((directory/name).resolve())]=digest
     for path in paths:old.pin(inputs,path)
     files=cache.source.inherited.local_import_closure([Path(__file__),GENERATION_CONFIG,cache.PROTOCOL,
-        base.ROOT/"tests/structure_net/test_jspace_3b_broad_assess.py"])
+        base.ROOT/"tests/structure_net/test_jspace_3b_broad_assess.py",
+        base.ROOT/"tests/structure_net/test_jspace_3b_partial_generation.py"])
     plan=dict(schema=SCHEMA,recovery_root=str(recovery_root),recovery_fingerprint=selection["fingerprint"],
         cache_root=selection["cache_root"],data_root=str(data_root),selection=selection,
         model=cp["model"],fits=cp["fits"],label_ids=cp["label_ids"],cut=22,hidden_size=2048,
         checkpoint=candidate["checkpoint"],checkpoint_sha256=candidate["checkpoint_sha256"],
         seed_checkpoint=cp["checkpoint"],seed_checkpoint_sha256=cp["checkpoint_sha256"],
+        compact_development_controls=controls,
         development_control=cp["development_control"],native_boundary=str(Path(cp["native_cache"])/"boundary_22.npy"),
         items_digest=base.digest(items),canaries_digest=base.digest(canaries),total_tokens=offset,
         generation_config_sha256=base.sha(GENERATION_CONFIG),generation=config["generation"],
@@ -122,7 +171,10 @@ def verify(root):
     if (p.get("schema")!=SCHEMA or p.get("cut")!=22 or p.get("phases")!=list(PHASES)
             or p.get("allocation_mib")!=11264 or p.get("allocator_mib")!=11008 or p.get("confirmed") is not False
             or p["checkpoint_sha256"]!=p["selection"]["candidate"]["checkpoint_sha256"]
-            or p["seed_checkpoint_sha256"]!=cache.SEED_SHA):raise ValueError("Assessment admission policy changed")
+            or p["seed_checkpoint_sha256"]!=cache.SEED_SHA
+            or p["compact_development_controls"]["selected"]["checkpoint_sha256"]!=p["checkpoint_sha256"]
+            or p["compact_development_controls"]["seed"]["checkpoint_sha256"]!=p["seed_checkpoint_sha256"]):
+        raise ValueError("Assessment admission policy changed")
     for path,identity in p["input_identity"].items():
         if old.file_identity(path)!=identity:raise ValueError("Assessment input changed: "+path)
     for path,digest in p["source_sha256"].items():
@@ -145,6 +197,16 @@ def validate_generation(rows,canaries):
                 or row.get("generation_config",{}).get("use_cache") is not False
                 or row["generation_config"].get("max_new_tokens")!=64):
             raise ValueError("Generation prompt, budget, cache or output receipt changed")
+
+
+def check_compact_controls(result,plan,which,*,full_partial):
+    expected=plan["compact_development_controls"][which]
+    if (result.get("fixed_state_control")!={"passed":True,"expected":expected["fixed_state"],"actual":expected["fixed_state"]}
+            or not result.get("development_control",{}).get("records_exact")
+            or result["development_control"].get("actual")!=expected["record"]
+            or result["development_control"].get("expected")!=expected["record"]
+            or (full_partial and not result["development_control"].get("boundary",{}).get("bit_exact"))):
+        raise ValueError("Original fixed-state and compact development replay controls required")
 
 
 def checked(root,phase,plan=None):
@@ -182,11 +244,14 @@ def checked(root,phase,plan=None):
                 or r.get("inheritance",{}).get("unchanged_layers")!=list(range(22,36))
                 or not r.get("inheritance",{}).get("norm_exact")):
             raise ValueError("Selected compact state or native prefix changed")
+        if phase=="audit_compact":check_compact_controls(r,p,"selected",full_partial=False)
     else:
         validate_generation(r["records"],read(root/"canaries.json")["canaries"])
         expected_sha=None if phase=="generate_native" else p["seed_checkpoint_sha256"] if phase=="generate_seed" else p["checkpoint_sha256"]
         if (r.get("checkpoint_sha256")!=expected_sha or r.get("generation_config_sha256")!=p["generation_config_sha256"]):
             raise ValueError("Wrong generation checkpoint or pinned configuration")
+        if phase!="generate_native":
+            check_compact_controls(r,p,"seed" if phase=="generate_seed" else "selected",full_partial=True)
     return r
 
 
@@ -225,27 +290,39 @@ def run(root,phase):
                     bank[case["offset"]:case["stop"]]=hidden[0].contiguous().view(torch.int16).numpy();records.append(row)
                 bank.flush();bank._mmap.close();del bank,model
             elif phase=="audit_compact":
-                stack,norm,E,rotary,proof=cache.builder.build_stack(p["model"]["path"],{int(k):v for k,v in p["fits"].items()},
+                stack,norm,E,cpu_rotary,proof=cache.builder.build_stack(p["model"]["path"],{int(k):v for k,v in p["fits"].items()},
                     22,p["checkpoint"],device="cpu",trainable=False,checkpoint_blocks=False)
-                packed=cache.builder.packed_clone(stack,device="cpu");del stack
-                packed,norm,E,rotary=packed.to("cuda:0"),norm.to("cuda:0"),E.to("cuda:0"),rotary.to("cuda:0")
+                controls=p["compact_development_controls"]
+                rotary=generation.training_rotary(cache.builder.native._config(p["model"]["path"],None),"cuda:0",guard=guard)
+                fixed=generation.assert_fixed_state(stack,E,rotary,controls["selected"]["fixed_state"])
+                packed=cache.builder.packed_clone(stack,device="cpu");del stack,cpu_rotary
+                packed,norm,E=packed.to("cuda:0"),norm.to("cuda:0"),E.to("cuda:0")
+                control=sanity.compact_case(packed,norm,E,rotary,control_boundary(controls),controls["case"],p["label_ids"],guard)
+                replay=require_development_record(control,controls["selected"]["record"])
                 bank=np.load(root/"audit_native/boundary_22.npy",mmap_mode="r")
                 if bank.dtype!=np.int16 or bank.shape!=(p["total_tokens"],2048):raise ValueError("Native audit bank changed")
                 for case in read(root/"items.json")["items"]:
                     hidden=torch.from_numpy(np.array(bank[case["offset"]:case["stop"]],copy=True)).view(torch.bfloat16)[None]
                     records.append(sanity.compact_case(packed,norm,E,rotary,hidden,case,p["label_ids"],guard))
                 detail=dict(strict_state_load=True,inheritance=proof,checkpoint_sha256=p["checkpoint_sha256"],
-                    boundary_sha256=base.sha(root/"audit_native/boundary_22.npy"));bank._mmap.close()
+                    boundary_sha256=base.sha(root/"audit_native/boundary_22.npy"),
+                    fixed_state_control=fixed,development_control=replay);bank._mmap.close()
             else:
                 from transformers import AutoTokenizer
                 tokenizer=AutoTokenizer.from_pretrained(p["model"]["path"],local_files_only=True,trust_remote_code=False)
                 checkpoint=None if phase=="generate_native" else p["seed_checkpoint"] if phase=="generate_seed" else p["checkpoint"]
+                which="seed" if phase=="generate_seed" else "selected"
                 model=sanity.execution.load_native_model(p["model"]["path"],device="cuda:0",attention="eager",guard=guard) if checkpoint is None else generation.build_partial(
-                    p["model"]["path"],{int(k):v for k,v in p["fits"].items()},checkpoint,cut=22,device="cuda:0",guard=guard)
+                    p["model"]["path"],{int(k):v for k,v in p["fits"].items()},checkpoint,cut=22,device="cuda:0",guard=guard,
+                    expected_fixed_state=p["compact_development_controls"][which]["fixed_state"])
+                if checkpoint is not None:
+                    detail.update(fixed_state_control=model.partial_fixed_state_receipt,
+                        development_control=partial_development_control(model,p["compact_development_controls"],which,p["label_ids"],guard),
+                        rotary_scope=model.partial_generation_scope)
                 for case in read(root/"canaries.json")["canaries"]:
                     value=generation.generate(model,tokenizer,case["input_ids"],max_new_tokens=64,position_capacity=416,guard=guard)
                     records.append(dict(id=case["id"],category=case["category"],**value))
-                detail=dict(checkpoint_sha256=None if checkpoint is None else base.sha(checkpoint),strict_state_load=True,
+                detail.update(checkpoint_sha256=None if checkpoint is None else base.sha(checkpoint),strict_state_load=True,
                     semantic_review_pending=True,use_cache=False,generation_config_sha256=p["generation_config_sha256"])
         guard();result=dict(status="completed",phase=phase,fingerprint=p["fingerprint"],records=records,**detail)
         if phase.startswith("audit_"):

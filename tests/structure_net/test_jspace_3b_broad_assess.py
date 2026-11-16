@@ -3,6 +3,8 @@ import copy
 from pathlib import Path
 
 import pytest
+import numpy as np
+import torch
 
 from experiments.structure_net import jspace_3b_broad_assess as assess
 
@@ -108,7 +110,7 @@ def test_cpu_prepare_freezes_actual_config_bytes_and_only_postselection_audit(tm
     report=tmp_path/"development.json";report.write_text("{}")
     checkpoint_sha=assess.base.sha(checkpoint)
     selection=dict(status="completed",fingerprint="selected",cache_root=str(cache_root),development_passed=False,
-        candidate=dict(checkpoint=str(checkpoint),checkpoint_sha256=checkpoint_sha,report=str(report)))
+        candidate=dict(arm="parent_legacy",checkpoint=str(checkpoint),checkpoint_sha256=checkpoint_sha,report=str(report)))
     for name in ("plan.json","selection.json","manifest.json"):
         assess.base.write(recovery/name,selection if name=="selection.json" else {})
     for arm in assess.cache.ARMS:
@@ -122,6 +124,13 @@ def test_cpu_prepare_freezes_actual_config_bytes_and_only_postselection_audit(tm
     assess.base.write(data_root/"audit_identities.json",dict(identities=[c["identity"] for c in cases]))
     for name in ("plan.json","manifest.json"):assess.base.write(data_root/name,{})
     assess.base.write(cache_root/"plan.json",{})
+    assess.base.write(cache_root/"items.json",dict(items=[]))
+    (cache_root/"native").mkdir()
+    assess.base.write(cache_root/"native/manifest.json",{})
+    (cache_root/"native/boundary_22.npy").write_bytes(b"pinned-bank")
+    controls=dict(seed=dict(checkpoint_sha256=checkpoint_sha),selected=dict(checkpoint_sha256=checkpoint_sha),
+        boundary_path=str(cache_root/"native/boundary_22.npy"))
+    monkeypatch.setattr(assess,"development_controls",lambda *args:controls)
     cp=dict(data_root=str(data_root),input_sha256={},model={"path":str(tmp_path/"native")},fits={},label_ids=[0,1,2,3],
         checkpoint=str(checkpoint),checkpoint_sha256=checkpoint_sha,development_control={},native_cache=str(tmp_path))
     events=[]
@@ -139,3 +148,55 @@ def test_cpu_prepare_freezes_actual_config_bytes_and_only_postselection_audit(tm
     assert events==["selection","data_verified"] and result["audit_count"]==128
     assert (out/"generation_config.json").read_bytes()==assess.GENERATION_CONFIG.read_bytes()
     assert assess.verify(out)["selection"]["development_passed"] is False
+
+
+def test_existing_development_control_requires_exact_record_and_prefix(tmp_path,monkeypatch):
+    case=dict(identity="dev",input_ids=[1,2,3],offset=1,stop=4)
+    hidden=torch.arange(12).reshape(1,3,4).bfloat16()
+    bank=np.zeros((5,4),dtype=np.int16);bank[1:4]=hidden[0].view(torch.int16).numpy()
+    path=tmp_path/"boundary.npy";np.save(path,bank)
+    row=dict(identity="dev",prediction=1,logits=[1.,2.])
+    controls=dict(case=case,boundary_path=str(path),boundary_shape=[5,4],selected=dict(record=row))
+    monkeypatch.setattr(assess.sanity,"native_case",lambda *args:(copy.deepcopy(row),hidden.clone()))
+    actual=assess.partial_development_control(None,controls,"selected",[0,1],lambda:None)
+    assert actual["records_exact"] and actual["boundary"]["bit_exact"]
+    wrong=copy.deepcopy(row);wrong["logits"][0]+=.03125
+    monkeypatch.setattr(assess.sanity,"native_case",lambda *args:(wrong,hidden.clone()))
+    with pytest.raises(ValueError,match="choice record"):
+        assess.partial_development_control(None,controls,"selected",[0,1],lambda:None)
+    monkeypatch.setattr(assess.sanity,"native_case",lambda *args:(row,hidden+1))
+    with pytest.raises(ValueError,match="boundary differs"):
+        assess.partial_development_control(None,controls,"selected",[0,1],lambda:None)
+
+
+def test_phase_receipts_require_whole_fixed_state_and_saved_development_logits():
+    state=dict(sha256="exact",tensor_bytes=123)
+    row=dict(identity="dev",prediction=1,logits=[1.,2.])
+    plan=dict(compact_development_controls=dict(selected=dict(fixed_state=state,record=row)))
+    result=dict(fixed_state_control=dict(passed=True,actual=state,expected=state),
+        development_control=dict(records_exact=True,actual=row,expected=row,boundary=dict(bit_exact=True)))
+    assess.check_compact_controls(result,plan,"selected",full_partial=True)
+    bad=copy.deepcopy(result);bad["fixed_state_control"]["actual"]["sha256"]="other"
+    with pytest.raises(ValueError,match="fixed-state"):
+        assess.check_compact_controls(bad,plan,"selected",full_partial=True)
+    bad=copy.deepcopy(result);bad["development_control"]["boundary"]["bit_exact"]=False
+    with pytest.raises(ValueError,match="fixed-state"):
+        assess.check_compact_controls(bad,plan,"selected",full_partial=True)
+
+
+def test_control_references_use_selected_report_seed_pilot_and_original_dev_offsets(tmp_path):
+    root=tmp_path/"recovery";cache_root=tmp_path/"cache";arm="native_content"
+    items=[dict(identity=f"{i:064x}",family="arc",answer=i%2,choices=["a","b"],
+        input_ids=[2,3,4],split="development",offset=30+3*i,stop=33+3*i) for i in range(256)]
+    seed=[dict(identity=c["identity"],family="arc",answer=c["answer"],prediction=0,logits=[2.,1.]) for c in items]
+    selected=copy.deepcopy(seed);selected[0].update(prediction=1,logits=[1.,3.])
+    state=dict(sha256="fixed",tensor_bytes=99)
+    for directory in (root/arm/"pilot",root/arm/"train",cache_root):directory.mkdir(parents=True)
+    assess.base.write(root/arm/"pilot/result.json",dict(initial_records=seed,probe=dict(fixed_state=state),checkpoint_sha256="seed"))
+    assess.base.write(root/arm/"train/result.json",dict(fixed_state=state))
+    assess.base.write(cache_root/"items.json",dict(items=items))
+    report=root/arm/"train/development.json";assess.base.write(report,dict(records=selected))
+    value=assess.development_controls(root,cache_root,dict(arm=arm,report=str(report),checkpoint_sha256="selected"))
+    assert value["case"]["offset"]==30 and value["case"]["identity"]==items[0]["identity"]
+    assert value["seed"]["record"]==seed[0] and value["selected"]["record"]==selected[0]
+    assert value["seed"]["fixed_state"]==value["selected"]["fixed_state"]==state

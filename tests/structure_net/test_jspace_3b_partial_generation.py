@@ -84,3 +84,80 @@ def test_incomplete_or_wrong_cut_suffix_rejected():
     model, stack, norm = fixture()
     with pytest.raises(ValueError, match="partial suffix"):
         partial.attach_suffix(model, stack, norm, cut=1)
+
+
+@torch.inference_mode()
+def test_suffix_has_its_own_rotary_without_changing_native_prefix():
+    model, stack, norm = fixture()
+    native = deepcopy(model)
+    suffix_rotary = partial.training_rotary(model.config, "cpu")
+    # Simulate a construction-device difference, magnified so this CPU test
+    # detects an accidental reuse of the native-prefix rotary.
+    suffix_rotary.inv_freq.mul_(11.)
+    native_rotary = model.model.rotary_emb
+    original_bits = native_rotary.inv_freq.clone()
+    ids = torch.tensor([[2, 5, 9, 1, 7, 3]])
+    captured = []
+    hook = native.model.layers[2].register_forward_pre_hook(lambda _m, args: captured.append(args[0]))
+    native.model(input_ids=ids, use_cache=False)
+    hook.remove()
+    hidden = captured[0]
+    positions = torch.arange(ids.shape[1])[None]
+    mask = torch.full((6, 6), torch.finfo(hidden.dtype).min, dtype=hidden.dtype).triu(1)[None, None]
+    kwargs = dict(attention_mask=mask, position_ids=positions, cache_position=positions[0], use_cache=False)
+    expected = norm(stack(hidden, position_embeddings=suffix_rotary(hidden, positions), **kwargs)[0])
+    wrong = norm(stack(hidden, position_embeddings=native_rotary(hidden, positions), **kwargs)[0])
+    partial.attach_suffix(model, stack, norm, cut=2, suffix_rotary=suffix_rotary)
+    observed = []
+    hook = model.model.layers[2].register_forward_pre_hook(lambda _m, args: observed.append(args[0]))
+    actual = model.model(input_ids=ids, use_cache=False).last_hidden_state
+    hook.remove()
+    assert torch.equal(observed[0], hidden)  # Original native prefix, bit for bit.
+    assert torch.equal(actual, expected) and not torch.equal(actual, wrong)
+    assert model.model.rotary_emb is native_rotary
+    assert torch.equal(native_rotary.inv_freq, original_bits)
+    assert model.model.layers[2].rotary is suffix_rotary
+    with pytest.raises(ValueError, match="cache-free"):
+        model.model.layers[2](hidden, position_ids=positions, use_cache=True)
+
+
+def test_whole_fixed_state_includes_rotary_and_geometry():
+    model, stack, _ = fixture()
+    rotary = partial.training_rotary(model.config, "cpu")
+    expected = partial.fixed_state(stack, model.lm_head.weight, rotary)
+    assert partial.assert_fixed_state(stack, model.lm_head.weight, rotary, expected)["passed"]
+    rotary.inv_freq[0] += .01
+    with pytest.raises(ValueError, match="Complete fixed"):
+        partial.assert_fixed_state(stack, model.lm_head.weight, rotary, expected)
+    rotary = partial.training_rotary(model.config, "cpu")
+    stack.blocks[0].basis.flatten()[0] += .01
+    with pytest.raises(ValueError, match="Complete fixed"):
+        partial.assert_fixed_state(stack, model.lm_head.weight, rotary, expected)
+
+
+def test_training_rotary_denies_unreserved_cuda_before_constructor(monkeypatch):
+    monkeypatch.setattr(partial,"Qwen2RotaryEmbedding",lambda **kw:pytest.fail("Constructor before reservation"))
+    with pytest.raises(ValueError,match="reservation guard"):
+        partial.training_rotary(None,"cuda:0")
+
+
+def test_build_checks_original_whole_state_before_packing_and_attaches_recreated_rotary(monkeypatch):
+    model, stack, norm = fixture()
+    reference = partial.training_rotary(model.config,"cpu")
+    expected = partial.fixed_state(stack,model.lm_head.weight,reference)
+    # A CPU reconstruction's nonpersistent buffers must never be used merely
+    # because every checkpoint tensor loaded strictly.
+    stale = deepcopy(reference);stale.inv_freq.mul_(2)
+    proof = dict(new_layer=None,unchanged_layers=[2,3])
+    monkeypatch.setattr(partial.execution,"load_native_model",lambda *a,**kw:model)
+    monkeypatch.setattr(partial.builder,"build_stack",lambda *a,**kw:(stack,norm,model.lm_head.weight,stale,proof))
+    calls=[]
+    monkeypatch.setattr(partial.builder,"packed_clone",lambda block,**kw:calls.append("pack") or deepcopy(block))
+    wrong=dict(expected,sha256="changed")
+    with pytest.raises(ValueError,match="Complete fixed"):
+        partial.build_partial("unused",{},"checkpoint",cut=2,expected_fixed_state=wrong)
+    assert calls==[]
+    built=partial.build_partial("unused",{},"checkpoint",cut=2,expected_fixed_state=expected)
+    assert calls==["pack"] and built.partial_fixed_state_receipt["actual"]==expected
+    assert torch.equal(built.model.layers[2].rotary.inv_freq,reference.inv_freq)
+    assert not torch.equal(built.model.layers[2].rotary.inv_freq,stale.inv_freq)
