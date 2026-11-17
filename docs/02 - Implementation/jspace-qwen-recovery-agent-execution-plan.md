@@ -267,3 +267,49 @@ authenticated 2,048-token TRAIN geometry-calibration prefix. The latter is used
 only for inference qualification, never as a fabricated response target.
 `runtime_resident16_boundary` preserves this corrected qualification separately
 from the failed gate in `runtime_resident16`.
+
+### Qualified runtime and completed 10→11 diagnostic
+
+`runtime_resident16_boundary/pilot/result.json` passed on the reserved SUPER:
+bit-exact streamed/resident next-token logits at 72, 2,043 and 2,048 tokens;
+6,679,429,120 peak reserved bytes during these checks; exact fresh-process resume
+across 306 model/optimizer payloads, including history bindings, RNG and masks.
+The two disposable windows supervised 463 tokens. Their rollout stage took
+166.41 seconds and checkpoint writes 155.58 seconds. These are pilot phase costs,
+not deployed token throughput or a reliable full-study ETA. Pilot updates remain
+discarded; scientific arms start from the original eight-block checkpoint.
+
+The authenticated diagnostic completed 2,442 controlled trace records across
+74 histories (10 reference, 44 saved-generated, 20 fresh-generated). With the old
+suffix and norm fixed, replacing the native boundary with block 11's compressed
+boundary increased teacher KL as follows:
+
+| Insertion checkpoint | Mean paired KL increase | Histories with increased KL |
+| --- | ---: | ---: |
+| Before joint recovery, update 0 | 0.16273 | 71/74 |
+| Update 10 | 0.14955 | 69/74 |
+| Update 19 | 0.13682 | 67/74 |
+
+These are descriptive history averages, not independent-sample confidence
+intervals or task accuracy. The production/recomposition control had token-weighted
+KL between 0.00076 and 0.00106 across state/history strata: small but not bit-exact,
+so the intervened graph is not silently treated as production-identical.
+
+Holding insertion and norm fixed, update-19 suffix weights reduced mean teacher
+KL relative to the old suffix by 0.15863 on reference histories, 0.05862 on saved
+generated histories and 0.06845 on fresh generated histories. Together these
+controls support remaining interface damage with partial recovery, rather than
+lost parent weights: inherited tensors and norm were exact at both transitions.
+Four historical checkpoints were unavailable; six cap probes exceeded the old
+416-token support and were explicitly excluded. No generation correctness is
+inferred from cap termination or token-level agreement.
+
+Decision: retain the frozen eight-block initializer and proceed with the declared
+history-distribution comparison, without mixing a new local-fit intervention into
+it. `workflow_resident16_boundary` now launches `train:reference:100000`, then
+`train:student_history:100000`, each under its own reservation. The arms run
+sequentially on the same SUPER profile while the progressive campaign is preserved.
+Zero-update generation/assessment remains required; its immutable initializer
+allows it to be evaluated after these first fixed-budget training phases without
+contaminating training or changing the baseline. No new recovery accuracy is yet
+available.
