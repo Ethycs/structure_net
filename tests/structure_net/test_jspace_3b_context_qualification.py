@@ -238,3 +238,19 @@ def test_prepared_only_check_rejects_changed_spec(tmp_path, monkeypatch):
     spec.write_text(json.dumps({"target_context": 416}))
     with pytest.raises(ValueError, match="hash mismatch"):
         geometry.check(tmp_path)
+
+
+def test_initial_restore_preserves_saved_parameter_dtype_without_casting_geometry():
+    stack, norm, _, _, _, _ = fixture(count=1)
+    for parameter in [*stack.parameters(), *norm.parameters()]:
+        parameter.data = parameter.detach().to(torch.bfloat16)
+    saved = deepcopy(dict(stack=stack.state_dict(), norm=norm.state_dict()))
+    restored, restored_norm, _, _, _, _ = fixture(count=1)
+    # Ordinary load_state_dict would silently widen saved BF16 parameters.
+    geometry._restore_saved_state(restored, restored_norm, saved)
+    assert all(p.dtype == torch.bfloat16 for p in [*restored.parameters(), *restored_norm.parameters()])
+    assert restored.blocks[0].anchor.dtype == saved["stack"]["blocks.0.anchor"].dtype
+    changed = deepcopy(saved["stack"])
+    changed["blocks.0.polynomial_bias"] = changed["blocks.0.polynomial_bias"].float()
+    with pytest.raises(ValueError, match="changed existing state"):
+        geometry.assert_preserved(saved["stack"], changed, 0, set())

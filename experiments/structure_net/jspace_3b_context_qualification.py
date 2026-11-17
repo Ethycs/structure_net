@@ -88,8 +88,20 @@ def load_initial(spec, *, device="cpu", guard=None):
     del old_rotary
     if proof["new_layer"] is not None or not proof["norm_exact"]:
         raise ValueError("Initializer was not strictly reconstructed")
+    saved = torch.load(spec["initial_checkpoint"], map_location="cpu", weights_only=True, mmap=True)
+    _restore_saved_state(stack, norm, saved)
+    del saved
     rotary = partial.training_rotary(builder.native._config(spec["native_model_path"]), device, guard=guard)
     return stack.to(device), norm.to(device), embedding.to(device), rotary
+
+
+def _restore_saved_state(stack, norm, saved):
+    # Constructor defaults can differ from checkpoint parameter precision.
+    # assign=True restores saved dtypes without casting FP32 geometry to BF16.
+    stack.load_state_dict(saved["stack"], strict=True, assign=True)
+    norm.load_state_dict(saved["norm"], strict=True, assign=True)
+    assert_preserved(saved["stack"], stack.state_dict(), 0, set())
+    assert_preserved(saved["norm"], norm.state_dict(), 0, set())
 
 
 def _dependencies(spec, plan):
@@ -280,7 +292,8 @@ def assert_preserved(initial, extended, old_length, table_names):
         actual = extended[name]
         if name in table_names:
             actual = actual[:old_length]
-        equal = torch.equal(old.cpu(), actual.cpu()) if isinstance(old, torch.Tensor) else old == actual
+        equal = (isinstance(actual, torch.Tensor) and old.dtype == actual.dtype
+                 and old.shape == actual.shape and torch.equal(old.cpu(), actual.cpu())) if isinstance(old, torch.Tensor) else old == actual
         if not equal:
             raise ValueError(f"Extension changed existing state: {name}")
 
