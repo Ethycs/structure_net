@@ -56,13 +56,16 @@ def cpu_environment():
                 UV_CACHE_DIR='/tmp/structure-net-uv-cache')
 
 
-def prepare(root, spec_path, *, allocation, minutes=360):
+def prepare(root, spec_path, *, allocation, minutes=360, runtime_root=None, prefix_mode='streamed'):
     if os.environ.get('CUDA_VISIBLE_DEVICES') != '':
         raise ValueError('Workflow preparation requires CUDA hidden')
     root, spec_path = Path(root).resolve(), Path(spec_path).resolve()
     if minutes < 1 or '=' not in allocation:
         raise ValueError('Explicit reservation allocation and positive duration required')
     spec = read(spec_path)
+    runtime_root = Path(runtime_root or Path(spec['artifact_root'])/'runtime').resolve()
+    if not runtime_root.is_relative_to(Path(spec['artifact_root']).resolve()) or prefix_mode not in ('streamed', 'resident'):
+        raise ValueError('Declare an isolated study runtime root and supported prefix residency')
     if sha(spec['initial_checkpoint']) != spec['initial_checkpoint_sha256']:
         raise ValueError('Initializer differs from the approved eight-block checkpoint')
     sources = {Path(path) for path in read(spec['teacher_plan'])['source_sha256'] if Path(path).suffix == '.py'}
@@ -78,6 +81,7 @@ def prepare(root, spec_path, *, allocation, minutes=360):
     plan = dict(schema=SCHEMA, spec_path=str(spec_path), spec_sha256=sha(spec_path),
                 study_id=spec['study_id'], seed=spec['seed'], artifact_root=spec['artifact_root'],
                 allocation=allocation, minutes=minutes, source_sha256=hashes,
+                runtime_root=str(runtime_root), runtime_prefix_mode=prefix_mode,
                 automatic_training_retries=False, scientific_claim=False)
     plan['fingerprint'] = module('distillation_recovery').digest(plan)
     root.mkdir(parents=True, exist_ok=True)
@@ -112,12 +116,14 @@ def phase_definition(plan, name):
     parts = name.split('_')
     if name in QUALIFICATION:
         adapter, action = parts
-        directory = base/adapter
+        directory = Path(plan['runtime_root']) if adapter == 'runtime' else base/adapter
         arguments = [action, '--root', str(directory)]
         if action == 'prepare':
             arguments += ['--spec', plan['spec_path']]
         if adapter in ('runtime', 'diagnostics') and action == 'prepare':
             arguments += ['--limit-mib', '7424']
+        if adapter == 'runtime' and action == 'prepare':
+            arguments += ['--prefix-mode', plan['runtime_prefix_mode']]
         if adapter == 'context' and action in ('run', 'pilot'):
             arguments += ['--limit-mib', '7168']
         if action == 'prepare':
@@ -135,7 +141,7 @@ def phase_definition(plan, name):
         spec = read(plan['spec_path'])
         if target not in ([0] if action == 'generate' else []) + spec['milestones']:
             raise ValueError('Undeclared checkpoint target')
-        adapter, directory, gpu = 'runtime', base/'runtime', True
+        adapter, directory, gpu = 'runtime', Path(plan['runtime_root']), True
         arguments = [action, '--root', str(directory), '--arm', arm, '--target-tokens', str(target)]
         branch = 'phases' if action == 'train' else 'generation'
         output = directory/'arms'/arm/branch/f'tokens_{target}'/'result.json'
@@ -146,8 +152,8 @@ def phase_definition(plan, name):
         if arm not in ('reference', 'student_history') or target not in [0, *spec['milestones']]:
             raise ValueError('Undeclared grading checkpoint')
         adapter, directory, gpu = 'evaluation', base/'evaluation', False
-        label = f'{arm}_tokens_{target}'
-        responses = base/'runtime/arms'/arm/'generation'/f'tokens_{target}'/'responses.jsonl'
+        label = f"{Path(plan['runtime_root']).name}_{arm}_tokens_{target}"
+        responses = Path(plan['runtime_root'])/'arms'/arm/'generation'/f'tokens_{target}'/'responses.jsonl'
         arguments = ['run', '--root', str(directory), '--responses', str(responses),
                      '--split', 'development', '--label', label]
         output = directory/'runs'/label/'result.json'
@@ -173,9 +179,13 @@ def check_preconditions(plan, phase):
         if corpus.get('spec_sha256') != plan['spec_sha256']:
             raise ValueError('Corpus was not prepared against this specification')
     if phase['name'].startswith(('train:', 'generate:')):
-        pilot = read(Path(plan['artifact_root'])/'runtime/pilot/result.json')
+        pilot = read(Path(plan['runtime_root'])/'pilot/result.json')
         if pilot.get('passed') is not True or pilot.get('discarded') is not True:
             raise ValueError('Disposable session pilot did not qualify scientific execution')
+        prepared = read(Path(plan['runtime_root'])/'plan.json')
+        if (prepared['profile']['native_prefix'] != plan['runtime_prefix_mode']
+                or pilot.get('plan_fingerprint') != prepared['fingerprint']):
+            raise ValueError('Pilot belongs to a different runtime profile')
 
 
 def authenticate_receipt(path, *, expected_fingerprint=None):
@@ -242,6 +252,8 @@ class PhaseWorker:
                 prepared = read(Path(phase['directory'])/'plan.json')
                 if prepared.get('spec_sha256') != plan['spec_sha256']:
                     raise ValueError('Prepared artifact is bound to another specification')
+                if phase['adapter'] == 'runtime' and prepared['profile']['native_prefix'] != plan['runtime_prefix_mode']:
+                    raise ValueError('Prepared runtime profile differs from selected workflow')
             else:
                 with (phase_root/'worker.log').open('x') as stream:
                     completed = run_process(phase['command'], cwd=ROOT, env=cpu_environment(),
@@ -285,13 +297,13 @@ async def run_phase(root, name, *, adopt=False):
     if name.startswith(('runtime_', 'train:', 'generate:')):
         dependencies.append(Path(spec['geometry_manifest']))
     if name.startswith(('train:', 'generate:')):
-        dependencies.extend(Path(plan['artifact_root'])/'runtime'/relative for relative in
+        dependencies.extend(Path(plan['runtime_root'])/relative for relative in
                             ('plan.json', 'pilot/result.json'))
     if name.startswith(('generate:', 'grade:')):
         dependencies.append(Path(plan['artifact_root'])/'evaluation/plan.json')
     if name.startswith('grade:'):
         _, arm, target = name.split(':')
-        dependencies.append(Path(plan['artifact_root'])/'runtime/arms'/arm/'generation'/f'tokens_{target}'/'responses.jsonl')
+        dependencies.append(Path(plan['runtime_root'])/'arms'/arm/'generation'/f'tokens_{target}'/'responses.jsonl')
     parameters['input_sha256'] = {str(path):sha(path) for path in dependencies}
     experiment = core.Experiment(id=plan['study_id']+'.'+name, hypothesis_id=plan['study_id'],
         name=name, parameters=parameters, device_id=-1, seed=plan['seed'])
@@ -322,10 +334,13 @@ def main(argv=None):
     parser.add_argument('--minutes', type=int, default=360)
     parser.add_argument('--phase')
     parser.add_argument('--adopt', action='store_true')
+    parser.add_argument('--runtime-root')
+    parser.add_argument('--prefix-mode', choices=('streamed', 'resident'), default='streamed')
     args = parser.parse_args(argv)
     if args.action == 'prepare':
         if not args.spec: parser.error('--spec is required for prepare')
-        result = prepare(args.root, args.spec, allocation=args.allocation, minutes=args.minutes)
+        result = prepare(args.root, args.spec, allocation=args.allocation, minutes=args.minutes,
+                         runtime_root=args.runtime_root, prefix_mode=args.prefix_mode)
     elif args.action == 'run-phase':
         if not args.phase: parser.error('--phase is required')
         result = asyncio.run(run_phase(args.root, args.phase, adopt=args.adopt))

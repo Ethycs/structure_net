@@ -40,8 +40,10 @@ def admission(tmp_path):
     spec = put(tmp_path/'spec.json', {'target_context':2048, 'geometry_manifest':geometry,
                                      'corpus_manifest':corpus, 'milestones':[100000]})
     pilot = tmp_path/'runtime/pilot/result.json'
-    put(pilot, {'passed':True, 'discarded':True})
-    return {'artifact_root':str(tmp_path), 'spec_path':spec, 'spec_sha256':'spec'}, Path(geometry), pilot
+    put(pilot, {'passed':True, 'discarded':True, 'plan_fingerprint':'runtime'})
+    put(tmp_path/'runtime/plan.json', {'profile':{'native_prefix':'streamed'}, 'fingerprint':'runtime'})
+    return {'artifact_root':str(tmp_path), 'spec_path':spec, 'spec_sha256':'spec',
+            'runtime_root':str(tmp_path/'runtime'), 'runtime_prefix_mode':'streamed'}, Path(geometry), pilot
 
 
 def test_training_rejects_unqualified_or_short_geometry(tmp_path):
@@ -67,3 +69,16 @@ def test_undeclared_arm_or_token_target_is_rejected(tmp_path):
     for name in ('train:reference:999', 'train:unknown:100000', 'train:reference:0'):
         with pytest.raises(ValueError):
             workflow.phase_definition(plan, name)
+
+
+def test_other_profile_pilot_cannot_admit_selected_runtime(tmp_path):
+    plan, _, _ = admission(tmp_path)
+    plan.update(runtime_root=str(tmp_path/'runtime_resident'), runtime_prefix_mode='resident')
+    put(tmp_path/'runtime_resident/plan.json',
+        {'profile':{'native_prefix':'resident'}, 'fingerprint':'resident'})
+    pilot = tmp_path/'runtime_resident/pilot/result.json'
+    put(pilot, {'passed':True, 'discarded':True, 'plan_fingerprint':'runtime'})
+    with pytest.raises(ValueError, match='different runtime profile'):
+        workflow.check_preconditions(plan, {'name':'train:student_history:100000'})
+    put(pilot, {'passed':True, 'discarded':True, 'plan_fingerprint':'resident'})
+    workflow.check_preconditions(plan, {'name':'train:student_history:100000'})
