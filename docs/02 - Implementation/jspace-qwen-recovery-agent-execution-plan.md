@@ -251,3 +251,9 @@ step. This closes the short-rollout qualification gap rather than shortening the
 context or relaxing the memory guard. Runtime/workflow regression checks passed:
 27 tests. The new reserved hardware pilot is in progress; no quality improvement
 or full-corpus speedup is claimed from these systems checks.
+
+The 24-block residency hardware qualification also failed at full-context native
+attention softmax, before any optimizer update. Its failed artifacts are retained.
+`runtime_resident16` / `workflow_resident16` now test 16 resident and 12 streamed
+native-prefix blocks under the same reservation, precision, context, and objective.
+The smaller resident bank is a workspace-headroom decision, not a model change.
