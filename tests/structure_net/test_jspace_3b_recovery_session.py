@@ -429,3 +429,30 @@ def test_partial_residency_rolls_back_when_admission_fails_mid_bank():
     assert teacher.resident_count == 0
     assert pointers == [[p.data_ptr() for p in block.parameters()] for block in teacher.blocks]
     assert teacher.validate_unchanged()["unchanged"]
+
+
+def test_residency_qualifies_context_boundary_when_complete_records_are_shorter(tmp_path):
+    session = make_session(tmp_path)
+    try:
+        source = record(response_ids=(7, 8, 6, 5, 8, 7, 6, 8, 7, 15))
+        provenance = dict(source.provenance, source_complete_tokens_sha256=runtime.data.digest(source.input_ids),
+            source_complete_token_count=len(source.input_ids), source_row=0, historical_lineage={},
+            derivation="exact_prefix_crop_for_geometry_only")
+        calibration = tmp_path / "calibration.jsonl"
+        calibration.write_text(json.dumps(dict(example_id=source.example_id, group_id=source.group_id,
+            split="train", input_ids=source.input_ids, provenance=provenance)) + "\n")
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(json.dumps(dict(schema="jspace.recovery-reset.corpus.v1",
+            calibration_records=str(calibration), train_records=str(session.corpus.path),
+            sha256={str(calibration): runtime.sha(calibration)})))
+        session.spec.update(corpus_manifest=str(manifest), target_context=12)
+        session.profile.update(native_prefix="resident", resident_prefix_layers=1)
+        before = runtime.offload.fingerprint(session.named)
+        proof = runtime.qualify_prefix_residency(session)
+        assert [row["tokens"] for row in proof] == [2, 5, 12]
+        assert all(row["bit_exact"] for row in proof)
+        assert proof[-1]["calibration"]["calibration_sha256"] == runtime.sha(calibration)
+        assert before == runtime.offload.fingerprint(session.named)
+        assert session.teacher.validate_unchanged()["unchanged"]
+    finally:
+        close(session)

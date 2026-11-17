@@ -1153,11 +1153,17 @@ def project_pilot_cost(windows, checkpoints, profile):
         interpretation="Linear two-window systems extrapolation, not scientific budget execution or accuracy evidence; native-prefix and teacher-transfer are subsets of rollout and capture")
 
 
-def qualify_prefix_residency(session):
-    """Exercise real short and maximum-length TRAIN histories before any update."""
+def qualify_prefix_residency(session, *, original_range=False):
+    """Exercise complete TRAIN histories and the admitted context-boundary prefix."""
     longest = max(range(len(session.corpus.rows)), key=lambda i: session.corpus.rows[i][4])
     cases = [("prompt", session.corpus[0].prompt_ids),
              ("longest_observed_history", session.corpus[longest].input_ids[:-1])]
+    calibration = None
+    if not original_range:
+        from .jspace_3b_context_qualification import calibration_records
+        rows, calibration = calibration_records(session.spec["corpus_manifest"],
+            target=session.spec["target_context"], maximum=1, minimum=1)
+        cases.append(("full_context_calibration", rows[0]["input_ids"]))
     results = []
     for name, tokens in cases:
         ids = torch.tensor([tokens], device=session.model.embedding.device)
@@ -1168,6 +1174,8 @@ def qualify_prefix_residency(session):
             raise ValueError(f"Native-prefix residency changed {name} logits")
         results.append(dict(case=name, tokens=len(tokens), bit_exact=True,
             peak_reserved_bytes=torch.cuda.max_memory_reserved() if ids.device.type == "cuda" else 0))
+    if calibration is not None:
+        results[-1]["calibration"] = calibration
     return results
 
 
@@ -1184,9 +1192,7 @@ def pilot(root, *, original_range=False, proof_stage="all"):
         session, _ = build_runtime(plan, arm="student_history", guard=guard, original_range=original_range)
         count = min(plan["spec"]["pilot_examples"], plan["spec"]["accumulation_examples"])
         if proof_stage in {"all", "baseline"}:
-            prefix_parity = qualify_prefix_residency(session)
-            if not original_range and prefix_parity[-1]["tokens"] != plan["spec"]["target_context"] - 1:
-                raise ValueError("Residency qualification requires an actual full-context TRAIN history")
+            prefix_parity = qualify_prefix_residency(session, original_range=original_range)
             write_json(directory / "prefix_parity.json",
                        dict(plan_fingerprint=plan["fingerprint"], cases=prefix_parity))
             initial = session.save(directory / "baseline/update_00000000")

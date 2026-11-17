@@ -234,7 +234,7 @@ Before committing the long study to that streaming cost, a separate `runtime_res
 ### Full-context residency qualification
 
 The fully resident native prefix passed the short rollout/resume pilot but failed
-on a real 2,047-token TRAIN history: the native attention softmax could not allocate
+on a real 2,043-token TRAIN history: the native attention softmax could not allocate
 another 256 MiB. It is not admitted for recovery on the full corpus.
 
 The replacement profile is `runtime_resident24`: 24 of the 28 native prefix blocks
@@ -257,3 +257,13 @@ attention softmax, before any optimizer update. Its failed artifacts are retaine
 `runtime_resident16` / `workflow_resident16` now test 16 resident and 12 streamed
 native-prefix blocks under the same reservation, precision, context, and objective.
 The smaller resident bank is a workspace-headroom decision, not a model change.
+
+The first 16-block qualification reached the post-parity length gate without OOM
+or a logit mismatch, but that gate incorrectly assumed a complete TRAIN example
+would exactly fill the context. The actual maximum is 2,044 tokens; the probe
+omits its terminal token, so the earlier “2,047-token” descriptions were wrong.
+The corrected pilot uses both the longest complete response history and an
+authenticated 2,048-token TRAIN geometry-calibration prefix. The latter is used
+only for inference qualification, never as a fabricated response target.
+`runtime_resident16_boundary` preserves this corrected qualification separately
+from the failed gate in `runtime_resident16`.
