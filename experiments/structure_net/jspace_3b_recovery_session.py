@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import argparse
 import base64
-from contextlib import contextmanager, nullcontext
+from contextlib import ExitStack, contextmanager, nullcontext
 from dataclasses import asdict, replace
 import gc
 import hashlib
@@ -40,7 +40,6 @@ from . import jspace_3b_response_train as response
 from .jspace_3b_mmlu_redux import host_weights
 from .jspace_3b_response_cache import reservation
 from .jspace_3b_response_eval import generate_prompt
-from .jspace_3b_response_model import attach_native_prefix
 from .jspace_3b_staged_campaign import local_import_closure
 
 nal = module("distillation_training")
@@ -114,7 +113,7 @@ def derive_token_window(response_lengths, *, nominal_examples, rollout_max_token
 
 
 def prepare(root, spec_path, *, limit_mib=11008, host_reserve_bytes=8 * 1024**3,
-            max_cpu_state_bytes=32 * 1024**3, token_chunk_size=8, prefix_mode="streamed"):
+            max_cpu_state_bytes=32 * 1024**3, token_chunk_size=8, prefix_mode="streamed", resident_layers=None):
     cpu_only()
     root, spec_path = Path(root).resolve(), Path(spec_path).resolve()
     spec = read_json(spec_path)
@@ -123,6 +122,11 @@ def prepare(root, spec_path, *, limit_mib=11008, host_reserve_bytes=8 * 1024**3,
         raise ValueError("Positive resource limits required")
     if prefix_mode not in {"streamed", "resident"}:
         raise ValueError("Declare streamed or resident rollout native-prefix weights")
+    cut = read_json(spec["teacher_plan"])["cut"]
+    resident_layers = (cut if prefix_mode == "resident" else 0) if resident_layers is None else resident_layers
+    if (type(resident_layers) is not int or not 0 <= resident_layers <= cut
+            or (prefix_mode == "streamed") != (resident_layers == 0)):
+        raise ValueError("Resident layer count must match the declared prefix residency")
     if sha(spec["initial_checkpoint"]) != spec["initial_checkpoint_sha256"]:
         raise ValueError("Historical model-only initializer changed")
     corpus, _ = admit_corpus(dict(spec=spec), max_length=spec["target_context"])
@@ -152,6 +156,7 @@ def prepare(root, spec_path, *, limit_mib=11008, host_reserve_bytes=8 * 1024**3,
     plan = dict(schema=SCHEMA, spec=spec, spec_path=str(spec_path), spec_sha256=sha(spec_path),
         input_sha256=inputs, source_sha256={str(p): sha(p) for p in sorted(sources)},
         profile=dict(dtype="torch.bfloat16", attention="eager", native_prefix=prefix_mode,
+            resident_prefix_layers=resident_layers,
             student_backend="unpacked_differentiable_torch", timing_policy="synchronize timed CUDA prefix and transfer boundaries",
             limit_mib=limit_mib, host_reserve_bytes=host_reserve_bytes,
             max_cpu_state_bytes=max_cpu_state_bytes, token_chunk_size=token_chunk_size,
@@ -407,6 +412,23 @@ class ExactHistoryTeacher:
         norm.eval().requires_grad_(False)
         rotary.eval().requires_grad_(False)
         self.original = self.fingerprint()
+        self.resident_count = 0
+
+    @contextmanager
+    def prefix_residency(self, count):
+        """Retain a bounded prefix bank; the same forward streams the remainder."""
+        if type(count) is not int or not 0 <= count <= self.cut or self.resident_count:
+            raise ValueError("Invalid or nested native-prefix residency")
+        try:
+            with ExitStack() as residency:
+                for block in self.blocks[:count]:
+                    residency.enter_context(host_weights(block, self.embedding.device, self.guard))
+                self.resident_count = count
+                yield
+        finally:
+            self.resident_count = 0
+            if self.embedding.device.type == "cuda":
+                torch.cuda.empty_cache()
 
     def fingerprint(self):
         named = [(f"block.{i}.{n}", t) for i, block in enumerate(self.blocks)
@@ -425,6 +447,8 @@ class ExactHistoryTeacher:
     @torch.no_grad()
     def forward(self, ids, *, full, last_only=False):
         self.guard()
+        if full and self.resident_count:
+            raise ValueError("Release rollout residency before teacher target capture")
         if ids.ndim != 2 or ids.shape[0] != 1 or not 0 < ids.shape[1] <= self.max_length:
             raise ValueError("One exact unpadded supported history required")
         ids = ids.to(self.embedding.device)
@@ -441,13 +465,15 @@ class ExactHistoryTeacher:
             if ids.device.type == "cuda":
                 torch.cuda.synchronize(ids.device)
             started = time.monotonic()
-            with host_weights(block, ids.device, self.guard):
+            resident = index < self.resident_count
+            with nullcontext() if resident else host_weights(block, ids.device, self.guard):
                 self.transfer_seconds += time.monotonic() - started
                 hidden = block(hidden, attention_mask=mask, position_ids=positions,
                     position_embeddings=rope, cache_position=positions[0], use_cache=False)[0]
                 if ids.device.type == "cuda":
-                    self.transfer_bytes += sum(v.numel() * v.element_size()
-                        for v in (*block.parameters(), *block.buffers()))
+                    if not resident:
+                        self.transfer_bytes += sum(v.numel() * v.element_size()
+                            for v in (*block.parameters(), *block.buffers()))
                     torch.cuda.synchronize(ids.device)
                 started = time.monotonic()
             self.transfer_seconds += time.monotonic() - started
@@ -510,19 +536,11 @@ def timed_prefix(model):
 
 
 @contextmanager
-def rollout_residency(model, spec, profile):
-    """Resident mode is explicit and released before any teacher/backward graph."""
-    if profile["native_prefix"] == "streamed":
-        with timed_prefix(model):
-            yield
-        return
-    original = model.native_prefix
-    model.native_prefix = None
-    try:
-        with attach_native_prefix(model, spec["native_model_path"], guard=model.guard), timed_prefix(model):
-            yield
-    finally:
-        model.native_prefix = original
+def rollout_residency(model, teacher, profile):
+    """Residency changes storage placement, never the native prefix arithmetic."""
+    count = 0 if profile["native_prefix"] == "streamed" else profile["resident_prefix_layers"]
+    with teacher.prefix_residency(count), timed_prefix(model):
+        yield
 
 
 class RecoverySession:
@@ -590,7 +608,7 @@ class RecoverySession:
         if pilot_indices is not None and (len(pilot_indices) != examples or
                 any(not 0 <= i < len(self.corpus.rows) for i in pilot_indices)):
             raise ValueError("Disposable pilot indices must be admitted TRAIN records")
-        residency = rollout_residency(self.model, self.spec, self.profile) if self.arm == "student_history" else nullcontext()
+        residency = rollout_residency(self.model, self.teacher, self.profile) if self.arm == "student_history" else nullcontext()
         residency_started = time.monotonic()
         with residency:
             residency_setup_seconds = time.monotonic() - residency_started
@@ -1135,6 +1153,24 @@ def project_pilot_cost(windows, checkpoints, profile):
         interpretation="Linear two-window systems extrapolation, not scientific budget execution or accuracy evidence; native-prefix and teacher-transfer are subsets of rollout and capture")
 
 
+def qualify_prefix_residency(session):
+    """Exercise real short and maximum-length TRAIN histories before any update."""
+    longest = max(range(len(session.corpus.rows)), key=lambda i: session.corpus.rows[i][4])
+    cases = [("prompt", session.corpus[0].prompt_ids),
+             ("longest_observed_history", session.corpus[longest].input_ids[:-1])]
+    results = []
+    for name, tokens in cases:
+        ids = torch.tensor([tokens], device=session.model.embedding.device)
+        expected = session.model.next_logits(ids).detach().cpu()
+        with rollout_residency(session.model, session.teacher, session.profile):
+            actual = session.model.next_logits(ids).detach().cpu()
+        if not torch.isfinite(actual).all() or not torch.equal(actual, expected):
+            raise ValueError(f"Native-prefix residency changed {name} logits")
+        results.append(dict(case=name, tokens=len(tokens), bit_exact=True,
+            peak_reserved_bytes=torch.cuda.max_memory_reserved() if ids.device.type == "cuda" else 0))
+    return results
+
+
 def pilot(root, *, original_range=False, proof_stage="all"):
     root = Path(root).resolve()
     plan = load_plan(root)
@@ -1148,6 +1184,11 @@ def pilot(root, *, original_range=False, proof_stage="all"):
         session, _ = build_runtime(plan, arm="student_history", guard=guard, original_range=original_range)
         count = min(plan["spec"]["pilot_examples"], plan["spec"]["accumulation_examples"])
         if proof_stage in {"all", "baseline"}:
+            prefix_parity = qualify_prefix_residency(session)
+            if not original_range and prefix_parity[-1]["tokens"] != plan["spec"]["target_context"] - 1:
+                raise ValueError("Residency qualification requires an actual full-context TRAIN history")
+            write_json(directory / "prefix_parity.json",
+                       dict(plan_fingerprint=plan["fingerprint"], cases=prefix_parity))
             initial = session.save(directory / "baseline/update_00000000")
             initial_logits = session.model.next_logits(torch.tensor([session.corpus[0].prompt_ids],
                                       device=session.model.embedding.device)).detach().cpu()
@@ -1180,6 +1221,7 @@ def pilot(root, *, original_range=False, proof_stage="all"):
                 plan_fingerprint=plan["fingerprint"], identities=session.identities, lease=lease,
                 original_range_disposable=original_range, initial=initial, interruption=interruption, expected=expected,
                 exercised_lengths=[len(r["prompt_ids"]) + len(r["response_ids"]) for r in first["records"]],
+                prefix_parity=prefix_parity,
                 changed_bf16_blocks=changed_blocks, corpus_exclusions=session.corpus.exclusions,
                 frozen_proof=proof, changed_bf16_weights=True, first_window=first,
                 initial_logits_sha256=sha(directory / "initial_logits.pt"), final_logits_sha256=sha(directory / "final_logits.pt"),
@@ -1216,6 +1258,7 @@ def pilot(root, *, original_range=False, proof_stage="all"):
             paired_resume=comparison, frozen_proof=proof, checkpoint=resumed,
             baseline_checkpoint=baseline["expected"], changed_bf16_weights=baseline["changed_bf16_weights"],
             cost_projection=baseline["cost_projection"], exercised_lengths=baseline["exercised_lengths"],
+            prefix_parity=baseline["prefix_parity"],
             lease=lease, **summary(session))
         write_json(directory / "result.json", result)
         return result
@@ -1312,7 +1355,7 @@ def generate(root, *, arm, target_tokens):
                             raise ValueError("Native response reuse requires identical prompts/teacher/decoding/grader")
                         reused_rows += 1
                     else:
-                        residency = rollout_residency(session.model, plan["spec"], plan["profile"]) if role == "student" else nullcontext()
+                        residency = rollout_residency(session.model, session.teacher, plan["profile"]) if role == "student" else nullcontext()
                         with residency:
                             generated = generate_prompt(runner, record.prompt_ids, eos_token_ids=decoding["eos_token_ids"],
                                 max_new_tokens=allowance, max_length=session.model.max_length,
@@ -1423,13 +1466,14 @@ def main():
     parser.add_argument("--max-cpu-state-bytes", type=int, default=32 * 1024**3)
     parser.add_argument("--token-chunk-size", type=int, default=8)
     parser.add_argument("--prefix-mode", choices=("streamed", "resident"), default="streamed")
+    parser.add_argument("--resident-layers", type=int)
     args = parser.parse_args()
     if args.phase == "prepare":
         if not args.spec:
             parser.error("prepare requires --spec")
         result = prepare(args.root, args.spec, limit_mib=args.limit_mib, host_reserve_bytes=args.host_reserve_bytes,
                          max_cpu_state_bytes=args.max_cpu_state_bytes, token_chunk_size=args.token_chunk_size,
-                         prefix_mode=args.prefix_mode)
+                         prefix_mode=args.prefix_mode, resident_layers=args.resident_layers)
     elif args.phase == "pilot":
         result = pilot(args.root, original_range=args.original_range, proof_stage=args.proof_stage)
     elif args.phase == "check":

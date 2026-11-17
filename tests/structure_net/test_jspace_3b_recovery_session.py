@@ -32,15 +32,15 @@ def corpus_file(tmp_path):
     return path
 
 
-def tiny_teacher(seed=31):
+def tiny_teacher(seed=31, *, layers=2, cut=1):
     torch.manual_seed(seed)
     cfg = Qwen2Config(vocab_size=16, hidden_size=8, intermediate_size=12,
-        num_hidden_layers=2, num_attention_heads=2, num_key_value_heads=1,
+        num_hidden_layers=layers, num_attention_heads=2, num_key_value_heads=1,
         max_position_embeddings=32, attention_dropout=0.)
     cfg._attn_implementation = "eager"
     full = Qwen2Model(cfg).bfloat16().eval().requires_grad_(False)
     teacher = runtime.ExactHistoryTeacher(list(full.layers), full.embed_tokens.weight.detach(), full.norm,
-        full.rotary_emb, cut=1, max_length=12, teacher_id="a" * 40, guard=lambda: None)
+        full.rotary_emb, cut=cut, max_length=12, teacher_id="a" * 40, guard=lambda: None)
     return cfg, full, teacher
 
 
@@ -393,3 +393,39 @@ def test_interrupted_owned_pruning_resumes_without_touching_latest(tmp_path, mon
         runtime.authenticate_checkpoint(committed["directory"], committed["manifest_sha256"])
     finally:
         close(session)
+
+
+@pytest.mark.parametrize("resident_count", [0, 1, 2])
+def test_partial_residency_preserves_prefix_and_releases_before_capture(resident_count):
+    _, _, teacher = tiny_teacher(layers=3, cut=2)
+    ids = torch.tensor([[1, 3, 7, 8, 15]])
+    expected = teacher.forward(ids, full=False)
+    original = [[p.data_ptr() for p in block.parameters()] for block in teacher.blocks]
+    with teacher.prefix_residency(resident_count):
+        actual = teacher.forward(ids, full=False)
+        torch.testing.assert_close(actual, expected, atol=0., rtol=0.)
+        if resident_count:
+            with pytest.raises(ValueError, match="Release rollout residency"):
+                teacher.forward(ids, full=True)
+    assert teacher.resident_count == 0
+    assert original == [[p.data_ptr() for p in block.parameters()] for block in teacher.blocks]
+    assert teacher.validate_unchanged()["unchanged"]
+    assert torch.isfinite(teacher.forward(ids, full=True)[1]).all()
+
+
+def test_partial_residency_rolls_back_when_admission_fails_mid_bank():
+    _, _, teacher = tiny_teacher(layers=3, cut=2)
+    pointers = [[p.data_ptr() for p in block.parameters()] for block in teacher.blocks]
+    calls = 0
+    def guard():
+        nonlocal calls
+        calls += 1
+        if calls == 3:
+            raise RuntimeError("reservation revoked during second block admission")
+    teacher.guard = guard
+    with pytest.raises(RuntimeError, match="reservation revoked"):
+        with teacher.prefix_residency(2):
+            pytest.fail("Incomplete resident bank was exposed")
+    assert teacher.resident_count == 0
+    assert pointers == [[p.data_ptr() for p in block.parameters()] for block in teacher.blocks]
+    assert teacher.validate_unchanged()["unchanged"]

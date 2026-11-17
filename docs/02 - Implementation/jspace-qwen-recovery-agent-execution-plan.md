@@ -230,3 +230,24 @@ V2 passed both the corrected context gate and the real streamed-prefix recovery 
 Measured baseline pilot costs were 254.39s for rollout, including 245.07s of native-prefix execution/streaming; 23.16s for teacher capture; 12.31s for backward; 5.49s for Adam; and 174.49s for the two measured checkpoint commits. The raw linear token extrapolation is not a reliable full-study ETA: the scientific window targets 1,017 supervised tokens, unlike the four-example pilot, so fixed checkpoint costs are amortized differently.
 
 Before committing the long study to that streaming cost, a separate `runtime_resident` profile is testing the already-implemented GPU-resident native prefix under the same SUPER reservation. The NAL controller now pins a runtime root and residency mode, preventing one profile's successful pilot from admitting another. Six focused orchestration tests passed. Data/geometry and objective remain unchanged; the original streamed pilot and its artifacts remain intact.
+
+### Full-context residency qualification
+
+The fully resident native prefix passed the short rollout/resume pilot but failed
+on a real 2,047-token TRAIN history: the native attention softmax could not allocate
+another 256 MiB. It is not admitted for recovery on the full corpus.
+
+The replacement profile is `runtime_resident24`: 24 of the 28 native prefix blocks
+remain on the SUPER during rollout; the remaining four stream from their original
+CPU storage. Both paths now use the same `ExactHistoryTeacher.forward` arithmetic.
+The runtime plan records `native_prefix=resident` and
+`resident_prefix_layers=24`; its distinct root and plan fingerprint isolate it
+from the earlier full-resident pilot. Residency is released before teacher target
+capture and backward, including when reservation admission raises.
+
+The disposable pilot now requires bit-exact short and full-context next-token
+logits against streamed execution before saving checkpoints or taking an optimizer
+step. This closes the short-rollout qualification gap rather than shortening the
+context or relaxing the memory guard. Runtime/workflow regression checks passed:
+27 tests. The new reserved hardware pilot is in progress; no quality improvement
+or full-corpus speedup is claimed from these systems checks.
