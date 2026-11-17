@@ -313,3 +313,30 @@ Zero-update generation/assessment remains required; its immutable initializer
 allows it to be evaluated after these first fixed-budget training phases without
 contaminating training or changing the baseline. No new recovery accuracy is yet
 available.
+
+### Reservation expiry and explicit continuation
+
+The first reference-history phase committed update 89 with 99,232 supervised
+tokens before its six-hour lease expired. The resource guard raised
+`ReservationError` at the next window boundary; this was not a numerical or
+quality failure. The latest committed model, optimizer chunks, control state and
+history remain intact. The chained student-history phase did not start.
+
+The six-hour reservation was undersized. Although the controller does not
+automatically kill experiments, the training guard correctly rejects an expired
+lease. `workflow_resident16_continuation24h` uses a fresh 1,440-minute reservation
+window and the same frozen `runtime_resident16_boundary`, not a new initializer
+or optimizer. Its explicit reference-arm continuation restores the committed
+pointer; the previous failed phase/ledger remains preserved. Completion timing
+must include the original 21,765.5-second phase attempt, not only the continuation.
+The matched student-history arm is next, after reference completion is verified.
+
+The continuation completed successfully: `starting_tokens=99232`, update 90,
+100,409 supervised reference tokens, zero rollout tokens, and a declared
+409-token milestone overshoot. Its checkpoint manifest SHA is
+`74a8b0721f78e97648961be02955f320bdea219e1932dd1f2002def8628c887b`.
+The continuation's runtime receipt reports 656.20 seconds; the enclosing NAL
+phase took 1,696.2 seconds including orchestration/authentication. Neither replaces
+the original attempt's elapsed time. Status is **ungraded**, not zero accuracy.
+The student-history 100k phase has now been launched under the 24-hour reservation
+workflow, starting independently from the same frozen eight-block initializer.
