@@ -43,3 +43,7 @@ A CPU-only check against the real authenticated parent verified 71 windows, 1,13
 At 23:09:11 UTC the deferred controller started with PID 3465672, reporting `waiting_parent` and `gpu_reservation_held=false`. Its state is under `/data/structure_net_experiments/jspace_3b_attention_retry/20261116_v1/controller_v1`. It waits at most 24 hours for terminal parent evidence, then authenticates the selected seed, runs both disposable pilots, and performs the two matched scientific arms. Accepted lease readiness has a separate 300-second limit. No extra GPU reservation is held while waiting, and no GPU retry result exists yet.
 
 Failures, unavailable judges and partially written producers are preserved rather than silently retried. A CPU verification pass is not GPU qualification, generation recovery or evidence of a speedup.
+
+## Planning pause — 2026-11-17
+
+On the user's instruction to stop and make a consolidated plan, the deferred controller was stopped while still waiting for the parent. It had not acquired a retry GPU reservation or run either arm. The implementation and verification receipts remain preserved; no retry result is claimed. The [recovery reset plan](../../02%20-%20Implementation/jspace-qwen-compression-recovery-reset-plan.md) now places recovery-budget sufficiency and broader paired evaluation ahead of a new attention intervention. Existing progressive, three-block evaluation and ABLATION32 jobs were left running.
