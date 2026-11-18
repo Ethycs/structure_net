@@ -340,3 +340,86 @@ phase took 1,696.2 seconds including orchestration/authentication. Neither repla
 the original attempt's elapsed time. Status is **ungraded**, not zero accuracy.
 The student-history 100k phase has now been launched under the 24-hour reservation
 workflow, starting independently from the same frozen eight-block initializer.
+
+### Read-only recovery audit — sampling and precision
+
+The audit leaves active producers, checkpoints, leases and source fingerprints
+unchanged. Findings below are not substitutes for recovered task accuracy.
+
+**Realized corpus balance differs from the four admitted families.**
+`IndexedRecords` groups by `record.task` (recovery session line 273), and
+`FamilySampler.next` round-robins those groups (lines 298–307). The admitted
+corpus has four `provenance.category` values, but twelve task labels: eight
+instruction subtypes, two code sources, one math source and one summary source.
+Archived windows of the completed reference arm show:
+
+| Broad family | Supervised tokens | Share |
+| --- | ---: | ---: |
+| Instruction | 65,717 | 65.45% |
+| Code | 20,715 | 20.63% |
+| Math | 11,363 | 11.32% |
+| Summary | 2,614 | 2.60% |
+
+There were 1,124 distinct presented prompts and 93–94 presentations per task
+label. An equally stocked corpus does not ensure balanced training exposure.
+Changing the grouping to four categories alone would still balance examples,
+not loss-bearing tokens. A corrected study should declare and persist token
+budgets per broad family. This finding concerns the new recovery study, not a
+demonstrated explanation of the historical 10→11 cliff.
+
+**BF16 gradient accumulation is an avoidable precision risk.**
+`CPUGradientAdamW._capture` (`jspace_qwen3_train.py:99–112`) sums each record's
+gradient into a parameter-dtype CPU bank. The active bank is BF16 despite FP32
+masters/moments. A scalar illustration loses 100 BF16 additions of approximately
+0.001 to an accumulator at 1.0; that illustrates rounding, not measured model
+gradient error. An FP32 bank would add 534,188,032 host bytes for this trainable
+set, with no need to widen the GPU parameters or BF16 transfer buffers.
+
+**The trainable final norm barely changes in served precision.**
+Comparing the reference arm's immutable update-0 and update-90 checkpoints found
+that all 2,048 FP32 norm master values changed, but only one BF16 norm value did.
+Mean absolute master movement was 0.00030165; maximum 0.00143266. The initial
+median norm weight was 3.140625, so these movements mostly round away. BF16
+writeback exactly matches the saved masters. In contrast, approximately 79–84%
+of the large qkv/attention/MLP weight scalars changed: recovery is not globally
+frozen. Keeping this small norm in FP32 is a targeted next-profile experiment;
+its accuracy benefit remains unmeasured.
+
+The inspected KL direction, full-vocabulary support, response/prediction-position
+alignment, observed EOS handling, exact-history teacher binding, token-mean
+normalization and persistent FP32 optimizer state have no identified defect.
+Native attention dropout is zero. At mixed-history update 43, 42 of 51 sampled
+responses hit their length cap; these remain explicitly partial histories, not
+fake EOS completions. Their recovery value needs evaluation, not a correctness
+claim from cap status.
+
+**Fixed removal budgets exceed demonstrated relation coverage.**
+At both progressive layers 26 and 25, `relations.json` records 1,024 removed
+channels, zero relations eligible across every task at the diagnostic threshold,
+and `selected_not_eligible_all_tasks=1024` on both evaluated interfaces.
+This means each selected channel fails at least one task's threshold, not that
+every channel fails on every task. Training selected-channel NRMSE medians are
+0.89542 and 0.88455 respectively. `jspace_allblocks_rankfit.py:158–174` records
+eligibility, while `fit_relation:225–244` still compiles the requested fixed
+removal count. This is an explicit approximation-budget policy, not evidence of
+an exact teacher identity. It can burden recovery but does not isolate why
+layer 25 is worse: its own fit-error metrics are no worse than layer 26's.
+A sensitive-layer/native-block ablation or adaptive retained capacity is the
+appropriate separate experiment; do not relabel weak relations as proven coverage.
+
+**Checkpoint selection is noisy, not missing or corrupted.**
+The progressive rank key is `(-mc_correct, nll, response_tokens, update)`
+(`jspace_3b_full_progressive_recovery.py:112–121`). At stage 10 it selected prefit
+(195/256, NLL 2.94122) rather than update 46 (193/256, NLL 2.79735).
+Small selection-panel differences can therefore reject substantial loss reduction.
+Neither metric proves better generation, and reusing this DEV panel for selection
+means its scores are not independent confirmation. This implements the existing
+MC-first policy; it is a selection-risk finding, not benchmark answers in gradients.
+The separate task result does record stage 11's quality failure. Non-stopping
+progression is intentional and is not evidence that failure was unrecorded.
+
+Priority for a separately frozen corrective profile: explicit broad-family token
+exposure; FP32 final normalization weights and FP32 host gradient accumulation;
+then the proposed sensitive-layer ablation. Preserve the active comparison and
+measure corrected candidates against their untouched initializer. No source
+changes, GPU work or training reruns were performed by this audit.
